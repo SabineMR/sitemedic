@@ -13,7 +13,7 @@ SiteMedic transforms medic clinical work into automatic compliance documentation
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Backend API, auth, encrypted offline storage, sync infrastructure
-- [ ] **Phase 1.5: Business Operations Foundation** (INSERTED) - Database schema for bookings, territories, clients, payments; Stripe Connect; Google Maps API; UK postcodes
+- [x] **Phase 1.5: Business Operations Foundation** (INSERTED) - Database schema for bookings, territories, clients, payments; Stripe Connect; Google Maps API; UK postcodes
 - [ ] **Phase 2: Mobile Core** - Treatment logger, worker profiles, near-miss, daily checks (local-only)
 - [ ] **Phase 3: Sync Engine** - Mobile-to-backend data flow with photo upload
 - [ ] **Phase 4: Web Dashboard** - Manager reporting UI with compliance scoring
@@ -74,10 +74,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 01.5-01-PLAN.md -- Invoice sequencing, pricing calculation, and test data seeding (DB schema already exists)
-- [ ] 01.5-02-PLAN.md -- Stripe Connect integration (Express accounts, Payment Intents, webhooks)
-- [ ] 01.5-03-PLAN.md -- Auto-assignment algorithm and out-of-territory cost logic (Google Maps API already exists)
-- [ ] 01.5-04-PLAN.md -- UK postcode database seeding (~11,232 sectors with region mappings)
+- [x] 01.5-01-PLAN.md -- Invoice sequencing, pricing calculation, and test data seeding (DB schema already exists)
+- [x] 01.5-02-PLAN.md -- Stripe Connect integration (Express accounts, Payment Intents, webhooks)
+- [x] 01.5-03-PLAN.md -- Auto-assignment algorithm and out-of-territory cost logic (Google Maps API already exists)
+- [x] 01.5-04-PLAN.md -- UK postcode database seeding (~11,232 sectors with region mappings)
 
 ### Phase 2: Mobile Core
 **Goal**: Medics can capture treatments, worker profiles, near-misses, and daily safety checks 100% offline with gloves-on usability.
@@ -368,7 +368,7 @@ Phases execute in numeric order: 1 → 1.5 → 2 → 3 → 4 → 4.5 → 4.6 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 5/5 | Complete | 2026-02-15 |
-| 1.5. Business Operations Foundation | 0/4 | Planning complete | - |
+| 1.5. Business Operations Foundation | 4/4 | Complete | 2026-02-15 |
 | 2. Mobile Core | 0/TBD | Not started | - |
 | 3. Sync Engine | 0/TBD | Not started | - |
 | 4. Web Dashboard | 0/TBD | Not started | - |

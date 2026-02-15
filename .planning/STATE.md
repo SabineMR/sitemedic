@@ -9,18 +9,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 1.5 of 7 (Business Foundation)
-Plan: 5 of 5 in current phase
+Phase: 1.5 of 7 (Business Operations Foundation)
+Plan: 4 of 4 in current phase
 Status: Phase complete
 Last activity: 2026-02-15 — Completed 01.5-02-PLAN.md (Stripe Connect integration)
 
-Progress: [████░░░░░░] 40% (8/20 plans across all active phases)
+Progress: [████░░░░░░] 40% (9/20 plans across all active phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: 4 min
+- Total plans completed: 9
+- Average duration: 3.3 min
 - Total execution time: 0.50 hours
 
 **By Phase:**
@@ -28,7 +28,7 @@ Progress: [████░░░░░░] 40% (8/20 plans across all active pha
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 5/5 | 20 min | 4 min |
-| 01.5-business-foundation | 5/5 | 12 min | 2 min |
+| 01.5-business-foundation | 4/4 | 10 min | 2.5 min |
 
 **Recent Trend:**
 - Last 5 plans: 01-05 (3 min), 01.5-01 (2 min), 01.5-03 (3 min), 01.5-04 (3 min), 01.5-02 (4 min)
@@ -114,11 +114,14 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+- Add Stripe API keys to Supabase secrets (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PUBLISHABLE_KEY)
+- Configure Stripe webhook endpoint in Stripe Dashboard for 4 event types
+- Add Google Maps API key to Supabase secrets (GOOGLE_MAPS_API_KEY)
+- Enable Distance Matrix API in Google Cloud Console
 
 ### Blockers/Concerns
 
-None yet.
+None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
@@ -127,4 +130,4 @@ Stopped at: Completed 01.5-02-PLAN.md — Stripe Connect integration
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Foundation) complete (5/5 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Next step: Plan Phase 2 (Mobile Core) work*
