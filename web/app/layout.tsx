@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import CookieConsent from '@/components/CookieConsent';
+import SkipToContent from '@/components/SkipToContent';
 
 export const metadata: Metadata = {
-  title: 'SiteMedic - Automatic Compliance for Construction Site Medics',
-  description: 'Turn clinical work into automatic compliance documentation. RIDDOR-ready reports in 60 seconds.',
+  title: 'SiteMedic - UK Paramedic Staffing for Construction Sites',
+  description: 'Book qualified paramedics for your construction site. Our medics provide professional care with built-in compliance technology—RIDDOR reports generated automatically.',
 };
 
 export default function RootLayout({
@@ -13,8 +14,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en-GB">
       <body className="antialiased">
+        <SkipToContent />
         {children}
         <CookieConsent />
       </body>
