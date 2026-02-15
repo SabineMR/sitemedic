@@ -73,10 +73,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 01.5-01-PLAN.md -- Database schema for territories, bookings, clients, timesheets, payments
-- [ ] 01.5-02-PLAN.md -- Stripe Connect integration (platform + Express accounts)
-- [ ] 01.5-03-PLAN.md -- Google Maps Distance Matrix API with 7-day caching
-- [ ] 01.5-04-PLAN.md -- UK postcode database seeding and territory assignment
+- [ ] 01.5-01-PLAN.md -- Invoice sequencing, pricing calculation, and test data seeding (DB schema already exists)
+- [ ] 01.5-02-PLAN.md -- Stripe Connect integration (Express accounts, Payment Intents, webhooks)
+- [ ] 01.5-03-PLAN.md -- Auto-assignment algorithm and out-of-territory cost logic (Google Maps API already exists)
+- [ ] 01.5-04-PLAN.md -- UK postcode database seeding (~11,232 sectors with region mappings)
 
 ### Phase 2: Mobile Core
 **Goal**: Medics can capture treatments, worker profiles, near-misses, and daily safety checks 100% offline with gloves-on usability.
@@ -336,8 +336,8 @@ Phases execute in numeric order: 1 → 1.5 → 2 → 3 → 4 → 4.5 → 5 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/5 | Planning complete | - |
-| 1.5. Business Operations Foundation | 0/4 | Not started | - |
+| 1. Foundation | 5/5 | Complete | 2026-02-15 |
+| 1.5. Business Operations Foundation | 0/4 | Planning complete | - |
 | 2. Mobile Core | 0/TBD | Not started | - |
 | 3. Sync Engine | 0/TBD | Not started | - |
 | 4. Web Dashboard | 0/TBD | Not started | - |
@@ -355,3 +355,4 @@ Phases execute in numeric order: 1 → 1.5 → 2 → 3 → 4 → 4.5 → 5 → 5
 *Phase 1 revised: 2026-02-15 -- Updated criteria #4 (encryption deferred) and #8 (client-side audit logging added)*
 *Coverage: 83/83 v1 requirements mapped*
 *Business operations phases added: 2026-02-15 -- 5 decimal phases (1.5, 4.5, 5.5, 6.5, 7.5) with 24 plans total for multi-medic scaling (booking portal, payments, territory management)*
+*Phase 1.5 planned: 2026-02-15 -- 4 plans in 1 wave (all parallel, DB schema and Google Maps API already exist from prior session)*
