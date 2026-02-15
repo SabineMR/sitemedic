@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import Script from 'next/script';
 
 interface QuoteBuilderProps {
   onClose: () => void;
@@ -8,6 +9,11 @@ interface QuoteBuilderProps {
 
 export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
   const [step, setStep] = useState(1);
+  const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
+  const [addressAutoFilled, setAddressAutoFilled] = useState(false);
+  const addressInputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
   const [formData, setFormData] = useState({
     workerCount: '',
     projectType: '',
@@ -32,16 +38,79 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Calculate recommended paramedics based on HSE guidelines and project type
+  // Auto-fill recommended medic count when worker count or project type changes
+  useEffect(() => {
+    if (formData.workerCount && formData.projectType) {
+      const recommended = calculateRecommendedMedics();
+      updateField('medicCount', recommended.toString());
+    }
+  }, [formData.workerCount, formData.projectType]);
+
+  // Initialize Google Places Autocomplete when API loads
+  useEffect(() => {
+    if (!googleMapsLoaded || !addressInputRef.current) return;
+
+    // Create autocomplete instance with UK restriction
+    autocompleteRef.current = new google.maps.places.Autocomplete(addressInputRef.current, {
+      componentRestrictions: { country: 'gb' },
+      types: ['geocode'],
+      fields: ['formatted_address', 'geometry', 'address_components'],
+    });
+
+    // Listen for place selection
+    autocompleteRef.current.addListener('place_changed', () => {
+      const place = autocompleteRef.current?.getPlace();
+      if (!place || !place.geometry) return;
+
+      // Check if address is in England or Wales (exclude Scotland and Northern Ireland)
+      const addressComponents = place.address_components || [];
+      const country = addressComponents.find(c => c.types.includes('country'));
+      const adminArea = addressComponents.find(c => c.types.includes('administrative_area_level_1'));
+
+      // Filter out Scotland and Northern Ireland
+      const excludedAreas = ['Scotland', 'Northern Ireland'];
+      if (adminArea && excludedAreas.includes(adminArea.long_name)) {
+        alert('Please select an address in England or Wales only.');
+        updateField('siteAddress', '');
+        updateField('coordinates', '');
+        setAddressAutoFilled(false);
+        return;
+      }
+
+      // Extract formatted address
+      const address = place.formatted_address || '';
+
+      // Extract coordinates
+      const lat = place.geometry.location?.lat();
+      const lng = place.geometry.location?.lng();
+      const coordinates = lat && lng ? `${lat}, ${lng}` : '';
+
+      // Update form data and mark as auto-filled
+      updateField('siteAddress', address);
+      updateField('coordinates', coordinates);
+      setAddressAutoFilled(true);
+    });
+
+    return () => {
+      if (autocompleteRef.current) {
+        google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      }
+    };
+  }, [googleMapsLoaded]);
+
+  // Calculate recommended paramedics based on HSE guidance (configurable via env vars)
   const calculateRecommendedMedics = () => {
     const workers = parseInt(formData.workerCount) || 0;
     const isHighRisk = formData.projectType === 'high-risk';
 
     if (workers === 0) return 1;
 
-    // HSE guidelines: 1 paramedic per 50-100 workers
-    // High-risk sites need more coverage (1 per 50), standard sites (1 per 100)
-    const ratio = isHighRisk ? 50 : 100;
+    // HSE guidance (not legal requirement): configurable ratios
+    // Default: High-risk sites 1 per 50 workers, low-risk 1 per 100 workers
+    const highRiskRatio = parseInt(process.env.NEXT_PUBLIC_HIGH_RISK_RATIO || '50');
+    const lowRiskRatio = parseInt(process.env.NEXT_PUBLIC_LOW_RISK_RATIO || '100');
+
+    const ratio = isHighRisk ? highRiskRatio : lowRiskRatio;
     const recommended = Math.max(1, Math.ceil(workers / ratio));
 
     return recommended;
@@ -141,8 +210,16 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
   const prevStep = () => setStep(step - 1);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <>
+      {/* Load Google Maps Places API */}
+      <Script
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY}&libraries=places`}
+        onLoad={() => setGoogleMapsLoaded(true)}
+        strategy="lazyOnload"
+      />
+
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
           <div>
@@ -230,19 +307,19 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
                         </svg>
                         <div className="flex-1">
                           <p className="text-sm font-bold text-green-900">
-                            ✓ UK Regulation Recommendation: {calculateRecommendedMedics()} paramedic{calculateRecommendedMedics() > 1 ? 's' : ''}
+                            ✓ HSE Guidance Recommendation: {calculateRecommendedMedics()} paramedic{calculateRecommendedMedics() > 1 ? 's' : ''}
                           </p>
                           <p className="text-xs text-green-800 mt-1">
                             Based on {formData.workerCount} peak concurrent workers on a {formData.projectType.replace('-', ' ')} site
                           </p>
                           <p className="text-xs text-green-700 mt-2 font-medium">
                             {formData.projectType === 'high-risk'
-                              ? '📋 High-risk sites: 1 paramedic per 50 workers (HSE First Aid Regulations 1981, CDM 2015)'
-                              : '📋 Standard construction: 1 paramedic per 100 workers (HSE First Aid Regulations 1981)'}
+                              ? `📋 HSE Guidance: High-risk sites typically need 1 first aider per ${process.env.NEXT_PUBLIC_HIGH_RISK_RATIO || '50'} workers`
+                              : `📋 HSE Guidance: Low-risk sites typically need 1 first aider per ${process.env.NEXT_PUBLIC_LOW_RISK_RATIO || '100'} workers`}
                           </p>
                           <div className="mt-2 pt-2 border-t border-green-300">
                             <p className="text-xs text-green-800">
-                              <strong>UK Legal Requirement:</strong> Under the Health and Safety (First-Aid) Regulations 1981 and CDM Regulations 2015, employers must provide adequate first-aid provisions based on workplace hazards and number of employees.
+                              <strong>Note:</strong> UK law (Health and Safety First-Aid Regulations 1981, CDM 2015) requires "adequate first-aid provisions" based on risk assessment. The ratios above are HSE guidance, not legal mandates. We recommend paramedic coverage as best practice.
                             </p>
                           </div>
                         </div>
@@ -360,32 +437,43 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
                     </div>
                   </div>
 
-                  {/* Site address with coordinates fallback */}
+                  {/* Site address with Google Places autocomplete */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Site address *
+                      Site address * {googleMapsLoaded && <span className="text-green-600 text-xs">(autocomplete enabled)</span>}
                     </label>
                     <input
+                      ref={addressInputRef}
                       type="text"
                       value={formData.siteAddress}
-                      onChange={(e) => updateField('siteAddress', e.target.value)}
-                      placeholder="e.g., 123 High Street, London, SW1A 1AA"
+                      onChange={(e) => {
+                        updateField('siteAddress', e.target.value);
+                        // Reset auto-fill flag when user manually types
+                        if (addressAutoFilled) {
+                          setAddressAutoFilled(false);
+                          updateField('coordinates', '');
+                        }
+                      }}
+                      placeholder="Start typing address in England or Wales..."
                       className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
                         !isValidLocation() && (formData.siteAddress || formData.coordinates)
                           ? 'border-red-300 focus:border-red-500'
                           : 'border-slate-300 focus:border-blue-500'
                       }`}
+                      autoComplete="off"
                       required={!formData.coordinates}
                     />
                     <p className="text-xs text-slate-500 mt-1">
-                      Enter the full construction site address for accurate paramedic dispatch
+                      {googleMapsLoaded
+                        ? 'Start typing to see address suggestions (England & Wales only). Coordinates auto-fill on selection.'
+                        : 'Enter the full construction site address for accurate paramedic dispatch'}
                     </p>
                   </div>
 
-                  {/* Coordinates fallback */}
+                  {/* Coordinates (auto-filled from address or manual override) */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Or GPS coordinates {formData.siteAddress ? '(optional)' : '*'}
+                      GPS coordinates {addressAutoFilled ? '(auto-filled)' : formData.siteAddress ? '' : '*'}
                     </label>
                     <input
                       type="text"
@@ -396,8 +484,9 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
                         !isValidLocation() && formData.coordinates && !formData.siteAddress
                           ? 'border-red-300 focus:border-red-500'
                           : 'border-slate-300 focus:border-blue-500'
-                      }`}
+                      } ${addressAutoFilled ? 'bg-slate-50' : ''}`}
                       required={!formData.siteAddress}
+                      readOnly={addressAutoFilled}
                     />
                     {formData.coordinates && !formData.siteAddress && !isValidLocation() && (
                       <p className="text-xs text-red-600 mt-1">
@@ -405,7 +494,9 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
                       </p>
                     )}
                     <p className="text-xs text-slate-500 mt-1">
-                      Use coordinates if exact address is not yet available
+                      {addressAutoFilled
+                        ? '✓ Auto-filled from selected address'
+                        : 'Enter coordinates manually if exact address is not available'}
                     </p>
                   </div>
 
@@ -742,5 +833,6 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
         </div>
       </div>
     </div>
+    </>
   );
 }
