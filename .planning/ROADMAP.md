@@ -39,10 +39,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   7. Network connectivity detection triggers sync status updates
   8. Audit logging captures all data access attempts (who viewed which worker record)
 
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] TBD during planning
+- [ ] 01-01-PLAN.md -- Expo project scaffold and Supabase client initialization
+- [ ] 01-02-PLAN.md -- Supabase backend schema, RLS, audit logging, GDPR tables
+- [ ] 01-03-PLAN.md -- WatermelonDB local database and encryption key management
+- [ ] 01-04-PLAN.md -- Authentication system with offline persistence and biometrics
+- [ ] 01-05-PLAN.md -- Sync infrastructure, network monitoring, and status UI
 
 ### Phase 2: Mobile Core
 **Goal**: Medics can capture treatments, worker profiles, near-misses, and daily safety checks 100% offline with gloves-on usability.
@@ -187,7 +191,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 0/5 | Planning complete | - |
 | 2. Mobile Core | 0/TBD | Not started | - |
 | 3. Sync Engine | 0/TBD | Not started | - |
 | 4. Web Dashboard | 0/TBD | Not started | - |
@@ -197,4 +201,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 ---
 *Roadmap created: 2026-02-15*
+*Phase 1 planned: 2026-02-15 — 5 plans in 3 waves*
 *Coverage: 83/83 v1 requirements mapped*
