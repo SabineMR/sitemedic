@@ -13,12 +13,17 @@ SiteMedic transforms medic clinical work into automatic compliance documentation
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Foundation** - Backend API, auth, encrypted offline storage, sync infrastructure
+- [ ] **Phase 1.5: Business Operations Foundation** (INSERTED) - Database schema for bookings, territories, clients, payments; Stripe Connect; Google Maps API; UK postcodes
 - [ ] **Phase 2: Mobile Core** - Treatment logger, worker profiles, near-miss, daily checks (local-only)
 - [ ] **Phase 3: Sync Engine** - Mobile-to-backend data flow with photo upload
 - [ ] **Phase 4: Web Dashboard** - Manager reporting UI with compliance scoring
+- [ ] **Phase 4.5: Marketing Website & Booking Portal** (INSERTED) - Public marketing site, client self-service booking portal with Stripe payments, auto-matching
 - [ ] **Phase 5: PDF Generation** - Weekly safety reports for HSE audits
+- [ ] **Phase 5.5: Admin Operations Dashboards** (INSERTED) - Admin dashboard for bookings, medics, territories, revenue, timesheets, client management
 - [ ] **Phase 6: RIDDOR Auto-Flagging** - Smart compliance detection with deadline tracking
+- [ ] **Phase 6.5: Payment Processing & Payouts** (INSERTED) - Client payment processing, weekly medic payouts via UK Faster Payments, IR35 compliance, invoice generation
 - [ ] **Phase 7: Certification Tracking** - Expiry monitoring with progressive alerts
+- [ ] **Phase 7.5: Territory Management & Auto-Assignment** (INSERTED) - UK postcode territory system, auto-assignment algorithm, coverage gap detection, hiring triggers
 
 ## Phase Details
 
@@ -47,6 +52,31 @@ Plans:
 - [ ] 01-03-PLAN.md -- WatermelonDB local database and encryption key management
 - [ ] 01-04-PLAN.md -- Authentication system with offline persistence and biometrics
 - [ ] 01-05-PLAN.md -- Sync infrastructure, network monitoring, and status UI
+
+### Phase 1.5: Business Operations Foundation (INSERTED)
+**Goal**: Database schema, payment infrastructure, and territory system operational to support booking portal, medic payouts, and UK-wide coverage management.
+
+**Depends on**: Phase 1
+
+**Requirements**: Booking system (online portal, auto-matching, recurring bookings), Payment processing (Stripe Connect, 40% markup, Net 30 invoicing), Territory management (UK postcode sectors, primary/secondary medics, coverage gaps), Payout automation (weekly Friday payouts via UK Faster Payments, IR35 compliance)
+
+**Success Criteria** (what must be TRUE):
+  1. Database tables exist for territories, bookings, clients, medics, timesheets, payments, invoices with RLS policies
+  2. Stripe Connect account created for platform in test mode
+  3. Can create Stripe Express account for test medic (onboarding flow works)
+  4. Google Maps Distance Matrix API returns travel times for UK postcodes
+  5. UK postcode sector database seeded (~11,232 sectors) with primary assignment capability
+  6. Can create test booking with pricing calculation (base + urgency + travel + VAT)
+  7. Auto-assignment algorithm ranks medics by distance, utilization, qualifications
+  8. Out-of-territory cost logic calculates travel bonus vs room/board vs deny
+
+**Plans**: 4 plans
+
+Plans:
+- [ ] 01.5-01-PLAN.md -- Database schema for territories, bookings, clients, timesheets, payments
+- [ ] 01.5-02-PLAN.md -- Stripe Connect integration (platform + Express accounts)
+- [ ] 01.5-03-PLAN.md -- Google Maps Distance Matrix API with 7-day caching
+- [ ] 01.5-04-PLAN.md -- UK postcode database seeding and territory assignment
 
 ### Phase 2: Mobile Core
 **Goal**: Medics can capture treatments, worker profiles, near-misses, and daily safety checks 100% offline with gloves-on usability.
@@ -118,6 +148,33 @@ Plans:
 
 Plans:
 - [ ] TBD during planning
+
+### Phase 4.5: Marketing Website & Booking Portal (INSERTED)
+**Goal**: Public-facing marketing website and client self-service booking portal operational with Stripe payment processing and auto-matching to medics.
+
+**Depends on**: Phase 1.5, Phase 4
+
+**Requirements**: Marketing website (Next.js SSG, <2s load, homepage/pricing/trust), Booking portal (Next.js SSR, calendar picker, site location, auto-matching, payment), Stripe integration (prepay for new clients, Net 30 for established), Client registration (company details, payment setup), Real-time availability checking, Booking confirmation (calendar invite, email notification)
+
+**Success Criteria** (what must be TRUE):
+  1. Marketing website loads in <2 seconds (Lighthouse score >90)
+  2. Client can complete booking end-to-end in <5 minutes (calendar → location → payment → confirmation)
+  3. Stripe payment processing works in test mode (card charges successful)
+  4. Auto-matching presents ranked medic candidates with transparency (distance, availability, rating)
+  5. Pricing breakdown shows base + urgency premium + travel surcharge + VAT (20%)
+  6. Medic receives booking notification email when assigned
+  7. Client receives booking confirmation with calendar invite (.ics file)
+  8. Established clients see Net 30 payment option (prepay bypassed)
+  9. New clients must prepay via card (Stripe Payment Intent with 3D Secure)
+  10. Recurring bookings can be created (same medic, weekly schedule)
+
+**Plans**: 4 plans
+
+Plans:
+- [ ] 04.5-01-PLAN.md -- Marketing website with Next.js SSG (homepage, pricing, trust signals)
+- [ ] 04.5-02-PLAN.md -- Booking portal calendar and site location input
+- [ ] 04.5-03-PLAN.md -- Stripe payment integration (prepay vs Net 30 logic)
+- [ ] 04.5-04-PLAN.md -- Auto-matching UI and booking confirmation flow
 
 ### Phase 5: PDF Generation
 **Goal**: Weekly safety reports auto-generate every Friday and on-demand with professional formatting ready for HSE audits, principal contractors, and insurers.
