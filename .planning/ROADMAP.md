@@ -197,6 +197,35 @@ Plans:
 Plans:
 - [ ] TBD during planning
 
+### Phase 5.5: Admin Operations Dashboards (INSERTED)
+**Goal**: Admin dashboard operational with booking management, medic roster, territory coverage map, revenue tracking, timesheet approval, and client management capabilities.
+
+**Depends on**: Phase 1.5, Phase 4, Phase 5
+
+**Requirements**: Admin dashboard (extends existing Phase 4 web dashboard), Booking management (approve/reject/reassign/cancel), Medic management (roster, availability, territory assignments, utilization %, performance), Territory overview (coverage map, gap detection, hiring alerts), Revenue dashboard (per territory/medic, platform fees, cash flow projection), Timesheet approval (batch review, Friday payout preparation), Client management (accounts, payment status, booking history, Net 30 upgrades)
+
+**Success Criteria** (what must be TRUE):
+  1. Admin can view all bookings with filters (date range, status, medic, client)
+  2. Admin can approve/reject bookings requiring manual review (emergency, out-of-territory, special requirements)
+  3. Admin can reassign medic to different booking with reason
+  4. Admin can view medic roster with availability calendar and territory assignments
+  5. Admin can batch-approve 20 timesheets in <5 minutes (Friday payout workflow)
+  6. Territory coverage map displays color-coded utilization (green <50%, yellow 50-80%, red >80%)
+  7. Coverage gap alerts trigger when rejection rate >10% in territory
+  8. Revenue dashboard shows platform fees earned per territory and per medic
+  9. Cash flow projection warns when gap >30 days (pay medics before collecting from clients)
+  10. Admin can upgrade client to Net 30 payment terms (from prepay)
+
+**Plans**: 6 plans
+
+Plans:
+- [ ] 05.5-01-PLAN.md -- Bookings management tab with approval workflow
+- [ ] 05.5-02-PLAN.md -- Medic management tab with roster and utilization
+- [ ] 05.5-03-PLAN.md -- Territory coverage map with visual representation
+- [ ] 05.5-04-PLAN.md -- Revenue dashboard with cash flow projections
+- [ ] 05.5-05-PLAN.md -- Timesheet approval workflow for batch Friday payouts
+- [ ] 05.5-06-PLAN.md -- Client management with payment terms and history
+
 ### Phase 6: RIDDOR Auto-Flagging
 **Goal**: App automatically detects RIDDOR-reportable incidents with deadline countdown, medic override capability, and pre-filled HSE F2508 form generation.
 
@@ -218,6 +247,36 @@ Plans:
 
 Plans:
 - [ ] TBD during planning
+
+### Phase 6.5: Payment Processing & Payouts (INSERTED)
+**Goal**: Full payment processing operational with client charging (card + Net 30), automated weekly medic payouts via UK Faster Payments, IR35 compliance, and out-of-territory cost management.
+
+**Depends on**: Phase 1.5, Phase 5.5
+
+**Requirements**: Stripe payment processing (card, 3D Secure, Payment Intents), Weekly medic payouts (automated Friday job via UK Faster Payments), Platform fee calculation (40% markup transparent to clients), Invoice generation (PDF with VAT 20%, Net 30 terms), Late payment handling (auto-reminders at 7/14/21 days, statutory fees), IR35 compliance (self-employed contractors, Stripe Express accounts, UTR collection), Timesheet workflow (medic logs → manager approves → admin batch-approves → Friday payout), Out-of-territory cost management (travel bonus vs room/board vs deny booking)
+
+**Success Criteria** (what must be TRUE):
+  1. Client payment processing works (card charge via Stripe Payment Intent with 3D Secure)
+  2. Friday payout job runs automatically (zero failures, every Friday at 9am)
+  3. Medics receive funds within 2 business days via UK Faster Payments
+  4. Platform fee calculation correct (medic £30/hr → client £42/hr → platform £12/hr)
+  5. Invoice PDF generated with VAT (20%) and Net 30 terms for established clients
+  6. Late payment auto-reminders send at 7, 14, 21 days with statutory late fees (£40-100)
+  7. Medic onboarding captures IR35 status (self-employed vs umbrella company)
+  8. Stripe Express account onboarding link works (medic completes bank details)
+  9. Payslip PDF generated (gross, deductions, net) for medic records
+  10. Out-of-territory bookings calculate travel bonus (£2/mile beyond 30 miles) vs room/board cost
+  11. Admin sees cost breakdown and can approve/deny out-of-territory booking
+  12. System denies booking if out-of-territory cost >50% of shift cost (admin can override)
+
+**Plans**: 5 plans
+
+Plans:
+- [ ] 06.5-01-PLAN.md -- Client payment processing with Stripe (card, 3D Secure)
+- [ ] 06.5-02-PLAN.md -- Friday payout automation with UK Faster Payments
+- [ ] 06.5-03-PLAN.md -- Invoice generation with VAT and late payment handling
+- [ ] 06.5-04-PLAN.md -- IR35 compliance and medic onboarding flow
+- [ ] 06.5-05-PLAN.md -- Out-of-territory cost management (travel bonus vs room/board)
 
 ### Phase 7: Certification Tracking
 **Goal**: System tracks UK certifications with progressive expiry alerts, prevents expired workers from logging incidents, and surfaces compliance status to managers.
@@ -241,23 +300,58 @@ Plans:
 Plans:
 - [ ] TBD during planning
 
+### Phase 7.5: Territory Management & Auto-Assignment (INSERTED)
+**Goal**: UK-wide territory system operational with postcode-based coverage, intelligent auto-assignment algorithm, coverage gap detection, and hiring recommendations to scale medic roster.
+
+**Depends on**: Phase 1.5, Phase 4.5, Phase 5.5
+
+**Requirements**: Territory assignment (UK postcode sectors as primary unit, primary + secondary medic per sector), Auto-assignment algorithm (rank by distance, utilization, qualifications, availability, rating), Out-of-territory coverage logic (travel bonus vs room/board vs deny with cost comparison), Coverage gap detection (alert when rejection rate >10%), Hiring triggers (utilization >80% for 3+ weeks OR fulfillment rate <90%), Visual coverage map (choropleth with green/yellow/red utilization levels)
+
+**Success Criteria** (what must be TRUE):
+  1. UK postcode sector database fully seeded (~11,232 sectors) with assignment capability
+  2. Can assign primary + secondary medic to postcode sector (drag-drop in admin UI)
+  3. Auto-assignment algorithm ranks medics by: distance (via Google Maps) → utilization (<70% preferred) → qualifications (required certs) → availability (calendar check) → rating (>4.5 stars)
+  4. Out-of-territory logic calculates travel time from secondary medic's home to site
+  5. System compares travel bonus (£2/mile beyond 30 miles) vs room/board cost (overnight stay)
+  6. Admin sees cost breakdown and system recommends deny if cost >50% shift value
+  7. Coverage gap alerts trigger when booking rejection rate >10% in territory for 3+ weeks
+  8. Hiring recommendations display: "Hire medic in North London (N1-N22 sectors, 85% utilization)"
+  9. Visual coverage map updates in real-time (5-minute refresh) with color-coded utilization
+  10. Admin can click postcode sector to see assigned medic, stats, recent bookings
+  11. Auto-assignment successfully matches 95% of bookings (tested with 100 simulated bookings)
+
+**Plans**: 5 plans
+
+Plans:
+- [ ] 07.5-01-PLAN.md -- Territory assignment system with UK postcode sectors
+- [ ] 07.5-02-PLAN.md -- Auto-assignment algorithm with ranking logic
+- [ ] 07.5-03-PLAN.md -- Out-of-territory coverage logic (travel bonus vs room/board vs deny)
+- [ ] 07.5-04-PLAN.md -- Coverage gap detection and hiring trigger alerts
+- [ ] 07.5-05-PLAN.md -- Visual coverage map with admin drag-drop reassignment
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
+Phases execute in numeric order: 1 → 1.5 → 2 → 3 → 4 → 4.5 → 5 → 5.5 → 6 → 6.5 → 7 → 7.5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 0/5 | Planning complete | - |
+| 1.5. Business Operations Foundation | 0/4 | Not started | - |
 | 2. Mobile Core | 0/TBD | Not started | - |
 | 3. Sync Engine | 0/TBD | Not started | - |
 | 4. Web Dashboard | 0/TBD | Not started | - |
+| 4.5. Marketing Website & Booking Portal | 0/4 | Not started | - |
 | 5. PDF Generation | 0/TBD | Not started | - |
+| 5.5. Admin Operations Dashboards | 0/6 | Not started | - |
 | 6. RIDDOR Auto-Flagging | 0/TBD | Not started | - |
+| 6.5. Payment Processing & Payouts | 0/5 | Not started | - |
 | 7. Certification Tracking | 0/TBD | Not started | - |
+| 7.5. Territory Management & Auto-Assignment | 0/5 | Not started | - |
 
 ---
 *Roadmap created: 2026-02-15*
 *Phase 1 planned: 2026-02-15 -- 5 plans in 3 waves*
 *Phase 1 revised: 2026-02-15 -- Updated criteria #4 (encryption deferred) and #8 (client-side audit logging added)*
 *Coverage: 83/83 v1 requirements mapped*
+*Business operations phases added: 2026-02-15 -- 5 decimal phases (1.5, 4.5, 5.5, 6.5, 7.5) with 24 plans total for multi-medic scaling (booking portal, payments, territory management)*
