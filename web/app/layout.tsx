@@ -4,8 +4,8 @@ import CookieConsent from '@/components/CookieConsent';
 import SkipToContent from '@/components/SkipToContent';
 
 export const metadata: Metadata = {
-  title: 'SiteMedic - UK Paramedic Staffing for Construction Sites',
-  description: 'Book qualified paramedics for your construction site. Our medics provide professional care with built-in compliance technology—RIDDOR reports generated automatically.',
+  title: 'Guardian Medics - Professional Paramedics for UK Construction Sites',
+  description: 'Book qualified paramedics for your construction site. Guardian Medics provides expert care with built-in compliance technology powered by SiteMedic—RIDDOR reports generated automatically.',
 };
 
 export default function RootLayout({

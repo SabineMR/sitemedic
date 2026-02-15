@@ -18,6 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 3: Sync Engine** - Mobile-to-backend data flow with photo upload
 - [ ] **Phase 4: Web Dashboard** - Manager reporting UI with compliance scoring
 - [ ] **Phase 4.5: Marketing Website & Booking Portal** (INSERTED) - Public marketing site, client self-service booking portal with Stripe payments, auto-matching
+- [ ] **Phase 4.6: Customer Onboarding & Contract Management** (INSERTED) - Service agreement generation, document portal, flexible payment terms, digital signatures
 - [ ] **Phase 5: PDF Generation** - Weekly safety reports for HSE audits
 - [ ] **Phase 5.5: Admin Operations Dashboards** (INSERTED) - Admin dashboard for bookings, medics, territories, revenue, timesheets, client management
 - [ ] **Phase 6: RIDDOR Auto-Flagging** - Smart compliance detection with deadline tracking
@@ -176,6 +177,36 @@ Plans:
 - [ ] 04.5-03-PLAN.md -- Stripe payment integration (prepay vs Net 30 logic)
 - [ ] 04.5-04-PLAN.md -- Auto-matching UI and booking confirmation flow
 
+### Phase 4.6: Customer Onboarding & Contract Management (INSERTED)
+**Goal**: Automated service agreement generation with business info auto-filled, document portal for phone sales, flexible payment terms (half upfront, remainder after completion), and digital signature collection.
+
+**Depends on**: Phase 1.5, Phase 4.5
+
+**Requirements**: Service agreement template generation (auto-fill client, site, dates, pricing, terms), Document portal (send agreements during phone calls, track status), Digital signature collection (DocuSign/HelloSign integration or native signing), Flexible payment schedules (full prepay, split payment, Net 30, custom terms), Payment milestone tracking (upfront payment, completion payment, 30-day terms), Document versioning and audit trail, Email notifications (document sent, viewed, signed), Admin document management (templates, sent documents, signature status)
+
+**Success Criteria** (what must be TRUE):
+  1. Service agreement auto-generates with client info (company name, contact, site address, dates) pre-filled from booking
+  2. Pricing breakdown in agreement matches booking (base rate, hours, urgency premium, travel, VAT, total)
+  3. Admin/sales can select payment terms per booking: Full prepay, Half upfront + half on completion, Half upfront + half Net 30, Full Net 30, Custom terms
+  4. Payment terms in agreement update based on selection (e.g., "50% (£500) due upon signing, 50% (£500) due 30 days after service completion")
+  5. Admin can send service agreement via portal during phone call with client (enter email, click send, get shareable link)
+  6. Client receives email with link to view and sign agreement
+  7. Client can view agreement in browser and sign digitally (signature pad or typed name)
+  8. Agreement shows signature status in admin dashboard (Sent, Viewed, Signed, Completed)
+  9. Signed agreement PDF stored in Supabase Storage with audit trail (who signed, when, IP address)
+  10. Payment schedule enforces based on agreement (e.g., 50% charge on signature, 50% charge after booking completion)
+  11. Admin can manage agreement templates (edit clauses, add custom terms, version control)
+  12. Booking cannot be confirmed until agreement is signed (configurable per client)
+
+**Plans**: 5 plans
+
+Plans:
+- [ ] 04.6-01-PLAN.md -- Service agreement template engine with auto-fill logic
+- [ ] 04.6-02-PLAN.md -- Document portal for sending and tracking agreements
+- [ ] 04.6-03-PLAN.md -- Digital signature capture (native signing with signature pad)
+- [ ] 04.6-04-PLAN.md -- Flexible payment terms and payment schedule engine
+- [ ] 04.6-05-PLAN.md -- Admin document management and template versioning
+
 ### Phase 5: PDF Generation
 **Goal**: Weekly safety reports auto-generate every Friday and on-demand with professional formatting ready for HSE audits, principal contractors, and insurers.
 
@@ -332,7 +363,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 1.5 → 2 → 3 → 4 → 4.5 → 5 → 5.5 → 6 → 6.5 → 7 → 7.5
+Phases execute in numeric order: 1 → 1.5 → 2 → 3 → 4 → 4.5 → 4.6 → 5 → 5.5 → 6 → 6.5 → 7 → 7.5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -342,6 +373,7 @@ Phases execute in numeric order: 1 → 1.5 → 2 → 3 → 4 → 4.5 → 5 → 5
 | 3. Sync Engine | 0/TBD | Not started | - |
 | 4. Web Dashboard | 0/TBD | Not started | - |
 | 4.5. Marketing Website & Booking Portal | 0/4 | Not started | - |
+| 4.6. Customer Onboarding & Contract Management | 0/5 | Not started | - |
 | 5. PDF Generation | 0/TBD | Not started | - |
 | 5.5. Admin Operations Dashboards | 0/6 | Not started | - |
 | 6. RIDDOR Auto-Flagging | 0/TBD | Not started | - |
@@ -356,3 +388,4 @@ Phases execute in numeric order: 1 → 1.5 → 2 → 3 → 4 → 4.5 → 5 → 5
 *Coverage: 83/83 v1 requirements mapped*
 *Business operations phases added: 2026-02-15 -- 5 decimal phases (1.5, 4.5, 5.5, 6.5, 7.5) with 24 plans total for multi-medic scaling (booking portal, payments, territory management)*
 *Phase 1.5 planned: 2026-02-15 -- 4 plans in 1 wave (all parallel, DB schema and Google Maps API already exist from prior session)*
+*Phase 4.6 added: 2026-02-15 -- Customer onboarding & contract management with service agreement generation, document portal for phone sales, flexible payment terms (half upfront + remainder after completion/Net 30), digital signatures, and payment schedule enforcement (5 plans)*

@@ -302,6 +302,90 @@ Automated PDF generation and RIDDOR auto-flagging for HSE compliance.
   - Proper labeling of form controls
   - Clear button labels for screen readers
 
+#### **Refund & Returns Policy** (`/refund-policy`) ✅ **NEW**
+- **Consumer Rights Act 2015 Compliant**
+  - 14-day cooling off period for online purchases
+  - Full refund rights for subscription services
+  - Medic booking cancellation policy:
+    - 7+ days before: 100% refund, no cancellation charges
+    - 3-6 days before: 50% refund, 50% cancellation fee
+    - <72 hours: No refund (medic reserved)
+  - Service quality issue resolution process
+  - Refund request procedures (email, phone, online dashboard)
+  - Refund processing timelines:
+    - Card payments: 5-7 business days
+    - PayPal: 3-5 business days
+    - Bank transfer: 3-5 business days
+  - Non-refundable items clearly listed
+  - Rescheduling option as alternative to cancellation
+  - Statutory rights preserved (Consumer Rights Act, Consumer Contracts Regulations)
+
+#### **Complaints Procedure** (`/complaints`) ✅ **NEW**
+- **Comprehensive Complaints Handling Process**
+  - Multiple contact methods (email, phone, live chat, post)
+  - Three-stage process:
+    1. Acknowledgement within 24 hours with complaint reference number
+    2. Investigation within 5-10 business days
+    3. Resolution with clear explanation and remedies
+  - Possible outcomes:
+    - Financial remedy (refund, credit, discount, compensation)
+    - Service remedy (re-performance, upgrade, priority support)
+    - Corrective action (staff training, process improvements)
+    - Apology and explanation
+  - Internal escalation to senior management
+  - External escalation options:
+    - Alternative Dispute Resolution (UK Dispute Resolution service)
+    - Citizens Advice Consumer Service
+    - Small Claims Court
+  - Common complaint categories (service quality, booking/admin, technical, communication)
+  - Commitment to learning from complaints (quarterly reviews, process improvements)
+
+#### **Acceptable Use Policy** (`/acceptable-use`) ✅ **NEW**
+- **Comprehensive AUP Defining Prohibited Activities**
+  - Prohibited categories:
+    1. Illegal or fraudulent activities (fraud, false RIDDOR reports, insurance fraud)
+    2. Data misuse and privacy violations (unauthorized access, GDPR violations, data selling)
+    3. System abuse and security violations (hacking, malware, DoS attacks)
+    4. Content and communication abuse (false information, harassment, spam)
+    5. Commercial misuse (reselling, competing, building similar products)
+    6. Professional misconduct (practice outside scope, impaired treatment, falsified records)
+  - Reporting mechanisms for violations (security, abuse, DPO contacts)
+  - Consequences of violations:
+    - Warning (first-time/minor violations)
+    - Account suspension (repeated/moderate violations, 7-30 days)
+    - Account termination (serious violations, permanent ban, no refund)
+    - Legal action (criminal reporting to police, HSE, ICO)
+    - Professional reporting (GMC, NMC, HCPC)
+  - Monitoring and enforcement policy
+    - Automated detection systems
+    - Human review for flagged accounts
+    - Privacy-compliant monitoring per UK GDPR
+  - Clear guidance for users (contact legal@sitemedic.co.uk if unsure)
+
+#### **Accessibility Statement** (`/accessibility-statement`) ✅ **NEW**
+- **WCAG 2.1 Level AA Compliance Statement**
+  - Commitment to digital accessibility for people with disabilities
+  - Accessibility features documented:
+    - Keyboard navigation (skip links, no keyboard traps, visible focus)
+    - Screen reader support (semantic HTML, ARIA labels, alt text)
+    - Visual accessibility (high contrast, resizable text, clear fonts)
+    - Mobile accessibility (responsive design, 44x44px touch targets)
+  - Compatible assistive technologies listed:
+    - Screen readers: JAWS, NVDA, VoiceOver, TalkBack
+    - Screen magnification: ZoomText, Windows Magnifier, macOS Zoom
+    - Speech recognition: Dragon NaturallySpeaking, Voice Control
+  - Known limitations documented (third-party content, PDF accessibility)
+  - Feedback and contact information for accessibility issues
+  - Alternative access methods:
+    - Phone support for assistance
+    - Email support for accessible formats
+    - Alternative document formats (large print, audio, Braille, accessible PDF)
+  - Technical specifications (HTML5, WAI-ARIA, CSS3, JavaScript ES6+)
+  - Assessment methodology (self-evaluation, automated testing, manual testing, user testing)
+  - Latest assessment: 15 February 2026, WCAG 2.1 AA compliant
+  - Escalation to Equality and Human Rights Commission (EHRC) if unsatisfied
+  - Review schedule: Every 6 months (next review: August 2026)
+
 #### **Footer Enhancements** ✅
 - **Legally Required Company Information** (Electronic Commerce Regulations 2002)
   - Company name: SiteMedic Ltd
@@ -312,10 +396,14 @@ Automated PDF generation and RIDDOR auto-flagging for HSE compliance.
   - Contact email: info@sitemedic.co.uk
   - Contact phone: [Placeholder for actual number]
   - ICO registration number: [Placeholder]
-- **Legal & Compliance Links**
+- **Legal & Compliance Links** (Updated with new pages)
   - Privacy Policy (`/privacy-policy`)
   - Cookie Policy (`/cookie-policy`)
   - Terms & Conditions (`/terms-and-conditions`)
+  - Refund Policy (`/refund-policy`) **NEW**
+  - Complaints (`/complaints`) **NEW**
+  - Acceptable Use (`/acceptable-use`) **NEW**
+  - Accessibility Statement (`/accessibility-statement`) **NEW**
   - ICO Registration (external link to ico.org.uk)
 - **Compliance Badges**
   - UK GDPR Compliant ✓
@@ -328,7 +416,7 @@ Automated PDF generation and RIDDOR auto-flagging for HSE compliance.
 - **Professional 4-Column Layout**
   - Column 1: Company info and legal details
   - Column 2: Product links
-  - Column 3: Legal documentation links
+  - Column 3: Legal documentation links (expanded to 7 pages)
   - Column 4: Compliance badges
   - Bottom section: Full registered office address, contact details, technical compliance info
 
@@ -366,6 +454,7 @@ Automated PDF generation and RIDDOR auto-flagging for HSE compliance.
 - ✅ RIDDOR 2013 (data retention and reporting responsibilities)
 
 #### **Outstanding Items**
+**⚠️ Code Placeholders to Update:**
 - [ ] Insert actual company registration number (placeholder: [Insert Registration Number])
 - [ ] Insert actual VAT number (placeholder: [Insert VAT Number])
 - [ ] Insert actual registered office address (placeholder: [Insert Registered Office Address])
@@ -375,6 +464,13 @@ Automated PDF generation and RIDDOR auto-flagging for HSE compliance.
 - [ ] Implement marketing pixel initialization (Facebook Pixel) when consent granted
 - [ ] Add Google Analytics tracking ID to environment variables
 - [ ] Add Facebook Pixel ID to environment variables
+
+**📋 External Compliance Tasks:**
+See **`docs/TODO.md`** for comprehensive list of external compliance tasks including:
+- 🔴 Critical: Company registration, ICO registration, professional indemnity insurance
+- 🟡 Important: VAT registration (when threshold reached), DPO appointment, DPIA
+- 🟢 Nice to Have: ISO 27001 certification, Cyber Essentials, ADR membership
+- Full checklist with timelines, costs, and next actions for each task
 
 ---
 
