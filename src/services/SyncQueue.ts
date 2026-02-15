@@ -203,7 +203,7 @@ export class SyncQueue {
         const { error } = await supabase
           .from(item.tableName as any)
           .update(payload as any)
-          .eq('id', payload.id)
+          .eq('id', payload.id as any)
 
         if (error) throw error
         break
