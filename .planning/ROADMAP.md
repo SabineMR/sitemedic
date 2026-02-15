@@ -12,7 +12,7 @@ SiteMedic transforms medic clinical work into automatic compliance documentation
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Backend API, auth, encrypted offline storage, sync infrastructure
+- [x] **Phase 1: Foundation** - Backend API, auth, encrypted offline storage, sync infrastructure
 - [ ] **Phase 1.5: Business Operations Foundation** (INSERTED) - Database schema for bookings, territories, clients, payments; Stripe Connect; Google Maps API; UK postcodes
 - [ ] **Phase 2: Mobile Core** - Treatment logger, worker profiles, near-miss, daily checks (local-only)
 - [ ] **Phase 3: Sync Engine** - Mobile-to-backend data flow with photo upload
@@ -47,11 +47,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 5 plans
 
 Plans:
-- [ ] 01-01-PLAN.md -- Expo project scaffold and Supabase client initialization
-- [ ] 01-02-PLAN.md -- Supabase backend schema, RLS, audit logging, GDPR tables
-- [ ] 01-03-PLAN.md -- WatermelonDB local database and encryption key management
-- [ ] 01-04-PLAN.md -- Authentication system with offline persistence and biometrics
-- [ ] 01-05-PLAN.md -- Sync infrastructure, network monitoring, and status UI
+- [x] 01-01-PLAN.md -- Expo project scaffold and Supabase client initialization
+- [x] 01-02-PLAN.md -- Supabase backend schema, RLS, audit logging, GDPR tables
+- [x] 01-03-PLAN.md -- WatermelonDB local database and encryption key management
+- [x] 01-04-PLAN.md -- Authentication system with offline persistence and biometrics
+- [x] 01-05-PLAN.md -- Sync infrastructure, network monitoring, and status UI
 
 ### Phase 1.5: Business Operations Foundation (INSERTED)
 **Goal**: Database schema, payment infrastructure, and territory system operational to support booking portal, medic payouts, and UK-wide coverage management.
