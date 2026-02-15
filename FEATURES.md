@@ -28,7 +28,10 @@ Offline-first iOS app for medics to capture treatments, near-misses, and daily s
 ### 4. Site Manager Dashboard (Phase 4)
 Web dashboard for construction site managers to view compliance reports and treatment logs.
 
-### 5. Reporting & Compliance (Phase 5-6)
+### 5. Customer Onboarding & Contracts (Phase 4.6)
+**NEW** - Service agreement generation with auto-filled business info, document portal for phone sales, flexible payment terms (half upfront + remainder after completion/Net 30), digital signatures, and payment schedule enforcement.
+
+### 6. Reporting & Compliance (Phase 5-6)
 Automated PDF generation and RIDDOR auto-flagging for HSE compliance.
 
 ---
@@ -76,28 +79,91 @@ Automated PDF generation and RIDDOR auto-flagging for HSE compliance.
   - Legal links (Terms, GDPR, Data Processing)
 
 #### **Pricing Page** (`/pricing`)
-- **Three-Tier Pricing Model**
-  - **Basic Medic**: £30/hour (traditional service, no tech)
-  - **SiteMedic Pro**: £42/hour (recommended - medic + full platform)
-  - **Enterprise**: Custom pricing (multi-site, custom integrations)
+- **Modern Design with Enhanced Visual Hierarchy**
+  - Updated hero section with larger typography (text-6xl)
+  - Better spacing and padding throughout (pt-20, pb-20)
+  - Professional shadow effects on cards (shadow-lg, hover:shadow-xl)
+  - Gradient backgrounds for visual interest (from-slate-50 to-blue-50)
+  - Improved mobile responsiveness (sm, md, lg breakpoints)
 
-- **Value Calculator**
-  - Traditional cost breakdown (£240 medic + £40 admin + RIDDOR risk = £280+)
-  - SiteMedic cost (£336 for 8hr shift, zero admin, zero risk)
-  - ROI comparison showing time savings and compliance benefits
+- **Main Pricing Card (Guardian Medics Pro)**
+  - Daily rate: £350/day (+VAT)
+  - Enhanced card design with rounded-xl borders
+  - Larger pricing display (text-6xl for price)
+  - Feature list with green checkmarks
+  - Hover effects for better interactivity
+  - Includes: Digital treatment logging, RIDDOR auto-flagging, weekly safety reports, offline capability
+
+- **Volume Discount Cards**
+  - Gradient background design (from-slate-50 to-blue-50)
+  - Three tiers:
+    - 1 week (5 days): £1,750 total (£350/day)
+    - 1 month (20 days): £6,800 total (£340/day, 3% off)
+    - Enterprise: Custom pricing with highlighted card design
+  - Hover states with shadow effects
+  - Better visual hierarchy with bold typography
 
 - **FAQ Section**
-  - What's included in £42/hour rate
-  - Minimum booking requirements
-  - Free trial policy
-  - Dashboard pricing (included, no separate fees)
-  - Offline functionality guarantee
+  - Enhanced with rounded-xl borders
+  - Larger headings (text-lg) for better readability
+  - Hover effects (border-blue-200, shadow-sm)
+  - Better spacing between questions
+  - Professional typography with leading-relaxed
 
-- **Pricing Transparency**
-  - No hidden fees messaging
-  - All features included in hourly rate
-  - No per-user dashboard charges
-  - Flat-rate pricing model
+- **CTA Section**
+  - Gradient background (from-slate-50 to-blue-50)
+  - Larger typography (text-4xl for heading)
+  - Enhanced button with shadow effects
+  - Better mobile responsiveness
+
+- **Interactive Quote Builder Modal with UK Construction Industry Intelligence**
+  - **Step 1: Construction Site Assessment**
+    - **Worker count input** for calculating paramedic requirements
+      - Clearly asks for "Maximum workers on site at one time" (peak concurrent workers)
+      - Not total headcount across all shifts/rotations
+      - Includes example: "50 day shift + 30 night shift = enter 50"
+      - Blue info box explains why peak concurrent matters for safety coverage
+    - Project type selection (standard, high-risk, heavy civil, refurbishment)
+    - **Intelligent paramedic recommendation** based on HSE guidelines:
+      - High-risk sites: 1 paramedic per 50 concurrent workers
+      - Standard sites: 1 paramedic per 100 concurrent workers
+      - Green highlighted recommendation box shows calculation logic
+    - Project phase selection (pre-construction, construction, fit-out, completion)
+    - **Special requirements checkboxes** with educational info icon (ℹ️)
+      - Confined Space Work (requires specialized rescue training)
+      - Working at Height >3m (scaffolding, roofing, fall injury expertise)
+      - Heavy Machinery Operation (crush injuries, extrication)
+      - CSCS Card Site (paramedic needs valid CSCS card)
+      - Trauma Specialist (advanced trauma care experience)
+      - Clickable info icon shows detailed explanation of each requirement
+      - Helps users understand why each matters for paramedic matching
+    - UK postcode validation (England, Scotland, Wales, Northern Ireland only)
+    - Duration flexibility: Fixed vs Estimated
+      - Fixed: Exact duration (1 day to 6 months)
+      - Estimated: Range-based (1-2 weeks, 2-4 weeks, etc., or ongoing with weekly renewal)
+    - Start date picker with minimum date validation
+
+  - **Step 2: Comprehensive Quote Breakdown**
+    - Project details summary (workers, type, location, special requirements)
+    - Detailed pricing calculation:
+      - Per-paramedic daily rate (£350/day)
+      - Total days calculated from duration selection
+      - VAT clearly indicated (20%)
+      - Estimated vs fixed pricing clearly labeled
+    - What's included section listing all compliance features
+    - Educational note for estimated pricing explaining flexibility
+
+  - **Step 3: Contact Information Collection**
+    - Full name, email, phone (UK format), company name
+    - GDPR-compliant consent notice
+    - Form submission with quote request
+
+  - **UK Construction Industry Context**
+    - Follows CDM 2015 requirements
+    - Accommodates uncertain construction timelines
+    - Provides guidance on paramedic requirements
+    - Special requirements aligned with UK construction standards
+    - UK-only address validation for insurance compliance
 
 #### **Technical Implementation**
 - **Port Configuration**: 30500 (configured to avoid conflicts with port 1234)
@@ -722,6 +788,244 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
 
 ---
 
+## Phase 4.6: Customer Onboarding & Contract Management (NEW)
+**Status**: Not started (5 plans)
+**Goal**: Automated service agreement generation, document portal for phone sales, flexible payment terms, and digital signatures
+
+### Features:
+
+- **Service Agreement Template Engine**
+  - **Auto-Fill Business Information**
+    - Client details: Company name, contact, billing address, VAT number
+    - Site details: Location, postcode, site manager contact
+    - Booking details: Date, time, shift duration, medic assigned
+    - Pricing breakdown: Base rate, hours, urgency premium, travel, VAT, total
+    - Payment terms: Auto-populated based on client type and admin selection
+
+  - **Payment Terms Configuration Per Booking**
+    - **Full Prepay**: 100% payment due on contract signature
+    - **Split Payment (50/50)**: 50% on signature, 50% on completion
+    - **Split with Net 30**: 50% on signature, 50% Net 30 after completion
+    - **Full Net 30**: 100% due 30 days after invoice (established clients only)
+    - **Custom Terms**: Admin can define custom payment schedules
+      - Example: "£500 on signing, £300 after 7 days, £200 on completion"
+
+  - **Agreement Customization**
+    - Standard terms and conditions
+    - Liability clauses (professional indemnity limits)
+    - Cancellation policy (7 days = full refund, <72 hours = no refund)
+    - Service scope definition (medic qualifications, duties, exclusions)
+    - RIDDOR compliance responsibilities
+    - GDPR worker data handling consent
+    - Insurance coverage details (£5M professional indemnity, £10M public liability)
+    - Force majeure provisions
+
+  - **Template Versioning**
+    - Version control for agreement templates
+    - Track template changes over time
+    - Legal approval workflow for template updates
+    - Grandfathering: Old bookings use old template version
+    - Audit trail: Which version used for which client
+
+- **Document Portal (Phone Sales)**
+  - **Quick Send During Phone Call**
+    - Admin enters client email in portal
+    - Click "Send Agreement" → instant email delivery
+    - Shareable link generated (no login required for client)
+    - Link expires after 30 days (security)
+
+  - **Client Document Viewing**
+    - Browser-based document viewer (no download required)
+    - Mobile-responsive (works on phone, tablet, desktop)
+    - High-resolution rendering
+    - Zoom/pan capabilities
+    - Page navigation
+
+  - **Document Tracking**
+    - Status indicators:
+      - **Draft**: Agreement created but not sent
+      - **Sent**: Email delivered to client
+      - **Viewed**: Client opened document link
+      - **Signed**: Client completed digital signature
+      - **Completed**: Agreement fully executed (both parties signed)
+      - **Expired**: Link expired before signature (re-send required)
+    - Timestamp tracking for each status change
+    - Email open tracking (when client first views)
+    - IP address logging for signature (audit trail)
+    - Device info capture (mobile vs desktop signature)
+
+  - **Admin Dashboard for Sent Documents**
+    - List view: All sent agreements with status filters
+    - Search by: Client name, booking ID, date sent, status
+    - Quick actions: Resend, Cancel, Download signed PDF
+    - Reminder emails: Auto-send if not signed after 3 days
+    - Expiry alerts: Warning at 7 days before link expiry
+
+- **Digital Signature Capture**
+  - **Native Signing (No Third-Party)**
+    - Built-in signature pad (canvas-based)
+    - Touch/stylus support for tablets and phones
+    - Mouse support for desktop
+    - Signature preview before confirming
+    - Option to clear and re-sign
+    - Typed name alternative (checkbox: "I agree to use typed name as signature")
+
+  - **Signature Validation**
+    - Required fields before signing:
+      - Full name (match company contact name)
+      - Job title
+      - Date (auto-filled, can be manually adjusted)
+      - Checkbox: "I have authority to bind [Company Name] to this agreement"
+    - Email verification: Send 6-digit code to email, enter before signing
+    - IP address capture (logged for audit)
+    - Device fingerprint (browser, OS, screen resolution)
+
+  - **Signed Document Storage**
+    - PDF generation with signature overlay
+    - Stored in Supabase Storage (UK region)
+    - Signed URL for secure access (7-day expiry, can renew)
+    - Watermark: "SIGNED - [Date] - [Client Name]"
+    - Tamper detection: PDF hash verification
+
+  - **Audit Trail**
+    - JSON log stored alongside PDF:
+      - Who signed (name, email, job title)
+      - When signed (ISO 8601 timestamp with timezone)
+      - Where signed (IP address, geolocation)
+      - How signed (signature pad vs typed name)
+      - Device used (browser, OS, screen size)
+      - Agreement version number
+      - Payment terms selected
+    - Immutable after signing (blockchain-ready structure)
+    - Exportable for legal discovery
+
+  - **Dual Signature Support (Future Enhancement)**
+    - Client signs first
+    - Admin/medic signs second (company representative)
+    - Agreement only valid after both signatures
+    - Sequential signing workflow
+
+- **Payment Schedule Enforcement**
+  - **Upfront Payment Processing**
+    - IF payment terms = "Full Prepay" OR "50% Upfront":
+      - Generate Stripe Payment Intent on signature
+      - Charge card immediately after signature
+      - Booking status = "Pending Payment"
+      - Booking auto-confirms on payment success
+    - Payment failure handling:
+      - Email notification to client with retry link
+      - Booking status = "Payment Failed"
+      - Admin alert for manual follow-up
+      - Automatic cancellation after 48 hours if unpaid
+
+  - **Completion Payment Trigger**
+    - Booking status changes to "Completed" (medic logs shift end)
+    - IF payment terms include completion payment:
+      - **Option A (Immediate)**: Charge card for remaining 50%
+      - **Option B (Net 30)**: Generate invoice, send email, due in 30 days
+    - Completion payment tracking in dashboard
+    - Late payment reminders (7, 14, 21 days)
+
+  - **Custom Payment Schedule Tracking**
+    - For custom terms (e.g., "3 installments over 6 weeks"):
+      - Payment milestones table (payment_schedules)
+      - Scheduled charges (Stripe Scheduled Payments)
+      - Email reminders before each charge
+      - Failed payment retry logic (3 attempts over 1 week)
+      - Dashboard shows upcoming payment dates
+
+  - **Cancellation & Refund Logic**
+    - IF client cancels after signing but before shift:
+      - 7+ days before: Full refund minus processing fee (2%)
+      - 3-6 days before: 50% refund (cancellation penalty)
+      - <72 hours: No refund (medic already reserved)
+    - Refund processing via Stripe Refunds API
+    - Email notification of refund amount and reason
+    - Booking status updated to "Cancelled - Refunded"
+
+- **Booking-Contract Linkage**
+  - **Agreement Required for Booking Confirmation**
+    - Setting: "Require signed agreement" (toggle per client or globally)
+    - IF enabled: Booking status = "Pending Agreement"
+    - Client cannot change booking details after agreement sent
+    - Agreement lock prevents price changes after signature
+
+  - **Agreement as Source of Truth**
+    - Payment terms in agreement override booking defaults
+    - Pricing in agreement must match booking (validation check)
+    - Cancellation policy from agreement enforced
+    - Service scope defines medic qualifications required
+
+  - **Booking Modification After Signature**
+    - IF client requests change (date, time, duration):
+      - Requires agreement amendment (new signature)
+      - Original agreement marked "Superseded"
+      - New agreement references original (version history)
+      - Email notification: "Your booking agreement has been updated"
+
+- **Admin Document Management**
+  - **Template Library**
+    - Standard service agreement template
+    - Emergency booking template (expedited terms)
+    - Recurring booking template (weekly/monthly)
+    - Enterprise client template (custom SLA)
+    - Template preview before sending
+
+  - **Bulk Document Operations**
+    - Batch send agreements (select multiple pending bookings)
+    - Bulk download signed agreements (ZIP archive)
+    - Bulk reminder emails (all unsigned agreements >3 days old)
+
+  - **Compliance & Legal Review**
+    - Template approval workflow (legal team review)
+    - Regulatory compliance checklist (GDPR, Consumer Rights Act)
+    - Professional indemnity insurance verification
+    - Annual legal review reminder (template updates)
+
+  - **Reporting & Analytics**
+    - Conversion rate: Sent → Signed (target: >80%)
+    - Average time to signature (target: <24 hours)
+    - Expired agreements (need follow-up)
+    - Most common cancellation reasons
+    - Payment failure rate by payment terms
+
+### Performance Targets:
+| Metric | Target |
+|--------|--------|
+| Agreement generation | <5 seconds |
+| Email delivery | <30 seconds |
+| Document load time | <2 seconds |
+| Signature submission | <3 seconds |
+| Payment processing | <10 seconds |
+| Conversion rate (sent → signed) | >80% |
+| Average time to signature | <24 hours |
+
+### Technical Implementation:
+- **Frontend**: React + shadcn/ui signature pad component
+- **Backend**: Supabase Edge Function for PDF generation
+- **PDF Library**: jsPDF or PDFKit for agreement rendering
+- **Signature Rendering**: HTML5 Canvas → PNG → PDF overlay
+- **Email**: Transactional email via Supabase (SendGrid backend)
+- **Storage**: Supabase Storage (UK region, signed URLs)
+- **Payments**: Stripe Payment Intents API with metadata linking to agreement
+- **Audit Logging**: PostgreSQL JSONB column for signature event log
+
+### Integration Points:
+- **Booking System (Phase 4.5)**: Agreement required before booking confirmation
+- **Payment Processing (Phase 6.5)**: Payment schedule enforcement tied to agreement terms
+- **Admin Dashboard (Phase 5.5)**: Document management tab for tracking sent agreements
+- **Client Dashboard (Future)**: Self-service agreement viewing and re-download
+
+### Compliance Considerations:
+- **Electronic Signatures Act 2000 (UK)**: Digital signatures legally binding
+- **Consumer Rights Act 2015**: 14-day cooling-off period for online contracts
+- **Late Payment of Commercial Debts Act 1998**: Statutory late fees for Net 30 invoices
+- **GDPR**: Worker health data consent clause in agreement
+- **Professional Indemnity Insurance**: Coverage limits disclosed in agreement
+- **RIDDOR Responsibilities**: Client's obligations for incident reporting clearly stated
+
+---
+
 ## Phase 5: PDF Generation
 **Status**: Not started
 **Goal**: Automated weekly safety reports for HSE audits
@@ -1330,8 +1634,8 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2026-02-15
+**Document Version**: 1.1
+**Last Updated**: 2026-02-15 (Added Phase 4.6: Customer Onboarding & Contract Management)
 **Next Review**: After Phase 1.5 completion
 
 ---
