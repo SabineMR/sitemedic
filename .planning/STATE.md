@@ -10,29 +10,29 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 1.5 of 7 (Business Foundation)
-Plan: 4 of 5 in current phase
-Status: In progress
-Last activity: 2026-02-15 — Completed 01.5-04-PLAN.md (UK postcode sector database seeding)
+Plan: 5 of 5 in current phase
+Status: Phase complete
+Last activity: 2026-02-15 — Completed 01.5-02-PLAN.md (Stripe Connect integration)
 
-Progress: [███░░░░░░░] 35% (7/20 plans across all active phases)
+Progress: [████░░░░░░] 40% (8/20 plans across all active phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
+- Total plans completed: 8
 - Average duration: 4 min
-- Total execution time: 0.43 hours
+- Total execution time: 0.50 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 5/5 | 20 min | 4 min |
-| 01.5-business-foundation | 4/5 | 8 min | 2 min |
+| 01.5-business-foundation | 5/5 | 12 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-04 (5 min), 01-05 (3 min), 01.5-01 (2 min), 01.5-03 (3 min), 01.5-04 (3 min)
-- Trend: Stable (consistent ~2-5 min per plan)
+- Last 5 plans: 01-05 (3 min), 01.5-01 (2 min), 01.5-03 (3 min), 01.5-04 (3 min), 01.5-02 (4 min)
+- Trend: Stable (consistent ~2-4 min per plan)
 
 *Updated after each plan completion*
 
@@ -104,6 +104,14 @@ Recent decisions affecting current work:
 - D-01.5-04-005: Set default max_travel_minutes to 30 for all territories
 - D-01.5-04-006: Generate CSV for offline reference only (Edge Function doesn't read it)
 
+**From Plan 01.5-02:**
+- D-01.5-02-001: Use Stripe v14 for Deno compatibility (older versions have CommonJS issues in Edge Runtime)
+- D-01.5-02-002: Action-based routing pattern for stripe-connect (single function, multiple actions via body.action)
+- D-01.5-02-003: Store onboarding_url in medics table for re-access (Stripe AccountLinks expire)
+- D-01.5-02-004: Verify webhook signatures BEFORE parsing event (security requirement per Stripe docs)
+- D-01.5-02-005: Express accounts for medics use GB country and transfers capability (UK-based medics)
+- D-01.5-02-006: Payment Intent metadata includes booking_id and client_id for event correlation
+
 ### Pending Todos
 
 None yet.
@@ -114,9 +122,9 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-15T23:10:24Z
-Stopped at: Completed 01.5-04-PLAN.md — UK postcode sector database seeding
+Last session: 2026-02-15T23:33:07Z
+Stopped at: Completed 01.5-02-PLAN.md — Stripe Connect integration
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Foundation) in progress (4/5 plans complete)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Foundation) complete (5/5 plans)*
