@@ -9,29 +9,30 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 1 of 7 (Foundation)
-Plan: 5 of 5 in current phase
-Status: Phase complete
-Last activity: 2026-02-15 — Completed 01-05-PLAN.md (Sync infrastructure with persistent queue and audit logging)
+Phase: 1.5 of 7 (Business Foundation)
+Plan: 1 of 5 in current phase
+Status: In progress
+Last activity: 2026-02-15 — Completed 01.5-01-PLAN.md (Database validation with invoice sequencing and pricing calculation)
 
-Progress: [██░░░░░░░░] 25% (5/20 plans across all active phases)
+Progress: [███░░░░░░░] 30% (6/20 plans across all active phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
+- Total plans completed: 6
 - Average duration: 4 min
-- Total execution time: 0.33 hours
+- Total execution time: 0.37 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 5/5 | 20 min | 4 min |
+| 01.5-business-foundation | 1/5 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (5 min), 01-02 (5 min), 01-03 (2 min), 01-04 (5 min), 01-05 (3 min)
-- Trend: Stable (consistent ~3-5 min per plan)
+- Last 5 plans: 01-02 (5 min), 01-03 (2 min), 01-04 (5 min), 01-05 (3 min), 01.5-01 (2 min)
+- Trend: Improving (last plan: 2 min - fastest yet)
 
 *Updated after each plan completion*
 
@@ -79,6 +80,12 @@ Recent decisions affecting current work:
 - D-01-05-007: AuditLogger only logs SENSITIVE_TABLES (workers, treatments, near_misses, safety_checks) to reduce audit volume
 - D-01-05-008: server_id updated after successful 'create' sync to map local UUID to Supabase UUID
 
+**From Plan 01.5-01:**
+- D-01.5-01-001: Pure calculation pattern for pricing (returns JSON, callers persist to DB)
+- D-01.5-01-002: Single global invoice sequence (no yearly reset for simplicity)
+- D-01.5-01-003: Deterministic UUIDs for test data idempotency (10000000-..., 20000000-..., 30000000-...)
+- D-01.5-01-004: Platform split on total including VAT (40% platform, 60% medic)
+
 ### Pending Todos
 
 None yet.
@@ -89,9 +96,9 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-15T22:48:48Z
-Stopped at: Completed 01-05-PLAN.md — Sync infrastructure with persistent queue and audit logging
+Last session: 2026-02-15T23:19:17Z
+Stopped at: Completed 01.5-01-PLAN.md — Database validation with invoice sequencing and pricing calculation
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Next step: Plan Phase 2 (Mobile Core UI) work*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Foundation) in progress (1/5 plans complete)*
