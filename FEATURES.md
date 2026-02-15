@@ -16,21 +16,127 @@ SiteMedic is a comprehensive platform combining **mobile medic software** (offli
 
 ## Feature Categories
 
-### 1. Medic Mobile App (Phases 1-3, 6-7)
+### 1. Marketing Website (NEW - Just Built)
+Next.js public-facing website with homepage, pricing page, and trust signals running on port 30500.
+
+### 2. Medic Mobile App (Phases 1-3, 6-7)
 Offline-first iOS app for medics to capture treatments, near-misses, and daily safety checks.
 
-### 2. Business Operations (Phases 1.5, 4.5-7.5)
+### 3. Business Operations (Phases 1.5, 4.5-7.5)
 **NEW** - Online booking portal, payment processing, territory management, admin dashboards for scaling the staffing business.
 
-### 3. Site Manager Dashboard (Phase 4)
+### 4. Site Manager Dashboard (Phase 4)
 Web dashboard for construction site managers to view compliance reports and treatment logs.
 
-### 4. Reporting & Compliance (Phase 5-6)
+### 5. Reporting & Compliance (Phase 5-6)
 Automated PDF generation and RIDDOR auto-flagging for HSE compliance.
 
 ---
 
 ## Detailed Feature List
+
+## Marketing Website (Just Built)
+**Status**: ✅ **COMPLETED** - Running on port 30500
+**Goal**: Public-facing marketing website for client acquisition and brand presence
+**Tech Stack**: Next.js 15, TypeScript, Tailwind CSS
+**Performance**: <2s load time target, Lighthouse score >90 target
+
+### Features:
+
+#### **Homepage** (`/`)
+- **Hero Section**
+  - Main headline: "Compliance Happens While You Work"
+  - Value proposition: Automatic compliance documentation from clinical work
+  - Dual CTAs: "Start Free Trial" + "Watch Demo"
+
+- **Problem/Solution Grid**
+  - Left column: Current pain points (manual admin, paper records, missed RIDDOR deadlines)
+  - Right column: SiteMedic solutions (automatic documentation, instant sync, auto-flagging)
+
+- **Key Benefits Section**
+  - Offline-first capability (works with zero mobile signal)
+  - 60-second logging performance (30s minor, 90s full treatment)
+  - UK GDPR compliance (AES-256, UK servers, special category data)
+
+- **How It Works** (4-step process)
+  1. Treat the Patient (clinical work focus)
+  2. Auto-Sync (cloud sync when connectivity returns)
+  3. RIDDOR Check (AI-powered flagging)
+  4. Weekly Reports (automatic PDF generation)
+
+- **Trust Signals**
+  - RIDDOR 2013 compliance badge
+  - UK GDPR certification
+  - CDM 2015 construction safety
+  - HSE audit-ready reports
+
+- **Footer Navigation**
+  - Product links (Features, Pricing, Security)
+  - Company links (About, Contact, Privacy)
+  - Legal links (Terms, GDPR, Data Processing)
+
+#### **Pricing Page** (`/pricing`)
+- **Three-Tier Pricing Model**
+  - **Basic Medic**: £30/hour (traditional service, no tech)
+  - **SiteMedic Pro**: £42/hour (recommended - medic + full platform)
+  - **Enterprise**: Custom pricing (multi-site, custom integrations)
+
+- **Value Calculator**
+  - Traditional cost breakdown (£240 medic + £40 admin + RIDDOR risk = £280+)
+  - SiteMedic cost (£336 for 8hr shift, zero admin, zero risk)
+  - ROI comparison showing time savings and compliance benefits
+
+- **FAQ Section**
+  - What's included in £42/hour rate
+  - Minimum booking requirements
+  - Free trial policy
+  - Dashboard pricing (included, no separate fees)
+  - Offline functionality guarantee
+
+- **Pricing Transparency**
+  - No hidden fees messaging
+  - All features included in hourly rate
+  - No per-user dashboard charges
+  - Flat-rate pricing model
+
+#### **Technical Implementation**
+- **Port Configuration**: 30500 (configured to avoid conflicts with port 1234)
+- **Development Server**: `pnpm dev` starts on localhost:30500
+- **Production Build**: `pnpm build` + `pnpm start`
+- **Performance Optimizations**:
+  - Next.js Image optimization
+  - React Strict Mode enabled
+  - Compression enabled
+  - Powered-by header removed for security
+  - Workspace root detection configured
+
+#### **Design System**
+- Tailwind CSS utility-first styling
+- Color scheme: Blue primary (#2563EB), Gray neutrals
+- Typography: System font stack (-apple-system, BlinkMacSystemFont, Segoe UI)
+- Responsive breakpoints: sm, md, lg
+- Accessibility: High contrast, semantic HTML, ARIA labels
+
+#### **SEO & Metadata**
+- Page title: "SiteMedic - Automatic Compliance for Construction Site Medics"
+- Meta description: "Turn clinical work into automatic compliance documentation. RIDDOR-ready reports in 60 seconds."
+- Language: en (English)
+- Social sharing metadata (ready for Open Graph)
+
+#### **Navigation**
+- Consistent header across all pages
+- Logo links to homepage
+- Mobile-responsive menu (hidden on mobile, visible on md+)
+- CTA button in header: "Get Started"
+- Footer with 4-column layout (Product, Company, Legal, About)
+
+#### **Deployment Ready**
+- Static Site Generation (SSG) for fast performance
+- Build output optimized for CDN deployment
+- Environment-agnostic configuration
+- No hard-coded URLs or secrets
+
+---
 
 ## Phase 1: Foundation
 **Status**: Planning complete (5 plans)
