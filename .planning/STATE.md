@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 1 of 7 (Foundation)
-Plan: 4 of 5 in current phase
-Status: In progress
-Last activity: 2026-02-15 — Completed 01-04-PLAN.md (Authentication with offline session persistence)
+Plan: 5 of 5 in current phase
+Status: Phase complete
+Last activity: 2026-02-15 — Completed 01-05-PLAN.md (Sync infrastructure with persistent queue and audit logging)
 
-Progress: [██░░░░░░░░] 20% (4/20 plans across all active phases)
+Progress: [██░░░░░░░░] 25% (5/20 plans across all active phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
+- Total plans completed: 5
 - Average duration: 4 min
-- Total execution time: 0.28 hours
+- Total execution time: 0.33 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-foundation | 4/5 | 17 min | 4 min |
+| 01-foundation | 5/5 | 20 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (5 min), 01-02 (5 min), 01-03 (2 min), 01-04 (5 min)
-- Trend: Stable (consistent ~4-5 min per plan)
+- Last 5 plans: 01-01 (5 min), 01-02 (5 min), 01-03 (2 min), 01-04 (5 min), 01-05 (3 min)
+- Trend: Stable (consistent ~3-5 min per plan)
 
 *Updated after each plan completion*
 
@@ -69,6 +69,16 @@ Recent decisions affecting current work:
 - D-01-04-003: Local JWT expiry check when offline (accepts staleness up to 1 hour for construction site offline periods)
 - D-01-04-004: Type assertion for profiles query result (Supabase TypeScript client type inference issue)
 
+**From Plan 01-05:**
+- D-01-05-001: Sync queue persists in WatermelonDB (not in-memory) to survive force-quit per Research Pitfall 6
+- D-01-05-002: Exponential backoff caps at 240 minutes (4 hours) to prevent indefinite retry delays during multi-day offline
+- D-01-05-003: RIDDOR priority is 0, normal is 1, audit logs are 2 (ensures compliance-critical records sync first)
+- D-01-05-004: Audit logs batch-sync 50 at a time to prevent overwhelming sync queue
+- D-01-05-005: NetInfo reachability test pings Supabase URL (confirms actual backend connectivity, not just WiFi)
+- D-01-05-006: SyncContext polls every 10 seconds (simpler than WatermelonDB observable for initial implementation)
+- D-01-05-007: AuditLogger only logs SENSITIVE_TABLES (workers, treatments, near_misses, safety_checks) to reduce audit volume
+- D-01-05-008: server_id updated after successful 'create' sync to map local UUID to Supabase UUID
+
 ### Pending Todos
 
 None yet.
@@ -79,9 +89,9 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-15T22:38:40Z
-Stopped at: Completed 01-04-PLAN.md — Authentication with offline session persistence and biometric auth
+Last session: 2026-02-15T22:48:48Z
+Stopped at: Completed 01-05-PLAN.md — Sync infrastructure with persistent queue and audit logging
 Resume file: None
 
 ---
-*Next step: Execute 01-05-PLAN.md (if exists) or plan next phase work*
+*Phase 1 (Foundation) complete. Next step: Plan Phase 2 (Mobile Core UI) work*
