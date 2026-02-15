@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 1.5 of 7 (Business Foundation)
-Plan: 3 of 5 in current phase
+Plan: 4 of 5 in current phase
 Status: In progress
-Last activity: 2026-02-15 — Completed 01.5-03-PLAN.md (Auto-assignment & out-of-territory cost logic)
+Last activity: 2026-02-15 — Completed 01.5-04-PLAN.md (UK postcode sector database seeding)
 
-Progress: [███░░░░░░░] 30% (6/20 plans across all active phases)
+Progress: [███░░░░░░░] 35% (7/20 plans across all active phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
+- Total plans completed: 7
 - Average duration: 4 min
-- Total execution time: 0.38 hours
+- Total execution time: 0.43 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 5/5 | 20 min | 4 min |
-| 01.5-business-foundation | 3/5 | 5 min | 2 min |
+| 01.5-business-foundation | 4/5 | 8 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-03 (2 min), 01-04 (5 min), 01-05 (3 min), 01.5-01 (2 min), 01.5-03 (3 min)
+- Last 5 plans: 01-04 (5 min), 01-05 (3 min), 01.5-01 (2 min), 01.5-03 (3 min), 01.5-04 (3 min)
 - Trend: Stable (consistent ~2-5 min per plan)
 
 *Updated after each plan completion*
@@ -96,6 +96,14 @@ Recent decisions affecting current work:
 - D-01.5-03-007: All out-of-territory bookings require admin approval regardless of cost
 - D-01.5-03-008: Cache cleanup scheduled daily at 3 AM UTC via pg_cron (manual fallback provided)
 
+**From Plan 01.5-04:**
+- D-01.5-04-001: Store postcodes at AREA+DISTRICT level (outward code) not full sector for territory granularity
+- D-01.5-04-002: Embed compact area definitions in Edge Function, generate sectors programmatically at runtime to avoid size/timeout
+- D-01.5-04-003: Use batch inserts of 500 rows for Edge Function efficiency
+- D-01.5-04-004: Use upsert with ignoreDuplicates to allow re-running seeder without overwriting medic assignments
+- D-01.5-04-005: Set default max_travel_minutes to 30 for all territories
+- D-01.5-04-006: Generate CSV for offline reference only (Edge Function doesn't read it)
+
 ### Pending Todos
 
 None yet.
@@ -106,9 +114,9 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-15T23:21:31Z
-Stopped at: Completed 01.5-03-PLAN.md — Auto-assignment & out-of-territory cost logic
+Last session: 2026-02-15T23:10:24Z
+Stopped at: Completed 01.5-04-PLAN.md — UK postcode sector database seeding
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Foundation) in progress (3/5 plans complete)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Foundation) in progress (4/5 plans complete)*
