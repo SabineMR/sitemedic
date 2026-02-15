@@ -33,11 +33,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. User can sign up and log in with email/password
   2. User session persists across app restarts (offline session handling works)
   3. Biometric authentication (Face ID/Touch ID) works for quick access
-  4. Local SQLite database encrypts all health data at rest (AES-256, verified)
+  4. Encryption key infrastructure ready in iOS Keychain via expo-secure-store (SQLCipher database encryption deferred to Phase 2 per research -- WatermelonDB PR #907 not merged)
   5. Sync queue persists locally with conflict resolution logic ready (not yet actively syncing)
   6. Multi-modal sync status indicators display correctly (color, labels, pending count badge)
   7. Network connectivity detection triggers sync status updates
-  8. Audit logging captures all data access attempts (who viewed which worker record)
+  8. Audit logging captures all data access: server-side via PostgreSQL triggers on Supabase tables, client-side via local audit log service that records READ operations on sensitive WatermelonDB tables and queues for sync
 
 **Plans**: 5 plans
 
@@ -201,5 +201,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 ---
 *Roadmap created: 2026-02-15*
-*Phase 1 planned: 2026-02-15 — 5 plans in 3 waves*
+*Phase 1 planned: 2026-02-15 -- 5 plans in 3 waves*
+*Phase 1 revised: 2026-02-15 -- Updated criteria #4 (encryption deferred) and #8 (client-side audit logging added)*
 *Coverage: 83/83 v1 requirements mapped*
