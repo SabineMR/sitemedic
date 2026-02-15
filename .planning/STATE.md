@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 1.5 of 7 (Business Foundation)
-Plan: 1 of 5 in current phase
+Plan: 3 of 5 in current phase
 Status: In progress
-Last activity: 2026-02-15 — Completed 01.5-01-PLAN.md (Database validation with invoice sequencing and pricing calculation)
+Last activity: 2026-02-15 — Completed 01.5-03-PLAN.md (Auto-assignment & out-of-territory cost logic)
 
 Progress: [███░░░░░░░] 30% (6/20 plans across all active phases)
 
@@ -21,18 +21,18 @@ Progress: [███░░░░░░░] 30% (6/20 plans across all active pha
 **Velocity:**
 - Total plans completed: 6
 - Average duration: 4 min
-- Total execution time: 0.37 hours
+- Total execution time: 0.38 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 5/5 | 20 min | 4 min |
-| 01.5-business-foundation | 1/5 | 2 min | 2 min |
+| 01.5-business-foundation | 3/5 | 5 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (5 min), 01-03 (2 min), 01-04 (5 min), 01-05 (3 min), 01.5-01 (2 min)
-- Trend: Improving (last plan: 2 min - fastest yet)
+- Last 5 plans: 01-03 (2 min), 01-04 (5 min), 01-05 (3 min), 01.5-01 (2 min), 01.5-03 (3 min)
+- Trend: Stable (consistent ~2-5 min per plan)
 
 *Updated after each plan completion*
 
@@ -86,6 +86,16 @@ Recent decisions affecting current work:
 - D-01.5-01-003: Deterministic UUIDs for test data idempotency (10000000-..., 20000000-..., 30000000-...)
 - D-01.5-01-004: Platform split on total including VAT (40% platform, 60% medic)
 
+**From Plan 01.5-03:**
+- D-01.5-03-001: Auto-assignment requires score >= 50 to assign automatically, otherwise manual approval
+- D-01.5-03-002: Distance scoring uses 40pts max (40 - travel_time/2) to heavily favor nearby medics
+- D-01.5-03-003: Utilization scoring favors under-utilized medics (25pts * (1 - utilization_pct/100))
+- D-01.5-03-004: New medics (0 rating) get 15 points benefit-of-doubt vs rating-based 0-20 points
+- D-01.5-03-005: Travel bonus is £2/mile beyond 30 miles, room/board is fixed £85 for >90min travel
+- D-01.5-03-006: Deny recommendation when cost >50% of shift value to prevent unprofitable bookings
+- D-01.5-03-007: All out-of-territory bookings require admin approval regardless of cost
+- D-01.5-03-008: Cache cleanup scheduled daily at 3 AM UTC via pg_cron (manual fallback provided)
+
 ### Pending Todos
 
 None yet.
@@ -96,9 +106,9 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-15T23:19:17Z
-Stopped at: Completed 01.5-01-PLAN.md — Database validation with invoice sequencing and pricing calculation
+Last session: 2026-02-15T23:21:31Z
+Stopped at: Completed 01.5-03-PLAN.md — Auto-assignment & out-of-territory cost logic
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Foundation) in progress (1/5 plans complete)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Foundation) in progress (3/5 plans complete)*
