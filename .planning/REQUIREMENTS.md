@@ -219,13 +219,110 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (To be populated by roadmapper) | | |
+| ARCH-01 | Phase 1 | Pending |
+| ARCH-02 | Phase 1 | Pending |
+| ARCH-03 | Phase 1 | Pending |
+| ARCH-04 | Phase 1 | Pending |
+| ARCH-05 | Phase 1 | Pending |
+| ARCH-06 | Phase 1 | Pending |
+| ARCH-07 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| AUTH-05 | Phase 1 | Pending |
+| GDPR-01 | Phase 1 | Pending |
+| GDPR-02 | Phase 1 | Pending |
+| GDPR-03 | Phase 1 | Pending |
+| GDPR-04 | Phase 1 | Pending |
+| GDPR-05 | Phase 1 | Pending |
+| GDPR-06 | Phase 1 | Pending |
+| TREAT-01 | Phase 2 | Pending |
+| TREAT-02 | Phase 2 | Pending |
+| TREAT-03 | Phase 2 | Pending |
+| TREAT-04 | Phase 2 | Pending |
+| TREAT-05 | Phase 2 | Pending |
+| TREAT-06 | Phase 2 | Pending |
+| TREAT-07 | Phase 2 | Pending |
+| TREAT-08 | Phase 2 | Pending |
+| TREAT-09 | Phase 2 | Pending |
+| TREAT-10 | Phase 2 | Pending |
+| TREAT-11 | Phase 2 | Pending |
+| TREAT-12 | Phase 2 | Pending |
+| NEAR-01 | Phase 2 | Pending |
+| NEAR-02 | Phase 2 | Pending |
+| NEAR-03 | Phase 2 | Pending |
+| NEAR-04 | Phase 2 | Pending |
+| NEAR-05 | Phase 2 | Pending |
+| NEAR-06 | Phase 2 | Pending |
+| NEAR-07 | Phase 2 | Pending |
+| DAILY-01 | Phase 2 | Pending |
+| DAILY-02 | Phase 2 | Pending |
+| DAILY-03 | Phase 2 | Pending |
+| DAILY-04 | Phase 2 | Pending |
+| DAILY-05 | Phase 2 | Pending |
+| WORK-01 | Phase 2 | Pending |
+| WORK-02 | Phase 2 | Pending |
+| WORK-03 | Phase 2 | Pending |
+| WORK-04 | Phase 2 | Pending |
+| WORK-05 | Phase 2 | Pending |
+| WORK-06 | Phase 2 | Pending |
+| PHOTO-01 | Phase 2 | Pending |
+| PHOTO-02 | Phase 2 | Pending |
+| PHOTO-03 | Phase 2 | Pending |
+| PHOTO-04 | Phase 2 | Pending |
+| PHOTO-05 | Phase 2 | Pending |
+| PHOTO-06 | Phase 2 | Pending |
+| UX-01 | Phase 2 | Pending |
+| UX-02 | Phase 2 | Pending |
+| UX-03 | Phase 2 | Pending |
+| UX-04 | Phase 2 | Pending |
+| UX-05 | Phase 2 | Pending |
+| UX-06 | Phase 2 | Pending |
+| UX-07 | Phase 2 | Pending |
+| UX-08 | Phase 2 | Pending |
+| DASH-01 | Phase 4 | Pending |
+| DASH-02 | Phase 4 | Pending |
+| DASH-03 | Phase 4 | Pending |
+| DASH-04 | Phase 4 | Pending |
+| DASH-05 | Phase 4 | Pending |
+| DASH-06 | Phase 4 | Pending |
+| DASH-07 | Phase 4 | Pending |
+| DASH-08 | Phase 4 | Pending |
+| DASH-09 | Phase 4 | Pending |
+| DASH-10 | Phase 4 | Pending |
+| EXPORT-01 | Phase 4 | Pending |
+| EXPORT-02 | Phase 4 | Pending |
+| EXPORT-03 | Phase 4 | Pending |
+| PDF-01 | Phase 5 | Pending |
+| PDF-02 | Phase 5 | Pending |
+| PDF-03 | Phase 5 | Pending |
+| PDF-04 | Phase 5 | Pending |
+| PDF-05 | Phase 5 | Pending |
+| PDF-06 | Phase 5 | Pending |
+| PDF-07 | Phase 5 | Pending |
+| NOTIF-01 | Phase 5 | Pending |
+| RIDD-01 | Phase 6 | Pending |
+| RIDD-02 | Phase 6 | Pending |
+| RIDD-03 | Phase 6 | Pending |
+| RIDD-04 | Phase 6 | Pending |
+| RIDD-05 | Phase 6 | Pending |
+| RIDD-06 | Phase 6 | Pending |
+| NOTIF-02 | Phase 6 | Pending |
+| CERT-01 | Phase 7 | Pending |
+| CERT-02 | Phase 7 | Pending |
+| CERT-03 | Phase 7 | Pending |
+| CERT-04 | Phase 7 | Pending |
+| CERT-05 | Phase 7 | Pending |
+| CERT-06 | Phase 7 | Pending |
+| NOTIF-03 | Phase 7 | Pending |
+| NOTIF-04 | Phase 7 | Pending |
 
 **Coverage:**
-- v1 requirements: 0 total (to be counted after roadmap)
-- Mapped to phases: 0
+- v1 requirements: 83 total
+- Mapped to phases: 83
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-15*
-*Last updated: 2026-02-15 after initial definition*
+*Last updated: 2026-02-15 after roadmap creation*
