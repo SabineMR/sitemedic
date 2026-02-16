@@ -16,7 +16,7 @@ import { AlertCircle, TrendingUp, CheckCircle, XCircle, Clock, ArrowLeft } from 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function RIDDORAnalyticsPage() {
-  // Fetch override statistics with 60-second polling
+  // Fetch override statistics with 5-minute polling
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['riddor-override-stats'],
     queryFn: async () => {
@@ -24,7 +24,7 @@ export default function RIDDORAnalyticsPage() {
       const orgId = '10000000-0000-0000-0000-000000000001';
       return fetchOverrideStats(orgId);
     },
-    refetchInterval: 60000,
+    refetchInterval: 300000, // 5 minutes
   });
 
   // Fetch common override reasons
@@ -34,7 +34,7 @@ export default function RIDDORAnalyticsPage() {
       const orgId = '10000000-0000-0000-0000-000000000001';
       return fetchOverrideReasons(orgId);
     },
-    refetchInterval: 60000,
+    refetchInterval: 300000, // 5 minutes
   });
 
   const isLoading = statsLoading || reasonsLoading;
