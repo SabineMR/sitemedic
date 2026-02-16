@@ -14,6 +14,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { renderToBuffer } from 'npm:@react-pdf/renderer@4.3.2';
 import { ReportDocument } from './components/ReportDocument.tsx';
 import { fetchWeeklyReportData } from './queries.ts';
+import { uploadReportPDF, saveReportMetadata } from './storage.ts';
+import { sendReportEmail } from './email.ts';
 
 // CORS headers for dashboard access
 const corsHeaders = {
@@ -49,15 +51,6 @@ Deno.serve(async (req: Request) => {
   const startTime = Date.now();
 
   try {
-    console.log('📄 Starting weekly report PDF generation...');
-
-    // Parse request body
-    const { week_ending, trigger = 'manual' }: GenerateReportRequest = await req.json();
-
-    // Calculate week_ending if not provided
-    const weekEnding = week_ending || getMostRecentFriday();
-    console.log(`📅 Week ending: ${weekEnding} (trigger: ${trigger})`);
-
     // Create Supabase client with service role key for full data access
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -68,6 +61,105 @@ Deno.serve(async (req: Request) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
+    // Handle GET request: Download existing report
+    if (req.method === 'GET') {
+      const url = new URL(req.url);
+      const weekEnding = url.searchParams.get('week_ending');
+
+      if (!weekEnding) {
+        return new Response(
+          JSON.stringify({ error: 'Missing week_ending query parameter' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.log(`📥 Fetching existing report for week ending: ${weekEnding}`);
+
+      // Look up existing report
+      const { data: report, error: lookupError } = await supabase
+        .from('weekly_reports')
+        .select('*')
+        .eq('week_ending', weekEnding.split('T')[0])
+        .limit(1)
+        .maybeSingle();
+
+      if (lookupError) {
+        throw new Error(`Failed to lookup report: ${lookupError.message}`);
+      }
+
+      if (!report) {
+        return new Response(
+          JSON.stringify({ error: 'Report not found for specified week' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Check if signed URL is expired
+      const now = new Date();
+      const expiresAt = new Date(report.signed_url_expires_at);
+
+      if (now >= expiresAt) {
+        console.log('🔄 Signed URL expired, regenerating...');
+
+        // Regenerate signed URL
+        const { data: newSignedUrlData, error: signedUrlError } = await supabase.storage
+          .from('safety-reports')
+          .createSignedUrl(report.storage_path, 604800); // 7 days
+
+        if (signedUrlError || !newSignedUrlData?.signedUrl) {
+          throw new Error('Failed to regenerate signed URL');
+        }
+
+        // Update record
+        const newExpiresAt = new Date(Date.now() + 604800 * 1000);
+        await supabase
+          .from('weekly_reports')
+          .update({
+            signed_url: newSignedUrlData.signedUrl,
+            signed_url_expires_at: newExpiresAt.toISOString(),
+          })
+          .eq('id', report.id);
+
+        return new Response(
+          JSON.stringify({
+            signedUrl: newSignedUrlData.signedUrl,
+            expiresAt: newExpiresAt.toISOString(),
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Return existing signed URL
+      return new Response(
+        JSON.stringify({
+          signedUrl: report.signed_url,
+          expiresAt: report.signed_url_expires_at,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Handle POST request: Generate new report
+    console.log('📄 Starting weekly report PDF generation...');
+
+    // Parse request body
+    const { week_ending, trigger = 'manual', org_id }: GenerateReportRequest & { org_id?: string } = await req.json();
+
+    // Calculate week_ending if not provided
+    const weekEnding = week_ending || getMostRecentFriday();
+    console.log(`📅 Week ending: ${weekEnding} (trigger: ${trigger})`);
+
+    // For MVP: Get first organization (single org per instance)
+    // In production, this would loop through all orgs for cron trigger
+    let orgId = org_id;
+    if (!orgId) {
+      const { data: org } = await supabase.from('organizations').select('id').limit(1).single();
+      if (!org?.id) {
+        throw new Error('No organization found');
+      }
+      orgId = org.id;
+    }
+
     // Fetch all report data from Supabase
     console.log('🔍 Fetching report data...');
     const reportData = await fetchWeeklyReportData(supabase, weekEnding);
@@ -76,21 +168,107 @@ Deno.serve(async (req: Request) => {
     console.log('📝 Rendering PDF...');
     const pdfBuffer = await renderToBuffer(<ReportDocument data={reportData} />);
 
-    const duration = Date.now() - startTime;
-    console.log(`✅ PDF generated successfully in ${duration}ms`);
+    console.log(`✅ PDF generated successfully (${pdfBuffer.length} bytes)`);
 
-    // Return PDF buffer as downloadable response
-    // Storage upload will be added in Plan 02
-    const fileName = `weekly-report-${weekEnding.split('T')[0]}.pdf`;
-    return new Response(pdfBuffer, {
-      status: 200,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${fileName}"`,
-        'X-Generation-Time': `${duration}ms`,
-      },
+    // Upload to storage and get signed URL
+    const { storagePath, signedUrl, expiresAt } = await uploadReportPDF(
+      supabase,
+      pdfBuffer,
+      orgId,
+      weekEnding
+    );
+
+    // Save report metadata
+    const reportId = await saveReportMetadata(supabase, {
+      orgId,
+      weekEnding,
+      storagePath,
+      signedUrl,
+      signedUrlExpiresAt: expiresAt,
+      fileSizeBytes: pdfBuffer.length,
+      generationTimeMs: Date.now() - startTime,
+      triggerType: trigger,
     });
+
+    // Send email notification if RESEND_API_KEY is configured
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    let emailResult = null;
+
+    if (resendApiKey) {
+      // Get site manager email
+      const { data: manager } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('role', 'manager')
+        .limit(1)
+        .maybeSingle();
+
+      if (manager?.email) {
+        console.log(`📧 Sending email to ${manager.email}...`);
+
+        emailResult = await sendReportEmail({
+          resendApiKey,
+          to: manager.email,
+          recipientName: manager.full_name || 'Site Manager',
+          weekEnding,
+          signedUrl,
+          pdfBuffer,
+          complianceStatus: reportData.complianceScore.status,
+          treatmentCount: reportData.weeklyStats.treatmentCount,
+          nearMissCount: reportData.weeklyStats.nearMissCount,
+          projectName: reportData.projectName,
+        });
+
+        // Update email_sent status
+        if (emailResult.success) {
+          await supabase
+            .from('weekly_reports')
+            .update({
+              email_sent: true,
+              email_sent_to: manager.email,
+            })
+            .eq('id', reportId);
+        }
+      } else {
+        console.log('⚠️  No manager found, skipping email notification');
+      }
+    } else {
+      console.log('⚠️  RESEND_API_KEY not configured, skipping email notification');
+    }
+
+    const duration = Date.now() - startTime;
+    console.log(`✅ Report pipeline completed in ${duration}ms`);
+
+    // Return response based on trigger type
+    if (trigger === 'cron') {
+      // Cron: return JSON metadata
+      return new Response(
+        JSON.stringify({
+          success: true,
+          reportId,
+          weekEnding,
+          signedUrl,
+          generationTimeMs: duration,
+          emailSent: emailResult?.success || false,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    } else {
+      // Manual: return PDF buffer for direct download
+      const fileName = `weekly-report-${weekEnding.split('T')[0]}.pdf`;
+      return new Response(pdfBuffer, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${fileName}"`,
+          'X-Generation-Time': `${duration}ms`,
+        },
+      });
+    }
   } catch (error) {
     console.error('❌ Error generating weekly report:', error);
 
