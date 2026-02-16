@@ -642,6 +642,7 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
   - Moved `mobile/app/` to root `app/` directory (Expo Router standard structure)
   - Moved `mobile/components/`, `mobile/services/`, `mobile/tasks/` to root
   - Fixed all import paths in app directory files (../../src → ../src, etc.)
+  - Fixed import paths in tasks/backgroundSyncTask.ts (../../src/services → ../src/services)
   - Removed custom `index.js` (backed up to `index.backup.js`)
   - Original root App.tsx backed up to `App.backup.tsx` for reference
   - **All Phase 2 features are now accessible via 4-tab navigation**:
