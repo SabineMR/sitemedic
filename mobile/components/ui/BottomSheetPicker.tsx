@@ -12,9 +12,10 @@ export interface BottomSheetPickerProps {
   visible: boolean;
   onClose: () => void;
   title: string;
-  items: BottomSheetPickerItem[];
-  onSelect: (id: string) => void;
+  items?: BottomSheetPickerItem[];
+  onSelect?: (id: string) => void;
   selectedId?: string;
+  renderCustomContent?: () => React.ReactNode;
 }
 
 /**
@@ -34,6 +35,7 @@ export default function BottomSheetPicker({
   items,
   onSelect,
   selectedId,
+  renderCustomContent,
 }: BottomSheetPickerProps) {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['50%', '90%'], []);
@@ -48,7 +50,9 @@ export default function BottomSheetPicker({
 
   const handleItemPress = useCallback(
     (id: string) => {
-      onSelect(id);
+      if (onSelect) {
+        onSelect(id);
+      }
       onClose();
     },
     [onSelect, onClose]
@@ -78,25 +82,29 @@ export default function BottomSheetPicker({
         </Pressable>
       </View>
 
-      {/* Scrollable items */}
+      {/* Scrollable items or custom content */}
       <BottomSheetScrollView style={styles.scrollView}>
-        {items.map((item) => (
-          <Pressable
-            key={item.id}
-            onPress={() => handleItemPress(item.id)}
-            style={({ pressed }) => [
-              styles.item,
-              pressed && styles.itemPressed,
-              selectedId === item.id && styles.itemSelected,
-            ]}
-          >
-            <Text style={styles.itemLabel}>
-              {item.icon && `${item.icon} `}
-              {item.label}
-            </Text>
-            {selectedId === item.id && <Text style={styles.checkmark}>✓</Text>}
-          </Pressable>
-        ))}
+        {renderCustomContent ? (
+          renderCustomContent()
+        ) : (
+          items?.map((item) => (
+            <Pressable
+              key={item.id}
+              onPress={() => handleItemPress(item.id)}
+              style={({ pressed }) => [
+                styles.item,
+                pressed && styles.itemPressed,
+                selectedId === item.id && styles.itemSelected,
+              ]}
+            >
+              <Text style={styles.itemLabel}>
+                {item.icon && `${item.icon} `}
+                {item.label}
+              </Text>
+              {selectedId === item.id && <Text style={styles.checkmark}>✓</Text>}
+            </Pressable>
+          ))
+        )}
       </BottomSheetScrollView>
     </BottomSheet>
   );

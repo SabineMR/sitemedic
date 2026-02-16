@@ -118,7 +118,7 @@ CREATE OR REPLACE FUNCTION revoke_user_role(
 )
 RETURNS BOOLEAN AS $$
 DECLARE
-  v_deleted BOOLEAN;
+  v_row_count INT;
 BEGIN
   -- Check if caller is admin
   IF NOT is_admin() THEN
@@ -130,9 +130,9 @@ BEGIN
   WHERE user_id = p_user_id
     AND role = p_role;
 
-  GET DIAGNOSTICS v_deleted = FOUND;
+  GET DIAGNOSTICS v_row_count = ROW_COUNT;
 
-  IF v_deleted THEN
+  IF v_row_count > 0 THEN
     -- Log role revocation
     INSERT INTO medic_location_audit (
       action_type,
@@ -154,7 +154,7 @@ BEGIN
     );
   END IF;
 
-  RETURN v_deleted;
+  RETURN v_row_count > 0;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

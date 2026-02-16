@@ -122,7 +122,7 @@ medic_alerts AS (
 )
 SELECT
   m.id AS medic_id,
-  m.name AS medic_name,
+  m.first_name || ' ' || m.last_name AS medic_name,
 
   -- Ping metrics
   COALESCE(mp.total_pings, 0) AS total_pings,
@@ -266,8 +266,8 @@ SELECT
     ELSE 'poor'
   END AS performance_rating
 FROM geofence_arrivals
-WHERE total_arrivals > 0
-ORDER BY auto_detection_rate DESC NULLS LAST;
+WHERE (auto_detections + manual_detections) > 0
+ORDER BY auto_detections::NUMERIC / NULLIF(auto_detections + manual_detections, 0) DESC NULLS LAST;
 
 COMMENT ON VIEW geofence_performance IS 'Geofence auto-detection performance by booking';
 

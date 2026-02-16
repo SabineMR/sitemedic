@@ -1265,7 +1265,13 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
     - **Pending Bookings** (⏳) - Highlighted when >0 (yellow ring)
     - **Active Issues** (⚠️) - Highlighted when >0 (yellow ring)
     - **Revenue MTD** (💰) - Month-to-date total in GBP
-    - **Weekly Payouts** (💳) - Last payout amount
+      - **Real-time GBP to USD conversion on hover** 💱 **NEW**
+        - Hover over revenue/payout amounts to see USD equivalent
+        - Uses live exchange rates (cached hourly via exchangerate-api.com)
+        - Tooltip shows formatted USD amount (e.g., "≈ $10,731.50 USD")
+        - Graceful fallback to ~$1.27 approximate rate if API unavailable
+        - Helps international stakeholders understand financial metrics
+    - **Weekly Payouts** (💳) - Last payout amount (with USD conversion on hover)
     - Color-coded gradient icons (blue, green, yellow, red, purple, cyan)
     - Responsive: 1 col mobile → 2 cols tablet → 3 cols desktop → 6 cols wide
 
@@ -1307,9 +1313,20 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
     - Client-side components ('use client') for interactivity
     - usePathname for route detection
     - TypeScript interfaces for type safety
-    - Tailwind CSS for styling
+    - Tailwind CSS for styling (with fadeIn animation for tooltips)
     - Mock data (to be replaced with Supabase queries)
     - Modular component structure (StatCard, ActivityItem, QuickActionButton, AlertItem)
+    - **Currency conversion system** 💱 **AUTOMATED**:
+      - `useExchangeRate` hook - Fetches and caches GBP→USD rate (1-hour cache)
+      - `CurrencyWithTooltip` component - Reusable tooltip with animated display
+      - `AdminCurrency` component - Admin-specific wrapper with presets
+      - localStorage caching to minimize API calls
+      - **Pattern enforcement**:
+        - README.md in /admin with mandatory guidelines
+        - TypeScript types (CurrencyAmount) to guide developers
+        - VS Code snippets for quick correct usage
+        - Inline comments in existing code showing examples
+        - **ALL future admin pages automatically get this pattern**
 
 ### User Experience Improvements:
 - **Easy Navigation**: Sidebar always visible, one-click access to any admin section
@@ -1335,8 +1352,15 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
 
 ### Files Created/Modified:
 - `web/app/admin/layout.tsx` - ✅ New: Sidebar navigation wrapper
-- `web/app/admin/page.tsx` - ✅ Updated: Dashboard overview with stats + activity
+- `web/app/admin/page.tsx` - ✅ Updated: Dashboard overview with stats + activity + currency tooltips
 - `web/app/admin/command-center/layout.tsx` - Existing: Full-screen layout for map view
+- `web/hooks/useExchangeRate.ts` - ✅ New: Exchange rate hook with caching
+- `web/components/CurrencyWithTooltip.tsx` - ✅ New: Currency tooltip component
+- `web/app/admin/components/AdminCurrency.tsx` - ✅ New: Admin-specific currency wrapper
+- `web/app/admin/types.ts` - ✅ New: TypeScript types for admin patterns
+- `web/app/admin/README.md` - ✅ New: Developer guidelines for admin pages
+- `.vscode/admin-snippets.code-snippets` - ✅ New: VS Code snippets for quick usage
+- `web/tailwind.config.ts` - ✅ Updated: Added fadeIn animation for tooltips
 
 ---
 

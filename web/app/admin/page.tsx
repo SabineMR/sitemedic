@@ -3,20 +3,26 @@
  *
  * Main admin dashboard showing key metrics, recent activity, and quick actions.
  * Works with the sidebar layout for easy navigation.
+ *
+ * CURRENCY DISPLAY STANDARD:
+ * - ALL GBP amounts MUST use CurrencyWithTooltip component
+ * - This automatically shows USD conversion on hover
+ * - See README.md in this directory for full guidelines
  */
 
 'use client';
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import CurrencyWithTooltip from '../../components/CurrencyWithTooltip';
 
 interface DashboardStats {
   activeMedics: number;
   todayBookings: number;
   pendingBookings: number;
   issuesCount: number;
-  totalRevenue: number;
-  weeklyPayouts: number;
+  totalRevenue: number; // IMPORTANT: Display with currency={true} in StatCard for USD conversion
+  weeklyPayouts: number; // IMPORTANT: Display with currency={true} in StatCard for USD conversion
 }
 
 interface RecentActivity {
@@ -141,17 +147,19 @@ export default function AdminDashboard() {
           />
           <StatCard
             label="Revenue (MTD)"
-            value={`£${stats.totalRevenue.toLocaleString()}`}
+            value={stats.totalRevenue}
             icon="💰"
             trend="Month to date"
             color="purple"
+            currency={true}
           />
           <StatCard
             label="Weekly Payouts"
-            value={`£${stats.weeklyPayouts.toLocaleString()}`}
+            value={stats.weeklyPayouts}
             icon="💳"
             trend="Last payout"
             color="cyan"
+            currency={true}
           />
         </div>
 
@@ -260,6 +268,7 @@ function StatCard({
   trend,
   color,
   highlight = false,
+  currency = false,
 }: {
   label: string;
   value: string | number;
@@ -267,6 +276,7 @@ function StatCard({
   trend: string;
   color: 'blue' | 'green' | 'yellow' | 'red' | 'purple' | 'cyan';
   highlight?: boolean;
+  currency?: boolean;
 }) {
   const colorClasses = {
     blue: 'from-blue-600 to-blue-700',
@@ -291,7 +301,13 @@ function StatCard({
           <span className="text-xl">{icon}</span>
         </div>
       </div>
-      <div className="text-3xl font-bold text-white mb-1">{value}</div>
+      <div className="text-3xl font-bold text-white mb-1">
+        {currency && typeof value === 'number' ? (
+          <CurrencyWithTooltip amount={value} className="text-3xl font-bold text-white" />
+        ) : (
+          value
+        )}
+      </div>
       <div className="text-gray-500 text-xs">{trend}</div>
     </div>
   );
