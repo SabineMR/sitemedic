@@ -1,8 +1,8 @@
 import * as TaskManager from 'expo-task-manager';
 import * as Battery from 'expo-battery';
 import NetInfo from '@react-native-community/netinfo';
-import { syncQueue } from '../../src/services/SyncQueue';
-import { photoUploadQueue } from '../../src/services/PhotoUploadQueue';
+import { syncQueue } from '../src/services/SyncQueue';
+import { photoUploadQueue } from '../src/services/PhotoUploadQueue';
 
 const BACKGROUND_SYNC_TASK = 'BACKGROUND_SYNC';
 
