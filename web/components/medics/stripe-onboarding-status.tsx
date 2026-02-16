@@ -1,14 +1,7 @@
-/**
- * Stripe Onboarding Status Component
- * Phase 6.5: Display Stripe Express account onboarding progress
- */
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface StripeOnboardingStatusProps {
   medicId: string;
@@ -16,184 +9,223 @@ interface StripeOnboardingStatusProps {
 
 interface MedicStripeData {
   stripe_account_id: string | null;
-  stripe_onboarding_complete: boolean;
   stripe_onboarding_url: string | null;
+  stripe_onboarding_complete: boolean;
+  stripe_charges_enabled: boolean;
+  stripe_payouts_enabled: boolean;
+  updated_at: string;
 }
 
 export function StripeOnboardingStatus({ medicId }: StripeOnboardingStatusProps) {
-  const [medicData, setMedicData] = useState<MedicStripeData | null>(null);
-  const [accountStatus, setAccountStatus] = useState<{
-    charges_enabled: boolean;
-    payouts_enabled: boolean;
-    details_submitted: boolean;
-  } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [medic, setMedic] = useState<MedicStripeData | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
 
-  // Fetch medic Stripe data
+  const supabase = createClient();
+
   const fetchMedicData = async () => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('medics')
-      .select('stripe_account_id, stripe_onboarding_complete, stripe_onboarding_url')
-      .eq('id', medicId)
-      .single();
+    setLoading(true);
+    setError(null);
 
-    if (error) {
-      console.error('Error fetching medic data:', error);
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('medics')
+        .select('stripe_account_id, stripe_onboarding_url, stripe_onboarding_complete, stripe_charges_enabled, stripe_payouts_enabled, updated_at')
+        .eq('id', medicId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      setMedic(data);
+    } catch (err) {
+      console.error('Error fetching medic Stripe data:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
       setLoading(false);
-      return;
-    }
-
-    setMedicData(data);
-    setLoading(false);
-
-    // If account exists, fetch status
-    if (data.stripe_account_id) {
-      await checkAccountStatus(data.stripe_account_id);
     }
   };
 
-  // Check Stripe account status
-  const checkAccountStatus = async (stripeAccountId: string) => {
+  const checkStripeStatus = async () => {
+    if (!medic?.stripe_account_id) return;
+
     setChecking(true);
-    const supabase = createClient();
 
     try {
-      const { data, error } = await supabase.functions.invoke('stripe-connect', {
+      // Call Stripe Connect Edge Function to check status
+      const { data, error: checkError } = await supabase.functions.invoke('stripe-connect', {
         body: {
           action: 'check_account_status',
-          stripe_account_id: stripeAccountId,
+          stripe_account_id: medic.stripe_account_id,
         },
       });
 
-      if (error) {
-        console.error('Error checking account status:', error);
-        setChecking(false);
-        return;
-      }
+      if (checkError) throw checkError;
 
-      setAccountStatus(data);
+      // Update medics table with latest status
+      await supabase
+        .from('medics')
+        .update({
+          stripe_onboarding_complete: data.charges_enabled && data.payouts_enabled,
+          stripe_charges_enabled: data.charges_enabled,
+          stripe_payouts_enabled: data.payouts_enabled,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', medicId);
 
-      // Update medics table if onboarding is complete
-      if (data.details_submitted && data.payouts_enabled) {
-        await supabase
-          .from('medics')
-          .update({ stripe_onboarding_complete: true })
-          .eq('id', medicId);
-      }
+      // Refresh data
+      await fetchMedicData();
     } catch (err) {
-      console.error('Account status check error:', err);
+      console.error('Error checking Stripe status:', err);
+    } finally {
+      setChecking(false);
     }
-
-    setChecking(false);
   };
 
-  // Auto-refresh every 30 seconds to check for completion
   useEffect(() => {
     fetchMedicData();
 
+    // Auto-refresh every 30 seconds if onboarding not complete
     const interval = setInterval(() => {
-      if (medicData?.stripe_account_id && !medicData.stripe_onboarding_complete) {
-        checkAccountStatus(medicData.stripe_account_id);
+      if (medic && medic.stripe_account_id && !medic.stripe_onboarding_complete) {
+        checkStripeStatus();
       }
-    }, 30000); // 30 seconds
+    }, 30000);
 
     return () => clearInterval(interval);
-  }, [medicId, medicData?.stripe_account_id, medicData?.stripe_onboarding_complete]);
-
-  const handleContinueOnboarding = () => {
-    if (medicData?.stripe_onboarding_url) {
-      window.open(medicData.stripe_onboarding_url, '_blank');
-    }
-  };
+  }, [medicId, medic?.stripe_onboarding_complete]);
 
   if (loading) {
     return (
-      <div className="p-4 bg-slate-50 rounded-md">
-        <p className="text-slate-600">Loading payout account status...</p>
+      <div className="flex items-center justify-center p-4">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        <span className="ml-2 text-gray-600 text-sm">Loading Stripe status...</span>
       </div>
     );
   }
 
-  if (!medicData?.stripe_account_id) {
+  if (error) {
     return (
-      <div className="p-4 bg-yellow-50 rounded-md border border-yellow-200">
-        <h3 className="font-semibold text-yellow-900 mb-2">Payout Account Not Set Up</h3>
-        <p className="text-sm text-yellow-800 mb-3">
-          Complete your IR35 assessment above to set up your payout account.
-        </p>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <p className="text-red-800 text-sm">{error}</p>
       </div>
     );
   }
 
-  // Onboarding complete
-  if (medicData.stripe_onboarding_complete || (accountStatus?.details_submitted && accountStatus?.payouts_enabled)) {
+  if (!medic) {
+    return null;
+  }
+
+  // Not Started
+  if (!medic.stripe_account_id) {
     return (
-      <div className="p-4 bg-green-50 rounded-md border border-green-200">
-        <div className="flex items-center gap-2 mb-2">
-          <svg
-            className="h-5 w-5 text-green-600"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path d="M5 13l4 4L19 7"></path>
-          </svg>
-          <h3 className="font-semibold text-green-900">Payout Account Active</h3>
-        </div>
-        <p className="text-sm text-green-800 mb-2">
-          Your bank account is connected and ready to receive payouts.
-        </p>
-        {accountStatus && (
-          <div className="text-xs text-green-700 space-y-1">
-            <p>Charges enabled: {accountStatus.charges_enabled ? 'Yes' : 'No'}</p>
-            <p>Payouts enabled: {accountStatus.payouts_enabled ? 'Yes' : 'No'}</p>
+      <div className="bg-gray-50 border rounded-lg p-6">
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0">
+            <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
           </div>
-        )}
+          <div className="flex-1">
+            <h3 className="font-semibold text-gray-900 mb-1">Payout Account Not Set Up</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              You need to set up your Stripe Express account to receive payouts. This takes about 5 minutes.
+            </p>
+            <p className="text-xs text-gray-500 mb-3">
+              IR35 status must be completed before setting up payouts.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
-  // Onboarding in progress
-  return (
-    <div className="p-4 bg-orange-50 rounded-md border border-orange-200">
-      <div className="flex items-center gap-2 mb-2">
-        <svg
-          className="h-5 w-5 text-orange-600"
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-        </svg>
-        <h3 className="font-semibold text-orange-900">Complete Stripe Onboarding</h3>
-      </div>
-      <p className="text-sm text-orange-800 mb-3">
-        You need to complete your bank account details before receiving payouts.
-      </p>
-      {accountStatus && (
-        <div className="text-xs text-orange-700 mb-3 space-y-1">
-          <p>Details submitted: {accountStatus.details_submitted ? 'Yes' : 'No'}</p>
-          <p>Status: {checking ? 'Checking...' : 'In progress'}</p>
+  // In Progress
+  if (!medic.stripe_onboarding_complete) {
+    return (
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0">
+            <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-gray-900 mb-1">Complete Stripe Onboarding</h3>
+            <p className="text-sm text-gray-700 mb-4">
+              You need to complete your bank account details before receiving payouts.
+            </p>
+            <div className="space-y-3">
+              <div className="text-xs text-gray-600">
+                <strong>Last updated:</strong> {new Date(medic.updated_at).toLocaleString()}
+              </div>
+              <div className="flex gap-3">
+                <a
+                  href={medic.stripe_onboarding_url || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition text-sm font-medium"
+                >
+                  Continue Onboarding
+                </a>
+                <button
+                  onClick={checkStripeStatus}
+                  disabled={checking}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-medium disabled:opacity-50"
+                >
+                  {checking ? 'Checking...' : 'Refresh Status'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
-      <Button
-        onClick={handleContinueOnboarding}
-        variant="outline"
-        className="w-full border-orange-300 hover:bg-orange-100"
-      >
-        Continue Onboarding
-      </Button>
-      <p className="text-xs text-orange-600 mt-2">
-        Auto-refreshing every 30 seconds...
-      </p>
+      </div>
+    );
+  }
+
+  // Complete
+  return (
+    <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+      <div className="flex items-start gap-4">
+        <div className="flex-shrink-0">
+          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-gray-900 mb-1">Payout Account Active</h3>
+          <p className="text-sm text-gray-700 mb-4">
+            Your Stripe Express account is fully set up and ready to receive payouts.
+          </p>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-gray-600">Charges enabled:</span>
+              <span className={medic.stripe_charges_enabled ? 'text-green-700 font-medium' : 'text-red-700'}>
+                {medic.stripe_charges_enabled ? 'Yes' : 'No'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-600">Payouts enabled:</span>
+              <span className={medic.stripe_payouts_enabled ? 'text-green-700 font-medium' : 'text-red-700'}>
+                {medic.stripe_payouts_enabled ? 'Yes' : 'No'}
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={checkStripeStatus}
+            disabled={checking}
+            className="mt-4 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition text-sm font-medium disabled:opacity-50"
+          >
+            {checking ? 'Checking...' : 'Refresh Status'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
