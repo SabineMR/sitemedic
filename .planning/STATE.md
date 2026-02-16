@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 Phase: 6.5 of 7 (Payments & Payouts) — In progress
 Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 06.5-02-PLAN.md (Friday Payout Automation)
+Last activity: 2026-02-16 — Completed 06.5-01-PLAN.md (Client Payment Processing)
 
 Progress: [██████████████] 100% (49/49 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6, 6.5)
 
@@ -20,8 +20,8 @@ Progress: [██████████████] 100% (49/49 plans across 
 
 **Velocity:**
 - Total plans completed: 49
-- Average duration: 4.3 min
-- Total execution time: 3.52 hours
+- Average duration: 4.4 min
+- Total execution time: 3.62 hours
 
 **By Phase:**
 
@@ -36,11 +36,11 @@ Progress: [██████████████] 100% (49/49 plans across 
 | 04.6-customer-onboarding | 7/7 | 52 min | 7.4 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
-| 06.5-payments-payouts | 1/3 | 4 min | 4 min |
+| 06.5-payments-payouts | 1/3 | 9 min | 9 min |
 
 **Recent Trend:**
-- Last 5 plans: 04.6-05 (4 min), 04.6-06 (8 min), 04.6-07 (6 min), 04.5-03 (6 min), 06.5-02 (4 min)
-- Trend: Phase 6.5 started - Automated payout system with Stripe Transfers
+- Last 5 plans: 04.6-06 (8 min), 04.6-07 (6 min), 04.5-03 (6 min), 06.5-02 (4 min), 06.5-01 (9 min)
+- Trend: Phase 6.5 in progress - Client payment processing with Stripe Payment Intents
 
 *Updated after each plan completion*
 
@@ -370,6 +370,13 @@ Recent decisions affecting current work:
 - D-04.6-05-006: Security notice warns clients not to share unique signing link
 - D-04.6-05-007: Webhook handler returns 200 OK even on processing errors (prevents Resend retries)
 
+**From Plan 06.5-01:**
+- D-06.5-01-001: Auto-create Stripe Customer on first payment if client doesn't have stripe_customer_id (seamless prepay experience)
+- D-06.5-01-002: Use automatic_payment_methods: { enabled: true } for 3D Secure support (SCA compliance)
+- D-06.5-01-003: Store payment record before confirmation with status 'pending' (audit trail of all payment attempts)
+- D-06.5-01-004: Use redirect: 'if_required' in confirmPayment (only redirect for 3D Secure when necessary)
+- D-06.5-01-005: Update booking status to 'confirmed' after payment success (payment-gated booking confirmation)
+
 **From Plan 06.5-02:**
 - D-06.5-02-001: Use pg_cron with Edge Function HTTP POST for Friday 9am automation (Supabase-native cron scheduling)
 - D-06.5-02-002: UK Faster Payments via Stripe Transfer API to medic Express accounts (2 business day settlement)
@@ -420,8 +427,8 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T21:23:43Z
-Stopped at: Completed 06.5-02-PLAN.md — Friday Payout Automation (pg_cron scheduler, Stripe Transfers for UK Faster Payments, 60/40 revenue split, admin dashboard)
+Last session: 2026-02-16T21:29:16Z
+Stopped at: Completed 06.5-01-PLAN.md — Client Payment Processing (Stripe Payment Intents with 3D Secure, automatic customer creation, booking confirmation)
 Resume file: None
 
 ---
