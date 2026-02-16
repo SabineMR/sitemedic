@@ -12,16 +12,16 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 Phase: 2 of 7 (Mobile Core)
 Plan: 1 of 8 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 02-02-PLAN.md (Photo & Signature Components)
+Last activity: 2026-02-16 — Completed 02-01-PLAN.md (Dependencies & Shared Components)
 
-Progress: [█████░░░░░] 59% (10/17 plans across all active phases)
+Progress: [█████░░░░░] 50% (10/20 plans across all active phases)
 
 ## Performance Metrics
 
 **Velocity:**
 - Total plans completed: 10
-- Average duration: 3.4 min
-- Total execution time: 0.57 hours
+- Average duration: 3.7 min
+- Total execution time: 0.62 hours
 
 **By Phase:**
 
@@ -29,11 +29,11 @@ Progress: [█████░░░░░] 59% (10/17 plans across all active ph
 |-------|-------|-------|----------|
 | 01-foundation | 5/5 | 20 min | 4 min |
 | 01.5-business-foundation | 4/4 | 10 min | 2.5 min |
-| 02-mobile-core | 1/8 | 4 min | 4 min |
+| 02-mobile-core | 1/8 | 7 min | 7 min |
 
 **Recent Trend:**
-- Last 5 plans: 01.5-01 (2 min), 01.5-03 (3 min), 01.5-04 (3 min), 01.5-02 (4 min), 02-02 (4 min)
-- Trend: Stable (consistent ~2-4 min per plan)
+- Last 5 plans: 01.5-03 (3 min), 01.5-04 (3 min), 01.5-02 (4 min), 02-01 (7 min)
+- Trend: Recent plan longer (7 min dependency installation)
 
 *Updated after each plan completion*
 
@@ -113,11 +113,17 @@ Recent decisions affecting current work:
 - D-01.5-02-005: Express accounts for medics use GB country and transfers capability (UK-based medics)
 - D-01.5-02-006: Payment Intent metadata includes booking_id and client_id for event correlation
 
-**From Plan 02-02:**
-- D-02-02-001: Use quality: 1.0 in ImagePicker to prevent iOS GIF compression bug (Research Pitfall 1)
-- D-02-02-002: Full-width photo cards (200px height) instead of thumbnails for better gloves-on tap targets (Research anti-pattern)
-- D-02-02-003: Thick signature stroke (dotSize: 3, minWidth: 3, maxWidth: 4) for gloves-on signing (Research Pattern 4)
-- D-02-02-004: Single-pass compression (1200px, 70% quality) with fallback to original URI on error
+**From Plan 02-01:**
+- D-02-01-001: Use @gorhom/bottom-sheet (not @gorhom/react-native-bottom-sheet) for picker modals
+- D-02-01-002: 56pt minimum tap targets (exceeds iOS 44pt and Android 48pt) for gloves-on construction site use
+- D-02-01-003: Extended hit slop (+4pt) on all interactive elements for easier gloved tapping
+- D-02-01-004: High contrast colors (#2563EB blue, #EF4444 red, #10B981 green) for outdoor sunlight readability
+- D-02-01-005: Taxonomy data as typed const arrays (not database tables) for zero-latency offline access
+- D-02-01-006: Kebab-case IDs for all taxonomy items for API/URL consistency
+- D-02-01-007: RIDDOR flag on injury types (isRiddorReportable: boolean) for Phase 6 auto-reporting
+- D-02-01-008: Severity levels on outcomes (low/medium/high) for escalation decision logic
+- D-02-01-009: Emoji icons on near-miss categories for faster visual scanning
+- D-02-01-010: Priority order on daily checks (1-10) for systematic inspection workflow
 
 ### Pending Todos
 
@@ -132,8 +138,8 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T00:41:28Z
-Stopped at: Completed 02-02-PLAN.md — Photo & Signature Components
+Last session: 2026-02-16T00:42:47Z
+Stopped at: Completed 02-01-PLAN.md — Dependencies & Shared Components
 Resume file: None
 
 ---
