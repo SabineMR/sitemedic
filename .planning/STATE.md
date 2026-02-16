@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 4 of 7 (Web Dashboard)
-Plan: 3 of 6 in current phase
+Plan: 5 of 6 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 04-03-PLAN.md (Treatment Log with Photos)
+Last activity: 2026-02-16 — Completed 04-05-PLAN.md (Export and Responsive Dashboard)
 
-Progress: [███████████░] 96.5% (28/29 plans across Phases 1, 1.5, 2, 3, 4)
+Progress: [███████████░] 100% (29/29 plans across Phases 1, 1.5, 2, 3, 4)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 28
-- Average duration: 3.8 min
-- Total execution time: 1.86 hours
+- Total plans completed: 29
+- Average duration: 3.9 min
+- Total execution time: 1.96 hours
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: [███████████░] 96.5% (28/29 plans across Phase
 | 01.5-business-foundation | 4/4 | 10 min | 2.5 min |
 | 02-mobile-core | 9/9 | 50 min | 5.6 min |
 | 03-sync-engine | 7/7 | 24 min | 3.4 min |
-| 04-web-dashboard | 3/6 | 26 min | 8.7 min |
+| 04-web-dashboard | 4/6 | 41 min | 10.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-07 (2.4 min), 04-01 (14 min), 04-02 (6 min), 04-03 (12 min)
-- Trend: Phase 4 progressing - treatment log with photos and interactive filtering delivered, reusable DataTable component created
+- Last 5 plans: 04-01 (14 min), 04-02 (6 min), 04-03 (12 min), 04-04 (9 min), 04-05 (15 min)
+- Trend: Phase 4 dashboard foundation complete - export functionality (CSV/PDF), responsive design, and interactive tables delivered
 
 *Updated after each plan completion*
 
@@ -229,6 +229,15 @@ Recent decisions affecting current work:
 - D-04-04-004: Worker search filters company and role via text inputs (faster than dropdowns for large datasets)
 - D-04-04-005: DateRangeFilter uses native HTML date inputs (simpler, no library dependency)
 
+**From Plan 04-05:**
+- D-04-05-001: UK date format (dd/MM/yyyy HH:mm) in CSV and PDF exports for HSE audit compliance
+- D-04-05-002: Export filtered data (not all data) so managers export only what they see
+- D-04-05-003: react-papaparse for CSV generation with BOM prefix for Excel UTF-8 compatibility
+- D-04-05-004: jsPDF + jspdf-autotable for formatted A4 landscape PDF reports
+- D-04-05-005: Horizontal table scrolling on narrow viewports (<768px) with min-w-[800px]
+- D-04-05-006: Filters stack on mobile (flex-col), inline on desktop (flex-row)
+- D-04-05-007: Certification status hard-coded as 'Active' in worker CSV (Phase 7 will implement real tracking)
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -263,9 +272,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T04:19:50Z
-Stopped at: Completed 04-03-PLAN.md — Treatment Log with Photos (interactive filtering, photo grid, 60s polling, reusable DataTable component)
+Last session: 2026-02-16T04:43:54Z
+Stopped at: Completed 04-05-PLAN.md — Export and Responsive Dashboard (CSV/PDF exports, responsive tables, filtered data export)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) in progress (3/6 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) in progress (4/6 plans)*
