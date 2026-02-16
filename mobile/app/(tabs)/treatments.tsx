@@ -122,7 +122,8 @@ export default function TreatmentsScreen() {
   };
 
   // Get outcome badge status color
-  const getOutcomeBadgeStatus = (outcomeId: string): 'green' | 'amber' | 'red' | 'grey' => {
+  const getOutcomeBadgeStatus = (outcomeId: string | undefined): 'green' | 'amber' | 'red' | 'grey' => {
+    if (!outcomeId) return 'grey';
     const outcome = OUTCOME_CATEGORIES.find((oc) => oc.id === outcomeId);
     if (!outcome) return 'grey';
 

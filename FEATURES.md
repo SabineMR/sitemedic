@@ -629,6 +629,32 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
 **Status**: 🚧 **IN PROGRESS** - Plans 02-01, 02-02, 02-03, 02-04, and 02-05 complete (5/8 plans)
 **Goal**: Treatment logging, worker profiles, near-miss capture, daily safety checks
 
+### iOS Mobile App Setup ✅ **COMPLETED - 2026-02-15**
+- **iOS Native Build Configuration**
+  - Generated iOS native project using `expo run:ios`
+  - CocoaPods dependency installation (95+ pods including Expo modules)
+  - Xcode project configuration with bundle identifier: `com.sitemedic.app`
+  - iOS 26.2 simulator compatibility (iPhone 15)
+
+- **pnpm Module Resolution Fix**
+  - Created custom `index.js` entry point to bypass pnpm symlink issues
+  - Updated `package.json` main field from `node_modules/expo/AppEntry.js` to `index.js`
+  - Created `metro.config.js` with pnpm-compatible resolver configuration
+  - Fixed "Unable to resolve module ../../App" error caused by pnpm's `.pnpm/` nested structure
+
+- **Development Environment**
+  - Metro bundler running on `http://localhost:8081`
+  - Development server on port 30500 (web version)
+  - Hot reload enabled for rapid development
+  - App successfully displays "SiteMedic" with sync status indicator
+
+- **Technical Stack Verified**
+  - React Native 0.81.5 with New Architecture enabled
+  - Expo SDK 54
+  - WatermelonDB offline database initialized successfully
+  - Auth and Sync context providers working
+  - Offline-first architecture confirmed operational
+
 ### Completed (Plan 02-01):
 - **Phase 2 Dependencies Installed** (11 packages)
   - expo-image-picker, expo-image-manipulator (photo documentation)
