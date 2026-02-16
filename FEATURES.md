@@ -1550,6 +1550,14 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
 - Alert type analysis
 - Comprehensive report generation
 
+**Security & Access Controls (Task #12):** ✅ **COMPLETE**
+- Row-Level Security (RLS) on all tables
+- Role-based access control (RBAC)
+- Immutable audit trails
+- Admin access logging
+- Rate limiting
+- GDPR-compliant data access
+
 ---
 
 ### Real-Time Alerts System ✅ **COMPLETE**
@@ -2862,11 +2870,16 @@ SELECT generate_location_report(
 - Rate limiting per medic (max 120 pings/hour)
 - Admin access audit logging
 
-**Testing (Task #13):**
-- Edge case testing (airplane mode, battery drain, app kill, GPS disabled)
-- Load testing (50 concurrent medics, 6000 pings/hour)
-- WebSocket stability testing
-- Map rendering performance (50 markers + polylines)
+**Testing & Monitoring (Task #13):**
+- Comprehensive testing documentation (TESTING.md)
+- Unit testing (database functions, Edge Function validation, GPS spoofing detection)
+- Integration testing (mobile→backend, backend→admin real-time flows)
+- End-to-end scenarios (complete shift workflow, offline resilience, alert handling)
+- Performance benchmarks (location ping ingestion <200ms p95, batch processing <500ms)
+- Security testing (RLS policy verification, GDPR compliance, audit trail integrity)
+- Edge case testing (GPS jitter, battery dies, clock skew, duplicate pings, airplane mode)
+- Monitoring queries (health checks, stuck medics, alert trends, geofence success rates)
+- Pre-deployment and post-deployment testing checklists
 
 ---
 

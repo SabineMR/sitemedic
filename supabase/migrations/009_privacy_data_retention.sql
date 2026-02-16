@@ -56,13 +56,20 @@ $$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION cleanup_old_location_pings IS 'Auto-delete location pings older than 30 days for GDPR compliance';
 
 -- Schedule cleanup job to run daily at 2 AM
-SELECT cron.schedule(
-  'location-pings-cleanup',
-  '0 2 * * *', -- Every day at 2 AM
-  $$
-  SELECT cleanup_old_location_pings();
-  $$
-);
+-- Note: pg_cron must be enabled in production Supabase (automatic)
+DO $block$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'cron') THEN
+    PERFORM cron.schedule(
+      'location-pings-cleanup',
+      '0 2 * * *', -- Every day at 2 AM
+      'SELECT cleanup_old_location_pings();'
+    );
+  ELSE
+    RAISE NOTICE 'pg_cron not available - run SELECT cleanup_old_location_pings() manually or enable pg_cron';
+  END IF;
+END
+$block$;
 
 -- =============================================================================
 -- FUNCTION: Export medic data (GDPR Right to Access)
@@ -206,7 +213,7 @@ DECLARE
   v_pings_deleted BIGINT;
   v_events_deleted BIGINT;
   v_alerts_deleted BIGINT;
-  v_consent_withdrawn BOOLEAN;
+  v_consent_withdrawn INT;
 BEGIN
   -- Verify requesting user has permission (medic themselves or admin)
   -- This check should be enforced by RLS, but adding extra validation
@@ -269,7 +276,7 @@ BEGIN
   WHERE medic_id = p_medic_id
     AND withdrawn_at IS NULL;
 
-  GET DIAGNOSTICS v_consent_withdrawn = FOUND;
+  GET DIAGNOSTICS v_consent_withdrawn = ROW_COUNT;
 
   -- Create final audit entry (this will remain for 6 years)
   INSERT INTO medic_location_audit (
@@ -372,13 +379,20 @@ $$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION anonymize_old_audit_logs IS 'Anonymize audit logs older than 6 years (keep for compliance, remove PII)';
 
 -- Schedule anonymization job to run annually
-SELECT cron.schedule(
-  'audit-logs-anonymization',
-  '0 3 1 1 *', -- Every Jan 1 at 3 AM
-  $$
-  SELECT anonymize_old_audit_logs();
-  $$
-);
+-- Note: pg_cron must be enabled in production Supabase (automatic)
+DO $block$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'cron') THEN
+    PERFORM cron.schedule(
+      'audit-logs-anonymization',
+      '0 3 1 1 *', -- Every Jan 1 at 3 AM
+      'SELECT anonymize_old_audit_logs();'
+    );
+  ELSE
+    RAISE NOTICE 'pg_cron not available - run SELECT anonymize_old_audit_logs() manually or enable pg_cron';
+  END IF;
+END
+$block$;
 
 -- =============================================================================
 -- VIEW: Medic privacy dashboard
