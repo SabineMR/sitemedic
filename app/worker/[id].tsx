@@ -11,8 +11,8 @@ import { Q } from '@nozbe/watermelondb';
 import { getDatabase } from '../../src/lib/watermelon';
 import Worker from '../../src/database/models/Worker';
 import Treatment from '../../src/database/models/Treatment';
-import LargeTapButton from '../components/ui/LargeTapButton';
-import StatusBadge from '../components/ui/StatusBadge';
+import LargeTapButton from '../../components/ui/LargeTapButton';
+import StatusBadge from '../../components/ui/StatusBadge';
 
 interface CertificationExpiry {
   type: string;

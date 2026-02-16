@@ -26,10 +26,10 @@ import { Q } from '@nozbe/watermelondb';
 import { getDatabase } from '../../src/lib/watermelon';
 import Treatment from '../../src/database/models/Treatment';
 import Worker from '../../src/database/models/Worker';
-import LargeTapButton from '../components/ui/LargeTapButton';
-import StatusBadge from '../components/ui/StatusBadge';
-import { INJURY_TYPES } from '../services/taxonomy/injury-types';
-import { OUTCOME_CATEGORIES } from '../services/taxonomy/outcome-categories';
+import LargeTapButton from '../../components/ui/LargeTapButton';
+import StatusBadge from '../../components/ui/StatusBadge';
+import { INJURY_TYPES } from '../../services/taxonomy/injury-types';
+import { OUTCOME_CATEGORIES } from '../../services/taxonomy/outcome-categories';
 
 interface TreatmentWithWorker extends Treatment {
   workerName?: string;

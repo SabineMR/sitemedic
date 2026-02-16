@@ -10,8 +10,8 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { getDatabase } from '../../src/lib/watermelon';
 import Worker from '../../src/database/models/Worker';
-import LargeTapButton from '../components/ui/LargeTapButton';
-import BottomSheetPicker from '../components/ui/BottomSheetPicker';
+import LargeTapButton from '../../components/ui/LargeTapButton';
+import BottomSheetPicker from '../../components/ui/BottomSheetPicker';
 import { useSync } from '../../src/contexts/SyncContext';
 
 interface WorkerInductionFormData {

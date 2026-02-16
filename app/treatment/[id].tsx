@@ -24,12 +24,12 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { getDatabase } from '../../src/lib/watermelon';
 import Treatment from '../../src/database/models/Treatment';
 import Worker from '../../src/database/models/Worker';
-import LargeTapButton from '../components/ui/LargeTapButton';
-import StatusBadge from '../components/ui/StatusBadge';
-import { INJURY_TYPES } from '../services/taxonomy/injury-types';
-import { TREATMENT_TYPES } from '../services/taxonomy/treatment-types';
-import { OUTCOME_CATEGORIES } from '../services/taxonomy/outcome-categories';
-import { BODY_PARTS } from '../services/taxonomy/body-parts';
+import LargeTapButton from '../../components/ui/LargeTapButton';
+import StatusBadge from '../../components/ui/StatusBadge';
+import { INJURY_TYPES } from '../../services/taxonomy/injury-types';
+import { TREATMENT_TYPES } from '../../services/taxonomy/treatment-types';
+import { OUTCOME_CATEGORIES } from '../../services/taxonomy/outcome-categories';
+import { BODY_PARTS } from '../../services/taxonomy/body-parts';
 import { useSync } from '../../src/contexts/SyncContext';
 
 export default function TreatmentDetailScreen() {

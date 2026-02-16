@@ -18,9 +18,9 @@ import { useRouter } from 'expo-router';
 import { Q } from '@nozbe/watermelondb';
 import { getDatabase } from '../../src/lib/watermelon';
 import SafetyCheck from '../../src/database/models/SafetyCheck';
-import { DAILY_CHECK_ITEMS } from '../services/taxonomy/daily-check-items';
-import { DailyChecklistItem } from '../components/safety/DailyChecklistItem';
-import { AutoSaveIndicator } from '../components/forms/AutoSaveForm';
+import { DAILY_CHECK_ITEMS } from '../../services/taxonomy/daily-check-items';
+import { DailyChecklistItem } from '../../components/safety/DailyChecklistItem';
+import { AutoSaveIndicator } from '../../components/forms/AutoSaveForm';
 import { useSync } from '../../src/contexts/SyncContext';
 import { photoUploadQueue } from '../../src/services/PhotoUploadQueue';
 

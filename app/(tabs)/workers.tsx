@@ -22,8 +22,8 @@ import { useDatabase } from '@nozbe/watermelondb/hooks';
 import { Q } from '@nozbe/watermelondb';
 import { withObservables } from '@nozbe/watermelondb/react';
 import Worker from '../../src/database/models/Worker';
-import LargeTapButton from '../components/ui/LargeTapButton';
-import StatusBadge from '../components/ui/StatusBadge';
+import LargeTapButton from '../../components/ui/LargeTapButton';
+import StatusBadge from '../../components/ui/StatusBadge';
 
 interface WorkersListProps {
   workers: Worker[];

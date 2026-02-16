@@ -27,10 +27,10 @@ import {
 import * as Location from 'expo-location';
 import { useDatabase } from '@nozbe/watermelondb/hooks';
 import NearMiss from '../../src/database/models/NearMiss';
-import NearMissQuickCapture from '../components/safety/NearMissQuickCapture';
-import LargeTapButton from '../components/ui/LargeTapButton';
-import StatusBadge from '../components/ui/StatusBadge';
-import { NEAR_MISS_CATEGORIES } from '../services/taxonomy/near-miss-categories';
+import NearMissQuickCapture from '../../components/safety/NearMissQuickCapture';
+import LargeTapButton from '../../components/ui/LargeTapButton';
+import StatusBadge from '../../components/ui/StatusBadge';
+import { NEAR_MISS_CATEGORIES } from '../../services/taxonomy/near-miss-categories';
 import { useSync } from '../../src/contexts/SyncContext';
 import { photoUploadQueue } from '../../src/services/PhotoUploadQueue';
 
