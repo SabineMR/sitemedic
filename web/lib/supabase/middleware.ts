@@ -42,24 +42,38 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Redirect to /login if not authenticated (except for public routes and login itself)
-  const isPublicRoute =
-    request.nextUrl.pathname === '/' ||
-    request.nextUrl.pathname === '/login' ||
-    request.nextUrl.pathname.startsWith('/pricing') ||
-    request.nextUrl.pathname.startsWith('/terms-and-conditions') ||
-    request.nextUrl.pathname.startsWith('/privacy-policy') ||
-    request.nextUrl.pathname.startsWith('/refund-policy') ||
-    request.nextUrl.pathname.startsWith('/cookie-policy') ||
-    request.nextUrl.pathname.startsWith('/complaints') ||
-    request.nextUrl.pathname.startsWith('/accessibility-statement') ||
-    request.nextUrl.pathname.startsWith('/acceptable-use') ||
-    request.nextUrl.pathname.startsWith('/api/');
+  // Define public routes (no auth required)
+  const publicRoutes = [
+    '/login',
+    '/pricing',
+    '/terms-and-conditions',
+    '/privacy-policy',
+    '/refund-policy',
+    '/cookie-policy',
+    '/complaints',
+    '/accessibility-statement',
+    '/acceptable-use',
+    '/admin', // Admin routes (existing admin pages)
+  ];
 
+  const isPublicRoute = publicRoutes.some(
+    (route) =>
+      request.nextUrl.pathname === route ||
+      request.nextUrl.pathname.startsWith(`${route}/`) ||
+      request.nextUrl.pathname.startsWith('/api/')
+  );
+
+  // Redirect unauthenticated users to /login (except for public routes)
   if (!user && !isPublicRoute) {
-    // Redirect to login
     const url = request.nextUrl.clone();
     url.pathname = '/login';
+    return NextResponse.redirect(url);
+  }
+
+  // Redirect authenticated users from /login to dashboard
+  if (user && request.nextUrl.pathname === '/login') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/';
     return NextResponse.redirect(url);
   }
 
