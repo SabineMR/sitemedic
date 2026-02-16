@@ -1,6 +1,13 @@
 import * as BackgroundTask from 'expo-background-task';
 import { BACKGROUND_SYNC_TASK } from '../../tasks/backgroundSyncTask';
 
+// Constraint Strategy (expo-background-task limitation):
+// expo-background-task does NOT expose WorkManager-style constraint APIs.
+// Battery and network constraints are enforced at RUNTIME in tasks/backgroundSyncTask.ts:
+// - Battery: Skip sync if < 15% and not charging
+// - Network: Skip photo uploads if cellular-only (data sync proceeds on any connection)
+// - Idle: Not enforced (OS handles via BGTaskScheduler/WorkManager scheduling)
+
 export async function registerBackgroundSync(): Promise<void> {
   try {
     await BackgroundTask.registerTaskAsync(BACKGROUND_SYNC_TASK, {
