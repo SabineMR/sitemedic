@@ -30,7 +30,7 @@ Progress: [███████████████] 100% (52/52 plans acro
 | 02-mobile-core | 9/9 | 50 min | 5.6 min |
 | 03-sync-engine | 7/7 | 24 min | 3.4 min |
 | 04-web-dashboard | 6/6 | 46 min | 7.7 min |
-| 04.5-marketing-booking | 3/3 | 26 min | 8.7 min |
+| 04.5-marketing-booking | 4/4 | 33 min | 8.3 min |
 | 04.6-customer-onboarding | 7/7 | 52 min | 7.4 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |

@@ -428,6 +428,10 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Phase 3 progress: 2026-02-15 -- 4/5 plans complete (03-01 through 03-04 executed, 03-05 remaining for full phase completion)*
 *Phase 3 gap closure: 2026-02-15 -- 2 gap closure plans (03-06, 03-07) addressing 2 verification gaps (battery constraints for background sync, client-generated UUID idempotency keys for duplicate prevention)*
 *Phase 3 complete: 2026-02-16 -- 7/7 plans executed (initial 5 + 2 gap closure), verification passed (10/10 must-haves), goal achieved (automatic background sync with battery-friendly constraints and duplicate prevention)*
+*Phase 4 planned: 2026-02-16 -- 6 plans in 3 waves (2 parallel Wave 1: scaffold+overview, 2 parallel Wave 2: treatment+near-miss, 2 sequential Wave 3: export+verification)*
+*Phase 4 complete: 2026-02-16 -- 6/6 plans executed, verification passed (9/9 must-haves), goal achieved (site manager dashboard with treatment log, near-miss reports, worker registry, compliance scoring, and CSV/PDF export)*
+*Phase 4.5 planned: 2026-02-16 -- 4 plans in 4 waves (Wave 1: marketing SSG, Wave 2: booking form, Wave 3: payment integration, Wave 4: auto-matching & email)*
+*Phase 4.5 complete: 2026-02-16 -- 4/4 plans executed, verification passed (10/10 must-haves), goal achieved (marketing website with <2s load time, client booking portal with Stripe payment processing, auto-matching with transparency, email confirmations with calendar invites)*
 *Phase 5.5 planned: 2026-02-16 -- 6 plans in 2 waves (3 parallel Wave 1: bookings/medics/timesheets, 3 parallel Wave 2: territories/revenue/clients)*
 *Phase 5.5 complete: 2026-02-16 -- 6/6 plans executed, verification passed (10/10 must-haves), goal achieved (admin dashboard operational with booking management, medic roster, territory coverage map, revenue tracking, timesheet approval, client management)*
 *Phase 4.6 planned: 2026-02-16 -- 7 plans in 4 waves (2 parallel foundation: schema+PDF, 2 parallel UI: signing+admin creation, 2 parallel delivery: email+dashboard, 1 enforcement: payments+booking gate)*
