@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 3 of 7 (Sync Engine)
-Plan: 3 of 3 in current phase
+Plan: 5 of 5 in current phase
 Status: Phase complete
-Last activity: 2026-02-16 — Completed 03-03-PLAN.md (re-execution with fixes)
+Last activity: 2026-02-16 — Completed 03-05-PLAN.md (Sync Wiring)
 
-Progress: [█████████░] 91.3% (21/23 plans across Phases 1, 1.5, 2, 3)
+Progress: [██████████] 82.8% (24/29 plans across Phases 1, 1.5, 2, 3)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 21
+- Total plans completed: 24
 - Average duration: 3.5 min
-- Total execution time: 1.29 hours
+- Total execution time: 1.45 hours
 
 **By Phase:**
 
@@ -30,11 +30,11 @@ Progress: [█████████░] 91.3% (21/23 plans across Phases 1, 1
 | 01-foundation | 5/5 | 20 min | 4 min |
 | 01.5-business-foundation | 4/4 | 10 min | 2.5 min |
 | 02-mobile-core | 9/9 | 50 min | 5.6 min |
-| 03-sync-engine | 3/3 | 10 min | 3.3 min |
+| 03-sync-engine | 5/5 | 20 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-09 (8 min), 02-10 (5 min), 03-01 (3 min), 03-02 (4 min), 03-04 (3 min)
-- Trend: Phase 3 complete - sync engine with error handling, RIDDOR alerts, and photo progress UI delivered
+- Last 5 plans: 02-10 (5 min), 03-01 (3 min), 03-02 (4 min), 03-03 (3 min), 03-05 (10 min)
+- Trend: Phase 3 complete - full sync engine with queue processing, RIDDOR alerts, photo uploads, and UI integration delivered
 
 *Updated after each plan completion*
 
@@ -184,6 +184,12 @@ Recent decisions affecting current work:
 - D-03-04-004: SyncStatusIndicator badge shows combined data + photo count for total pending visibility
 - D-03-04-005: RiddorSyncAlert is non-dismissible until resolved (legal requirement for RIDDOR reporting)
 
+**From Plan 03-05:**
+- D-03-05-001: Only explicit save/complete triggers sync, NOT auto-save (prevents queue overwhelm from 10s auto-save)
+- D-03-05-002: RIDDOR treatments use priority 0 (immediate), all else priority 1
+- D-03-05-003: Photos enqueued separately via photoUploadQueue (different constraints: WiFi-only, progressive upload)
+- D-03-05-004: Background task imported at App.tsx top level (TaskManager.defineTask must run at global scope)
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -218,9 +224,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T03:28:21Z
-Stopped at: Completed 03-03-PLAN.md — Sync Integration (re-execution with RIDDOR fast retry, LWW conflict resolution, photo integration)
+Last session: 2026-02-16T03:38:56Z
+Stopped at: Completed 03-05-PLAN.md — Sync Wiring (integrated all Phase 2 forms with sync queue and UI components)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (3/3 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (5/5 plans)*

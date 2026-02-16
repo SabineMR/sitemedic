@@ -158,10 +158,15 @@ Plans:
   8. Site manager can export worker registry as CSV
   9. Dashboard is responsive (works on desktop and tablets)
 
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] TBD during planning
+- [ ] 04-01-PLAN.md -- Dashboard scaffold with auth, Supabase SSR utilities, and responsive layout shell
+- [ ] 04-02-PLAN.md -- Overview page with traffic-light compliance score and weekly summary stats
+- [ ] 04-03-PLAN.md -- Treatment log with filtering/sorting, detail view with photos, and reusable DataTable
+- [ ] 04-04-PLAN.md -- Near-miss log and worker registry pages with search and filters
+- [ ] 04-05-PLAN.md -- Data export (CSV and PDF) and responsive polish
+- [ ] 04-06-PLAN.md -- Integration verification checkpoint
 
 ### Phase 4.5: Marketing Website & Booking Portal (INSERTED)
 **Goal**: Public-facing marketing website and client self-service booking portal operational with Stripe payment processing and auto-matching to medics.
@@ -384,7 +389,7 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 | 1.5. Business Operations Foundation | 4/4 | Complete | 2026-02-15 |
 | 2. Mobile Core | 10/10 | Complete | 2026-02-15 |
 | 3. Sync Engine | 4/5 | In Progress | - |
-| 4. Web Dashboard | 0/TBD | Not started | - |
+| 4. Web Dashboard | 0/6 | Not started | - |
 | 4.5. Marketing Website & Booking Portal | 0/4 | Not started | - |
 | 4.6. Customer Onboarding & Contract Management | 0/5 | Not started | - |
 | 5. PDF Generation | 0/TBD | Not started | - |
