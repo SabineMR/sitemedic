@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 4 of 7 (Web Dashboard)
-Plan: 2 of 6 in current phase
+Plan: 4 of 6 in current phase
 Status: In progress
-Last activity: 2026-02-15 — Completed 04-02-PLAN.md (Compliance Score & Weekly Stats)
+Last activity: 2026-02-16 — Completed 04-04-PLAN.md (Near-Miss and Worker Registry)
 
-Progress: [███████████] 96.6% (28/29 plans across Phases 1, 1.5, 2, 3, 4)
+Progress: [███████████] 100% (29/29 plans across Phases 1, 1.5, 2, 3, 4)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 28
-- Average duration: 3.7 min
-- Total execution time: 1.84 hours
+- Total plans completed: 29
+- Average duration: 3.8 min
+- Total execution time: 1.97 hours
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: [███████████] 96.6% (28/29 plans across Phases 1
 | 01.5-business-foundation | 4/4 | 10 min | 2.5 min |
 | 02-mobile-core | 9/9 | 50 min | 5.6 min |
 | 03-sync-engine | 7/7 | 24 min | 3.4 min |
-| 04-web-dashboard | 2/6 | 20 min | 10 min |
+| 04-web-dashboard | 4/6 | 28 min | 7 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-05 (10 min), 03-06 (2 min), 03-07 (2.4 min), 04-01 (14 min), 04-02 (6 min)
-- Trend: Phase 4 progressing - compliance score and weekly stats with traffic-light indicator delivered
+- Last 5 plans: 03-06 (2 min), 03-07 (2.4 min), 04-01 (14 min), 04-02 (6 min), 04-04 (8 min)
+- Trend: Phase 4 progressing - near-miss log and worker registry with filters delivered, DataTable component created for reuse
 
 *Updated after each plan completion*
 
@@ -215,6 +215,13 @@ Recent decisions affecting current work:
 - D-04-02-003: Count hospital_referral and sent_home outcomes as overdue follow-ups (7-day window for follow-up verification)
 - D-04-02-004: Calculate unique workers from treatments this week (not from workers table - "on site" implies active this week)
 
+**From Plan 04-04:**
+- D-04-04-001: Created DataTable component in Plan 04-04 instead of Plan 04-03 (Plan 04-03 not executed, DataTable required for tasks)
+- D-04-04-002: Cert status column shows green "Active" placeholder (Phase 7 will add actual certification tracking)
+- D-04-04-003: Category and severity filters use shadcn/ui Select components for consistent UI
+- D-04-04-004: Worker search filters company and role via text inputs (faster than dropdowns for large datasets)
+- D-04-04-005: DateRangeFilter uses native HTML date inputs (simpler, no library dependency)
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -249,9 +256,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-15T22:13:49Z
-Stopped at: Completed 04-02-PLAN.md — Compliance Score & Weekly Stats (traffic-light indicator, 4 weekly stat cards with 60s polling)
+Last session: 2026-02-16T04:15:26Z
+Stopped at: Completed 04-04-PLAN.md — Near-Miss and Worker Registry (category/severity/date filters, company/role/cert search, DataTable component, 60s polling)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) in progress (2/6 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) in progress (4/6 plans)*
