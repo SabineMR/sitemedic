@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 4.5 of 7 (Marketing & Booking) — Complete
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-02-16 — Completed 04.5-03-PLAN.md (Payment Integration)
+Phase: 6.5 of 7 (Payments & Payouts) — In progress
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-16 — Completed 06.5-02-PLAN.md (Friday Payout Automation)
 
-Progress: [██████████████] 100% (48/48 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6)
+Progress: [██████████████] 100% (49/49 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6, 6.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 48
+- Total plans completed: 49
 - Average duration: 4.3 min
-- Total execution time: 3.48 hours
+- Total execution time: 3.52 hours
 
 **By Phase:**
 
@@ -36,10 +36,11 @@ Progress: [██████████████] 100% (48/48 plans across 
 | 04.6-customer-onboarding | 7/7 | 52 min | 7.4 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
+| 06.5-payments-payouts | 1/3 | 4 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 04.6-04 (13 min), 04.6-05 (4 min), 04.6-06 (8 min), 04.6-07 (6 min), 04.5-03 (6 min)
-- Trend: Phase 4.5 complete - Marketing & booking flow with Stripe payment integration
+- Last 5 plans: 04.6-05 (4 min), 04.6-06 (8 min), 04.6-07 (6 min), 04.5-03 (6 min), 06.5-02 (4 min)
+- Trend: Phase 6.5 started - Automated payout system with Stripe Transfers
 
 *Updated after each plan completion*
 
@@ -369,6 +370,14 @@ Recent decisions affecting current work:
 - D-04.6-05-006: Security notice warns clients not to share unique signing link
 - D-04.6-05-007: Webhook handler returns 200 OK even on processing errors (prevents Resend retries)
 
+**From Plan 06.5-02:**
+- D-06.5-02-001: Use pg_cron with Edge Function HTTP POST for Friday 9am automation (Supabase-native cron scheduling)
+- D-06.5-02-002: UK Faster Payments via Stripe Transfer API to medic Express accounts (2 business day settlement)
+- D-06.5-02-003: 60% medic payout, 40% platform fee based on booking total (revenue split calculation pattern)
+- D-06.5-02-004: payout_executions table logs all automated runs for audit trail (compliance and debugging)
+- D-06.5-02-005: Manual payout trigger with dry-run preview for admin safety (validation without Stripe calls)
+- D-06.5-02-006: Continue processing all payouts even if individual transfers fail (batch resilience pattern)
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -401,6 +410,9 @@ Recent decisions affecting current work:
 - Deploy Supabase migration 016_weekly_report_cron.sql to enable pg_cron scheduled job (Plan 05-03)
 - Configure Vault secrets in Supabase Dashboard: project_url and service_role_key for pg_cron job authentication (Plan 05-03)
 - Configure Resend webhook endpoint for contract email tracking (Plan 04.6-05): Add webhook URL to Resend Dashboard with events: email.sent, email.delivered, email.opened, email.clicked, email.bounced
+- Deploy Supabase migration 021_friday_payout_cron.sql to create payout_executions table and enable pg_cron (Plan 06.5-02)
+- Configure Friday payout cron job in Supabase Dashboard: Schedule friday-medic-payouts job with '0 9 * * 5' cron expression to invoke friday-payout Edge Function (Plan 06.5-02)
+- Store service_role_key as database setting for pg_cron authentication: ALTER DATABASE postgres SET app.service_role_key = 'key' (Plan 06.5-02)
 
 ### Blockers/Concerns
 
@@ -408,9 +420,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T21:07:47Z
-Stopped at: Completed 04.5-03-PLAN.md — Payment Integration (Stripe payment with prepay vs Net 30, Payment Element with 3D Secure, webhook status updates)
+Last session: 2026-02-16T21:23:43Z
+Stopped at: Completed 06.5-02-PLAN.md — Friday Payout Automation (pg_cron scheduler, Stripe Transfers for UK Faster Payments, 60/40 revenue split, admin dashboard)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (3/3 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (3/3 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6.5 (Payments & Payouts) in progress (1/3 plans)*
