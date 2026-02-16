@@ -33,29 +33,32 @@ COMMENT ON COLUMN payout_executions.failed_payouts IS 'Number of failed payouts 
 COMMENT ON COLUMN payout_executions.total_amount IS 'Total amount transferred to medics in GBP';
 COMMENT ON COLUMN payout_executions.errors IS 'Array of error details for failed payouts: [{timesheetId, error, medic}]';
 
--- NOTE: pg_cron job creation requires manual setup via Supabase Dashboard
--- The cron job should be configured with the following parameters:
---
--- Job name: friday-medic-payouts
--- Schedule: 0 9 * * 5  (Every Friday at 9:00 AM GMT)
--- Command:
---   SELECT
---     net.http_post(
---       url := 'https://YOUR_PROJECT_REF.supabase.co/functions/v1/friday-payout',
---       headers := jsonb_build_object(
---         'Content-Type', 'application/json',
---         'Authorization', 'Bearer ' || current_setting('app.service_role_key')
---       ),
---       body := jsonb_build_object(
---         'scheduled', true,
---         'execution_time', NOW()
---       )
---     ) AS request_id;
---
--- IMPORTANT: The service_role_key must be stored as a database setting:
---   ALTER DATABASE postgres SET app.service_role_key = 'your-service-role-key';
---
--- Alternatively, use Supabase Edge Function Cron Triggers (recommended):
--- https://supabase.com/docs/guides/functions/schedule-functions
+-- Vault secrets required (configured in Supabase Dashboard):
+-- - project_url: Your Supabase project URL (e.g., https://xxx.supabase.co)
+-- - service_role_key: Your service role key for Edge Function auth
+
+-- Enable pg_net for HTTP calls
+CREATE EXTENSION IF NOT EXISTS pg_net;
+
+-- Schedule Friday payout job
+-- Cron expression: '0 9 * * 5' = Every Friday at 09:00 UTC
+SELECT cron.schedule(
+  'friday-medic-payouts',
+  '0 9 * * 5',
+  $$
+  SELECT net.http_post(
+    url := (SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'project_url')
+           || '/functions/v1/friday-payout',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer ' || (SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'service_role_key')
+    ),
+    body := jsonb_build_object(
+      'scheduled', true,
+      'execution_time', NOW()
+    )
+  ) AS request_id;
+  $$
+);
 
 COMMENT ON SCHEMA public IS 'Migration 021: Friday payout cron job and execution logging';
