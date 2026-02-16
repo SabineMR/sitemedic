@@ -48,6 +48,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       badgeColor: 'yellow',
     },
     {
+      name: 'Schedule Board',
+      href: '/admin/schedule-board',
+      icon: '📋',
+      // badge: unassignedBookingsCount, // TODO: Fetch from store
+      badgeColor: 'yellow',
+    },
+    {
       name: 'Medics',
       href: '/admin/medics',
       icon: '👨‍⚕️',
