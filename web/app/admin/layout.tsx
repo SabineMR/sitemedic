@@ -13,6 +13,7 @@ import { ReactNode } from 'react';
 import {
   LayoutDashboard,
   MapPin,
+  Map,
   Calendar,
   ClipboardList,
   Clock,
@@ -20,6 +21,7 @@ import {
   Building2,
   TrendingUp,
   Settings,
+  Banknote,
 } from 'lucide-react';
 import { QueryProvider } from '@/components/providers/query-provider';
 
@@ -53,6 +55,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       badgeColor: 'red',
     },
     {
+      name: 'Territories',
+      href: '/admin/territories',
+      icon: <Map className="w-5 h-5" />,
+    },
+    {
       name: 'Bookings',
       href: '/admin/bookings',
       icon: <Calendar className="w-5 h-5" />,
@@ -80,6 +87,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: 'Customers',
       href: '/admin/customers',
       icon: <Building2 className="w-5 h-5" />,
+    },
+    {
+      name: 'Revenue',
+      href: '/admin/revenue',
+      icon: <Banknote className="w-5 h-5" />,
     },
     {
       name: 'Analytics',
