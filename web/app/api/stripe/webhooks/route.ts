@@ -5,6 +5,7 @@
  * Handles:
  * - payment_intent.succeeded: Update booking from 'pending' to 'confirmed'
  * - payment_intent.payment_failed: Update booking to 'cancelled'
+ * - account.updated: Sync medic Stripe Express onboarding status
  *
  * CRITICAL: Verify signature BEFORE parsing event
  */
@@ -116,6 +117,41 @@ export async function POST(request: NextRequest) {
 
         if (updateError) {
           console.error('Error updating booking status:', updateError);
+        }
+
+        break;
+      }
+
+      case 'account.updated': {
+        const account = event.data.object as Stripe.Account;
+
+        if (!account.id) {
+          console.error('account.updated missing account ID');
+          return NextResponse.json({ received: true });
+        }
+
+        console.log(`Stripe account updated: ${account.id}`);
+
+        // Check if this is a Connected account (medic Express account)
+        const chargesEnabled = account.charges_enabled;
+        const payoutsEnabled = account.payouts_enabled;
+        const detailsSubmitted = account.details_submitted;
+        const onboardingComplete = chargesEnabled && payoutsEnabled && detailsSubmitted;
+
+        // Find medic by stripe_account_id and update onboarding status
+        const { error: updateError } = await supabase
+          .from('medics')
+          .update({
+            stripe_onboarding_complete: onboardingComplete,
+          })
+          .eq('stripe_account_id', account.id);
+
+        if (updateError) {
+          console.error('Error updating medic onboarding status:', updateError);
+        } else {
+          console.log(
+            `Medic Stripe onboarding ${onboardingComplete ? 'completed' : 'in progress'} for account ${account.id} (charges: ${chargesEnabled}, payouts: ${payoutsEnabled}, details: ${detailsSubmitted})`
+          );
         }
 
         break;
