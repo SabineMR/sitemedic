@@ -196,6 +196,7 @@ Plans:
 - [x] 04.5-02-PLAN.md -- Booking portal calendar and site location input
 - [x] 04.5-03-PLAN.md -- Stripe payment integration (prepay vs Net 30 logic)
 - [x] 04.5-04-PLAN.md -- Auto-matching UI and booking confirmation flow
+- [x] 04.5-05-PLAN.md -- [GAP CLOSURE] Real booking data in confirmation page (replaced mock)
 - [ ] 04.5-05-PLAN.md -- [GAP CLOSURE] Fix confirmation page mock data with real Supabase queries
 
 ### Phase 4.6: Customer Onboarding & Contract Management (INSERTED)
@@ -410,7 +411,7 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 | 2. Mobile Core | 10/10 | Complete | 2026-02-15 |
 | 3. Sync Engine | 7/7 | Complete | 2026-02-16 |
 | 4. Web Dashboard | 6/6 | Complete | 2026-02-16 |
-| 4.5. Marketing Website & Booking Portal | 4/4 | Complete | 2026-02-16 |
+| 4.5. Marketing Website & Booking Portal | 5/5 | Complete | 2026-02-16 |
 | 4.6. Customer Onboarding & Contract Management | 7/7 | Complete | 2026-02-16 |
 | 5. PDF Generation | 4/4 | Complete | 2026-02-16 |
 | 5.5. Admin Operations Dashboards | 6/6 | Complete | 2026-02-16 |
@@ -437,7 +438,8 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Phase 4 planned: 2026-02-16 -- 6 plans in 3 waves (2 parallel Wave 1: scaffold+overview, 2 parallel Wave 2: treatment+near-miss, 2 sequential Wave 3: export+verification)*
 *Phase 4 complete: 2026-02-16 -- 6/6 plans executed, verification passed (9/9 must-haves), goal achieved (site manager dashboard with treatment log, near-miss reports, worker registry, compliance scoring, and CSV/PDF export)*
 *Phase 4.5 planned: 2026-02-16 -- 4 plans in 4 waves (Wave 1: marketing SSG, Wave 2: booking form, Wave 3: payment integration, Wave 4: auto-matching & email)*
-*Phase 4.5 complete: 2026-02-16 -- 4/4 plans executed, verification passed (10/10 must-haves), goal achieved (marketing website with <2s load time, client booking portal with Stripe payment processing, auto-matching with transparency, email confirmations with calendar invites)*
+*Phase 4.5 complete: 2026-02-16 -- 5/5 plans executed (4 initial + 1 gap closure), verification passed (10/10 must-haves on re-verification), goal achieved (marketing website with <2s load time, client booking portal with Stripe payment processing, auto-matching with transparency, email confirmations with calendar invites, real booking data in confirmation)*
+*Phase 4.5 gap closure: 2026-02-16 -- 1 gap closure plan (04.5-05) fixing confirmation page mock data, re-verification passed (10/10 must-haves, was 9/10)*
 *Phase 5.5 planned: 2026-02-16 -- 6 plans in 2 waves (3 parallel Wave 1: bookings/medics/timesheets, 3 parallel Wave 2: territories/revenue/clients)*
 *Phase 5.5 complete: 2026-02-16 -- 6/6 plans executed, verification passed (10/10 must-haves), goal achieved (admin dashboard operational with booking management, medic roster, territory coverage map, revenue tracking, timesheet approval, client management)*
 *Phase 4.6 planned: 2026-02-16 -- 7 plans in 4 waves (2 parallel foundation: schema+PDF, 2 parallel UI: signing+admin creation, 2 parallel delivery: email+dashboard, 1 enforcement: payments+booking gate)*
