@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** Phase 1 - Foundation
+**Current focus:** Phase 2 - Mobile Core
 
 ## Current Position
 
-Phase: 1.5 of 7 (Business Operations Foundation)
-Plan: 4 of 4 in current phase
-Status: Phase complete
-Last activity: 2026-02-15 — Completed 01.5-02-PLAN.md (Stripe Connect integration)
+Phase: 2 of 7 (Mobile Core)
+Plan: 1 of 8 in current phase
+Status: In progress
+Last activity: 2026-02-16 — Completed 02-02-PLAN.md (Photo & Signature Components)
 
-Progress: [████░░░░░░] 40% (9/20 plans across all active phases)
+Progress: [█████░░░░░] 59% (10/17 plans across all active phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Average duration: 3.3 min
-- Total execution time: 0.50 hours
+- Total plans completed: 10
+- Average duration: 3.4 min
+- Total execution time: 0.57 hours
 
 **By Phase:**
 
@@ -29,9 +29,10 @@ Progress: [████░░░░░░] 40% (9/20 plans across all active pha
 |-------|-------|-------|----------|
 | 01-foundation | 5/5 | 20 min | 4 min |
 | 01.5-business-foundation | 4/4 | 10 min | 2.5 min |
+| 02-mobile-core | 1/8 | 4 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-05 (3 min), 01.5-01 (2 min), 01.5-03 (3 min), 01.5-04 (3 min), 01.5-02 (4 min)
+- Last 5 plans: 01.5-01 (2 min), 01.5-03 (3 min), 01.5-04 (3 min), 01.5-02 (4 min), 02-02 (4 min)
 - Trend: Stable (consistent ~2-4 min per plan)
 
 *Updated after each plan completion*
@@ -112,6 +113,12 @@ Recent decisions affecting current work:
 - D-01.5-02-005: Express accounts for medics use GB country and transfers capability (UK-based medics)
 - D-01.5-02-006: Payment Intent metadata includes booking_id and client_id for event correlation
 
+**From Plan 02-02:**
+- D-02-02-001: Use quality: 1.0 in ImagePicker to prevent iOS GIF compression bug (Research Pitfall 1)
+- D-02-02-002: Full-width photo cards (200px height) instead of thumbnails for better gloves-on tap targets (Research anti-pattern)
+- D-02-02-003: Thick signature stroke (dotSize: 3, minWidth: 3, maxWidth: 4) for gloves-on signing (Research Pattern 4)
+- D-02-02-004: Single-pass compression (1200px, 70% quality) with fallback to original URI on error
+
 ### Pending Todos
 
 - Add Stripe API keys to Supabase secrets (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PUBLISHABLE_KEY)
@@ -125,9 +132,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-15T23:33:07Z
-Stopped at: Completed 01.5-02-PLAN.md — Stripe Connect integration
+Last session: 2026-02-16T00:41:28Z
+Stopped at: Completed 02-02-PLAN.md — Photo & Signature Components
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Next step: Plan Phase 2 (Mobile Core) work*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) in progress (1/8 plans)*
