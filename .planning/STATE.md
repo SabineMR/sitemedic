@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 4 of 7 (Web Dashboard)
-Plan: 4 of 6 in current phase
+Plan: 3 of 6 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 04-04-PLAN.md (Near-Miss and Worker Registry)
+Last activity: 2026-02-16 — Completed 04-03-PLAN.md (Treatment Log with Photos)
 
-Progress: [███████████] 100% (29/29 plans across Phases 1, 1.5, 2, 3, 4)
+Progress: [███████████░] 96.5% (28/29 plans across Phases 1, 1.5, 2, 3, 4)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 29
+- Total plans completed: 28
 - Average duration: 3.8 min
-- Total execution time: 1.97 hours
+- Total execution time: 1.86 hours
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: [███████████] 100% (29/29 plans across Phases 1,
 | 01.5-business-foundation | 4/4 | 10 min | 2.5 min |
 | 02-mobile-core | 9/9 | 50 min | 5.6 min |
 | 03-sync-engine | 7/7 | 24 min | 3.4 min |
-| 04-web-dashboard | 4/6 | 28 min | 7 min |
+| 04-web-dashboard | 3/6 | 26 min | 8.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-06 (2 min), 03-07 (2.4 min), 04-01 (14 min), 04-02 (6 min), 04-04 (8 min)
-- Trend: Phase 4 progressing - near-miss log and worker registry with filters delivered, DataTable component created for reuse
+- Last 5 plans: 03-07 (2.4 min), 04-01 (14 min), 04-02 (6 min), 04-03 (12 min)
+- Trend: Phase 4 progressing - treatment log with photos and interactive filtering delivered, reusable DataTable component created
 
 *Updated after each plan completion*
 
@@ -209,6 +209,13 @@ Recent decisions affecting current work:
 - D-04-01-005: Dashboard at root / (protected), existing admin at /admin (public for backward compatibility)
 - D-04-01-006: ESLint skip during build (pre-existing lint issues in admin pages, not related to Phase 4)
 
+**From Plan 04-03:**
+- D-04-03-001: Client-side date formatting with suppressHydrationWarning to avoid Next.js hydration mismatch
+- D-04-03-002: Photo display uses Next.js Image with fill layout and responsive sizes for optimization
+- D-04-03-003: Severity and outcome rendered as colored badges (green/yellow/orange/red) for quick visual scanning
+- D-04-03-004: Treatment table includes row click handler navigating to detail page for fast access
+- D-04-03-005: Filters applied client-side after data fetch for instant filter response without server round-trip
+
 **From Plan 04-02:**
 - D-04-02-001: Use 15-day window for RIDDOR deadline tracking (matches UK HSE reporting requirement)
 - D-04-02-002: Hard-code expiredCerts to 0 (cert tracking deferred to Phase 7, no cert data exists yet)
@@ -256,9 +263,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T04:15:26Z
-Stopped at: Completed 04-04-PLAN.md — Near-Miss and Worker Registry (category/severity/date filters, company/role/cert search, DataTable component, 60s polling)
+Last session: 2026-02-16T04:19:50Z
+Stopped at: Completed 04-03-PLAN.md — Treatment Log with Photos (interactive filtering, photo grid, 60s polling, reusable DataTable component)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) in progress (4/6 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) in progress (3/6 plans)*
