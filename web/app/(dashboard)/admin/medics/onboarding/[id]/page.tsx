@@ -3,8 +3,8 @@ import { IR35Form } from '@/components/medics/ir35-form';
 import { StripeOnboardingStatus } from '@/components/medics/stripe-onboarding-status';
 import { notFound } from 'next/navigation';
 
-export default async function MedicOnboardingPage({ params }: { params: { id: string } }) {
-  const { id: medicId } = params;
+export default async function MedicOnboardingPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: medicId } = await params;
   const supabase = await createClient();
 
   // Fetch medic data
