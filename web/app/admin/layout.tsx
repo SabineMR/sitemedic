@@ -20,6 +20,7 @@ import {
   TrendingUp,
   Settings,
 } from 'lucide-react';
+import { QueryProvider } from '@/components/providers/query-provider';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -94,9 +95,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
-      {/* Sidebar */}
-      <aside className="w-64 bg-gray-800/50 backdrop-blur-xl border-r border-gray-700/50 flex flex-col shadow-2xl">
+    <QueryProvider>
+      <div className="flex h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
+        {/* Sidebar */}
+        <aside className="w-64 bg-gray-800/50 backdrop-blur-xl border-r border-gray-700/50 flex flex-col shadow-2xl">
         {/* Logo/Brand */}
         <div className="p-6 border-b border-gray-700/50">
           <Link href="/" className="flex items-center gap-3 group">
@@ -170,8 +172,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </div>
       </aside>
 
-      {/* Main content area */}
-      <main className="flex-1 overflow-auto">{children}</main>
-    </div>
+        {/* Main content area */}
+        <main className="flex-1 overflow-auto">{children}</main>
+      </div>
+    </QueryProvider>
   );
 }
