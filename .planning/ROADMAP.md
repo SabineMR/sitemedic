@@ -273,12 +273,12 @@ Plans:
 **Plans**: 6 plans
 
 Plans:
-- [ ] 05.5-01-PLAN.md -- Bookings management tab with approval workflow
-- [ ] 05.5-02-PLAN.md -- Medic management tab with roster and utilization
-- [ ] 05.5-03-PLAN.md -- Territory coverage map with visual representation
-- [ ] 05.5-04-PLAN.md -- Revenue dashboard with cash flow projections
-- [ ] 05.5-05-PLAN.md -- Timesheet approval workflow for batch Friday payouts
-- [ ] 05.5-06-PLAN.md -- Client management with payment terms and history
+- [ ] 05.5-01-PLAN.md -- Booking approval workflow with bulk operations and medic reassignment
+- [ ] 05.5-02-PLAN.md -- Medic roster with utilization bars, territory assignments, and availability toggle
+- [ ] 05.5-03-PLAN.md -- Timesheet batch approval for Friday payout workflow with bulk upsert
+- [ ] 05.5-04-PLAN.md -- Territory coverage map with color-coded utilization and gap alerts
+- [ ] 05.5-05-PLAN.md -- Revenue dashboard with Recharts charts and cash flow warning
+- [ ] 05.5-06-PLAN.md -- Client management with Net 30 upgrade and admin overview real data
 
 ### Phase 6: RIDDOR Auto-Flagging
 **Goal**: App automatically detects RIDDOR-reportable incidents with deadline countdown, medic override capability, and pre-filled HSE F2508 form generation.
@@ -419,3 +419,4 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Phase 3 progress: 2026-02-15 -- 4/5 plans complete (03-01 through 03-04 executed, 03-05 remaining for full phase completion)*
 *Phase 3 gap closure: 2026-02-15 -- 2 gap closure plans (03-06, 03-07) addressing 2 verification gaps (battery constraints for background sync, client-generated UUID idempotency keys for duplicate prevention)*
 *Phase 3 complete: 2026-02-16 -- 7/7 plans executed (initial 5 + 2 gap closure), verification passed (10/10 must-haves), goal achieved (automatic background sync with battery-friendly constraints and duplicate prevention)*
+*Phase 5.5 planned: 2026-02-16 -- 6 plans in 2 waves (3 parallel Wave 1: bookings/medics/timesheets, 3 parallel Wave 2: territories/revenue/clients)*
