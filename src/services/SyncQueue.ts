@@ -92,7 +92,10 @@ export class SyncQueue {
         )
         .fetch()
 
-      for (const item of pendingItems) {
+      // Filter out photo uploads (handled by PhotoUploadQueue separately)
+      const dataItems = pendingItems.filter(item => item.tableName !== 'photo_uploads')
+
+      for (const item of dataItems) {
         try {
           await this.syncItem(item)
           // Success—remove from queue
@@ -142,22 +145,27 @@ export class SyncQueue {
 
   /**
    * Schedule retry with exponential backoff.
-   * Backoff formula: Math.min(5 * 2^retryCount, 240) minutes
+   * RIDDOR (priority 0): 30s -> 1min -> 2min -> 5min -> 15min -> 30min cap
+   * Normal (priority 1+): 5min -> 10min -> 20min -> 40min -> 80min -> 160min -> 240min cap
    *
-   * Retry schedule:
-   * - Retry 0 → 1: 5 minutes
-   * - Retry 1 → 2: 10 minutes
-   * - Retry 2 → 3: 20 minutes
-   * - Retry 3 → 4: 40 minutes
-   * - Retry 4 → 5: 80 minutes
-   * - Retry 5 → 6: 160 minutes
-   * - Retry 6+: 240 minutes (4 hour cap)
+   * RIDDOR items use faster retry for compliance-critical data.
    */
   private async scheduleRetry(item: SyncQueueItem): Promise<void> {
     const database = getDatabase()
     const retryCount = item.retryCount + 1
-    const backoffMinutes = Math.min(5 * Math.pow(2, retryCount), 240) // Max 4 hours
-    const nextRetryAt = Date.now() + backoffMinutes * 60 * 1000
+
+    let backoffMs: number
+    if (item.priority === 0) {
+      // RIDDOR: faster retry (30s -> 1min -> 2min -> 5min -> 15min -> 30min cap)
+      const riddorBackoffSeconds = Math.min(30 * Math.pow(2, retryCount - 1), 30 * 60)
+      backoffMs = riddorBackoffSeconds * 1000
+    } else {
+      // Normal: standard backoff (5min -> 10min -> ... -> 240min cap)
+      const backoffMinutes = Math.min(5 * Math.pow(2, retryCount), 240)
+      backoffMs = backoffMinutes * 60 * 1000
+    }
+
+    const nextRetryAt = Date.now() + backoffMs
 
     await database.write(async () => {
       await item.update((record) => {
@@ -200,6 +208,34 @@ export class SyncQueue {
       }
 
       case 'update': {
+        // Last-write-wins: check if server record is newer
+        const { data: serverRecord, error: fetchError } = await supabase
+          .from(item.tableName as any)
+          .select('updated_at')
+          .eq('id', payload.id as any)
+          .single()
+
+        if (fetchError) {
+          // If record not found on server, it may have been deleted - skip
+          if (fetchError.code === 'PGRST116') {
+            console.warn(`[SyncQueue] Record ${payload.id} not found on server, skipping update`)
+            return
+          }
+          throw fetchError
+        }
+
+        // Compare timestamps - server updated_at is TIMESTAMPTZ, convert to epoch ms
+        if (serverRecord) {
+          const serverUpdatedAt = new Date(serverRecord.updated_at).getTime()
+          const localModifiedAt = payload.last_modified_at || payload.updated_at || 0
+
+          if (serverUpdatedAt > localModifiedAt) {
+            console.log(`[SyncQueue] Server record is newer (${serverUpdatedAt} > ${localModifiedAt}), skipping update (LWW)`)
+            return // Server wins - skip this update
+          }
+        }
+
+        // Local wins - proceed with update
         const { error } = await supabase
           .from(item.tableName as any)
           .update(payload as any)

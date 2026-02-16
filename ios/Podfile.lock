@@ -31,6 +31,8 @@ PODS:
     - Yoga
   - ExpoAsset (12.0.12):
     - ExpoModulesCore
+  - ExpoBackgroundTask (1.0.10):
+    - ExpoModulesCore
   - ExpoCrypto (15.0.8):
     - ExpoModulesCore
   - ExpoFileSystem (19.0.21):
@@ -79,6 +81,9 @@ PODS:
     - Yoga
   - ExpoSecureStore (15.0.8):
     - ExpoModulesCore
+  - EXTaskManager (14.0.9):
+    - ExpoModulesCore
+    - UMAppLoader
   - FBLazyVector (0.81.5)
   - hermes-engine (0.81.5):
     - hermes-engine/Pre-built (= 0.81.5)
@@ -1374,6 +1379,8 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
+  - react-native-background-upload (6.6.0):
+    - React
   - react-native-netinfo (11.4.1):
     - React-Core
   - react-native-safe-area-context (5.6.2):
@@ -2103,6 +2110,7 @@ PODS:
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.17)
   - simdjson (3.9.4)
+  - UMAppLoader (6.0.8)
   - WatermelonDB (0.28.0):
     - React
     - simdjson
@@ -2113,6 +2121,7 @@ DEPENDENCIES:
   - "EXImageLoader (from `../node_modules/.pnpm/expo-image-loader@6.0.0_expo@54.0.33/node_modules/expo-image-loader/ios`)"
   - "Expo (from `../node_modules/.pnpm/expo@54.0.33_@babel+core@7.29.0_@expo+metro-runtime@6.1.2_expo-router@6.0.23_react-nati_5bf98a69c93b5f549d4b7d504cedca6e/node_modules/expo`)"
   - "ExpoAsset (from `../node_modules/.pnpm/expo-asset@12.0.12_expo@54.0.33_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4__react@19.2.4/node_modules/expo-asset/ios`)"
+  - "ExpoBackgroundTask (from `../node_modules/.pnpm/expo-background-task@1.0.10_expo@54.0.33_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4_/node_modules/expo-background-task/ios`)"
   - "ExpoCrypto (from `../node_modules/.pnpm/expo-crypto@15.0.8_expo@54.0.33/node_modules/expo-crypto/ios`)"
   - "ExpoFileSystem (from `../node_modules/.pnpm/expo-file-system@19.0.21_expo@54.0.33_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4_/node_modules/expo-file-system/ios`)"
   - "ExpoFont (from `../node_modules/.pnpm/expo-font@14.0.11_expo@54.0.33_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4__react@19.2.4/node_modules/expo-font/ios`)"
@@ -2125,6 +2134,7 @@ DEPENDENCIES:
   - "ExpoLocation (from `../node_modules/.pnpm/expo-location@19.0.8_expo@54.0.33/node_modules/expo-location/ios`)"
   - "ExpoModulesCore (from `../node_modules/.pnpm/expo-modules-core@3.0.29_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4__react@19.2.4/node_modules/expo-modules-core`)"
   - "ExpoSecureStore (from `../node_modules/.pnpm/expo-secure-store@15.0.8_expo@54.0.33/node_modules/expo-secure-store/ios`)"
+  - "EXTaskManager (from `../node_modules/.pnpm/expo-task-manager@14.0.9_expo@54.0.33_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4_/node_modules/expo-task-manager/ios`)"
   - "FBLazyVector (from `../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4/node_modules/react-native/Libraries/FBLazyVector`)"
   - "hermes-engine (from `../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4/node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)"
   - "RCTDeprecation (from `../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4/node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)"
@@ -2161,6 +2171,7 @@ DEPENDENCIES:
   - "React-logger (from `../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4/node_modules/react-native/ReactCommon/logger`)"
   - "React-Mapbuffer (from `../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4/node_modules/react-native/ReactCommon`)"
   - "React-microtasksnativemodule (from `../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4/node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)"
+  - "react-native-background-upload (from `../node_modules/.pnpm/react-native-background-upload@6.6.0_react-native@0.81.5_@babel+core@7.29.0_@types+reac_b5664a395aa056ffbbf61384847a9896/node_modules/react-native-background-upload`)"
   - "react-native-netinfo (from `../node_modules/.pnpm/@react-native-community+netinfo@11.4.1_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4_/node_modules/@react-native-community/netinfo`)"
   - "react-native-safe-area-context (from `../node_modules/.pnpm/react-native-safe-area-context@5.6.2_react-native@0.81.5_@babel+core@7.29.0_@types+reac_68974b21d8439a83d69dc5b6626cd51f/node_modules/react-native-safe-area-context`)"
   - "react-native-webview (from `../node_modules/.pnpm/react-native-webview@13.16.0_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4__react@19.2.4/node_modules/react-native-webview`)"
@@ -2202,6 +2213,7 @@ DEPENDENCIES:
   - "RNSVG (from `../node_modules/.pnpm/react-native-svg@15.12.1_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4__react@19.2.4/node_modules/react-native-svg`)"
   - "RNWorklets (from `../node_modules/.pnpm/react-native-worklets@0.5.1_@babel+core@7.29.0_react-native@0.81.5_@babel+core@7.29.0_@_2e867d4e08b44c57c24a6d1c271aac8f/node_modules/react-native-worklets`)"
   - "simdjson (from `../node_modules/.pnpm/@nozbe+simdjson@3.9.4/node_modules/@nozbe/simdjson`)"
+  - "UMAppLoader (from `../node_modules/.pnpm/unimodules-app-loader@6.0.8/node_modules/unimodules-app-loader/ios`)"
   - "WatermelonDB (from `../node_modules/.pnpm/@nozbe+watermelondb@0.28.0/node_modules/@nozbe/watermelondb`)"
   - "Yoga (from `../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4/node_modules/react-native/ReactCommon/yoga`)"
 
@@ -2220,6 +2232,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/.pnpm/expo@54.0.33_@babel+core@7.29.0_@expo+metro-runtime@6.1.2_expo-router@6.0.23_react-nati_5bf98a69c93b5f549d4b7d504cedca6e/node_modules/expo"
   ExpoAsset:
     :path: "../node_modules/.pnpm/expo-asset@12.0.12_expo@54.0.33_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4__react@19.2.4/node_modules/expo-asset/ios"
+  ExpoBackgroundTask:
+    :path: "../node_modules/.pnpm/expo-background-task@1.0.10_expo@54.0.33_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4_/node_modules/expo-background-task/ios"
   ExpoCrypto:
     :path: "../node_modules/.pnpm/expo-crypto@15.0.8_expo@54.0.33/node_modules/expo-crypto/ios"
   ExpoFileSystem:
@@ -2244,6 +2258,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/.pnpm/expo-modules-core@3.0.29_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4__react@19.2.4/node_modules/expo-modules-core"
   ExpoSecureStore:
     :path: "../node_modules/.pnpm/expo-secure-store@15.0.8_expo@54.0.33/node_modules/expo-secure-store/ios"
+  EXTaskManager:
+    :path: "../node_modules/.pnpm/expo-task-manager@14.0.9_expo@54.0.33_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4_/node_modules/expo-task-manager/ios"
   FBLazyVector:
     :path: "../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4/node_modules/react-native/Libraries/FBLazyVector"
   hermes-engine:
@@ -2315,6 +2331,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4/node_modules/react-native/ReactCommon"
   React-microtasksnativemodule:
     :path: "../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4/node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
+  react-native-background-upload:
+    :path: "../node_modules/.pnpm/react-native-background-upload@6.6.0_react-native@0.81.5_@babel+core@7.29.0_@types+reac_b5664a395aa056ffbbf61384847a9896/node_modules/react-native-background-upload"
   react-native-netinfo:
     :path: "../node_modules/.pnpm/@react-native-community+netinfo@11.4.1_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.2.14_react@19.2.4_/node_modules/@react-native-community/netinfo"
   react-native-safe-area-context:
@@ -2397,6 +2415,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/.pnpm/react-native-worklets@0.5.1_@babel+core@7.29.0_react-native@0.81.5_@babel+core@7.29.0_@_2e867d4e08b44c57c24a6d1c271aac8f/node_modules/react-native-worklets"
   simdjson:
     :path: "../node_modules/.pnpm/@nozbe+simdjson@3.9.4/node_modules/@nozbe/simdjson"
+  UMAppLoader:
+    :path: "../node_modules/.pnpm/unimodules-app-loader@6.0.8/node_modules/unimodules-app-loader/ios"
   WatermelonDB:
     :path: "../node_modules/.pnpm/@nozbe+watermelondb@0.28.0/node_modules/@nozbe/watermelondb"
   Yoga:
@@ -2407,6 +2427,7 @@ SPEC CHECKSUMS:
   EXImageLoader: 189e3476581efe3ad4d1d3fb4735b7179eb26f05
   Expo: aadbcc8c6c14ff3105a9154f1683cb1424ff0d2a
   ExpoAsset: f867e55ceb428aab99e1e8c082b5aee7c159ea18
+  ExpoBackgroundTask: 835449414ab9f0e551de1f6d382fadbfad191dc7
   ExpoCrypto: b6105ebaa15d6b38a811e71e43b52cd934945322
   ExpoFileSystem: 858a44267a3e6e9057e0888ad7c7cfbf55d52063
   ExpoFont: f543ce20a228dd702813668b1a07b46f51878d47
@@ -2419,6 +2440,7 @@ SPEC CHECKSUMS:
   ExpoLocation: d5b61cb4970fa982e39ca94246a206a0c3b812ca
   ExpoModulesCore: f3da4f1ab5a8375d0beafab763739dbee8446583
   ExpoSecureStore: d32f751874a2ceb5aaeebeb3578e165c1ba2b24a
+  EXTaskManager: 6f1a66e4c8cc6df6e24c3d90928704bc3013eae5
   FBLazyVector: e95a291ad2dadb88e42b06e0c5fb8262de53ec12
   hermes-engine: 9f4dfe93326146a1c99eb535b1cb0b857a3cd172
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
@@ -2455,6 +2477,7 @@ SPEC CHECKSUMS:
   React-logger: 50fdb9a8236da90c0b1072da5c32ee03aeb5bf28
   React-Mapbuffer: 9050ee10c19f4f7fca8963d0211b2854d624973e
   React-microtasksnativemodule: f775db9e991c6f3b8ccbc02bfcde22770f96e23b
+  react-native-background-upload: 627de1e663b94336abed4a84e88fbfa2d1b6ed7f
   react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187
   react-native-safe-area-context: 37e680fc4cace3c0030ee46e8987d24f5d3bdab2
   react-native-webview: 3e303e80cadb5f17118c8c1502aa398e9287e415
@@ -2498,6 +2521,7 @@ SPEC CHECKSUMS:
   SDWebImage: 1bb6a1b84b6fe87b972a102bdc77dd589df33477
   SDWebImageWebPCoder: 0e06e365080397465cc73a7a9b472d8a3bd0f377
   simdjson: 7bb9e33d87737cec966e7b427773c67baa4458fe
+  UMAppLoader: 145337733539f9af9b3dd97eeaa7f3bd97cacb23
   WatermelonDB: 75e467adbaf2cb2809780fb3eda7ce4964e11778
   Yoga: 5934998fbeaef7845dbf698f698518695ab4cd1a
 

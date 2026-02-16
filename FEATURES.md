@@ -1,7 +1,7 @@
 # SiteMedic Features
 
 **Project**: SiteMedic - UK Construction Site Medic Staffing Platform with Bundled Software + Service
-**Last Updated**: 2026-02-16
+**Last Updated**: 2026-02-15
 **Audience**: Web developers, technical reviewers, product team
 
 ---
