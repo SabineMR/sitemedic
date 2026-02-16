@@ -8,7 +8,8 @@
  */
 
 import { Skeleton } from '@/components/ui/skeleton';
-import { ContractData, formatGBP } from '@/lib/contracts/payment-schedules';
+import type { ContractData } from '@/lib/contracts/types';
+import { formatGBP } from '@/lib/contracts/payment-schedules';
 
 interface ContractPreviewProps {
   contractData: Partial<ContractData>;
@@ -206,7 +207,7 @@ export function ContractPreview({
           <div>
             <h2 className="text-lg font-semibold mb-2">Contract Clauses</h2>
             <div className="text-xs text-muted-foreground space-y-2">
-              {contractData.clauses.slice(0, 3).map((clause, idx) => (
+              {contractData.clauses.slice(0, 3).map((clause: any, idx: number) => (
                 <div key={idx} className="border-l-2 pl-3">
                   <p className="font-medium">{clause.title}</p>
                   <p className="line-clamp-2">{clause.body}</p>

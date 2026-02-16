@@ -13,9 +13,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import type { PaymentTerms, PaymentSchedule } from '@/lib/contracts/types';
 import {
-  PaymentTerms,
-  PaymentSchedule,
   PAYMENT_TERMS_OPTIONS,
   calculatePaymentSchedule,
   getPaymentTermsOptions,
