@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 5.5 of 7 (Admin Operations) — In progress
-Plan: 2 of 4 in current phase
+Plan: 1 of 4 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 05.5-02-PLAN.md (Medic Management Dashboard)
+Last activity: 2026-02-16 — Completed 05.5-01-PLAN.md (Bookings Management with Approval Workflow)
 
-Progress: [████████████░] 97% (38/39 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5)
+Progress: [████████████░] 95% (37/39 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 38
-- Average duration: 3.8 min
-- Total execution time: 2.53 hours
+- Total plans completed: 37
+- Average duration: 3.9 min
+- Total execution time: 2.43 hours
 
 **By Phase:**
 
@@ -34,11 +34,11 @@ Progress: [████████████░] 97% (38/39 plans across Phas
 | 04-web-dashboard | 6/6 | 46 min | 7.7 min |
 | 04.5-marketing-booking | 1/3 | 10 min | 10 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
-| 05.5-admin-operations | 2/4 | 8 min | 4 min |
+| 05.5-admin-operations | 1/4 | 5.7 min | 5.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-02 (3 min), 05-03 (4 min), 05-04 (2 min), 04.5-01 (10 min), 05.5-02 (4 min)
-- Trend: Admin operations phase started - Medic roster with utilization metrics and availability management
+- Last 5 plans: 05-03 (4 min), 05-04 (2 min), 04.5-01 (10 min), 05.5-01 (5.7 min)
+- Trend: Admin operations phase started - Bookings approval with bulk operations and optimistic updates
 
 *Updated after each plan completion*
 
@@ -98,6 +98,11 @@ Recent decisions affecting current work:
 - D-01.5-03-003: Utilization scoring favors under-utilized medics (25pts * (1 - utilization_pct/100))
 - D-01.5-03-004: New medics (0 rating) get 15 points benefit-of-doubt vs rating-based 0-20 points
 - D-01.5-03-005: Travel bonus is £2/mile beyond 30 miles, room/board is fixed £85 for >90min travel
+
+**From Plan 05.5-01:**
+- D-05.5-01-001: Use TanStack Table row selection for bulk operations (handles select all, indeterminate, pagination-aware state)
+- D-05.5-01-002: Bulk operations use single .in() query not loops (10-100x faster, avoids N+1 pitfall)
+- D-05.5-01-003: 300ms debounced search (optimal balance between responsiveness and efficiency)
 - D-01.5-03-006: Deny recommendation when cost >50% of shift value to prevent unprofitable bookings
 - D-01.5-03-007: All out-of-territory bookings require admin approval regardless of cost
 - D-01.5-03-008: Cache cleanup scheduled daily at 3 AM UTC via pg_cron (manual fallback provided)
