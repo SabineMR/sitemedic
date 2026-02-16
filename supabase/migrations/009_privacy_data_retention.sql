@@ -401,7 +401,7 @@ $block$;
 CREATE OR REPLACE VIEW medic_privacy_dashboard AS
 SELECT
   m.id AS medic_id,
-  m.name AS medic_name,
+  m.first_name || ' ' || m.last_name AS medic_name,
 
   -- Consent status
   c.consent_given_at,

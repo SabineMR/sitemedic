@@ -694,11 +694,16 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
   - Certification tracking (CSCS, CPCS, IPAF, Gas Safe)
   - Treatment history timeline
 
-- **Near-Miss Capture**
-  - Photo evidence with GPS timestamp
-  - Category and severity classification
-  - <45 second completion time
-  - Hazard description and corrective actions
+- **Near-Miss Capture** ✅ **COMPLETED** (Plan 02-06)
+  - Photo-first workflow: Evidence captured FIRST (immediate), details SECOND (category/description/severity)
+  - 13 construction hazard categories displayed as visible 2-column grid with emoji icons (Fall from height ⬇️, Electrical ⚡, Fire/Explosion 🔥, etc.)
+  - GPS auto-capture with expo-location (balanced accuracy, non-blocking on failure for indoor/basement sites)
+  - 3-level severity potential picker: Minor (green) / Major (amber) / Fatal (red) with outcome descriptions
+  - Up to 4 photos with on-device compression (100-200KB target via 1200px resize + 70% JPEG)
+  - Auto-save to WatermelonDB on every field change (no manual save button)
+  - <45 second completion time achieved through visible category grid (no hidden picker) and photo-first design
+  - Safety tab with reactive near-miss list (sorted by date, shows category/severity/photo thumbnail)
+  - One-tap access to report from Safety tab (NEAR-06 requirement)
 
 - **Daily Safety Checklists**
   - 10-item checklist, <5 minute completion
