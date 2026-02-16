@@ -1,11 +1,18 @@
 /**
  * Stripe Server-side Utilities
- * Phase 4.5: Server-side Stripe SDK initialization for Payment Intent creation
+ * Phase 6.5: Server-side Stripe SDK initialization for Payment Intent creation
  */
 
 import Stripe from 'stripe';
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-01-28.clover',
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY environment variable is not set');
+}
+
+export const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+
+// Initialize Stripe with API version
+export const stripe = new Stripe(stripeSecretKey, {
+  apiVersion: '2024-12-18.acacia', // Latest stable version
   typescript: true,
 });
