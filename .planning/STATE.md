@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 6.5 of 7 (Payments & Payouts) — In progress
-Plan: 1 of 3 in current phase
+Plan: 4 of 5 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 06.5-01-PLAN.md (Client Payment Processing)
+Last activity: 2026-02-16 — Completed 06.5-04-PLAN.md (IR35 Compliance)
 
-Progress: [██████████████] 100% (49/49 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6, 6.5)
+Progress: [██████████████] 100% (50/50 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6, 6.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 49
+- Total plans completed: 50
 - Average duration: 4.4 min
-- Total execution time: 3.62 hours
+- Total execution time: 3.70 hours
 
 **By Phase:**
 
@@ -36,11 +36,11 @@ Progress: [██████████████] 100% (49/49 plans across 
 | 04.6-customer-onboarding | 7/7 | 52 min | 7.4 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
-| 06.5-payments-payouts | 1/3 | 9 min | 9 min |
+| 06.5-payments-payouts | 4/5 | 23 min | 5.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 04.6-06 (8 min), 04.6-07 (6 min), 04.5-03 (6 min), 06.5-02 (4 min), 06.5-01 (9 min)
-- Trend: Phase 6.5 in progress - Client payment processing with Stripe Payment Intents
+- Last 5 plans: 04.6-07 (6 min), 04.5-03 (6 min), 06.5-02 (4 min), 06.5-01 (9 min), 06.5-04 (5 min)
+- Trend: Phase 6.5 in progress - IR35 compliance and payout processing
 
 *Updated after each plan completion*
 
@@ -385,6 +385,14 @@ Recent decisions affecting current work:
 - D-06.5-02-005: Manual payout trigger with dry-run preview for admin safety (validation without Stripe calls)
 - D-06.5-02-006: Continue processing all payouts even if individual transfers fail (batch resilience pattern)
 
+**From Plan 06.5-04:**
+- D-06.5-04-001: Self-employed medics: no tax deductions (£0), medic handles own taxes
+- D-06.5-04-002: Umbrella company: payouts to company account, company handles deductions
+- D-06.5-04-003: UTR validation: 10-digit format with optional spaces
+- D-06.5-04-004: CEST assessment: recommended but not strictly required
+- D-06.5-04-005: Auto-refresh Stripe status every 30 seconds until onboarding complete
+- D-06.5-04-006: Payslip generation: triggered on timesheet.payout_status = 'paid'
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -427,9 +435,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T21:29:16Z
-Stopped at: Completed 06.5-01-PLAN.md — Client Payment Processing (Stripe Payment Intents with 3D Secure, automatic customer creation, booking confirmation)
+Last session: 2026-02-16T21:37:46Z
+Stopped at: Completed 06.5-04-PLAN.md — IR35 Compliance (Employment status, UTR validation, CEST assessment, Stripe Express onboarding, automated payslip generation)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (3/3 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6.5 (Payments & Payouts) in progress (1/3 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (3/3 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6.5 (Payments & Payouts) in progress (4/5 plans)*
