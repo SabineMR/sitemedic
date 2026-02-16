@@ -47,12 +47,12 @@ CREATE TABLE medic_alerts (
   -- Resolution
   is_dismissed BOOLEAN DEFAULT FALSE,
   dismissed_at TIMESTAMPTZ,
-  dismissed_by UUID REFERENCES users(id),
+  dismissed_by UUID REFERENCES auth.users(id),
   dismissal_notes TEXT,
 
   is_resolved BOOLEAN DEFAULT FALSE,
   resolved_at TIMESTAMPTZ,
-  resolved_by UUID REFERENCES users(id),
+  resolved_by UUID REFERENCES auth.users(id),
   resolution_notes TEXT,
 
   -- Auto-resolution (e.g., battery recovered, connection restored)
@@ -198,7 +198,7 @@ CREATE OR REPLACE VIEW active_medic_alerts AS
 SELECT
   a.id,
   a.medic_id,
-  m.name AS medic_name,
+  (m.first_name || ' ' || m.last_name) AS medic_name,
   a.booking_id,
   b.site_name,
   a.alert_type,

@@ -17,6 +17,12 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import {
+  validateOfflinePing,
+  validateOfflineBatch,
+  generateBatchId,
+  detectGpsSpoofing,
+} from '../_shared/offline-handler.ts';
 
 // Types
 interface LocationPing {
@@ -217,6 +223,39 @@ serve(async (req) => {
       );
     }
 
+    // Enhanced validation for offline batches
+    const hasOfflinePings = pings.some((p) => p.is_offline_queued);
+    let batchId: string | undefined;
+    let batchWarnings: string[] = [];
+
+    if (hasOfflinePings) {
+      console.log('[OfflineBatch] Detected offline pings, running enhanced validation...');
+      batchId = generateBatchId();
+
+      const batchValidation = validateOfflineBatch(pings);
+      if (!batchValidation.valid) {
+        console.error('[OfflineBatch] Validation failed:', batchValidation.errors);
+        return new Response(
+          JSON.stringify({
+            error: 'Offline batch validation failed',
+            details: batchValidation.errors,
+            stats: batchValidation.stats,
+          }),
+          {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      batchWarnings = batchValidation.warnings;
+      if (batchWarnings.length > 0) {
+        console.warn('[OfflineBatch] Validation warnings:', batchWarnings);
+      }
+
+      console.log('[OfflineBatch] Batch stats:', batchValidation.stats);
+    }
+
     // Validate all pings
     const validationErrors: string[] = [];
     for (let i = 0; i < pings.length; i++) {
@@ -229,6 +268,13 @@ serve(async (req) => {
       // Ensure medic can only submit their own pings (additional check beyond RLS)
       if (ping.medic_id !== user.id) {
         validationErrors.push(`Ping ${i}: Cannot submit pings for other medics`);
+      }
+
+      // GPS spoofing detection (log warnings but don't reject)
+      const spoofingCheck = detectGpsSpoofing(ping);
+      if (spoofingCheck.suspicious) {
+        console.warn(`[GPS Spoofing] Suspicious ping detected:`, spoofingCheck.reasons);
+        batchWarnings.push(`Ping ${i}: ${spoofingCheck.reasons.join(', ')}`);
       }
     }
 
@@ -289,14 +335,18 @@ serve(async (req) => {
     await supabaseClient.from('medic_location_audit').insert({
       medic_id: medicId,
       booking_id: pings[0].booking_id,
-      action_type: 'location_ping_received',
+      action_type: hasOfflinePings ? 'offline_batch_received' : 'location_ping_received',
       action_timestamp: new Date().toISOString(),
       actor_type: 'medic',
       actor_user_id: user.id,
-      description: `Received ${pings.length} location ping(s)`,
+      description: hasOfflinePings
+        ? `Received offline batch: ${pings.length} ping(s)`
+        : `Received ${pings.length} location ping(s)`,
       metadata: {
         ping_count: pings.length,
-        offline_queued: pings.some((p) => p.is_offline_queued),
+        offline_queued: hasOfflinePings,
+        batch_id: batchId,
+        batch_warnings: batchWarnings,
         avg_accuracy: pings.reduce((sum, p) => sum + p.accuracy_meters, 0) / pings.length,
         avg_battery: pings.reduce((sum, p) => sum + p.battery_level, 0) / pings.length,
       },

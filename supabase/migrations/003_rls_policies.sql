@@ -23,7 +23,7 @@ ALTER TABLE territory_metrics ENABLE ROW LEVEL SECURITY;
 -- =============================================================================
 -- HELPER FUNCTION: Get current user's role
 -- =============================================================================
-CREATE OR REPLACE FUNCTION auth.user_role()
+CREATE OR REPLACE FUNCTION public.user_role()
 RETURNS TEXT AS $$
   SELECT COALESCE(
     (SELECT raw_user_meta_data->>'role' FROM auth.users WHERE id = auth.uid()),
@@ -31,7 +31,7 @@ RETURNS TEXT AS $$
   );
 $$ LANGUAGE SQL SECURITY DEFINER;
 
-COMMENT ON FUNCTION auth.user_role IS 'Returns current user role: admin, medic, site_manager, client, or anonymous';
+COMMENT ON FUNCTION public.user_role IS 'Returns current user role: admin, medic, site_manager, client, or anonymous';
 
 -- =============================================================================
 -- RLS POLICIES: territories
@@ -40,14 +40,14 @@ COMMENT ON FUNCTION auth.user_role IS 'Returns current user role: admin, medic, 
 -- Admins: Full access
 CREATE POLICY "Admins can manage territories" ON territories
   FOR ALL
-  USING (auth.user_role() = 'admin')
-  WITH CHECK (auth.user_role() = 'admin');
+  USING (public.user_role() = 'admin')
+  WITH CHECK (public.user_role() = 'admin');
 
 -- Medics: View their assigned territories
 CREATE POLICY "Medics can view assigned territories" ON territories
   FOR SELECT
   USING (
-    auth.user_role() = 'medic' AND (
+    public.user_role() = 'medic' AND (
       primary_medic_id = auth.uid() OR
       secondary_medic_id = auth.uid()
     )
@@ -56,7 +56,7 @@ CREATE POLICY "Medics can view assigned territories" ON territories
 -- Site managers and clients: View all territories (for booking portal)
 CREATE POLICY "Site managers and clients can view territories" ON territories
   FOR SELECT
-  USING (auth.user_role() IN ('site_manager', 'client'));
+  USING (public.user_role() IN ('site_manager', 'client'));
 
 -- =============================================================================
 -- RLS POLICIES: clients
@@ -65,25 +65,25 @@ CREATE POLICY "Site managers and clients can view territories" ON territories
 -- Admins: Full access
 CREATE POLICY "Admins can manage clients" ON clients
   FOR ALL
-  USING (auth.user_role() = 'admin')
-  WITH CHECK (auth.user_role() = 'admin');
+  USING (public.user_role() = 'admin')
+  WITH CHECK (public.user_role() = 'admin');
 
 -- Clients: View and update own account only
 CREATE POLICY "Clients can view own account" ON clients
   FOR SELECT
   USING (
-    auth.user_role() = 'client' AND
+    public.user_role() = 'client' AND
     user_id = auth.uid()
   );
 
 CREATE POLICY "Clients can update own account" ON clients
   FOR UPDATE
   USING (
-    auth.user_role() = 'client' AND
+    public.user_role() = 'client' AND
     user_id = auth.uid()
   )
   WITH CHECK (
-    auth.user_role() = 'client' AND
+    public.user_role() = 'client' AND
     user_id = auth.uid()
   );
 
@@ -94,25 +94,25 @@ CREATE POLICY "Clients can update own account" ON clients
 -- Admins: Full access
 CREATE POLICY "Admins can manage medics" ON medics
   FOR ALL
-  USING (auth.user_role() = 'admin')
-  WITH CHECK (auth.user_role() = 'admin');
+  USING (public.user_role() = 'admin')
+  WITH CHECK (public.user_role() = 'admin');
 
 -- Medics: View and update own profile only
 CREATE POLICY "Medics can view own profile" ON medics
   FOR SELECT
   USING (
-    auth.user_role() = 'medic' AND
+    public.user_role() = 'medic' AND
     user_id = auth.uid()
   );
 
 CREATE POLICY "Medics can update own profile" ON medics
   FOR UPDATE
   USING (
-    auth.user_role() = 'medic' AND
+    public.user_role() = 'medic' AND
     user_id = auth.uid()
   )
   WITH CHECK (
-    auth.user_role() = 'medic' AND
+    public.user_role() = 'medic' AND
     user_id = auth.uid()
   );
 
@@ -120,7 +120,7 @@ CREATE POLICY "Medics can update own profile" ON medics
 -- NOTE: Hide sensitive data like home address, Stripe account, UTR
 CREATE POLICY "Clients can view medic public profiles" ON medics
   FOR SELECT
-  USING (auth.user_role() = 'client');
+  USING (public.user_role() = 'client');
   -- Application layer filters out: home_address, home_postcode, stripe_account_id, utr
 
 -- =============================================================================
@@ -130,33 +130,33 @@ CREATE POLICY "Clients can view medic public profiles" ON medics
 -- Admins: Full access
 CREATE POLICY "Admins can manage bookings" ON bookings
   FOR ALL
-  USING (auth.user_role() = 'admin')
-  WITH CHECK (auth.user_role() = 'admin');
+  USING (public.user_role() = 'admin')
+  WITH CHECK (public.user_role() = 'admin');
 
 -- Clients: View and create own bookings
 CREATE POLICY "Clients can view own bookings" ON bookings
   FOR SELECT
   USING (
-    auth.user_role() = 'client' AND
+    public.user_role() = 'client' AND
     client_id IN (SELECT id FROM clients WHERE user_id = auth.uid())
   );
 
 CREATE POLICY "Clients can create bookings" ON bookings
   FOR INSERT
   WITH CHECK (
-    auth.user_role() = 'client' AND
+    public.user_role() = 'client' AND
     client_id IN (SELECT id FROM clients WHERE user_id = auth.uid())
   );
 
 CREATE POLICY "Clients can cancel own bookings" ON bookings
   FOR UPDATE
   USING (
-    auth.user_role() = 'client' AND
+    public.user_role() = 'client' AND
     client_id IN (SELECT id FROM clients WHERE user_id = auth.uid()) AND
     status NOT IN ('completed', 'cancelled') -- Can't change completed/cancelled bookings
   )
   WITH CHECK (
-    auth.user_role() = 'client' AND
+    public.user_role() = 'client' AND
     client_id IN (SELECT id FROM clients WHERE user_id = auth.uid())
   );
 
@@ -164,7 +164,7 @@ CREATE POLICY "Clients can cancel own bookings" ON bookings
 CREATE POLICY "Medics can view assigned bookings" ON bookings
   FOR SELECT
   USING (
-    auth.user_role() = 'medic' AND
+    public.user_role() = 'medic' AND
     medic_id IN (SELECT id FROM medics WHERE user_id = auth.uid())
   );
 
@@ -172,18 +172,18 @@ CREATE POLICY "Medics can view assigned bookings" ON bookings
 CREATE POLICY "Site managers can view site bookings" ON bookings
   FOR SELECT
   USING (
-    auth.user_role() = 'site_manager' AND
+    public.user_role() = 'site_manager' AND
     site_manager_id = auth.uid()
   );
 
 CREATE POLICY "Site managers can update site bookings" ON bookings
   FOR UPDATE
   USING (
-    auth.user_role() = 'site_manager' AND
+    public.user_role() = 'site_manager' AND
     site_manager_id = auth.uid()
   )
   WITH CHECK (
-    auth.user_role() = 'site_manager' AND
+    public.user_role() = 'site_manager' AND
     site_manager_id = auth.uid()
   );
 
@@ -194,33 +194,33 @@ CREATE POLICY "Site managers can update site bookings" ON bookings
 -- Admins: Full access
 CREATE POLICY "Admins can manage timesheets" ON timesheets
   FOR ALL
-  USING (auth.user_role() = 'admin')
-  WITH CHECK (auth.user_role() = 'admin');
+  USING (public.user_role() = 'admin')
+  WITH CHECK (public.user_role() = 'admin');
 
 -- Medics: View and submit own timesheets
 CREATE POLICY "Medics can view own timesheets" ON timesheets
   FOR SELECT
   USING (
-    auth.user_role() = 'medic' AND
+    public.user_role() = 'medic' AND
     medic_id IN (SELECT id FROM medics WHERE user_id = auth.uid())
   );
 
 CREATE POLICY "Medics can submit timesheets" ON timesheets
   FOR INSERT
   WITH CHECK (
-    auth.user_role() = 'medic' AND
+    public.user_role() = 'medic' AND
     medic_id IN (SELECT id FROM medics WHERE user_id = auth.uid())
   );
 
 CREATE POLICY "Medics can update own pending timesheets" ON timesheets
   FOR UPDATE
   USING (
-    auth.user_role() = 'medic' AND
+    public.user_role() = 'medic' AND
     medic_id IN (SELECT id FROM medics WHERE user_id = auth.uid()) AND
     payout_status = 'pending' -- Can only edit before manager approval
   )
   WITH CHECK (
-    auth.user_role() = 'medic' AND
+    public.user_role() = 'medic' AND
     medic_id IN (SELECT id FROM medics WHERE user_id = auth.uid())
   );
 
@@ -228,7 +228,7 @@ CREATE POLICY "Medics can update own pending timesheets" ON timesheets
 CREATE POLICY "Site managers can view site timesheets" ON timesheets
   FOR SELECT
   USING (
-    auth.user_role() = 'site_manager' AND
+    public.user_role() = 'site_manager' AND
     booking_id IN (
       SELECT id FROM bookings WHERE site_manager_id = auth.uid()
     )
@@ -237,14 +237,14 @@ CREATE POLICY "Site managers can view site timesheets" ON timesheets
 CREATE POLICY "Site managers can approve timesheets" ON timesheets
   FOR UPDATE
   USING (
-    auth.user_role() = 'site_manager' AND
+    public.user_role() = 'site_manager' AND
     booking_id IN (
       SELECT id FROM bookings WHERE site_manager_id = auth.uid()
     ) AND
     payout_status = 'pending' -- Only approve pending timesheets
   )
   WITH CHECK (
-    auth.user_role() = 'site_manager' AND
+    public.user_role() = 'site_manager' AND
     booking_id IN (
       SELECT id FROM bookings WHERE site_manager_id = auth.uid()
     )
@@ -257,14 +257,14 @@ CREATE POLICY "Site managers can approve timesheets" ON timesheets
 -- Admins: Full access
 CREATE POLICY "Admins can manage invoices" ON invoices
   FOR ALL
-  USING (auth.user_role() = 'admin')
-  WITH CHECK (auth.user_role() = 'admin');
+  USING (public.user_role() = 'admin')
+  WITH CHECK (public.user_role() = 'admin');
 
 -- Clients: View own invoices only
 CREATE POLICY "Clients can view own invoices" ON invoices
   FOR SELECT
   USING (
-    auth.user_role() = 'client' AND
+    public.user_role() = 'client' AND
     client_id IN (SELECT id FROM clients WHERE user_id = auth.uid())
   );
 
@@ -275,14 +275,14 @@ CREATE POLICY "Clients can view own invoices" ON invoices
 -- Admins: Full access
 CREATE POLICY "Admins can manage invoice line items" ON invoice_line_items
   FOR ALL
-  USING (auth.user_role() = 'admin')
-  WITH CHECK (auth.user_role() = 'admin');
+  USING (public.user_role() = 'admin')
+  WITH CHECK (public.user_role() = 'admin');
 
 -- Clients: View line items for own invoices
 CREATE POLICY "Clients can view own invoice line items" ON invoice_line_items
   FOR SELECT
   USING (
-    auth.user_role() = 'client' AND
+    public.user_role() = 'client' AND
     invoice_id IN (
       SELECT id FROM invoices
       WHERE client_id IN (SELECT id FROM clients WHERE user_id = auth.uid())
@@ -296,14 +296,14 @@ CREATE POLICY "Clients can view own invoice line items" ON invoice_line_items
 -- Admins: Full access
 CREATE POLICY "Admins can manage payments" ON payments
   FOR ALL
-  USING (auth.user_role() = 'admin')
-  WITH CHECK (auth.user_role() = 'admin');
+  USING (public.user_role() = 'admin')
+  WITH CHECK (public.user_role() = 'admin');
 
 -- Clients: View own payments only
 CREATE POLICY "Clients can view own payments" ON payments
   FOR SELECT
   USING (
-    auth.user_role() = 'client' AND
+    public.user_role() = 'client' AND
     client_id IN (SELECT id FROM clients WHERE user_id = auth.uid())
   );
 
@@ -321,7 +321,7 @@ CREATE POLICY "Authenticated users can read travel cache" ON travel_time_cache
 CREATE POLICY "Admins and service role can write travel cache" ON travel_time_cache
   FOR INSERT
   WITH CHECK (
-    auth.user_role() = 'admin' OR
+    public.user_role() = 'admin' OR
     auth.role() = 'service_role' -- Backend Edge Functions
   );
 
@@ -332,8 +332,8 @@ CREATE POLICY "Admins and service role can write travel cache" ON travel_time_ca
 -- Admins: Full access
 CREATE POLICY "Admins can manage territory metrics" ON territory_metrics
   FOR ALL
-  USING (auth.user_role() = 'admin')
-  WITH CHECK (auth.user_role() = 'admin');
+  USING (public.user_role() = 'admin')
+  WITH CHECK (public.user_role() = 'admin');
 
 -- Backend functions can write metrics
 CREATE POLICY "Service role can write territory metrics" ON territory_metrics
@@ -344,7 +344,7 @@ CREATE POLICY "Service role can write territory metrics" ON territory_metrics
 CREATE POLICY "Medics can view own territory metrics" ON territory_metrics
   FOR SELECT
   USING (
-    auth.user_role() = 'medic' AND (
+    public.user_role() = 'medic' AND (
       primary_medic_id IN (SELECT id FROM medics WHERE user_id = auth.uid()) OR
       secondary_medic_id IN (SELECT id FROM medics WHERE user_id = auth.uid())
     )

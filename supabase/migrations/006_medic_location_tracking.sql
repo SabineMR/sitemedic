@@ -53,9 +53,8 @@ CREATE INDEX idx_location_pings_booking ON medic_location_pings(booking_id);
 CREATE INDEX idx_location_pings_recorded_at ON medic_location_pings(recorded_at);
 CREATE INDEX idx_location_pings_created_at ON medic_location_pings(created_at); -- For retention cleanup job
 
--- Partial index for today's active pings (command center queries)
-CREATE INDEX idx_location_pings_today ON medic_location_pings(medic_id, recorded_at DESC)
-  WHERE recorded_at >= CURRENT_DATE;
+-- Index for recent pings (command center queries)
+CREATE INDEX idx_location_pings_recent ON medic_location_pings(medic_id, recorded_at DESC);
 
 -- Geospatial index (if using PostGIS extension for advanced queries)
 -- CREATE INDEX idx_location_pings_geom ON medic_location_pings USING GIST (
@@ -138,9 +137,8 @@ CREATE INDEX idx_shift_events_booking ON medic_shift_events(booking_id);
 CREATE INDEX idx_shift_events_type ON medic_shift_events(event_type);
 CREATE INDEX idx_shift_events_timestamp ON medic_shift_events(event_timestamp DESC);
 
--- Partial index for today's events (command center real-time view)
-CREATE INDEX idx_shift_events_today ON medic_shift_events(medic_id, event_timestamp DESC)
-  WHERE event_timestamp >= CURRENT_DATE;
+-- Index for recent events (command center real-time view)
+CREATE INDEX idx_shift_events_recent ON medic_shift_events(medic_id, event_timestamp DESC);
 
 COMMENT ON TABLE medic_shift_events IS 'Significant shift status changes (arrival, departure, breaks, edge cases). Permanent retention for billing/compliance.';
 COMMENT ON COLUMN medic_shift_events.event_type IS 'Type of status change. Includes normal events (arrival/departure) and edge cases (battery died, connection lost).';
@@ -273,11 +271,11 @@ CREATE TABLE medic_location_consent (
   ip_address INET,
   user_agent TEXT,
 
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-
-  -- Unique constraint: One active consent per medic
-  UNIQUE(medic_id) WHERE withdrawn_at IS NULL
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Unique constraint: One active consent per medic (using partial unique index)
+CREATE UNIQUE INDEX idx_location_consent_medic_active ON medic_location_consent(medic_id) WHERE withdrawn_at IS NULL;
 
 CREATE INDEX idx_location_consent_medic ON medic_location_consent(medic_id);
 CREATE INDEX idx_location_consent_active ON medic_location_consent(consent_given) WHERE consent_given = TRUE AND withdrawn_at IS NULL;

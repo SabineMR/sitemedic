@@ -142,6 +142,8 @@ supabase functions deploy medic-location-ping
 supabase functions deploy medic-shift-event
 supabase functions deploy geofence-check
 supabase functions deploy alert-monitor
+supabase functions deploy gdpr-export-data
+supabase functions deploy gdpr-delete-data
 ```
 
 ### Set Up Cron Job
@@ -191,6 +193,40 @@ SELECT cron.schedule(
 - Battery/connection issues need immediate detection
 - Late arrivals need prompt notification
 - 1-minute frequency is still lightweight (<2 seconds per run)
+
+### Set Up Data Retention Cleanup
+
+Automatically delete location pings older than 30 days (GDPR compliance):
+
+```sql
+-- Scheduled daily at 2 AM
+SELECT cron.schedule(
+  'location-pings-cleanup',
+  '0 2 * * *', -- Every day at 2 AM
+  $$
+  SELECT cleanup_old_location_pings();
+  $$
+);
+
+-- Check cleanup job status
+SELECT * FROM cron.job_run_details
+WHERE jobname = 'location-pings-cleanup'
+ORDER BY start_time DESC
+LIMIT 5;
+```
+
+**Optional:** Anonymize old audit logs (>6 years):
+
+```sql
+-- Scheduled annually on Jan 1
+SELECT cron.schedule(
+  'audit-logs-anonymization',
+  '0 3 1 1 *', -- Every Jan 1 at 3 AM
+  $$
+  SELECT anonymize_old_audit_logs();
+  $$
+);
+```
 
 ## Geofence Configuration
 
@@ -392,3 +428,163 @@ ORDER BY a.triggered_at DESC;
 - Alerts: ~1-5 per hour (depends on issues)
 
 Highly efficient for real-time monitoring! 🚀
+
+## GDPR Compliance ✅
+
+### 5. `gdpr-export-data` ✨ **NEW**
+**Endpoint**: `POST /functions/v1/gdpr-export-data`
+
+GDPR Right to Access - Export all personal data for a medic.
+
+**WHY:** GDPR Article 15 requires organizations to provide individuals with a copy of all personal data in a structured, machine-readable format.
+
+**Authentication:** Requires valid medic auth token (medics can only export their own data)
+
+**Returns:**
+```json
+{
+  "success": true,
+  "data": {
+    "medic_id": "...",
+    "export_date": "2026-02-15T10:30:00Z",
+    "location_pings": [...],  // Last 30 days
+    "shift_events": [...],     // All time
+    "audit_trail": [...],      // All time
+    "consent_records": [...],
+    "alerts": [...]
+  },
+  "export_info": {
+    "exported_by": "medic@example.com",
+    "export_timestamp": "2026-02-15T10:30:00Z",
+    "format": "JSON",
+    "gdpr_notice": "..."
+  }
+}
+```
+
+**Usage from mobile app:**
+```typescript
+const { data, error } = await supabase.functions.invoke('gdpr-export-data');
+// Share or save the exported data
+```
+
+### 6. `gdpr-delete-data` ✨ **NEW**
+**Endpoint**: `POST /functions/v1/gdpr-delete-data`
+
+GDPR Right to be Forgotten - Permanently delete all personal data.
+
+**WHY:** GDPR Article 17 requires organizations to delete personal data upon request.
+
+**⚠️ IMPORTANT:**
+- This is PERMANENT and CANNOT BE UNDONE
+- Deletes: location pings, shift events, alerts
+- Keeps: audit trail (UK tax law requires 6-year retention)
+- Withdraws: location tracking consent
+
+**Request:**
+```json
+{
+  "confirmation": true,  // REQUIRED - must be true
+  "reason": "Optional reason for deletion"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "deleted_at": "2026-02-15T10:30:00Z",
+  "summary": {
+    "location_pings_deleted": 1542,
+    "shift_events_deleted": 87,
+    "alerts_deleted": 12
+  },
+  "important_notice": [
+    "Your location tracking data has been permanently deleted.",
+    "Audit logs are retained for 6 years per UK tax law.",
+    "Your consent has been withdrawn.",
+    "This action cannot be undone."
+  ]
+}
+```
+
+**Usage from mobile app:**
+```typescript
+const { data, error } = await supabase.functions.invoke('gdpr-delete-data', {
+  body: {
+    confirmation: true,
+    reason: 'User requested deletion'
+  }
+});
+```
+
+### Privacy Dashboard View
+
+View medic privacy information:
+
+```sql
+-- Check medic's privacy dashboard
+SELECT * FROM medic_privacy_dashboard
+WHERE medic_id = 'MEDIC_ID';
+
+-- Returns:
+-- - consent_status (active/withdrawn/none)
+-- - total_pings_stored
+-- - total_events_stored
+-- - times_viewed_by_admin
+-- - times_exported
+-- - data_deleted_previously
+```
+
+### Manual Data Management
+
+**Export specific medic data:**
+```sql
+SELECT export_medic_data('MEDIC_ID');
+```
+
+**Delete specific medic data:**
+```sql
+SELECT delete_medic_data(
+  p_medic_id := 'MEDIC_ID',
+  p_requesting_user_id := 'ADMIN_ID',
+  p_reason := 'User request via support ticket'
+);
+```
+
+**Check if medic has consent:**
+```sql
+SELECT has_location_tracking_consent('MEDIC_ID');
+```
+
+**Withdraw consent manually:**
+```sql
+UPDATE medic_location_consent
+SET withdrawn_at = NOW()
+WHERE medic_id = 'MEDIC_ID'
+  AND withdrawn_at IS NULL;
+```
+
+## Data Retention Policies
+
+| Data Type | Retention Period | Reason | Auto-Cleanup |
+|-----------|------------------|--------|--------------|
+| Location Pings | 30 days | GDPR compliance | ✅ Daily at 2 AM |
+| Shift Events | Permanent | Billing records | ❌ (needed for invoices) |
+| Audit Logs | 6 years | UK tax law | ✅ Anonymized after 6 years |
+| Alerts | 30 days | Operational data | ⏳ To be implemented |
+| Consent Records | Permanent | Legal requirement | ❌ (proof of consent) |
+
+**GDPR Compliance:**
+- ✅ Right to Access (export data)
+- ✅ Right to be Forgotten (delete data)
+- ✅ Right to Withdraw Consent
+- ✅ Data minimization (30-day retention)
+- ✅ Audit trail (who viewed data)
+- ✅ Transparent data practices
+
+**UK Legal Requirements:**
+- ✅ 6-year retention for tax records
+- ✅ Audit trail for compliance
+- ✅ Proof of consent stored
+- ✅ Anonymization after retention period

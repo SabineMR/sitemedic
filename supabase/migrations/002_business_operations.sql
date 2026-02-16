@@ -329,7 +329,7 @@ CREATE INDEX idx_invoices_client ON invoices(client_id);
 CREATE INDEX idx_invoices_status ON invoices(status);
 CREATE INDEX idx_invoices_due_date ON invoices(due_date);
 CREATE INDEX idx_invoices_number ON invoices(invoice_number);
-CREATE INDEX idx_invoices_overdue ON invoices(status, due_date) WHERE status = 'sent' AND due_date < CURRENT_DATE;
+CREATE INDEX idx_invoices_overdue ON invoices(status, due_date) WHERE status = 'sent';
 
 COMMENT ON TABLE invoices IS 'Client invoices with VAT (20%), Net 30 payment terms, and late payment tracking';
 COMMENT ON COLUMN invoices.late_fee_charged IS 'UK statutory late payment fees: £40 (<£1000), £70 (£1000-9999), £100 (£10k+)';
