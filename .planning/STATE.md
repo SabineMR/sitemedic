@@ -9,17 +9,17 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 Phase: 6.5 of 7 (Payments & Payouts) — In progress
-Plan: 5 of 5 in current phase
-Status: Phase complete
-Last activity: 2026-02-16 — Completed 06.5-05-PLAN.md (Out-of-Territory Cost Management)
-Progress: [███████████████] 100% (52/52 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6, 6.5)
+Plan: 6 of 10 in current phase
+Status: In progress
+Last activity: 2026-02-16 — Completed 06.5-06-PLAN.md (Platform Fee Calculation Fix)
+Progress: [███████████████] 100% (53/53 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6, 6.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 52
-- Average duration: 4.5 min
-- Total execution time: 3.93 hours
+- Total plans completed: 53
+- Average duration: 4.4 min
+- Total execution time: 3.95 hours
 
 **By Phase:**
 
@@ -34,11 +34,11 @@ Progress: [███████████████] 100% (52/52 plans acro
 | 04.6-customer-onboarding | 7/7 | 52 min | 7.4 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
-| 06.5-payments-payouts | 5/5 | 36 min | 7.2 min |
+| 06.5-payments-payouts | 6/10 | 37 min | 6.2 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.5-01 (9 min), 06.5-02 (4 min), 06.5-03 (9 min), 06.5-04 (5 min), 06.5-05 (4 min)
-- Trend: Phase 6.5 complete - Payments & payouts system with invoice generation, late payment tracking, payout calculations, and out-of-territory cost management
+- Last 5 plans: 06.5-02 (4 min), 06.5-03 (9 min), 06.5-04 (5 min), 06.5-05 (4 min), 06.5-06 (1 min)
+- Trend: Phase 6.5 in progress - Fixed platform fee calculation from 60/40 to roadmap-aligned 71.4/28.6 split
 
 *Updated after each plan completion*
 
@@ -90,7 +90,7 @@ Recent decisions affecting current work:
 - D-01.5-01-001: Pure calculation pattern for pricing (returns JSON, callers persist to DB)
 - D-01.5-01-002: Single global invoice sequence (no yearly reset for simplicity)
 - D-01.5-01-003: Deterministic UUIDs for test data idempotency (10000000-..., 20000000-..., 30000000-...)
-- D-01.5-01-004: Platform split on total including VAT (40% platform, 60% medic)
+- D-01.5-01-004: Platform split on total including VAT (28.6% platform, 71.4% medic) - Fixed in 06.5-06 to match roadmap (£30 medic / £42 client)
 
 **From Plan 01.5-03:**
 - D-01.5-03-001: Auto-assignment requires score >= 50 to assign automatically, otherwise manual approval
@@ -452,9 +452,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T21:49:53Z
-Stopped at: Completed 06.5-05-PLAN.md — Out-of-Territory Cost Management (Travel bonus vs room/board calculator with Google Maps integration, 7-day caching, admin approval workflow with 50-75% override limits)
+Last session: 2026-02-16T22:29:15Z
+Stopped at: Completed 06.5-06-PLAN.md — Platform Fee Calculation Fix (Corrected payout split from 60/40 to roadmap-aligned 71.4/28.6, fixing revenue loss from £30 medic / £42 client rate arithmetic)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (3/3 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6.5 (Payments & Payouts) complete (5/5 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (3/3 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6.5 (Payments & Payouts) in progress (6/10 plans)*
