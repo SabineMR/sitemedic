@@ -626,7 +626,7 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
 ---
 
 ## Phase 2: Mobile Core
-**Status**: 🚧 **IN PROGRESS** - Plans 02-01 and 02-02 complete (1/8 plans)
+**Status**: 🚧 **IN PROGRESS** - Plans 02-01, 02-02, and 02-03 complete (3/8 plans)
 **Goal**: Treatment logging, worker profiles, near-miss capture, daily safety checks
 
 ### Completed (Plan 02-01):
@@ -678,6 +678,63 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
   - Base64 PNG output via react-native-signature-canvas
   - Cancel button in header to close modal
   - Note: May show blank in Expo Go dev mode (Research Pitfall 4), works in production builds
+
+### Completed (Plan 02-03): ✅ **NEW - 2026-02-16**
+- **Worker Profile System** (mobile/app/worker/ + mobile/components/forms/)
+  - **WorkerSearchPicker Component** (mobile/components/forms/WorkerSearchPicker.tsx)
+    - Multi-field autocomplete search across name, company, and role using Q.or() query
+    - Accent normalization (NFD) for international name safety
+    - Q.sanitizeLikeString() for SQL injection protection
+    - 300ms debounced search for performance
+    - Inline quick-add when no search results found
+    - Creates workers with isIncomplete: true flag for follow-up full induction
+    - 56pt minimum height on all inputs (gloves-on design)
+    - "View History" button for selected worker
+
+  - **Full Worker Induction Form** (mobile/app/worker/new.tsx)
+    - 4 collapsible sections: Basic Info, Emergency Contact, Health Information, Certifications
+    - Auto-save on field change (debounced 500ms) using react-hook-form watch()
+    - All WORK-02 health screening fields:
+      - Allergies (free text, multi-line)
+      - Current medications (free text, multi-line)
+      - Pre-existing conditions (free text, multi-line)
+      - Blood type (picker: A+/A-/B+/B-/AB+/AB-/O+/O-/Unknown)
+      - CSCS card number + expiry date
+      - Additional certifications (type + expiry, multiple)
+      - Emergency contact (name, phone, relationship)
+    - BottomSheetPicker for blood type and relationship selection
+    - Sets isIncomplete: false on completion
+
+  - **Worker Profile View** (mobile/app/worker/[id].tsx)
+    - Worker profile info at top (name, company, role)
+    - Certification expiry status with StatusBadge:
+      - Green: >30 days remaining
+      - Amber: <30 days (expiring soon)
+      - Red: Expired
+    - Treatment history FlatList (sorted by created_at descending)
+    - Q.where('worker_id') query for treatments
+    - Reachable in 2 taps (WORK-04 requirement)
+    - Edit profile button
+    - Tap treatment row to view full treatment details
+
+  - **Quick-Add Worker Modal** (mobile/app/worker/quick-add.tsx)
+    - Minimal fields: Name (required), Company (required), Role (optional)
+    - Creates worker with isIncomplete: true flag
+    - Pre-fills name from search query if provided
+    - Returns worker ID to caller
+    - Large 56pt "Add Worker" button
+    - Warning note: "Worker marked as incomplete - remember to complete full induction later"
+
+  - **Extended Worker Model** (Schema v1 → v2)
+    - Added 9 fields to workers table:
+      - allergies, current_medications, pre_existing_conditions (TEXT)
+      - blood_type (STRING)
+      - cscs_card_number (STRING)
+      - cscs_expiry_date (NUMBER - epoch milliseconds)
+      - certifications (STRING - JSON array: [{type, expiry}])
+      - emergency_contact_relationship (STRING)
+      - is_incomplete (BOOLEAN)
+    - Migration with addColumns for backward compatibility
 
 ### Features:
 - **Treatment Logger**
