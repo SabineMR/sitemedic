@@ -3763,40 +3763,96 @@ A comprehensive customer account management page displaying all construction com
 ---
 
 ## Phase 6: RIDDOR Auto-Flagging
-**Status**: Not started
+**Status**: 🔄 **IN PROGRESS** - Database Schema Completed
 **Goal**: Intelligent RIDDOR detection with deadline tracking
+**Migration**: `018_riddor_incidents.sql` ✅ Added
+
+### Database Schema (✅ COMPLETED)
+- **`riddor_incidents` Table** - Auto-flagged and manually created RIDDOR-reportable incidents
+  - **Core Fields**:
+    - `id` (UUID primary key)
+    - `treatment_id` (UUID, references treatments table, UNIQUE constraint prevents duplicate flagging)
+    - `worker_id`, `org_id` (foreign keys for data relationships)
+
+  - **RIDDOR Categorization**:
+    - `category`: Four types with CHECK constraint
+      - `specified_injury` (fractures, amputations, loss of sight)
+      - `over_7_day` (incapacitation over 7 days)
+      - `occupational_disease` (work-related illnesses)
+      - `dangerous_occurrence` (scaffolding collapse, structural failures)
+    - `confidence_level`: Three levels (HIGH, MEDIUM, LOW)
+
+  - **Auto-Detection & Override Tracking**:
+    - `auto_flagged` (BOOLEAN, default TRUE for algorithm-detected incidents)
+    - `medic_confirmed` (BOOLEAN, NULL = awaiting review, TRUE = confirmed, FALSE = dismissed)
+    - `override_reason` (TEXT, **mandatory** when medic confirms or dismisses)
+    - `overridden_by` (UUID, references profiles)
+    - `overridden_at` (TIMESTAMPTZ for audit trail)
+
+  - **Deadline Management**:
+    - `deadline_date` (DATE type for calendar day deadlines)
+    - 10 days for `specified_injury` category
+    - 15 days for `over_7_day` category
+    - Indexed for efficient cron job queries (`WHERE status = 'draft'`)
+
+  - **Report Status & Submission**:
+    - `status`: Three states (draft, submitted, confirmed) with CHECK constraint
+    - `f2508_pdf_path` (TEXT, Supabase Storage path to generated F2508 PDF)
+    - `submitted_at`, `submitted_by` (audit trail for HSE submissions)
+
+  - **Timestamps**:
+    - `detected_at` (when auto-flagged by algorithm)
+    - `created_at`, `updated_at` (with auto-update trigger)
+
+- **Indexes for Performance**:
+  - `idx_riddor_incidents_org_id` - Fast org-level queries
+  - `idx_riddor_incidents_treatment_id` (UNIQUE) - Prevent duplicate detection
+  - `idx_riddor_incidents_deadline` (partial: `WHERE status = 'draft'`) - Deadline cron optimization
+  - `idx_riddor_incidents_medic_confirmed` (partial: `WHERE medic_confirmed IS NULL`) - Pending review queries
+
+- **Row Level Security (RLS)**:
+  - **Medics**: Full SELECT and UPDATE access for their organization's RIDDOR incidents
+  - **Site Managers**: SELECT access for their organization's incidents (view-only)
+  - **Service Role**: INSERT access for Edge Function auto-detection (bypasses RLS with service_role_key)
 
 ### Features:
-- **Auto-Detection Algorithm**
+- **Auto-Detection Algorithm** (Database schema ✅, Algorithm pending)
   - Matches treatment details against RIDDOR criteria
     - Specified injuries (fractures, amputations, loss of sight, etc.)
     - Over-7-day incapacitation
+    - Occupational diseases
     - Dangerous occurrences (scaffolding collapse, etc.)
   - Confidence level (High/Medium/Low)
   - Explanation of why flagged
+  - Unique constraint prevents duplicate flagging per treatment
 
-- **Medic Override**
+- **Medic Override** (Database schema ✅, UI pending)
   - Medic can confirm or override RIDDOR flag
-  - Requires reason for override
+  - **Mandatory reason** for override (enforced at database level)
   - Override patterns tracked for algorithm tuning
     - If 80% overridden for specific category → review logic
+  - Complete audit trail: who, when, and why
 
-- **Deadline Countdown**
+- **Deadline Countdown** (Database schema ✅, Cron + UI pending)
   - 10 days for specified injuries (immediate notification)
   - 15 days for over-7-day incapacitation
+  - Stored as DATE type for accurate calendar day calculations
+  - Indexed for efficient daily cron job queries
   - Visible on mobile app and dashboard
   - Email alert 3 days before deadline
 
-- **HSE F2508 Form Generation**
+- **HSE F2508 Form Generation** (Database schema ✅, PDF generation pending)
   - Pre-filled from treatment log data
   - PDF format ready for HSE submission
+  - Stored in Supabase Storage (`f2508_pdf_path`)
   - Editable fields for additional details
   - Digital signature support
 
-- **Status Tracking**
-  - Draft → Submitted → Confirmed
+- **Status Tracking** (Database schema ✅, UI workflow pending)
+  - Three states: Draft → Submitted → Confirmed
   - Submission confirmation from HSE (manual entry)
-  - Audit trail for compliance
+  - Complete audit trail for compliance (`submitted_at`, `submitted_by`)
+  - Prevents duplicate submissions with unique treatment constraint
 
 ---
 

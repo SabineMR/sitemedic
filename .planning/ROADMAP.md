@@ -301,8 +301,10 @@ Plans:
 
 **Plans**: 6 plans
 
+**Database Schema**: ✅ **COMPLETED** - Migration `018_riddor_incidents.sql` added with full table structure, RLS policies, and indexes
+
 Plans:
-- [ ] 06-01-PLAN.md -- Database schema and RIDDOR detection Edge Function with confidence scoring
+- [ ] 06-01-PLAN.md -- Database schema ✅ (migration 018 added) and RIDDOR detection Edge Function with confidence scoring (pending)
 - [ ] 06-02-PLAN.md -- Mobile medic override UI workflow with reason capture
 - [ ] 06-03-PLAN.md -- HSE F2508 PDF generation with form field mapping
 - [ ] 06-04-PLAN.md -- Web dashboard RIDDOR pages with deadline countdown
@@ -406,7 +408,7 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 | 4.6. Customer Onboarding & Contract Management | 0/7 | Not started | - |
 | 5. PDF Generation | 4/4 | Complete | 2026-02-16 |
 | 5.5. Admin Operations Dashboards | 6/6 | Complete | 2026-02-16 |
-| 6. RIDDOR Auto-Flagging | 0/6 | Not started | - |
+| 6. RIDDOR Auto-Flagging | 0/6 | 🔄 In Progress (DB schema ✅) | - |
 | 6.5. Payment Processing & Payouts | 0/5 | Not started | - |
 | 7. Certification Tracking | 0/TBD | Not started | - |
 | 7.5. Territory Management & Auto-Assignment | 0/5 | Not started | - |
@@ -430,3 +432,4 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Phase 5.5 complete: 2026-02-16 -- 6/6 plans executed, verification passed (10/10 must-haves), goal achieved (admin dashboard operational with booking management, medic roster, territory coverage map, revenue tracking, timesheet approval, client management)*
 *Phase 4.6 planned: 2026-02-16 -- 7 plans in 4 waves (2 parallel foundation: schema+PDF, 2 parallel UI: signing+admin creation, 2 parallel delivery: email+dashboard, 1 enforcement: payments+booking gate)*
 *Phase 6 planned: 2026-02-16 -- 6 plans in 3 waves (2 parallel Wave 1: detection+mobile, 2 parallel Wave 2: F2508+dashboard, 2 sequential Wave 3: notifications+analytics)*
+*Phase 6 progress: 2026-02-16 -- Database schema completed (migration 018_riddor_incidents.sql added with riddor_incidents table, RLS policies, performance indexes, and complete audit trail for auto-detection, medic override, deadline management, and F2508 PDF storage)*

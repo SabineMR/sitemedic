@@ -40,7 +40,7 @@
     },
     "plugins": [
       "expo-router",
-      ["@morrowdigital/watermelondb-expo-plugin", { "disableJsi": true }],
+      ["@morrowdigital/watermelondb-expo-plugin", { "disableJsi": false }],
       "expo-secure-store",
       [
         "expo-local-authentication",
