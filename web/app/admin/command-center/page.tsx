@@ -10,6 +10,10 @@
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useMedicLocationsStore } from '@/stores/useMedicLocationsStore';
+import { useMedicAlertsStore } from '@/stores/useMedicAlertsStore';
+import MedicTimeline from '@/components/admin/MedicTimeline';
+import AlertPanel from '@/components/admin/AlertPanel';
+import AlertToast from '@/components/admin/AlertToast';
 
 // Import map component dynamically (client-side only - Leaflet doesn't work with SSR)
 const MedicTrackingMap = dynamic(() => import('@/components/admin/MedicTrackingMap'), {
@@ -40,12 +44,17 @@ export interface MedicLocation {
 export default function CommandCenter() {
   const [selectedMedic, setSelectedMedic] = useState<MedicLocation | null>(null);
   const [filterMode, setFilterMode] = useState<'all' | 'issues'>('all');
+  const [showAlerts, setShowAlerts] = useState(true);
 
   // Real-time medic locations from Zustand store
   const subscribe = useMedicLocationsStore((state) => state.subscribe);
   const unsubscribe = useMedicLocationsStore((state) => state.unsubscribe);
   const activeMedics = useMedicLocationsStore((state) => state.getActiveMedics());
   const isConnected = useMedicLocationsStore((state) => state.isConnected);
+
+  // Real-time alerts from Zustand store
+  const alertsCount = useMedicAlertsStore((state) => state.getActiveAlerts().length);
+  const criticalAlertsCount = useMedicAlertsStore((state) => state.getCriticalAlertsCount());
 
   // Subscribe to real-time updates on mount
   useEffect(() => {
@@ -83,6 +92,9 @@ export default function CommandCenter() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
+      {/* Toast Notifications */}
+      <AlertToast />
+
       {/* Header */}
       <header className="bg-gray-800 border-b border-gray-700 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -103,7 +115,7 @@ export default function CommandCenter() {
             </p>
           </div>
 
-          {/* Filter Toggle */}
+          {/* Filter Toggle & Alerts */}
           <div className="flex gap-2">
             <button
               onClick={() => setFilterMode('all')}
@@ -125,11 +137,35 @@ export default function CommandCenter() {
             >
               Issues Only ({activeMedics.filter((m) => m.status === 'issue').length})
             </button>
+
+            {/* Alerts Toggle */}
+            <button
+              onClick={() => setShowAlerts(!showAlerts)}
+              className={`px-4 py-2 rounded-lg font-medium transition relative ${
+                showAlerts
+                  ? 'bg-yellow-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              🚨 Alerts
+              {alertsCount > 0 && (
+                <span className="absolute -top-1 -right-1 px-2 py-0.5 rounded-full bg-red-500 text-white text-xs font-bold">
+                  {alertsCount}
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </header>
 
       <div className="flex h-[calc(100vh-80px)]">
+        {/* Alerts Panel (if enabled) */}
+        {showAlerts && (
+          <div className="w-96 border-r border-gray-700 overflow-hidden">
+            <AlertPanel />
+          </div>
+        )}
+
         {/* Map View */}
         <div className="flex-1 relative">
           <MedicTrackingMap medics={filteredMedics} onMedicClick={handleMedicClick} />
@@ -253,33 +289,12 @@ export default function CommandCenter() {
                 </button>
               </div>
 
-              {/* Timeline (placeholder) */}
-              <div className="bg-gray-900 rounded-lg p-4">
-                <h3 className="text-sm font-semibold mb-3">Shift Timeline</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex gap-3">
-                    <div className="text-gray-400 min-w-[60px]">08:30</div>
-                    <div>
-                      <div className="text-white font-medium">Shift Started</div>
-                      <div className="text-gray-400 text-xs">Location tracking activated</div>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="text-gray-400 min-w-[60px]">08:47</div>
-                    <div>
-                      <div className="text-white font-medium">Arrived On-Site</div>
-                      <div className="text-gray-400 text-xs">Geofence auto-detect</div>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="text-gray-400 min-w-[60px]">12:03</div>
-                    <div>
-                      <div className="text-white font-medium">Break Started</div>
-                      <div className="text-gray-400 text-xs">Manual button</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* Real-time Timeline */}
+              <MedicTimeline
+                medicId={selectedMedic.medic_id}
+                bookingId={selectedMedic.booking_id}
+                medicName={selectedMedic.medic_name}
+              />
             </div>
           </div>
         )}
