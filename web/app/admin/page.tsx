@@ -31,6 +31,7 @@ interface RecentActivity {
   message: string;
   timestamp: string;
   status?: 'success' | 'warning' | 'error';
+  amount?: number; // For payment activities - enables CurrencyWithTooltip with USD conversion
 }
 
 export default function AdminDashboard() {
@@ -85,7 +86,8 @@ export default function AdminDashboard() {
       {
         id: '4',
         type: 'payment',
-        message: 'Weekly payout processed - £3,200',
+        message: 'Weekly payout processed',
+        amount: 3200,
         timestamp: '2 hours ago',
         status: 'success',
       },
@@ -349,7 +351,18 @@ function ActivityItem({ activity }: { activity: RecentActivity }) {
     <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-700/50 transition">
       <div className="text-2xl mt-0.5">{getIcon()}</div>
       <div className="flex-1">
-        <p className="text-white text-sm font-medium mb-1">{activity.message}</p>
+        <p className="text-white text-sm font-medium mb-1">
+          {activity.message}
+          {activity.type === 'payment' && activity.amount && (
+            <>
+              {' - '}
+              <CurrencyWithTooltip
+                amount={activity.amount}
+                className="text-white text-sm font-medium"
+              />
+            </>
+          )}
+        </p>
         <p className="text-gray-500 text-xs">{activity.timestamp}</p>
       </div>
       {activity.status && (
