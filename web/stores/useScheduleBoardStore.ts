@@ -19,6 +19,7 @@ import type {
   MedicWithStats,
   Booking,
   ConflictCheckResult,
+  Conflict,
   ConflictCheckParams,
   ScheduleBoardData,
 } from '@/types/schedule';

@@ -24,7 +24,8 @@ interface MedicLocation {
   connection_type: string;
   recorded_at: string;
   status: 'on_site' | 'traveling' | 'break' | 'issue' | 'offline';
-  issue_type?: string;
+  issue_type?: 'late_arrival' | 'battery_low' | 'connection_lost' | 'not_moving';
+  last_event?: string;
 }
 
 interface Props {
