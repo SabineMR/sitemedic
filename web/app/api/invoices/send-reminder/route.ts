@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { calculateLateFee } from '@/lib/invoices/late-fees';
+import { resend } from '@/lib/email/resend';
 
 export const dynamic = 'force-dynamic';
 
@@ -122,11 +123,45 @@ Best regards,
 SiteMedic Accounts Team
     `.trim();
 
-    // TODO: Send email via Resend
-    // For now, we'll just log it
-    console.log(`Would send email to ${invoice.client.contact_email}:`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Body: ${emailBody}`);
+    const { data: emailResult, error: emailError } = await resend.emails.send({
+      from: 'SiteMedic Accounts <accounts@sitemedic.co.uk>',
+      to: invoice.client.contact_email,
+      subject: subject,
+      html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #003366; padding: 20px; border-radius: 8px 8px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 20px;">SiteMedic</h1>
+        </div>
+        <div style="padding: 24px; background: #f9fafb; border: 1px solid #e5e7eb; border-top: none;">
+          <h2 style="color: #1f2937; margin-top: 0;">Payment Reminder</h2>
+          <p>Dear ${invoice.client.contact_name},</p>
+          <p>This is a payment reminder for Invoice <strong>${invoice.invoice_number}</strong>.</p>
+          <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+            <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Invoice Number</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">${invoice.invoice_number}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Original Amount</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">GBP${parseFloat(invoice.total).toFixed(2)}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Due Date</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${new Date(invoice.due_date).toLocaleDateString('en-GB')}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Days Overdue</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; color: #ef4444; font-weight: bold;">${daysOverdue} days</td></tr>
+            ${lateFee > 0 ? `<tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Late Payment Fee</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; color: #ef4444;">GBP${lateFee.toFixed(2)}</td></tr>` : ''}
+            <tr style="background: #f3f4f6;"><td style="padding: 8px; font-weight: bold;">Total Now Due</td><td style="padding: 8px; font-weight: bold; font-size: 16px;">GBP${(parseFloat(invoice.total) + lateFee).toFixed(2)}</td></tr>
+          </table>
+          <div style="background: #fffbeb; border: 1px solid #fbbf24; border-radius: 4px; padding: 12px; margin: 16px 0;">
+            <p style="margin: 0; color: #92400e; font-size: 13px;">As per the UK Late Payment of Commercial Debts (Interest) Act 1998, statutory late payment fees apply to overdue invoices.</p>
+          </div>
+          <h3 style="color: #1f2937;">Payment Instructions</h3>
+          <p>Bank: SiteMedic Ltd<br/>Sort Code: 12-34-56<br/>Account Number: 12345678<br/>Reference: ${invoice.invoice_number}</p>
+          ${escalationWarning ? `<div style="background: #fef2f2; border: 1px solid #ef4444; border-radius: 4px; padding: 12px; margin: 16px 0;"><p style="margin: 0; color: #991b1b; font-weight: bold;">This invoice is 21+ days overdue. If payment is not received within 7 days, this matter may be escalated to our collections department.</p></div>` : ''}
+          <p style="color: #6b7280; font-size: 12px;">If you have already made payment, please disregard this reminder and contact us to confirm.</p>
+        </div>
+        <div style="padding: 12px; text-align: center; color: #9ca3af; font-size: 11px;">
+          SiteMedic Ltd | accounts@sitemedic.co.uk
+        </div>
+      </div>`,
+      text: emailBody,
+    });
+
+    if (emailError) {
+      console.error('Failed to send reminder email:', emailError);
+      // Continue processing -- email failure should not block invoice status update
+    }
 
     // Update invoice
     const updates: any = {
@@ -176,7 +211,7 @@ SiteMedic Accounts Team
 
     return NextResponse.json({
       success: true,
-      email_sent: true,
+      email_sent: !emailError,
       late_fee_applied: daysOverdue >= 21 ? lateFee : 0,
       days_overdue: daysOverdue,
     });
