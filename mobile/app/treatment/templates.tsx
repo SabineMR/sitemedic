@@ -37,6 +37,8 @@ interface PresetTemplate {
  *
  * 8 common construction site minor injuries with auto-fill defaults
  * Uses taxonomy IDs from Plan 01 (kebab-case)
+ *
+ * All taxonomy IDs verified against: injury-types.ts, treatment-types.ts, body-parts.ts, outcome-categories.ts
  */
 const PRESET_TEMPLATES: PresetTemplate[] = [
   {

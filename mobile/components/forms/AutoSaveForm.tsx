@@ -2,7 +2,7 @@
  * AutoSaveForm - Auto-save hook and indicator for WatermelonDB forms
  *
  * Features:
- * - Debounced auto-save (default 500ms)
+ * - Debounced auto-save (default 10s)
  * - Works with any WatermelonDB Model
  * - Field mapping for form state to model properties
  * - Visual save indicator ("Saving..." / "Saved {time}")
@@ -14,7 +14,7 @@
  *   treatmentRecord,
  *   formValues,
  *   { injuryType: 'injury_type', bodyPart: 'body_part' },
- *   500
+ *   10000
  * );
  * ```
  */
@@ -29,14 +29,14 @@ import { Model } from '@nozbe/watermelondb';
  * @param record - WatermelonDB model instance to update
  * @param formValues - Current form values object
  * @param fieldMapping - Map of form field names to model field names
- * @param debounceMs - Debounce delay in milliseconds (default 500ms)
+ * @param debounceMs - Debounce delay in milliseconds (default 10000ms - 10 seconds)
  * @returns Object with isSaving state and lastSaved timestamp
  */
 export function useAutoSave<T extends Model>(
   record: T | null,
   formValues: Record<string, any>,
   fieldMapping: Record<string, string>,
-  debounceMs: number = 500
+  debounceMs: number = 10000
 ): { isSaving: boolean; lastSaved: number | null } {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<number | null>(null);

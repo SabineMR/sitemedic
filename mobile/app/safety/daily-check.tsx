@@ -129,8 +129,8 @@ export default function DailyCheckScreen() {
       }
     };
 
-    // Debounce save by 500ms
-    const timer = setTimeout(saveItems, 500);
+    // Debounce save by 10000ms (10 seconds)
+    const timer = setTimeout(saveItems, 10000);
     return () => clearTimeout(timer);
   }, [items, safetyCheck]);
 

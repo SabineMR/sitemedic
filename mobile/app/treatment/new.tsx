@@ -10,7 +10,7 @@
  * - Photos (up to 4)
  * - Outcome category
  * - Digital signature
- * - Auto-save every 500ms
+ * - Auto-save every 10 seconds
  *
  * Requirements: TREAT-01 through TREAT-12
  */
@@ -170,7 +170,7 @@ export default function NewTreatmentScreen() {
     isRiddorReportable: 'is_riddor_reportable',
   };
 
-  const { isSaving, lastSaved } = useAutoSave(treatment, formValues, fieldMapping, 500);
+  const { isSaving, lastSaved } = useAutoSave(treatment, formValues, fieldMapping, 10000);
 
   // Handle injury type selection with RIDDOR detection
   const handleInjuryTypeSelect = (injuryId: string) => {
