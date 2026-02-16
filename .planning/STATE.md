@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 4 of 7 (Web Dashboard) — Complete
-Plan: 6 of 6 in current phase
+Phase: 5 of 7 (PDF Generation) — Complete
+Plan: 3 of 3 in current phase
 Status: Phase complete
-Last activity: 2026-02-16 — Completed 04-06-PLAN.md (Integration Verification)
+Last activity: 2026-02-16 — Completed 05-03-PLAN.md (Automated Report Generation and Dashboard)
 
-Progress: [███████████░] 94% (34/36 plans across Phases 1, 1.5, 2, 3, 4, 5)
+Progress: [████████████] 97% (35/36 plans across Phases 1, 1.5, 2, 3, 4, 5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 34
+- Total plans completed: 35
 - Average duration: 4.0 min
-- Total execution time: 2.27 hours
+- Total execution time: 2.33 hours
 
 **By Phase:**
 
@@ -32,11 +32,11 @@ Progress: [███████████░] 94% (34/36 plans across Phases 
 | 02-mobile-core | 9/9 | 50 min | 5.6 min |
 | 03-sync-engine | 7/7 | 24 min | 3.4 min |
 | 04-web-dashboard | 6/6 | 46 min | 7.7 min |
-| 05-pdf-generation | 3/3 | 12.5 min | 4.2 min |
+| 05-pdf-generation | 3/3 | 16.5 min | 5.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-04 (9 min), 04-05 (15 min), 04-06 (5 min), 05-01 (4.5 min), 05-02 (3 min)
-- Trend: Phase 4 complete - Dashboard with auth, data display, filters, exports, and polling verified production-ready
+- Last 5 plans: 04-05 (15 min), 04-06 (5 min), 05-01 (4.5 min), 05-02 (3 min), 05-03 (4 min)
+- Trend: Phase 5 complete - PDF generation pipeline with automated scheduling, storage, email delivery, and dashboard UI
 
 *Updated after each plan completion*
 
@@ -259,6 +259,14 @@ Recent decisions affecting current work:
 - D-05-02-006: GET endpoint regenerates expired signed URLs automatically
 - D-05-02-007: Cron trigger returns JSON, manual trigger returns PDF buffer
 
+**From Plan 05-03:**
+- D-05-03-001: pg_cron job runs every Friday at 5 PM UTC (end of UK working day, captures all Friday data)
+- D-05-03-002: Vault secrets (project_url, service_role_key) for secure Edge Function invocation from pg_cron
+- D-05-03-003: Reports list as Card components instead of DataTable (simpler UI for chronological list)
+- D-05-03-004: 60-second polling interval for reports list (picks up newly generated reports automatically)
+- D-05-03-005: On-demand generation triggers browser download of PDF blob (no need to refetch list, polling handles it)
+- D-05-03-006: Manual trigger returns PDF as Blob via Edge Function response (different from cron trigger which returns JSON)
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -288,6 +296,8 @@ Recent decisions affecting current work:
 - Deploy Supabase migration 014_storage_buckets.sql to create treatment-photos bucket (Plan 03-02)
 - Add Resend API key to Supabase secrets (RESEND_API_KEY) and verify sitemedic.co.uk domain (Plan 05-02)
 - Deploy Supabase migration 015_safety_reports_storage.sql to create safety-reports bucket and weekly_reports table (Plan 05-02)
+- Deploy Supabase migration 016_weekly_report_cron.sql to enable pg_cron scheduled job (Plan 05-03)
+- Configure Vault secrets in Supabase Dashboard: project_url and service_role_key for pg_cron job authentication (Plan 05-03)
 
 ### Blockers/Concerns
 
@@ -295,8 +305,8 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T05:12:04Z
-Stopped at: Completed 04-06-PLAN.md — Integration Verification (all 13 Phase 4 requirements verified, dashboard production-ready)
+Last session: 2026-02-16T05:13:33Z
+Stopped at: Completed 05-03-PLAN.md — Automated Report Generation and Dashboard (pg_cron scheduling, Reports page with download UI)
 Resume file: None
 
 ---
