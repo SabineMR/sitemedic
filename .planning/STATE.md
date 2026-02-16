@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 4.6 of 7 (Customer Onboarding & Contract Management) — In progress
-Plan: 1 of 6 in current phase
+Plan: 2 of 6 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 04.6-01-PLAN.md (Contract Management Foundation)
+Last activity: 2026-02-16 — Completed 04.6-02-PLAN.md (Contract PDF Generation Edge Function)
 
-Progress: [█████████████░] 91% (41/45 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6)
+Progress: [█████████████░] 93% (42/45 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 41
+- Total plans completed: 42
 - Average duration: 3.9 min
-- Total execution time: 2.80 hours
+- Total execution time: 2.87 hours
 
 **By Phase:**
 
@@ -33,13 +33,13 @@ Progress: [█████████████░] 91% (41/45 plans across P
 | 03-sync-engine | 7/7 | 24 min | 3.4 min |
 | 04-web-dashboard | 6/6 | 46 min | 7.7 min |
 | 04.5-marketing-booking | 2/3 | 20 min | 10 min |
-| 04.6-customer-onboarding | 1/6 | 2 min | 2 min |
+| 04.6-customer-onboarding | 2/6 | 8 min | 4 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 05.5-03 (5 min), 04.5-02 (10 min), 05.5-02 (4 min), 05.5-06 (6 min), 04.6-01 (2 min)
-- Trend: Contract management foundation complete - Database schema, state machine, payment schedules ready for booking integration
+- Last 5 plans: 04.5-02 (10 min), 05.5-02 (4 min), 05.5-06 (6 min), 04.6-01 (2 min), 04.6-02 (6 min)
+- Trend: Contract PDF generation complete - Edge Function generates contracts with auto-filled booking data, payment schedules, signature capture
 
 *Updated after each plan completion*
 
@@ -327,6 +327,13 @@ Recent decisions affecting current work:
 - D-04.6-01-003: Contract versions stored as immutable PDFs in storage.contracts bucket with 10MB limit and PDF-only mime type
 - D-04.6-01-004: All contract events logged to contract_events table with flexible JSONB event_data payload for audit trail
 
+**From Plan 04.6-02:**
+- D-04.6-02-001: Contract number format SA-{YYYY}-{NNN} using UUID-derived sequential
+- D-04.6-02-002: Two-mode Edge Function: contractId (database lookup) or previewData (direct render)
+- D-04.6-02-003: Payment schedule descriptions hardcoded for standard terms, custom uses database field
+- D-04.6-02-004: UK date formatting patterns: long (16 February 2026) for headers, short (16 Feb 2026) for tables
+- D-04.6-02-005: Digital signature disclaimer cites UK Electronic Communications Act 2000
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -365,9 +372,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T18:59:54Z
-Stopped at: Completed 04.6-01-PLAN.md — Contract Management Foundation (database schema, state machine, payment schedules)
+Last session: 2026-02-16T19:04:02Z
+Stopped at: Completed 04.6-02-PLAN.md — Contract PDF Generation Edge Function (auto-fills booking data, pricing, payment schedules, signatures)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) in progress (2/3 plans). Phase 4.6 (Customer Onboarding & Contract Management) in progress (1/6 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) in progress (2/3 plans). Phase 4.6 (Customer Onboarding & Contract Management) in progress (2/6 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans)*
