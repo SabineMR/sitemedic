@@ -1,18 +1,8 @@
-/**
- * IR35 Assessment Form
- * Phase 6.5: Medic IR35 compliance form with employment status, UTR, and CEST assessment
- */
-
 'use client';
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { validateIR35Status, type EmploymentStatus } from '@/lib/medics/ir35-validator';
+import { validateIR35Status, type EmploymentStatus, type IR35Assessment } from '@/lib/medics/ir35-validator';
 
 interface IR35FormProps {
   medicId: string;
@@ -23,78 +13,64 @@ export function IR35Form({ medicId, onComplete }: IR35FormProps) {
   const [employmentStatus, setEmploymentStatus] = useState<EmploymentStatus>('self_employed');
   const [utr, setUtr] = useState('');
   const [umbrellaCompanyName, setUmbrellaCompanyName] = useState('');
-  const [cestResult, setCestResult] = useState<string>('');
+  const [cestResult, setCestResult] = useState<'outside_ir35' | 'inside_ir35' | 'unknown' | ''>('');
   const [cestDate, setCestDate] = useState('');
-  const [cestFile, setCestFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [cestPdfFile, setCestPdfFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (file.type === 'application/pdf') {
-        setCestFile(file);
-      } else {
-        setErrors(['Only PDF files are allowed for CEST assessment']);
-      }
-    }
-  };
+  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setErrors([]);
+    setSubmitting(true);
 
     try {
       // Validate IR35 data
-      const validation = validateIR35Status({
+      const assessment: IR35Assessment = {
         employment_status: employmentStatus,
         utr: employmentStatus === 'self_employed' ? utr : undefined,
         umbrella_company_name: employmentStatus === 'umbrella' ? umbrellaCompanyName : undefined,
         cest_assessment_result: cestResult || undefined,
         cest_assessment_date: cestDate || undefined,
-      });
+      };
 
+      const validation = validateIR35Status(assessment);
       if (!validation.valid) {
         setErrors(validation.errors);
-        setLoading(false);
+        setSubmitting(false);
         return;
       }
 
-      const supabase = createClient();
-      let cestPdfUrl = '';
-
       // Upload CEST PDF if provided
-      if (cestFile) {
-        const fileExtension = cestFile.name.split('.').pop();
-        const fileName = `${medicId}-${Date.now()}.${fileExtension}`;
-        const filePath = `ir35-assessments/${fileName}`;
-
+      let cestPdfUrl: string | undefined;
+      if (cestPdfFile && employmentStatus === 'self_employed') {
+        const timestamp = Date.now();
+        const fileName = `${medicId}-${timestamp}.pdf`;
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('documents')
-          .upload(filePath, cestFile);
+          .from('ir35-assessments')
+          .upload(fileName, cestPdfFile, {
+            contentType: 'application/pdf',
+            upsert: false,
+          });
 
         if (uploadError) {
-          console.error('CEST upload error:', uploadError);
-          setErrors(['Failed to upload CEST assessment PDF']);
-          setLoading(false);
+          console.error('Error uploading CEST PDF:', uploadError);
+          setErrors(['Failed to upload CEST assessment PDF. Please try again.']);
+          setSubmitting(false);
           return;
         }
 
         // Get public URL
-        const { data: urlData } = supabase.storage
-          .from('documents')
-          .getPublicUrl(filePath);
-
+        const { data: urlData } = supabase.storage.from('ir35-assessments').getPublicUrl(fileName);
         cestPdfUrl = urlData.publicUrl;
       }
 
-      // Call IR35 assessment API
+      // Submit IR35 assessment
       const response = await fetch('/api/medics/ir35-assessment', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           medicId,
           employment_status: employmentStatus,
@@ -108,177 +84,216 @@ export function IR35Form({ medicId, onComplete }: IR35FormProps) {
 
       if (!response.ok) {
         const errorData = await response.json();
-        setErrors([errorData.error || 'Failed to save IR35 assessment']);
-        setLoading(false);
-        return;
+        throw new Error(errorData.error || 'Failed to save IR35 assessment');
       }
 
       // Success
       onComplete();
     } catch (err) {
-      console.error('IR35 form error:', err);
-      setErrors(['An unexpected error occurred']);
-      setLoading(false);
+      console.error('Error submitting IR35 form:', err);
+      setErrors([err instanceof Error ? err.message : 'Unknown error occurred']);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Employment Status */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">IR35 Employment Status</h3>
-
-        {errors.length > 0 && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>
-              <ul className="list-disc list-inside">
-                {errors.map((error, idx) => (
-                  <li key={idx}>{error}</li>
-                ))}
-              </ul>
-            </AlertDescription>
-          </Alert>
-        )}
-
+        <label className="block text-sm font-medium text-gray-900 mb-3">
+          Employment Status <span className="text-red-500">*</span>
+        </label>
         <div className="space-y-3">
-          <Label>How are you employed? *</Label>
-          <RadioGroup value={employmentStatus} onValueChange={(value) => setEmploymentStatus(value as EmploymentStatus)}>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="self_employed" id="self_employed" />
-              <Label htmlFor="self_employed" className="font-normal cursor-pointer">
-                Self-employed contractor
-              </Label>
+          <label className="flex items-start p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+            <input
+              type="radio"
+              name="employment_status"
+              value="self_employed"
+              checked={employmentStatus === 'self_employed'}
+              onChange={(e) => setEmploymentStatus(e.target.value as EmploymentStatus)}
+              className="mt-1 mr-3"
+            />
+            <div>
+              <div className="font-medium text-gray-900">Self-Employed Contractor (Recommended)</div>
+              <div className="text-sm text-gray-600 mt-1">
+                You work independently and are responsible for your own tax and National Insurance contributions.
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="umbrella" id="umbrella" />
-              <Label htmlFor="umbrella" className="font-normal cursor-pointer">
-                Umbrella company employee
-              </Label>
+          </label>
+
+          <label className="flex items-start p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+            <input
+              type="radio"
+              name="employment_status"
+              value="umbrella"
+              checked={employmentStatus === 'umbrella'}
+              onChange={(e) => setEmploymentStatus(e.target.value as EmploymentStatus)}
+              className="mt-1 mr-3"
+            />
+            <div>
+              <div className="font-medium text-gray-900">Umbrella Company Employee</div>
+              <div className="text-sm text-gray-600 mt-1">
+                You are employed by an umbrella company which handles tax deductions and compliance.
+              </div>
             </div>
-          </RadioGroup>
+          </label>
         </div>
       </div>
 
+      {/* Self-Employed Fields */}
       {employmentStatus === 'self_employed' && (
-        <div className="space-y-4 p-4 bg-blue-50 rounded-md border border-blue-200">
-          <Alert>
-            <AlertDescription>
-              As a self-employed contractor, you are responsible for your own tax and National Insurance contributions.
-              SiteMedic will issue gross payments only.
-            </AlertDescription>
-          </Alert>
-
+        <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          {/* UTR */}
           <div>
-            <Label htmlFor="utr">Unique Taxpayer Reference (UTR) *</Label>
-            <Input
-              id="utr"
+            <label htmlFor="utr" className="block text-sm font-medium text-gray-900 mb-2">
+              Unique Taxpayer Reference (UTR) <span className="text-red-500">*</span>
+            </label>
+            <input
               type="text"
-              required
+              id="utr"
               value={utr}
               onChange={(e) => setUtr(e.target.value)}
               placeholder="1234567890"
               maxLength={10}
-              disabled={loading}
-              className="mt-1"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required={employmentStatus === 'self_employed'}
             />
-            <p className="text-xs text-slate-500 mt-1">10-digit number from HMRC</p>
+            <p className="text-xs text-gray-600 mt-1">10-digit number from HMRC</p>
           </div>
 
+          {/* CEST Assessment */}
           <div>
-            <Label>HMRC CEST Assessment (Recommended)</Label>
-            <div className="mt-2 space-y-3">
-              <div>
-                <Label htmlFor="cestFile" className="text-sm font-normal">
-                  Upload CEST Assessment PDF (optional)
-                </Label>
-                <Input
-                  id="cestFile"
-                  type="file"
-                  accept="application/pdf"
-                  onChange={handleFileChange}
-                  disabled={loading}
-                  className="mt-1"
-                />
-                {cestFile && (
-                  <p className="text-xs text-green-600 mt-1">
-                    Selected: {cestFile.name}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="cestResult" className="text-sm font-normal">
-                  Or select result manually
-                </Label>
-                <RadioGroup value={cestResult} onValueChange={setCestResult} className="mt-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="outside_ir35" id="outside_ir35" />
-                    <Label htmlFor="outside_ir35" className="font-normal cursor-pointer">
-                      Outside IR35 (self-employed status confirmed)
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="inside_ir35" id="inside_ir35" />
-                    <Label htmlFor="inside_ir35" className="font-normal cursor-pointer">
-                      Inside IR35 (employment status)
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="unknown" id="unknown" />
-                    <Label htmlFor="unknown" className="font-normal cursor-pointer">
-                      Unknown / Not assessed yet
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              {cestResult && (
-                <div>
-                  <Label htmlFor="cestDate" className="text-sm font-normal">
-                    Assessment Date
-                  </Label>
-                  <Input
-                    id="cestDate"
-                    type="date"
-                    value={cestDate}
-                    onChange={(e) => setCestDate(e.target.value)}
-                    disabled={loading}
-                    className="mt-1"
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+              HMRC CEST Assessment (Recommended)
+            </label>
+            <div className="space-y-3">
+              <div className="flex gap-3">
+                <label className="flex-1 flex items-center p-3 border rounded cursor-pointer hover:bg-white">
+                  <input
+                    type="radio"
+                    name="cest_result"
+                    value="outside_ir35"
+                    checked={cestResult === 'outside_ir35'}
+                    onChange={(e) => setCestResult(e.target.value as any)}
+                    className="mr-2"
                   />
-                </div>
-              )}
+                  <span className="text-sm">Outside IR35</span>
+                </label>
+                <label className="flex-1 flex items-center p-3 border rounded cursor-pointer hover:bg-white">
+                  <input
+                    type="radio"
+                    name="cest_result"
+                    value="inside_ir35"
+                    checked={cestResult === 'inside_ir35'}
+                    onChange={(e) => setCestResult(e.target.value as any)}
+                    className="mr-2"
+                  />
+                  <span className="text-sm">Inside IR35</span>
+                </label>
+                <label className="flex-1 flex items-center p-3 border rounded cursor-pointer hover:bg-white">
+                  <input
+                    type="radio"
+                    name="cest_result"
+                    value="unknown"
+                    checked={cestResult === 'unknown'}
+                    onChange={(e) => setCestResult(e.target.value as any)}
+                    className="mr-2"
+                  />
+                  <span className="text-sm">Unknown</span>
+                </label>
+              </div>
+
+              <div>
+                <label htmlFor="cest_date" className="block text-sm text-gray-700 mb-1">
+                  Assessment Date
+                </label>
+                <input
+                  type="date"
+                  id="cest_date"
+                  value={cestDate}
+                  onChange={(e) => setCestDate(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="cest_pdf" className="block text-sm text-gray-700 mb-1">
+                  Upload CEST PDF (Optional)
+                </label>
+                <input
+                  type="file"
+                  id="cest_pdf"
+                  accept=".pdf"
+                  onChange={(e) => setCestPdfFile(e.target.files?.[0] || null)}
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {employmentStatus === 'umbrella' && (
-        <div className="space-y-4 p-4 bg-purple-50 rounded-md border border-purple-200">
-          <Alert>
-            <AlertDescription>
-              Your umbrella company will handle tax and National Insurance deductions.
-              Payouts will be sent to your company's account.
-            </AlertDescription>
-          </Alert>
-
-          <div>
-            <Label htmlFor="umbrellaCompany">Umbrella Company Name *</Label>
-            <Input
-              id="umbrellaCompany"
-              type="text"
-              required
-              value={umbrellaCompanyName}
-              onChange={(e) => setUmbrellaCompanyName(e.target.value)}
-              placeholder="e.g., Umbrella Corp Ltd"
-              disabled={loading}
-              className="mt-1"
-            />
+          {/* Info Box */}
+          <div className="bg-blue-100 border border-blue-300 rounded p-3">
+            <p className="text-sm text-blue-900">
+              <strong>Important:</strong> As a self-employed contractor, you are responsible for your own tax and
+              National Insurance contributions. SiteMedic will issue gross payments only (no deductions). You must
+              complete a Self Assessment tax return each year.
+            </p>
           </div>
         </div>
       )}
 
-      <Button type="submit" disabled={loading} className="w-full">
-        {loading ? 'Saving...' : 'Save IR35 Status'}
-      </Button>
+      {/* Umbrella Company Fields */}
+      {employmentStatus === 'umbrella' && (
+        <div className="space-y-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div>
+            <label htmlFor="umbrella_company" className="block text-sm font-medium text-gray-900 mb-2">
+              Umbrella Company Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="umbrella_company"
+              value={umbrellaCompanyName}
+              onChange={(e) => setUmbrellaCompanyName(e.target.value)}
+              placeholder="e.g., PayStream, Giant Group, Brookson"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              required={employmentStatus === 'umbrella'}
+            />
+          </div>
+
+          {/* Info Box */}
+          <div className="bg-green-100 border border-green-300 rounded p-3">
+            <p className="text-sm text-green-900">
+              <strong>Note:</strong> Your umbrella company will handle tax and National Insurance deductions. Payouts
+              will be sent to your umbrella company's account, and they will process your payroll according to PAYE
+              rules.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Errors */}
+      {errors.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="font-medium text-red-900 mb-2">Please fix the following errors:</p>
+          <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
+            {errors.map((error, index) => (
+              <li key={index}>{error}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Submit Button */}
+      <div className="flex justify-end gap-3 pt-4 border-t">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {submitting ? 'Saving...' : 'Save IR35 Status'}
+        </button>
+      </div>
     </form>
   );
 }

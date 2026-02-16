@@ -104,7 +104,7 @@ export default function MedicAssignmentEmail({
           <Hr style={hr} />
 
           <Text style={footer}>
-            Guardian Medics - You have been assigned to this booking. Please confirm your availability.
+            Apex Safety Group - You have been assigned to this booking. Please confirm your availability.
           </Text>
         </Container>
       </Body>

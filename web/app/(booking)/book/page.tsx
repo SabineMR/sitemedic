@@ -7,7 +7,7 @@ import { Metadata } from 'next';
 import { BookingForm } from '@/components/booking/booking-form';
 
 export const metadata: Metadata = {
-  title: 'Book a Medic - Guardian Medics',
+  title: 'Book a Medic - Apex Safety Group',
   description:
     'Book qualified paramedics for your construction site. Select dates, configure shift requirements, and see real-time pricing.',
 };

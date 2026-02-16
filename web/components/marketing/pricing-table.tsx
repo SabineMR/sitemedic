@@ -8,10 +8,10 @@ export default function PricingTable() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
           <div className="flex-1">
             <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-3">
-              Guardian Medics Pro
+              ASG Medics Pro
             </h2>
             <p className="text-slate-600 mb-6 text-base">
-              HCPC-registered paramedic + automatic compliance platform
+              HCPC-registered paramedic + SiteMedic compliance platform
             </p>
             <ul className="space-y-3">
               <li className="flex items-center gap-3">

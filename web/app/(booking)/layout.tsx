@@ -22,7 +22,7 @@ export default function BookingLayout({
       <footer className="border-t border-slate-100 bg-white py-6">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between text-sm text-slate-600">
-            <p>&copy; 2026 Guardian Medics. All rights reserved.</p>
+            <p>&copy; 2026 Apex Safety Group. All rights reserved.</p>
             <Link href="/" className="hover:text-slate-900 transition">
               Back to home
             </Link>

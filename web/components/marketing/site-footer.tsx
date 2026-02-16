@@ -6,7 +6,7 @@ export default function SiteFooter() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-3 gap-8 mb-8">
           <div>
-            <h3 className="text-white font-semibold mb-3 text-sm">Guardian Medics</h3>
+            <h3 className="text-white font-semibold mb-3 text-sm">Apex Safety Group</h3>
             <p className="text-sm text-slate-400 mb-4">
               UK paramedic staffing with built-in compliance.
             </p>

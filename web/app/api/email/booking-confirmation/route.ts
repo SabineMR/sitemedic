@@ -130,7 +130,7 @@ export async function POST(request: Request) {
       );
 
       const clientEmailResult = await resend.emails.send({
-        from: 'Guardian Medics Bookings <bookings@sitemedic.co.uk>',
+        from: 'ASG Bookings <bookings@sitemedic.co.uk>',
         to: client.contact_email,
         subject: `Booking Confirmed - ${formattedDate}`,
         html: clientEmailHtml,
@@ -178,7 +178,7 @@ export async function POST(request: Request) {
       );
 
       const medicEmailResult = await resend.emails.send({
-        from: 'Guardian Medics <bookings@sitemedic.co.uk>',
+        from: 'Apex Safety Group <bookings@sitemedic.co.uk>',
         to: medic.email,
         subject: `New Booking Assignment - ${formattedDate} at ${booking.site_name}`,
         html: medicEmailHtml,
