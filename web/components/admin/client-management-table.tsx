@@ -547,7 +547,9 @@ function ClientRow({
           <div className="font-medium text-white flex items-center gap-2">
             {client.company_name}
             {isAtRisk && (
-              <AlertTriangle className="w-4 h-4 text-yellow-400" title="At risk: late payments or high balance" />
+              <span title="At risk: late payments or high balance">
+                <AlertTriangle className="w-4 h-4 text-yellow-400" />
+              </span>
             )}
           </div>
           <div className="text-sm text-gray-400">{client.billing_postcode}</div>
