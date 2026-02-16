@@ -96,16 +96,16 @@ Requirements for MVP launch. Each maps to roadmap phases.
 
 ### Web Dashboard (Site Manager)
 
-- [ ] **DASH-01**: Site manager sees overview screen with traffic-light compliance score
-- [ ] **DASH-02**: Compliance score based on: daily check completed today, overdue follow-ups, expired certifications, RIDDOR deadlines
-- [ ] **DASH-03**: Dashboard shows summary stats for current week (treatments, near-misses, toolbox talks, workers on site)
-- [ ] **DASH-04**: Site manager can view and filter treatment log (by date range, severity, injury type, worker, outcome)
-- [ ] **DASH-05**: Site manager can click into any treatment for full detail view including photos
-- [ ] **DASH-06**: Site manager can view near-miss log (list view with category, severity, date)
-- [ ] **DASH-07**: Site manager can view worker registry with certification status indicators
-- [ ] **DASH-08**: Site manager can search and filter workers (by company, role, certification status)
-- [ ] **DASH-09**: Dashboard updates via polling (60-second intervals) for near-real-time data
-- [ ] **DASH-10**: Dashboard is responsive (desktop-focused, mobile-friendly for tablets)
+- [x] **DASH-01**: Site manager sees overview screen with traffic-light compliance score
+- [x] **DASH-02**: Compliance score based on: daily check completed today, overdue follow-ups, expired certifications, RIDDOR deadlines
+- [x] **DASH-03**: Dashboard shows summary stats for current week (treatments, near-misses, toolbox talks, workers on site)
+- [x] **DASH-04**: Site manager can view and filter treatment log (by date range, severity, injury type, worker, outcome)
+- [x] **DASH-05**: Site manager can click into any treatment for full detail view including photos
+- [x] **DASH-06**: Site manager can view near-miss log (list view with category, severity, date)
+- [x] **DASH-07**: Site manager can view worker registry with certification status indicators
+- [x] **DASH-08**: Site manager can search and filter workers (by company, role, certification status)
+- [x] **DASH-09**: Dashboard updates via polling (60-second intervals) for near-real-time data
+- [x] **DASH-10**: Dashboard is responsive (desktop-focused, mobile-friendly for tablets)
 
 ### PDF Report Generation
 
@@ -146,9 +146,9 @@ Requirements for MVP launch. Each maps to roadmap phases.
 
 ### Data Export
 
-- [ ] **EXPORT-01**: Site manager can export treatment log as CSV
-- [ ] **EXPORT-02**: Site manager can export treatment log as PDF
-- [ ] **EXPORT-03**: Site manager can export worker registry as CSV
+- [x] **EXPORT-01**: Site manager can export treatment log as CSV
+- [x] **EXPORT-02**: Site manager can export treatment log as PDF
+- [x] **EXPORT-03**: Site manager can export worker registry as CSV
 
 ## v2 Requirements
 
@@ -281,19 +281,19 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UX-06 | Phase 2 | Pending |
 | UX-07 | Phase 2 | Pending |
 | UX-08 | Phase 2 | Pending |
-| DASH-01 | Phase 4 | Pending |
-| DASH-02 | Phase 4 | Pending |
-| DASH-03 | Phase 4 | Pending |
-| DASH-04 | Phase 4 | Pending |
-| DASH-05 | Phase 4 | Pending |
-| DASH-06 | Phase 4 | Pending |
-| DASH-07 | Phase 4 | Pending |
-| DASH-08 | Phase 4 | Pending |
-| DASH-09 | Phase 4 | Pending |
-| DASH-10 | Phase 4 | Pending |
-| EXPORT-01 | Phase 4 | Pending |
-| EXPORT-02 | Phase 4 | Pending |
-| EXPORT-03 | Phase 4 | Pending |
+| DASH-01 | Phase 4 | Complete |
+| DASH-02 | Phase 4 | Complete |
+| DASH-03 | Phase 4 | Complete |
+| DASH-04 | Phase 4 | Complete |
+| DASH-05 | Phase 4 | Complete |
+| DASH-06 | Phase 4 | Complete |
+| DASH-07 | Phase 4 | Complete |
+| DASH-08 | Phase 4 | Complete |
+| DASH-09 | Phase 4 | Complete |
+| DASH-10 | Phase 4 | Complete |
+| EXPORT-01 | Phase 4 | Complete |
+| EXPORT-02 | Phase 4 | Complete |
+| EXPORT-03 | Phase 4 | Complete |
 | PDF-01 | Phase 5 | Pending |
 | PDF-02 | Phase 5 | Pending |
 | PDF-03 | Phase 5 | Pending |
