@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 4.5 of 7 (Marketing & Booking) — In progress
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-02-16 — Completed 04.5-02-PLAN.md (Customer Booking Flow)
+Phase: 5.5 of 7 (Admin Operations) — Phase complete
+Plan: 6 of 6 in current phase
+Status: Phase complete
+Last activity: 2026-02-16 — Completed 05.5-06-PLAN.md (Client Management with Net 30 Upgrade & Admin Overview)
 
-Progress: [█████████████] 100% (39/39 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5)
+Progress: [█████████████] 100% (40/40 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 39
+- Total plans completed: 40
 - Average duration: 4.0 min
-- Total execution time: 2.67 hours
+- Total execution time: 2.77 hours
 
 **By Phase:**
 
@@ -34,11 +34,11 @@ Progress: [█████████████] 100% (39/39 plans across Pha
 | 04-web-dashboard | 6/6 | 46 min | 7.7 min |
 | 04.5-marketing-booking | 2/3 | 20 min | 10 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
-| 05.5-admin-operations | 3/4 | 10.7 min | 3.6 min |
+| 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 04.5-01 (10 min), 05.5-01 (5.7 min), 05.5-03 (5 min), 04.5-02 (10 min), 05.5-02 (4 min)
-- Trend: Marketing/booking phase continued - Customer booking flow with calendar, live pricing, and recurring bookings
+- Last 5 plans: 05.5-01 (5.7 min), 05.5-03 (5 min), 04.5-02 (10 min), 05.5-02 (4 min), 05.5-06 (6 min)
+- Trend: Admin operations phase complete - Client management with Net 30 upgrade (reliability scoring, validation), real-time admin overview (replaced all mock data)
 
 *Updated after each plan completion*
 
@@ -304,6 +304,13 @@ Recent decisions affecting current work:
 - D-05.5-02-003: Color-code utilization: green <50%, yellow 50-80%, red >80% for quick visual assessment
 - D-05.5-02-004: Use parallel queries (Promise.all) to avoid N+1 database calls when fetching metrics
 
+**From Plan 05.5-04:**
+- D-05.5-04-001: Use hardcoded UK_POSTCODE_CENTROIDS instead of OS Data Hub or geocoding API (approximate centroids sufficient for postcode-area-level admin overview, avoids external API dependency)
+- D-05.5-04-002: Circle markers instead of boundary polygons (OS Data Hub boundary data requires external service, polygons overkill for admin overview)
+- D-05.5-04-003: Dynamic import with ssr:false for Leaflet map (Leaflet requires browser APIs, crashes during SSR)
+- D-05.5-04-004: Coverage gap threshold at >10% rejection rate (matches Research pattern, severity: warning 10-25%, critical >25%)
+- D-05.5-04-005: Color-coded utilization bands green <50%, yellow 50-80%, red >80% (matches existing admin patterns, legend + numeric percentages for accessibility)
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -348,3 +355,29 @@ Resume file: None
 
 ---
 *Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) in progress (1/3 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) in progress (3/4 plans)*
+- D-05.5-04-005: Color-coded utilization bands green <50%, yellow 50-80%, red >80% (matches existing admin patterns, legend + numeric percentages for accessibility)
+
+### Pending Todos
+
+- Add Stripe API keys to Supabase secrets (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PUBLISHABLE_KEY)
+- Configure Stripe webhook endpoint in Stripe Dashboard for 4 event types
+- Add Google Maps API key to Supabase secrets (GOOGLE_MAPS_API_KEY)
+- Enable Distance Matrix API in Google Cloud Console
+- Deploy Supabase migration 014_storage_buckets.sql to create treatment-photos bucket (Plan 03-02)
+- Add Resend API key to Supabase secrets (RESEND_API_KEY) and verify sitemedic.co.uk domain (Plan 05-02)
+- Deploy Supabase migration 015_safety_reports_storage.sql to create safety-reports bucket and weekly_reports table (Plan 05-02)
+- Deploy Supabase migration 016_weekly_report_cron.sql to enable pg_cron scheduled job (Plan 05-03)
+- Configure Vault secrets in Supabase Dashboard: project_url and service_role_key for pg_cron job authentication (Plan 05-03)
+
+### Blockers/Concerns
+
+None. External API key configuration pending but does not block development.
+
+## Session Continuity
+
+Last session: 2026-02-16T06:24:47Z
+Stopped at: Completed 05.5-04-PLAN.md — Territory Coverage Dashboard (Leaflet map, color-coded utilization, coverage gap alerts)
+Resume file: None
+
+---
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) in progress (2/3 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (4/4 plans)*
