@@ -1,8 +1,12 @@
 /**
- * F2508 Type Definitions
+ * TypeScript types for RIDDOR F2508 PDF generation
  * Phase 6: RIDDOR Auto-Flagging - Plan 03
  */
 
+/**
+ * F2508 form data structure
+ * Field names are placeholders - must be updated after inspecting actual F2508 PDF
+ */
 export interface F2508Data {
   // Section 1: About the organisation
   organisationName: string;
@@ -32,12 +36,13 @@ export interface F2508Data {
   incidentDescription: string;
 }
 
+/**
+ * RIDDOR incident data fetched from database
+ * Includes joined data from treatments, workers, and organizations tables
+ */
 export interface RIDDORIncidentData {
   id: string;
   category: string;
-  deadline_date: string;
-  confidence_level: string;
-  detected_at: string;
   treatments: {
     id: string;
     injury_type: string;
@@ -47,7 +52,6 @@ export interface RIDDORIncidentData {
     treatment_types: string[];
     outcome: string;
     created_at: string;
-    reference_number: string;
   };
   workers: {
     first_name: string;
@@ -55,7 +59,7 @@ export interface RIDDORIncidentData {
     role: string;
     company: string;
   };
-  organizations: {
+  orgs: {
     company_name: string;
     site_address: string;
     postcode: string;
