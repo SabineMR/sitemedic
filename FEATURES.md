@@ -626,7 +626,7 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
 ---
 
 ## Phase 2: Mobile Core
-**Status**: 🚧 **IN PROGRESS** - Plan 02-01 complete (dependencies & shared components)
+**Status**: 🚧 **IN PROGRESS** - Plans 02-01 and 02-02 complete (1/8 plans)
 **Goal**: Treatment logging, worker profiles, near-miss capture, daily safety checks
 
 ### Completed (Plan 02-01):
@@ -653,6 +653,31 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
   - **daily-check-items.ts**: 10 priority-ordered site safety checks
   - **outcome-categories.ts**: 7 post-treatment outcomes with severity levels (low/medium/high)
   - All IDs use kebab-case for API consistency
+
+### Completed (Plan 02-02): ✅ **NEW - 2026-02-16**
+- **Photo Capture & Compression Pipeline** (mobile/services/photo-processor.ts)
+  - **captureAndCompressPhotos()**: Gallery picker with multi-select up to 4 photos
+  - **takePhotoAndCompress()**: Camera capture with on-device compression
+  - **compressPhoto()**: Resize to 1200px width, JPEG 70% quality (target 100-200KB per photo)
+  - Quality: 1.0 in ImagePicker prevents iOS GIF compression bug (Research Pitfall 1)
+  - Graceful permission handling (returns empty array on denial)
+  - Fallback to original URI on compression error
+
+- **PhotoCapture Component** (mobile/components/forms/PhotoCapture.tsx)
+  - Full-width photo cards (200px height) instead of thumbnails for better gloves-on tap targets
+  - 4-photo limit enforcement with remaining count display ("Photos: 2/4")
+  - Large remove buttons (56pt tap target, red variant)
+  - Camera and gallery buttons disable when limit reached
+  - ScrollView for multiple photos with vertical scrolling
+  - Automatic compression pipeline integration
+
+- **SignaturePad Component** (mobile/components/forms/SignaturePad.tsx)
+  - Full-screen modal (slide animation, presentationStyle="fullScreen")
+  - Thick pen stroke (dotSize: 3, minWidth: 3, maxWidth: 4) for gloves-on signing
+  - Large Clear and Save buttons (56pt minimum) with custom WebView styles
+  - Base64 PNG output via react-native-signature-canvas
+  - Cancel button in header to close modal
+  - Note: May show blank in Expo Go dev mode (Research Pitfall 4), works in production builds
 
 ### Features:
 - **Treatment Logger**
