@@ -8,18 +8,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 **Current focus:** Phase 2 - Mobile Core
 
 ## Current Position
-Phase: 4.5 of 7 (Marketing & Booking)
-Plan: 5 of 5 in current phase
+Phase: 6 of 7 (RIDDOR Auto-Flagging)
+Plan: 3 of 3 in current phase
 Status: Phase complete
-Last activity: 2026-02-16 — Completed 04.5-05-PLAN.md (Real Booking Data in Confirmation)
-Progress: [███████████████] 100% (57/57 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6, 6.5)
+Last activity: 2026-02-16 — Completed 06-03-PLAN.md (F2508 PDF Generation)
+Progress: [███████████████] 100% (58/58 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6, 6, 6.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 57
+- Total plans completed: 58
 - Average duration: 4.3 min
-- Total execution time: 4.09 hours
+- Total execution time: 4.17 hours
 
 **By Phase:**
 
@@ -34,11 +34,12 @@ Progress: [███████████████] 100% (57/57 plans acro
 | 04.6-customer-onboarding | 7/7 | 52 min | 7.4 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
+| 06-riddor-auto-flagging | 3/3 | 23 min | 7.7 min |
 | 06.5-payments-payouts | 10/10 | 44 min | 4.4 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.5-09 (2 min), 06.5-10 (3 min), 04.5-05 (2 min)
-- Trend: Phase 4.5 complete - Marketing booking flow with real database data
+- Last 5 plans: 06.5-10 (3 min), 04.5-05 (2 min), 06-03 (8 min)
+- Trend: Phase 6 complete - RIDDOR auto-detection with F2508 PDF generation
 
 *Updated after each plan completion*
 
@@ -413,6 +414,11 @@ Recent decisions affecting current work:
 - D-06.5-05-004: Admin override limit: 75% hard limit (prevents extreme loss-making bookings)
 - D-06.5-05-005: Google Maps cache: 7-day TTL for route data (reduces API costs)
 
+**From Plan 06-03:**
+- D-06-03-001: Use @react-pdf/renderer instead of pdf-lib with fillable PDF template (HSE F2508 not reliably available; matches Phase 5 pattern)
+- D-06-03-002: Store PDFs in {incident_id}/F2508-{timestamp}.pdf format for multiple versions per incident
+- D-06-03-003: 7-day signed URL expiry matching weekly report pattern for HSE submission window
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -457,9 +463,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T22:46:00Z
-Stopped at: Completed 04.5-05-PLAN.md — Real Booking Data in Confirmation (Created GET /api/bookings/{id} endpoint and replaced hardcoded mock data with real database queries)
+Last session: 2026-02-16T23:00:00Z
+Stopped at: Completed 06-03-PLAN.md — F2508 PDF Generation (Created Edge Function to generate pre-filled HSE F2508 RIDDOR forms using @react-pdf/renderer)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6.5 (Payments & Payouts) complete (10/10 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6 (RIDDOR Auto-Flagging) complete (3/3 plans). Phase 6.5 (Payments & Payouts) complete (10/10 plans)*
