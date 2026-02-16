@@ -101,16 +101,16 @@ Plans:
 **Plans**: 10 plans
 
 Plans:
-- [ ] 02-01-PLAN.md -- Dependencies, shared gloves-on UI components, and safety taxonomy data
-- [ ] 02-02-PLAN.md -- Photo capture/compression pipeline and signature pad component
-- [ ] 02-03-PLAN.md -- Worker profiles (search, quick-add, induction form, treatment history)
-- [ ] 02-04-PLAN.md -- Treatment logger core (full form with auto-save, body part picker, RIDDOR flag)
-- [ ] 02-05-PLAN.md -- Treatment quick mode (preset templates) and treatment list view
-- [ ] 02-06-PLAN.md -- Near-miss capture (photo-first, categories, severity, GPS tagging)
-- [ ] 02-07-PLAN.md -- Daily safety checklist (10 items, Green/Amber/Red, completion tracking)
-- [ ] 02-08-PLAN.md -- App navigation, home dashboard, workers tab, and integration verification
-- [ ] 02-09-PLAN.md -- [GAP CLOSURE] Fix auto-save timing (10s) and verify template presets
-- [ ] 02-10-PLAN.md -- [GAP CLOSURE] Fix import paths and verify offline functionality
+- [x] 02-01-PLAN.md -- Dependencies, shared gloves-on UI components, and safety taxonomy data
+- [x] 02-02-PLAN.md -- Photo capture/compression pipeline and signature pad component
+- [x] 02-03-PLAN.md -- Worker profiles (search, quick-add, induction form, treatment history)
+- [x] 02-04-PLAN.md -- Treatment logger core (full form with auto-save, body part picker, RIDDOR flag)
+- [x] 02-05-PLAN.md -- Treatment quick mode (preset templates) and treatment list view
+- [x] 02-06-PLAN.md -- Near-miss capture (photo-first, categories, severity, GPS tagging)
+- [x] 02-07-PLAN.md -- Daily safety checklist (10 items, Green/Amber/Red, completion tracking)
+- [x] 02-08-PLAN.md -- App navigation, home dashboard, workers tab, and integration verification
+- [x] 02-09-PLAN.md -- [GAP CLOSURE] Fix auto-save timing (10s) and verify template presets
+- [x] 02-10-PLAN.md -- [GAP CLOSURE] Fix import paths and verify offline functionality
 
 ### Phase 3: Sync Engine
 **Goal**: Mobile app data syncs to backend automatically when connectivity available, with photo uploads that don't block workflow and zero data loss during transitions.
@@ -134,10 +134,10 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 03-01-PLAN.md -- Install sync dependencies and create hybrid foreground/background sync scheduler
-- [ ] 03-02-PLAN.md -- Progressive photo upload pipeline with WiFi-only constraints and Supabase Storage
-- [ ] 03-03-PLAN.md -- Enhance SyncQueue with RIDDOR fast retry, LWW conflict resolution, and scheduler wiring
-- [ ] 03-04-PLAN.md -- Sync feedback UI (error display, RIDDOR critical alert, photo upload progress)
+- [x] 03-01-PLAN.md -- Install sync dependencies and create hybrid foreground/background sync scheduler
+- [x] 03-02-PLAN.md -- Progressive photo upload pipeline with WiFi-only constraints and Supabase Storage
+- [x] 03-03-PLAN.md -- Enhance SyncQueue with RIDDOR fast retry, LWW conflict resolution, and scheduler wiring
+- [x] 03-04-PLAN.md -- Sync feedback UI (error display, RIDDOR critical alert, photo upload progress)
 - [ ] 03-05-PLAN.md -- Wire all Phase 2 forms to sync queue and mount sync UI in App.tsx
 
 ### Phase 4: Web Dashboard
@@ -382,8 +382,8 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 |-------|----------------|--------|-----------|
 | 1. Foundation | 5/5 | Complete | 2026-02-15 |
 | 1.5. Business Operations Foundation | 4/4 | Complete | 2026-02-15 |
-| 2. Mobile Core | 9/10 | Complete | 2026-02-15 |
-| 3. Sync Engine | 0/5 | Not started | - |
+| 2. Mobile Core | 10/10 | Complete | 2026-02-15 |
+| 3. Sync Engine | 4/5 | In Progress | - |
 | 4. Web Dashboard | 0/TBD | Not started | - |
 | 4.5. Marketing Website & Booking Portal | 0/4 | Not started | - |
 | 4.6. Customer Onboarding & Contract Management | 0/5 | Not started | - |
@@ -404,5 +404,6 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Phase 4.6 added: 2026-02-15 -- Customer onboarding & contract management with service agreement generation, document portal for phone sales, flexible payment terms (half upfront + remainder after completion/Net 30), digital signatures, and payment schedule enforcement (5 plans)*
 *Phase 2 planned: 2026-02-15 -- 8 plans in 3 waves (2 parallel foundation, 4 parallel features, 2 integration)*
 *Phase 2 gap closure: 2026-02-15 -- 2 gap closure plans (02-09, 02-10) addressing 3 verification gaps (auto-save timing, template presets, offline import paths)*
-*Phase 2 complete: 2026-02-15 -- 9 plans executed, verification passed (10/10 must-haves), goal achieved (offline mobile core with gloves-on usability)*
+*Phase 2 complete: 2026-02-15 -- 10/10 plans executed, verification passed (10/10 must-haves), goal achieved (offline mobile core with gloves-on usability)*
 *Phase 3 planned: 2026-02-15 -- 5 plans in 3 waves (2 parallel foundation, 2 parallel enhancement, 1 integration with checkpoint)*
+*Phase 3 progress: 2026-02-15 -- 4/5 plans complete (03-01 through 03-04 executed, 03-05 remaining for full phase completion)*
