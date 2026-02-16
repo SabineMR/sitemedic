@@ -13,8 +13,8 @@ import { TreatmentWithWorker, Worker } from '@/types/database.types';
 /**
  * Export treatments to CSV file
  *
- * Columns: Date, Reference, Worker Name, Company, Injury Type, Body Part, Severity,
- *          Treatment Notes, Outcome, RIDDOR Reportable, Created At
+ * Columns: Date, Worker Name, Company, Injury Type, Body Part, Severity,
+ *          Treatment Notes, Outcome, RIDDOR Reportable
  *
  * Date format: UK format (dd/MM/yyyy HH:mm)
  */
@@ -22,7 +22,6 @@ export function exportTreatmentsCSV(treatments: TreatmentWithWorker[]) {
   // Map treatments to flat CSV rows
   const csvData = treatments.map((t) => ({
     'Date': t.created_at ? format(new Date(t.created_at), 'dd/MM/yyyy HH:mm') : '',
-    'Reference': t.reference_number || '',
     'Worker Name': t.worker
       ? `${t.worker.first_name} ${t.worker.last_name}`
       : 'Unknown',
@@ -30,10 +29,9 @@ export function exportTreatmentsCSV(treatments: TreatmentWithWorker[]) {
     'Injury Type': t.injury_type || '',
     'Body Part': t.body_part || '',
     'Severity': t.severity || '',
-    'Treatment Notes': t.treatment_given || '',
+    'Treatment Notes': t.treatment_notes || '',
     'Outcome': formatOutcome(t.outcome),
     'RIDDOR Reportable': t.is_riddor_reportable ? 'Yes' : 'No',
-    'Created At': t.created_at ? format(new Date(t.created_at), 'dd/MM/yyyy HH:mm') : '',
   }));
 
   // Generate CSV with react-papaparse (handles escaping, delimiters, special chars)
