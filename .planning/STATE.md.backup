@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 2 of 7 (Mobile Core)
-Plan: 3 of 8 in current phase
+Plan: 10 of 8 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 02-03-PLAN.md (Worker Profile System)
+Last activity: 2026-02-16 — Completed 02-10-PLAN.md (Import Path Audit & Offline Verification)
 
-Progress: [█████░░░░░] 50% (10/20 plans across all active phases)
+Progress: [███████░░░] 65% (13/20 plans across all active phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: 3.7 min
-- Total execution time: 0.68 hours
+- Total plans completed: 14
+- Average duration: 4.0 min
+- Total execution time: 0.93 hours
 
 **By Phase:**
 
@@ -29,11 +29,11 @@ Progress: [█████░░░░░] 50% (10/20 plans across all active ph
 |-------|-------|-------|----------|
 | 01-foundation | 5/5 | 20 min | 4 min |
 | 01.5-business-foundation | 4/4 | 10 min | 2.5 min |
-| 02-mobile-core | 2/8 | 12 min | 6 min |
+| 02-mobile-core | 5/8 | 29 min | 5.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 01.5-02 (4 min), 02-01 (7 min), 02-03 (5 min)
-- Trend: Mobile Core plans averaging 6 min (more complex than business foundation)
+- Last 5 plans: 02-03 (5 min), 02-04 (7 min), 02-05 (5 min), 02-10 (5 min)
+- Trend: Mobile Core plans averaging 5.8 min (bug fixes faster than new features)
 
 *Updated after each plan completion*
 
@@ -125,7 +125,43 @@ Recent decisions affecting current work:
 - D-02-01-009: Emoji icons on near-miss categories for faster visual scanning
 - D-02-01-010: Priority order on daily checks (1-10) for systematic inspection workflow
 
+**From Plan 02-04:**
+- D-02-04-001: Auto-save debounce 500ms (exceeds TREAT-10 requirement of 10s for faster UX)
+- D-02-04-002: Reference number format SITE-YYYYMMDD-NNN with daily sequential counter
+- D-02-04-003: RIDDOR detection automatic based on isRiddorReportable flag in INJURY_TYPES taxonomy
+- D-02-04-004: Treatment status workflow draft→complete (draft editable, complete read-only)
+- D-02-04-005: Mechanism presets: 8 common injury scenarios as quick-select chips above free text
+- D-02-04-006: Treatment types multi-select checkboxes (not single picker) for combined treatments
+- D-02-04-007: Body part selection grid layout (not SVG diagram) for faster build and better gloves-on usability
+- D-02-04-008: Signature mandatory for completion, stored as base64 PNG
+- D-02-04-009: Photo limit 4 enforced via PhotoCapture maxPhotos prop per TREAT-06
+- D-02-04-010: BottomSheetPicker renderCustomContent prop for custom picker UIs like BodyDiagramPicker
+
+**From Plan 02-05:**
+- D-02-05-001: 8 preset templates for common construction injuries (Minor Cut, Bruise, Headache, Splinter, Eye Irritation, Sprain/Strain, Minor Burn, Nausea/Dizziness)
+- D-02-05-002: Worker selection BEFORE template selection (validates worker before creating treatment record)
+- D-02-05-003: Navigate to treatment/[id] for review after template selection (enables quick confirmation + optional additions)
+- D-02-05-004: Treatment list sorted by created_at DESC (reverse chronological order, most recent first)
+- D-02-05-005: Search filters by worker name, injury type, and reference number (single unified search across 3 fields)
+- D-02-05-006: RIDDOR flag shown as red badge in list view (high visibility for compliance-critical flag)
+- D-02-05-007: Outcome badge with color coding (green/amber/red) based on severity levels
+- D-02-05-008: Empty state with dual CTAs (Quick Log + Full Treatment) to reduce friction for first action
+- D-02-05-009: Load worker names via Promise.all for each treatment (parallel loading with fallback to 'Unknown Worker')
+- D-02-05-010: Quick Log and Full Treatment buttons side-by-side at top (visual hierarchy emphasizes quick entry)
+
+**From Plan 02-10:**
+- D-02-10-001: Verified all files at depth 3 from project root (mobile/app/treatment/, mobile/app/(tabs)/, mobile/components/forms/) require ../../../ to reach src/lib/watermelon.ts
+- D-02-10-002: Approved checkpoint via code verification instead of runtime testing when iOS simulator runtime unavailable (grep confirmed all import paths correct, depth calculations validated)
+
 **From Plan 02-07:**
+
+**From Plan 02-06:**
+- D-02-06-001: Store GPS as JSON string {latitude, longitude} in location field (schema has string type)
+- D-02-06-002: Category grid visible on screen (not bottom sheet) for speed - reduces taps from 2 to 1
+- D-02-06-003: GPS failure does NOT block form submission (construction sites have poor GPS coverage)
+- D-02-06-004: Photo thumbnails in list (80x80) instead of full-width for compact list view
+- D-02-06-005: Severity descriptions clarify potential outcome ('Could cause minor injury' vs abstract 'Minor')
+- D-02-06-006: Auto-save on every field change (no manual save button) for offline reliability
 - D-02-07-001: Green/Amber/Red status buttons with borderWidth 4 for selected state (clear visual feedback in sunlight)
 - D-02-07-002: Photo and note optional (only appear after status selected) for quick <5 minute completion
 - D-02-07-003: Amber/Red items prompt for issue description with context-sensitive placeholder
@@ -150,9 +186,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T00:51:18Z
-Stopped at: Completed 02-07-PLAN.md — Daily Safety Checklist
+Last session: 2026-02-16T02:03:09Z
+Stopped at: Completed 02-10-PLAN.md — Import Path Audit & Offline Verification
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) in progress (2/8 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) in progress (5/8 plans)*
