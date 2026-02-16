@@ -144,12 +144,12 @@ export function TerritoryRevenueChart({ data }: TerritoryRevenueChartProps) {
               borderRadius: '8px',
               color: '#F3F4F6',
             }}
-            formatter={(value: any, name: string) => {
+            formatter={((value: any, name: string) => {
               const val = value || 0;
               if (name === 'platformFees') return [`£${val.toLocaleString()}`, 'Platform Fees'];
               if (name === 'medicPayouts') return [`£${val.toLocaleString()}`, 'Medic Payouts'];
               return [`£${val.toLocaleString()}`, name];
-            }}
+            }) as any}
             labelFormatter={(label) => `Territory: ${label}`}
           />
           <Legend
