@@ -11,6 +11,17 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import CurrencyWithTooltip from '@/components/CurrencyWithTooltip';
 import Link from 'next/link';
+import {
+  Building2,
+  UserPlus,
+  CheckCircle,
+  XCircle,
+  Clock,
+  CreditCard,
+  AlertTriangle,
+  TrendingUp,
+  DollarSign,
+} from 'lucide-react';
 
 interface Customer {
   id: string;
@@ -113,19 +124,23 @@ export default function CustomersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
       {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700 px-8 py-6">
+      <header className="bg-gray-800/50 backdrop-blur-xl border-b border-gray-700/50 px-8 py-6 shadow-lg">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Customers</h1>
-            <p className="text-gray-400">Manage client accounts and payment terms</p>
+            <h1 className="text-3xl font-bold text-white mb-2 tracking-tight flex items-center gap-3">
+              <Building2 className="w-8 h-8 text-blue-400" />
+              Customers
+            </h1>
+            <p className="text-gray-400 text-sm">Manage client accounts and payment terms</p>
           </div>
           <Link
             href="/admin/customers/new"
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
+            className="group px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl font-medium transition-all duration-200 shadow-lg shadow-blue-500/20 hover:scale-105 active:scale-95 flex items-center gap-2"
           >
-            ➕ Add Customer
+            <UserPlus className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
+            Add Customer
           </Link>
         </div>
       </header>
@@ -161,7 +176,7 @@ export default function CustomersPage() {
         </div>
 
         {/* Filters & Search */}
-        <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-6">
+        <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 p-6 mb-6 shadow-2xl">
           <div className="space-y-4">
             {/* Search */}
             <div>
@@ -170,7 +185,7 @@ export default function CustomersPage() {
                 placeholder="Search by company, contact, email, or postcode..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               />
             </div>
 
@@ -242,10 +257,10 @@ export default function CustomersPage() {
         </div>
 
         {/* Customers Table */}
-        <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+        <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 overflow-hidden shadow-2xl">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-900 border-b border-gray-700">
+              <thead className="bg-gray-900/50 border-b border-gray-700/50">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                     Company
@@ -309,23 +324,25 @@ function StatCard({
   highlight?: boolean;
 }) {
   const colorClasses = {
-    blue: 'from-blue-600 to-blue-700',
-    green: 'from-green-600 to-green-700',
-    yellow: 'from-yellow-600 to-yellow-700',
-    red: 'from-red-600 to-red-700',
-    purple: 'from-purple-600 to-purple-700',
-    gray: 'from-gray-600 to-gray-700',
+    blue: 'from-blue-500 to-blue-600',
+    green: 'from-green-500 to-green-600',
+    yellow: 'from-yellow-500 to-yellow-600',
+    red: 'from-red-500 to-red-600',
+    purple: 'from-purple-500 to-purple-600',
+    gray: 'from-gray-500 to-gray-600',
   };
 
   return (
     <div
-      className={`bg-gray-800 rounded-lg p-4 border ${
-        highlight ? 'border-yellow-500/50 ring-2 ring-yellow-500/20' : 'border-gray-700'
+      className={`group bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border transition-all duration-300 hover:shadow-2xl hover:scale-105 ${
+        highlight
+          ? 'border-yellow-500/50 ring-2 ring-yellow-500/20 shadow-lg shadow-yellow-500/10'
+          : 'border-gray-700/50 hover:border-gray-600/50'
       }`}
     >
-      <div className="text-gray-400 text-xs font-medium mb-1">{label}</div>
+      <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">{label}</div>
       <div
-        className={`text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-br ${colorClasses[color]}`}
+        className={`text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-br ${colorClasses[color]} transition-transform duration-300 group-hover:scale-110`}
       >
         {value}
       </div>
@@ -350,19 +367,21 @@ function FilterButton({
   color?: 'blue' | 'green' | 'yellow' | 'red' | 'purple' | 'gray';
 }) {
   const activeColors = {
-    blue: 'bg-blue-600 text-white',
-    green: 'bg-green-600 text-white',
-    yellow: 'bg-yellow-600 text-white',
-    red: 'bg-red-600 text-white',
-    purple: 'bg-purple-600 text-white',
-    gray: 'bg-gray-600 text-white',
+    blue: 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/20',
+    green: 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg shadow-green-500/20',
+    yellow: 'bg-gradient-to-r from-yellow-600 to-yellow-700 text-white shadow-lg shadow-yellow-500/20',
+    red: 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-500/20',
+    purple: 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg shadow-purple-500/20',
+    gray: 'bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-lg shadow-gray-500/20',
   };
 
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-2 rounded-lg font-medium text-sm transition ${
-        active ? activeColors[color] : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+      className={`px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${
+        active
+          ? `${activeColors[color]} scale-105`
+          : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 hover:scale-105'
       }`}
     >
       {label} ({count})

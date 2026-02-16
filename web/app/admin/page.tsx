@@ -480,16 +480,18 @@ function AlertItem({
   message,
   type,
 }: {
-  icon: string;
+  icon: React.ReactNode;
   message: string;
   type: 'warning' | 'error';
 }) {
-  const bgColor = type === 'error' ? 'bg-red-500/10 border-red-500/30' : 'bg-yellow-500/10 border-yellow-500/30';
+  const bgColor = type === 'error'
+    ? 'bg-red-500/10 border-red-500/30 hover:bg-red-500/20'
+    : 'bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20';
   const textColor = type === 'error' ? 'text-red-400' : 'text-yellow-400';
 
   return (
-    <div className={`flex items-center gap-3 p-3 rounded-lg border ${bgColor}`}>
-      <span className="text-xl">{icon}</span>
+    <div className={`flex items-center gap-3 p-4 rounded-xl border ${bgColor} transition-all duration-200 group`}>
+      <span className={`${textColor} transition-transform duration-200 group-hover:scale-110`}>{icon}</span>
       <p className={`text-sm font-medium ${textColor} flex-1`}>{message}</p>
     </div>
   );
