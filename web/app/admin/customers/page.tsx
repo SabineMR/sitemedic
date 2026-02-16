@@ -440,7 +440,7 @@ function CustomerRow({ customer }: { customer: Customer }) {
       customer.outstanding_balance > customer.credit_limit * 0.8);
 
   return (
-    <tr className="hover:bg-gray-700/50 transition">
+    <tr className="hover:bg-gray-700/30 transition-all duration-200 border-b border-transparent hover:border-gray-700/50 group">
       {/* Company */}
       <td className="px-6 py-4">
         <div>
