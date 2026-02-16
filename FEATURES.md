@@ -1212,6 +1212,14 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
     - Calendar-based date/time picker
     - Shift duration selector (8-hour minimum enforced)
     - Site location with UK postcode validation
+    - **what3words Integration (NEW)**: Precise location addressing with 3m x 3m accuracy
+      - Customers can enter what3words address (e.g., ///filled.count.soap) as alternative to traditional address
+      - Auto-converts coordinates to what3words when Google Places address is selected
+      - Autocomplete suggestions for what3words input (UK-restricted)
+      - Live validation and map link preview
+      - Included in booking confirmation and medic assignment emails
+      - Makes it easier for paramedics to find exact site entrance/location
+      - Benefits: Easy to communicate verbally, impossible to mistype, extremely precise (vs vague "site entrance")
     - Special requirements (confined space, trauma specialist, etc.)
     - Recurring booking option (same medic, weekly schedule)
 
@@ -3858,7 +3866,7 @@ A comprehensive customer account management page displaying all construction com
 ---
 
 ## Phase 6.5: Payment Processing & Payouts (NEW)
-**Status**: 🔄 **IN PROGRESS** - 3/5 plans complete (Client payments ✅, Weekly payouts ✅, Out-of-territory costs ✅)
+**Status**: 🔄 **IN PROGRESS** - 4/5 plans complete (Client payments ✅, Weekly payouts ✅, Out-of-territory costs ✅, IR35 compliance ✅)
 **Goal**: Full payment processing with client charging and weekly medic payouts
 
 ### Features:
@@ -3904,23 +3912,89 @@ A comprehensive customer account management page displaying all construction com
     - Shows: Gross pay, deductions (none for self-employed), net pay
     - Includes: Platform name, medic name, tax year, UTR (for self-employed)
 
-- **IR35 Compliance**
-  - **Medic Onboarding**
-    - Self-employed vs umbrella company selection
-    - UTR collection for self-employed (HMRC Unique Taxpayer Reference)
-    - Umbrella company details if applicable
+- **IR35 Compliance** ✅ **COMPLETED**
+  - **IR35 Validator Library** (`web/lib/medics/ir35-validator.ts`)
+    - **UTR Validation**: 10-digit format check for Unique Taxpayer Reference
+    - **Employment Status Validation**: Self-employed vs umbrella company
+    - **CEST Assessment Check**: Verifies HMRC assessment completeness
+    - **Deduction Calculator**: £0 for self-employed (medic handles own tax)
+    - Functions:
+      - `validateUTR()` - 10-digit format validation
+      - `requiresCESTAssessment()` - Checks if CEST needed
+      - `validateIR35Status()` - Completeness validation with error messages
+      - `calculateDeductions()` - Gross to net (£0 deductions for self-employed)
 
-  - **Stripe Express Account Setup**
-    - Onboarding link generation (Stripe hosted)
-    - Bank account verification
-    - Identity verification (KYC)
-    - Tax documentation collection
+  - **IR35 Form Component** (`web/components/medics/ir35-form.tsx`)
+    - **Employment Status Selection**:
+      - Self-employed contractor (recommended) with tax responsibility warning
+      - Umbrella company employee with PAYE info
+    - **Self-Employed Fields**:
+      - UTR input with 10-digit validation
+      - CEST assessment result (outside/inside/unknown IR35)
+      - CEST assessment date picker
+      - CEST PDF upload to Supabase Storage (`ir35-assessments` bucket)
+      - Blue info box explaining tax responsibilities
+    - **Umbrella Company Fields**:
+      - Umbrella company name input
+      - Green info box explaining PAYE handling
+    - **Inline Validation**: Real-time error messages for incomplete/invalid data
+    - **Auto-upload**: CEST PDF to Supabase Storage with medic ID + timestamp naming
+
+  - **IR35 Assessment API** (`/api/medics/ir35-assessment`)
+    - **POST Endpoint**: Saves IR35 data to medics table
+    - **Authorization Check**: User must be medic or admin
+    - **Data Validation**: Calls validateIR35Status before saving
+    - **Database Update**: Stores employment_status, UTR, umbrella company, CEST data
+    - **Stripe Account Creation**: Auto-creates Express account if doesn't exist
+    - **Returns**: Stripe onboarding URL for bank account setup
+    - **Error Handling**: Returns validation errors with 400 status
+
+  - **Stripe Onboarding Status Component** (`web/components/medics/stripe-onboarding-status.tsx`)
+    - **Three States**:
+      - Not Started: Shows explanation, IR35 required first
+      - In Progress: Yellow warning with "Continue Onboarding" button
+      - Complete: Green checkmark with account status (charges_enabled, payouts_enabled)
+    - **Auto-refresh**: Checks Stripe status every 30 seconds if incomplete
+    - **Manual Refresh**: "Refresh Status" button calls check_account_status Edge Function
+    - **Status Display**: Shows charges enabled/disabled, payouts enabled/disabled
+    - **Last Updated**: Timestamp of last status check
+
+  - **Payslip Auto-Generator** (`024_payslip_generation.sql`)
+    - **Payslips Table**: Stores gross, tax (£0), NI (£0), net, employment status, UTR
+    - **Database Trigger**: `generate_payslip_on_payout()` fires when timesheet.payout_status = 'paid'
+    - **Auto-generation**: Creates payslip record automatically on payout
+    - **IR35 Data**: Copies employment_status, UTR, umbrella company from medics table
+    - **Pay Period**: Records start/end dates and payment date
+    - **PDF Storage**: pdf_url field for future PDF generation
+
+  - **Admin Medic Onboarding Page** (`/admin/medics/onboarding/[id]`)
+    - **Onboarding Checklist** with 5 items:
+      1. Personal details (name, email, phone, postcode) ✅/❌
+      2. Qualifications (certifications list) ✅/❌
+      3. IR35 status (employment status + UTR/umbrella) ✅/❌
+      4. Stripe Express account (onboarding complete) ✅/❌
+      5. Ready for payouts (all above complete) ✅/❌ highlighted
+    - **Personal Information Section**: Read-only display with edit button
+    - **Qualifications Section**: List of certifications with green checkmarks
+    - **IR35 Compliance Section**:
+      - If incomplete: Shows IR35Form component
+      - If complete: Displays status summary with CEST PDF download link
+    - **Payout Setup Section**: Shows StripeOnboardingStatus component
+    - **Payslip History Table**:
+      - Columns: Pay period, Gross, Deductions, Net, PDF download
+      - Sorted by payment date descending
+    - **Admin Actions**:
+      - "Approve for Work" button (disabled until ready for payouts)
+      - "Suspend" button
+      - "View Payout History" link
+    - **Real-time Updates**: Page reloads on form completion
 
   - **Contractor Status**
     - Self-employed medics (NOT employees)
     - No PAYE, no NI contributions by platform
-    - Medics responsible for own tax returns
+    - Medics responsible for own tax returns (Self Assessment)
     - HMRC CEST tool validation (IR35 check)
+    - Payslips show £0 deductions with UTR for tax filing
 
 - **Out-of-Territory Cost Management** ✅ **COMPLETED**
   - **Cost Calculation Library** (`web/lib/bookings/out-of-territory.ts`)
@@ -4780,6 +4854,13 @@ GET /functions/v1/cert-expiry-checker
 ### External Integrations
 - **Payments**: Stripe Connect (platform + medic Express accounts)
 - **Geolocation**: Google Maps Distance Matrix API (7-day cache)
+- **what3words** (NEW): Precise location addressing system
+  - Package: `@what3words/api` (v5.4.0) + `@what3words/react-components` (v5.0.5)
+  - API key configured in `NEXT_PUBLIC_WHAT3WORDS_API_KEY`
+  - Features: coordinate ↔ words conversion, autocomplete suggestions, UK-only filtering
+  - Usage: Quote builder, booking forms, email templates
+  - Database: `what3words_address` column in `bookings`, `territories`, and `medics` tables
+  - Benefits: 3m x 3m precision, easy verbal communication, impossible to mistype
 - **Calendar**: iCal feeds (Google, Outlook, iCloud - read-only)
 - **Email**: Transactional emails via Supabase (SendGrid/Mailgun backend)
 
