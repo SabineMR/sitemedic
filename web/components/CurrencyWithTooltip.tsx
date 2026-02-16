@@ -33,14 +33,17 @@ export default function CurrencyWithTooltip({
   const { rate, loading, error } = useExchangeRate();
 
   const formatCurrency = (value: number, curr: string) => {
+    // Round to whole dollars/pounds (no decimals)
+    const rounded = Math.round(value);
+
     if (curr === 'GBP') {
       return showSymbol
-        ? `£${value.toLocaleString()}`
-        : value.toLocaleString();
+        ? `£${rounded.toLocaleString()}`
+        : rounded.toLocaleString();
     }
     return showSymbol
-      ? `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-      : value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      ? `$${rounded.toLocaleString('en-US')}`
+      : rounded.toLocaleString('en-US');
   };
 
   const convertedAmount = rate ? amount * rate : null;
@@ -56,7 +59,7 @@ export default function CurrencyWithTooltip({
       {/* Tooltip */}
       {isHovered && !loading && convertedAmount && (
         <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg shadow-lg whitespace-nowrap z-50 animate-fadeIn">
-          ≈ {formatCurrency(convertedAmount, 'USD')} USD
+          ≈ {formatCurrency(convertedAmount, 'USD')}
           {error && (
             <span className="block text-xs text-slate-300 mt-1">
               (Approximate rate)

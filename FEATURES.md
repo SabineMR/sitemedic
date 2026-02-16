@@ -1315,7 +1315,8 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
       - **Real-time GBP to USD conversion on hover** 💱 **NEW**
         - Hover over revenue/payout amounts to see USD equivalent
         - Uses live exchange rates (cached hourly via exchangerate-api.com)
-        - Tooltip shows formatted USD amount (e.g., "≈ $10,731.50 USD")
+        - Tooltip shows formatted USD amount (e.g., "≈ $10,732")
+        - All amounts rounded to whole dollars (no .00 decimals)
         - Graceful fallback to ~$1.27 approximate rate if API unavailable
         - Helps international stakeholders understand financial metrics
     - **Weekly Payouts** (💳) - Last payout amount (with USD conversion on hover)
@@ -1373,6 +1374,9 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
       - `CurrencyWithTooltip` component - Reusable tooltip with animated display
       - `AdminCurrency` component - Admin-specific wrapper with presets
       - localStorage caching to minimize API calls
+      - **Currency Formatting**: All amounts display as whole dollars/pounds (rounded, no decimals)
+        - Example: £350 (not £350.00), $444 (not $444.50)
+        - Clean, easy-to-read amounts throughout the application
       - **Pattern enforcement**:
         - README.md in /admin with mandatory guidelines
         - TypeScript types (CurrencyAmount) to guide developers
