@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 4.6 of 7 (Customer Onboarding & Contract Management) — In progress
-Plan: 2 of 6 in current phase
+Plan: 3 of 6 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 04.6-02-PLAN.md (Contract PDF Generation Edge Function)
+Last activity: 2026-02-16 — Completed 04.6-03-PLAN.md (Contract Signing Interface)
 
-Progress: [█████████████░] 93% (42/45 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6)
+Progress: [█████████████░] 96% (43/45 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 42
-- Average duration: 3.9 min
-- Total execution time: 2.87 hours
+- Total plans completed: 43
+- Average duration: 4.1 min
+- Total execution time: 3.09 hours
 
 **By Phase:**
 
@@ -33,13 +33,13 @@ Progress: [█████████████░] 93% (42/45 plans across P
 | 03-sync-engine | 7/7 | 24 min | 3.4 min |
 | 04-web-dashboard | 6/6 | 46 min | 7.7 min |
 | 04.5-marketing-booking | 2/3 | 20 min | 10 min |
-| 04.6-customer-onboarding | 2/6 | 8 min | 4 min |
+| 04.6-customer-onboarding | 3/6 | 21 min | 7 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 04.5-02 (10 min), 05.5-02 (4 min), 05.5-06 (6 min), 04.6-01 (2 min), 04.6-02 (6 min)
-- Trend: Contract PDF generation complete - Edge Function generates contracts with auto-filled booking data, payment schedules, signature capture
+- Last 5 plans: 05.5-02 (4 min), 05.5-06 (6 min), 04.6-01 (2 min), 04.6-02 (6 min), 04.6-03 (13 min)
+- Trend: Client-facing contract signing interface complete - public pages with signature capture, canvas drawing, typed name fallback, PDF regeneration
 
 *Updated after each plan completion*
 
@@ -334,6 +334,12 @@ Recent decisions affecting current work:
 - D-04.6-02-004: UK date formatting patterns: long (16 February 2026) for headers, short (16 Feb 2026) for tables
 - D-04.6-02-005: Digital signature disclaimer cites UK Electronic Communications Act 2000
 
+**From Plan 04.6-03:**
+- D-04.6-03-001: Signature methods - Canvas drawing (primary) and typed name (fallback for accessibility) both produce base64 PNG
+- D-04.6-03-002: Auto-update status to 'viewed' when contract opened (server component checks if status === 'sent' on page load)
+- D-04.6-03-003: Signature audit trail captures IP, user agent, and timestamp (extract IP from x-forwarded-for or x-real-ip headers)
+- D-04.6-03-004: PDF regeneration triggered automatically after signature (non-blocking: signature save succeeds even if PDF fails)
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -372,8 +378,8 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T19:04:02Z
-Stopped at: Completed 04.6-02-PLAN.md — Contract PDF Generation Edge Function (auto-fills booking data, pricing, payment schedules, signatures)
+Last session: 2026-02-16T19:21:19Z
+Stopped at: Completed 04.6-03-PLAN.md — Contract Signing Interface (public page with signature capture, canvas drawing, typed name fallback, audit trail, PDF regeneration)
 Resume file: None
 
 ---
