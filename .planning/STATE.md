@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 2 of 7 (Mobile Core)
-Plan: 4 of 8 in current phase
+Plan: 5 of 8 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 02-04-PLAN.md (Treatment Logging Workflow)
+Last activity: 2026-02-16 — Completed 02-05-PLAN.md (Quick Treatment & Logs)
 
-Progress: [█████░░░░░] 55% (11/20 plans across all active phases)
+Progress: [██████░░░░] 60% (12/20 plans across all active phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
+- Total plans completed: 13
 - Average duration: 4.1 min
-- Total execution time: 0.82 hours
+- Total execution time: 0.89 hours
 
 **By Phase:**
 
@@ -29,11 +29,11 @@ Progress: [█████░░░░░] 55% (11/20 plans across all active ph
 |-------|-------|-------|----------|
 | 01-foundation | 5/5 | 20 min | 4 min |
 | 01.5-business-foundation | 4/4 | 10 min | 2.5 min |
-| 02-mobile-core | 3/8 | 19 min | 6.3 min |
+| 02-mobile-core | 4/8 | 24 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (7 min), 02-03 (5 min), 02-04 (7 min)
-- Trend: Mobile Core plans averaging 6.3 min (more complex workflows, UI implementation)
+- Last 5 plans: 02-01 (7 min), 02-03 (5 min), 02-04 (7 min), 02-05 (5 min)
+- Trend: Mobile Core plans averaging 6 min (more complex workflows, UI implementation)
 
 *Updated after each plan completion*
 
@@ -137,6 +137,18 @@ Recent decisions affecting current work:
 - D-02-04-009: Photo limit 4 enforced via PhotoCapture maxPhotos prop per TREAT-06
 - D-02-04-010: BottomSheetPicker renderCustomContent prop for custom picker UIs like BodyDiagramPicker
 
+**From Plan 02-05:**
+- D-02-05-001: 8 preset templates for common construction injuries (Minor Cut, Bruise, Headache, Splinter, Eye Irritation, Sprain/Strain, Minor Burn, Nausea/Dizziness)
+- D-02-05-002: Worker selection BEFORE template selection (validates worker before creating treatment record)
+- D-02-05-003: Navigate to treatment/[id] for review after template selection (enables quick confirmation + optional additions)
+- D-02-05-004: Treatment list sorted by created_at DESC (reverse chronological order, most recent first)
+- D-02-05-005: Search filters by worker name, injury type, and reference number (single unified search across 3 fields)
+- D-02-05-006: RIDDOR flag shown as red badge in list view (high visibility for compliance-critical flag)
+- D-02-05-007: Outcome badge with color coding (green/amber/red) based on severity levels
+- D-02-05-008: Empty state with dual CTAs (Quick Log + Full Treatment) to reduce friction for first action
+- D-02-05-009: Load worker names via Promise.all for each treatment (parallel loading with fallback to 'Unknown Worker')
+- D-02-05-010: Quick Log and Full Treatment buttons side-by-side at top (visual hierarchy emphasizes quick entry)
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -170,9 +182,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T00:54:06Z
-Stopped at: Completed 02-04-PLAN.md — Treatment Logging Workflow
+Last session: 2026-02-16T01:06:33Z
+Stopped at: Completed 02-05-PLAN.md — Quick Treatment & Logs
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) in progress (3/8 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) in progress (5/8 plans)*
