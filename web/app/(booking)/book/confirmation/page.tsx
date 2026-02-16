@@ -80,53 +80,70 @@ function ConfirmationContent() {
         const matchData: MatchResult = await matchResponse.json();
         setMatchResult(matchData);
 
-        // Step 3: Fetch booking details to check if recurring
+        // Step 3: Fetch booking details from database
         console.log('📋 Fetching booking details...');
-        // TODO: Fetch booking from Supabase
-        // For now, mock the data structure
-        const mockBooking = {
+        const bookingResponse = await fetch(`/api/bookings/${bookingId}`);
+        if (!bookingResponse.ok) {
+          throw new Error('Failed to fetch booking details');
+        }
+        const bookingDetail = await bookingResponse.json();
+
+        const fetchedBooking = {
           id: bookingId,
-          date: new Date().toLocaleDateString('en-GB', {
+          date: new Date(bookingDetail.booking.shift_date).toLocaleDateString('en-GB', {
             weekday: 'long',
             day: 'numeric',
             month: 'long',
             year: 'numeric',
           }),
-          startTime: '07:00',
-          endTime: '15:00',
-          siteName: 'Construction Site',
-          siteAddress: 'London, UK',
-          medicName: matchData.matches[0]?.medic_name || 'Assigned Medic',
-          medicRating: matchData.matches[0]?.star_rating || 4.8,
-          clientEmail: 'client@example.com',
+          startTime: bookingDetail.booking.shift_start_time?.slice(0, 5) || '07:00',
+          endTime: bookingDetail.booking.shift_end_time?.slice(0, 5) || '15:00',
+          siteName: bookingDetail.booking.site_name,
+          siteAddress: `${bookingDetail.booking.site_address}, ${bookingDetail.booking.site_postcode}`,
+          medicName: bookingDetail.medic
+            ? `${bookingDetail.medic.first_name} ${bookingDetail.medic.last_name}`
+            : matchData.matches[0]?.medic_name || 'Assigned Medic',
+          medicRating: bookingDetail.medic?.star_rating
+            ? Number(bookingDetail.medic.star_rating)
+            : matchData.matches[0]?.star_rating || 4.8,
+          clientEmail: bookingDetail.client?.contact_email || 'No email on file',
           pricing: {
-            baseRate: 42,
-            shiftHours: 8,
-            hourlyTotal: 336,
-            urgencyPremiumPercent: 0,
-            urgencyAmount: 0,
-            travelSurcharge: 0,
-            subtotal: 336,
-            vat: 67.2,
-            total: 403.2,
+            baseRate: Number(bookingDetail.booking.base_rate),
+            shiftHours: Number(bookingDetail.booking.shift_hours),
+            hourlyTotal: Number(bookingDetail.booking.base_rate) * Number(bookingDetail.booking.shift_hours),
+            urgencyPremiumPercent: bookingDetail.booking.urgency_premium_percent || 0,
+            urgencyAmount: (Number(bookingDetail.booking.base_rate) * Number(bookingDetail.booking.shift_hours) * (bookingDetail.booking.urgency_premium_percent || 0)) / 100,
+            travelSurcharge: Number(bookingDetail.booking.travel_surcharge) || 0,
+            subtotal: Number(bookingDetail.booking.subtotal),
+            vat: Number(bookingDetail.booking.vat),
+            total: Number(bookingDetail.booking.total),
           },
-          is_recurring: false,
-          recurrence_pattern: null,
+          is_recurring: bookingDetail.booking.is_recurring || false,
+          recurrence_pattern: bookingDetail.booking.recurrence_pattern || null,
           recurring_weeks: 0,
         };
 
-        setBookingData(mockBooking);
+        // Calculate recurring weeks if recurring booking
+        if (fetchedBooking.is_recurring && bookingDetail.booking.recurring_until) {
+          const shiftDate = new Date(bookingDetail.booking.shift_date);
+          const recurringUntil = new Date(bookingDetail.booking.recurring_until);
+          const diffDays = Math.ceil((recurringUntil.getTime() - shiftDate.getTime()) / (1000 * 60 * 60 * 24));
+          const weeks = fetchedBooking.recurrence_pattern === 'biweekly' ? Math.floor(diffDays / 14) : Math.floor(diffDays / 7);
+          fetchedBooking.recurring_weeks = weeks;
+        }
+
+        setBookingData(fetchedBooking);
 
         // Step 4: If recurring booking, create child bookings
-        if (mockBooking.is_recurring && mockBooking.recurring_weeks > 0) {
+        if (fetchedBooking.is_recurring && fetchedBooking.recurring_weeks > 0) {
           console.log('🔄 Creating recurring bookings...');
           const recurringResponse = await fetch('/api/bookings/recurring', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               parentBookingId: bookingId,
-              recurrencePattern: mockBooking.recurrence_pattern,
-              weeks: mockBooking.recurring_weeks,
+              recurrencePattern: fetchedBooking.recurrence_pattern,
+              weeks: fetchedBooking.recurring_weeks,
             }),
           });
 
