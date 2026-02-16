@@ -947,6 +947,31 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
   - Normal items batch for 30 seconds to reduce network requests
   - Background task registration is non-fatal (app continues with foreground-only if registration fails)
 
+- **Testing Behavior: Simulator vs. Real Device**
+  - **iOS Simulator**:
+    - ⚠️ Shows warning: "Background tasks are not supported on iOS simulators. Skipped registering task: BACKGROUND_SYNC"
+    - ✅ Background task still registers successfully (logs "[BackgroundSyncTask] Registered successfully")
+    - ✅ Foreground sync works normally (30-second polling when app active)
+    - ⚠️ Background task execution is **simulated only** - won't actually run when app backgrounded
+    - ✅ All other sync functionality works (SyncQueue, PhotoUploadQueue, NetworkMonitor, etc.)
+    - **Expected behavior**: Warning is informational, not an error. App functions normally with foreground sync only.
+
+  - **Real iPhone Device**:
+    - ✅ No simulator warning shown
+    - ✅ Background tasks execute every ~15 minutes when app backgrounded (iOS manages exact timing)
+    - ✅ Full hybrid sync strategy active (30s foreground + 15min background)
+    - ✅ Photos upload in background (respects WiFi-only constraint)
+    - **Testing requirement**: Must test background sync on real device or TestFlight to verify full functionality
+
+  - **How to Test Background Sync on Real Device**:
+    1. Build to physical iPhone: `pnpm ios --device`
+    2. Open app, create treatment with photos while offline
+    3. Background the app (press home button)
+    4. Connect to WiFi
+    5. Wait ~15-20 minutes
+    6. Check Supabase database - treatment should be synced
+    7. Check Supabase Storage - photos should be uploaded
+
 ### Plan 03-02: Progressive Photo Upload Pipeline ✅ **COMPLETED - 2026-02-16**
 - **Progressive Image Compression** (src/utils/imageCompression.ts)
   - 3 quality tiers from single photo URI using expo-image-manipulator
