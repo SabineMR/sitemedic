@@ -143,6 +143,50 @@ serve(async (req) => {
         continue;
       }
 
+      // Validate medic account is GB (required for UK Faster Payments)
+      try {
+        const account = await stripe.accounts.retrieve(medic.stripe_account_id);
+
+        if (account.country !== 'GB') {
+          console.warn(
+            `⚠️ Timesheet ${timesheet.id}: Medic ${medicName} account country is ${account.country}, not GB`
+          );
+          failedCount++;
+          errors.push({
+            timesheetId: timesheet.id,
+            error: `Stripe account country is ${account.country} (expected GB for UK Faster Payments)`,
+            medic: medicName,
+          });
+          continue;
+        }
+
+        // Also verify payouts are actually enabled on the account
+        if (!account.payouts_enabled) {
+          console.warn(
+            `⚠️ Timesheet ${timesheet.id}: Medic ${medicName} payouts not enabled on Stripe account`
+          );
+          failedCount++;
+          errors.push({
+            timesheetId: timesheet.id,
+            error: 'Stripe account payouts not enabled',
+            medic: medicName,
+          });
+          continue;
+        }
+      } catch (accountError: any) {
+        console.error(
+          `⚠️ Timesheet ${timesheet.id}: Failed to retrieve Stripe account for ${medicName}:`,
+          accountError.message
+        );
+        failedCount++;
+        errors.push({
+          timesheetId: timesheet.id,
+          error: `Failed to verify Stripe account: ${accountError.message}`,
+          medic: medicName,
+        });
+        continue;
+      }
+
       // Validate payout amount (should be 71.4% of booking total)
       const expectedPayout = Number(((booking.total * 71.4) / 100).toFixed(2));
       const actualPayout = Number(timesheet.payout_amount);
