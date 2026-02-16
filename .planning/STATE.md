@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 4 of 7 (Web Dashboard)
-Plan: 1 of 6 in current phase
+Plan: 2 of 6 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 04-01-PLAN.md (Dashboard Foundation)
+Last activity: 2026-02-15 — Completed 04-02-PLAN.md (Compliance Score & Weekly Stats)
 
-Progress: [███████████] 93.1% (27/29 plans across Phases 1, 1.5, 2, 3, 4)
+Progress: [███████████] 96.6% (28/29 plans across Phases 1, 1.5, 2, 3, 4)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 27
-- Average duration: 3.6 min
-- Total execution time: 1.74 hours
+- Total plans completed: 28
+- Average duration: 3.7 min
+- Total execution time: 1.84 hours
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: [███████████] 93.1% (27/29 plans across Phases 1
 | 01.5-business-foundation | 4/4 | 10 min | 2.5 min |
 | 02-mobile-core | 9/9 | 50 min | 5.6 min |
 | 03-sync-engine | 7/7 | 24 min | 3.4 min |
-| 04-web-dashboard | 1/6 | 14 min | 14 min |
+| 04-web-dashboard | 2/6 | 20 min | 10 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-03 (3 min), 03-05 (10 min), 03-06 (2 min), 03-07 (2.4 min), 04-01 (14 min)
-- Trend: Phase 4 started - dashboard foundation with Supabase SSR auth, shadcn/ui, responsive sidebar, TanStack Query 60s polling delivered
+- Last 5 plans: 03-05 (10 min), 03-06 (2 min), 03-07 (2.4 min), 04-01 (14 min), 04-02 (6 min)
+- Trend: Phase 4 progressing - compliance score and weekly stats with traffic-light indicator delivered
 
 *Updated after each plan completion*
 
@@ -209,6 +209,12 @@ Recent decisions affecting current work:
 - D-04-01-005: Dashboard at root / (protected), existing admin at /admin (public for backward compatibility)
 - D-04-01-006: ESLint skip during build (pre-existing lint issues in admin pages, not related to Phase 4)
 
+**From Plan 04-02:**
+- D-04-02-001: Use 15-day window for RIDDOR deadline tracking (matches UK HSE reporting requirement)
+- D-04-02-002: Hard-code expiredCerts to 0 (cert tracking deferred to Phase 7, no cert data exists yet)
+- D-04-02-003: Count hospital_referral and sent_home outcomes as overdue follow-ups (7-day window for follow-up verification)
+- D-04-02-004: Calculate unique workers from treatments this week (not from workers table - "on site" implies active this week)
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -243,9 +249,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T04:04:04Z
-Stopped at: Completed 04-01-PLAN.md — Dashboard Foundation (Supabase SSR auth, shadcn/ui components, responsive sidebar navigation, TanStack Query 60s polling)
+Last session: 2026-02-15T22:13:49Z
+Stopped at: Completed 04-02-PLAN.md — Compliance Score & Weekly Stats (traffic-light indicator, 4 weekly stat cards with 60s polling)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) in progress (1/6 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) in progress (2/6 plans)*
