@@ -11,11 +11,11 @@ export interface Treatment {
   medic_id: string;
   injury_type: string;
   body_part: string;
-  severity: 'minor' | 'moderate' | 'severe';
+  severity: 'minor' | 'moderate' | 'major' | 'critical';
   treatment_notes: string | null;
-  outcome: string | null;
+  outcome: 'returned_to_work' | 'sent_home' | 'hospital_referral' | 'ambulance_called' | null;
   is_riddor_reportable: boolean;
-  riddor_confidence: number | null;
+  riddor_confidence: string | null;
   photo_uris: string[] | null;
   signature_uri: string | null;
   created_at: string;
@@ -46,7 +46,7 @@ export interface NearMiss {
   org_id: string;
   reported_by: string;
   category: string;
-  severity: 'low' | 'medium' | 'high';
+  severity: 'low' | 'medium' | 'high' | 'critical';
   description: string | null;
   location: string | null;
   photo_uris: string[] | null;
@@ -69,6 +69,15 @@ export interface SafetyCheck {
   deleted_at: string | null;
 }
 
+export interface Profile {
+  id: string;
+  full_name: string | null;
+}
+
 export interface TreatmentWithWorker extends Treatment {
   worker: Worker | null;
+}
+
+export interface NearMissWithReporter extends NearMiss {
+  reporter: Profile | null;
 }
