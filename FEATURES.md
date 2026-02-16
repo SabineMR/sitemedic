@@ -1325,6 +1325,11 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
   - **Recent Activity Feed** (2/3 width on desktop)
     - Live feed of recent events with icons
     - Activity types: Booking, Issue, Medic, Payment
+    - **Payment activities show currency with USD conversion** 💱 **NEW**
+      - Payment amounts (e.g., weekly payouts) display with interactive CurrencyWithTooltip
+      - Hover over payment amounts to see USD equivalent (matches stat card behavior)
+      - Uses same real-time exchange rate system as dashboard metrics
+      - Example: "Weekly payout processed - £3,200" shows "≈ $4,064.00 USD" on hover
     - Status indicators (✓ success, ! warning, ✗ error)
     - Color-coded status (green, yellow, red)
     - Timestamps (relative: "5 minutes ago")
@@ -3350,123 +3355,463 @@ SELECT generate_location_report(
 
 ---
 
-## Phase 7.5: Territory Management & Auto-Assignment (NEW)
-**Status**: Not started (5 plans)
-**Goal**: Intelligent medic assignment across UK territories
+## Phase 7.5: Intelligent Auto-Scheduling & Medic Management (NEW)
+**Status**: Backend Complete (14 of 19 tasks, 74% done) - UI work remaining
+**Goal**: ConnectStream-style intelligent auto-scheduling with UK compliance enforcement
 
-### Features:
-- **Territory Assignment System**
-  - **UK Postcode Sectors**
-    - Primary geographic unit (~11,232 sectors total)
-    - Format: "SW1A", "N1", "E14" (area + district)
-    - Granular coverage mapping
+### Backend Services Complete (11 Edge Functions)
 
-  - **Primary + Secondary Medic**
-    - Primary medic: First choice for bookings in sector
-    - Secondary medic: Backup when primary unavailable
-    - Multiple sectors per medic (overlapping territories)
+#### 1. **Core Auto-Scheduling**
+- ✅ **auto-assign-medic-v2** - 7-factor intelligent matching with UK compliance
+  - **7-Factor Scoring Algorithm** (weighted ranking):
+    1. Distance (25%) - Google Maps drive time, prefer <30 min
+    2. Qualifications (20%) - Required certs (confined space, trauma specialist)
+    3. Availability (15%) - Calendar integration, time-off requests
+    4. Utilization (15%) - Load balancing, prefer <70% weekly utilization
+    5. Rating (10%) - Client ratings, prefer 4.5+ stars
+    6. Performance (10%) - On-time percentage, completion rate
+    7. Fairness (5%) - Equitable shift distribution (shifts offered vs worked)
 
-  - **Hybrid Territory Model**
-    - Postcode sector + max travel time
-    - Example: "SW1A within 30 minutes"
-    - Accommodates traffic patterns and geography
+  - **6-Layer Filtering** (eliminates unqualified medics):
+    1. Available for work (active status)
+    2. Required certifications (hard validation)
+    3. Not double-booked (date + time overlap check)
+    4. Medic availability calendar (approved time-off blocks)
+    5. UK Working Time Regulations compliance (calls PostgreSQL function)
+    6. Sufficient rest period (11-hour minimum between shifts)
 
-  - **Admin Assignment UI**
-    - Drag-drop medics to postcode sectors
-    - Visual coverage map
-    - Reassignment with effective date
+  - **Confidence-Based Categorization**:
+    - Score ≥80% → Auto-assign immediately (no human review)
+    - Score 50-79% → Flag for admin review before assignment
+    - Score <50% → Requires manual medic selection
 
-- **Auto-Assignment Algorithm**
-  - **Ranking Criteria** (in order):
-    1. **Territory Match** - Medic assigned to postcode sector (primary > secondary)
-    2. **Distance** - Google Maps drive time (prefer <30 minutes)
-    3. **Utilization** - Prefer medics <70% utilization (load balancing)
-    4. **Qualifications** - Must have required certs (confined space, trauma, etc.)
-    5. **Availability** - Check calendar integration (Google/Outlook iCal feed)
-    6. **Rating** - Prefer higher-rated medics (4.5+ stars)
+  - **Comprehensive Audit Logging**:
+    - Every decision tracked in `auto_schedule_logs` table
+    - Includes: All candidates considered, scores, filters failed, final decision
+    - Confidence score stored with booking for quality analysis
 
-  - **Out-of-Territory Logic**
-    - IF primary medic unavailable AND secondary medic exists:
-      - Calculate travel time from secondary medic's home to site
-      - IF travel time >60 minutes:
-        - Compare: Travel bonus (£2/mile beyond 30 miles) vs Room/board (overnight stay)
-        - IF cost >50% shift value: Recommend deny
-      - Present to admin for approval with cost breakdown
+- ✅ **auto-assign-all** - Bulk processing for "Auto-Schedule All" button
+  - Processes all unassigned bookings in batch
+  - Configurable limit (default: 10 bookings per run)
+  - Returns categorized results: auto_assigned, flagged_for_review, requires_manual
+  - Perfect for daily scheduling runs or clearing backlog
 
-  - **Hybrid Approval**
-    - Auto-confirm: Standard shifts (7+ days notice, medic available, <30 min travel)
-    - Manual review: Emergency, out-of-territory, special requirements
+#### 2. **UK Compliance Enforcement** (HARD BLOCKS - No Overrides)
+- ✅ **48-Hour Weekly Limit** (UK Working Time Regulations 1998)
+  - PostgreSQL function: `check_working_time_compliance()`
+  - Calculates rolling 7-day window from shift start
+  - Includes all confirmed and in-progress shifts
+  - **CRITICAL**: Blocks assignment if medic would exceed 48 hours
+  - Prevents legal violations (HSE can fine £5,000+ per breach)
 
-  - **Candidate Transparency**
-    - Client sees ranked candidates (if multiple options)
-    - Explanation: "Closest medic (15 min drive), 4.8 stars, available"
-    - Builds trust in auto-matching
+- ✅ **11-Hour Rest Period** (Mandatory break between shifts)
+  - Checks time between end of last shift and start of new shift
+  - **CRITICAL**: Blocks assignment if rest period <11 hours
+  - Accounts for overnight shifts and cross-day boundaries
+  - Protects medic safety and prevents fatigue-related incidents
 
-- **Coverage Gap Detection**
-  - **Rejection Rate Monitoring**
-    - Track booking rejection rate per territory
-    - Alert when >10% rejection rate for 3+ consecutive weeks
-    - Display: "Coverage gap detected in East London (E1-E20)"
+- ✅ **Double-Booking Prevention**
+  - Checks for overlapping shifts on same date
+  - Includes all statuses: confirmed, in_progress, urgent_broadcast
+  - **CRITICAL**: Blocks assignment if time overlap detected
 
-  - **Utilization Monitoring**
-    - Track medic utilization per week
-    - Alert when >80% utilization for 3+ weeks
-    - Display: "High utilization in South West (SW sectors, 85%)"
+- ✅ **Qualification Validation**
+  - Confined space certification (when `confined_space_required = true`)
+  - Trauma specialist certification (when `trauma_specialist_required = true`)
+  - **CRITICAL**: Blocks assignment if medic lacks required certs
+  - Prevents sending unqualified medics to dangerous sites
 
-  - **Fulfillment Rate**
-    - Track % of bookings successfully filled
-    - Alert when fulfillment rate <90%
-    - Display: "Low fulfillment in Birmingham (B sectors, 85%)"
+#### 3. **Real-Time Conflict Detection**
+- ✅ **conflict-detector** - 6 conflict checks before assignment
+  - **Check 1: Double-booking** (severity: critical)
+    - Searches for overlapping shifts on same date
+    - Returns existing shift details for UI display
+    - Cannot override
 
-  - **Hiring Triggers**
-    - Trigger conditions:
-      - Utilization >80% for 3+ weeks, OR
-      - Fulfillment rate <90%, OR
-      - Rejection rate >10% for 3+ weeks
-    - Recommendation: "Hire medic in North London (N1-N22 sectors)"
-    - Include: Estimated demand, revenue opportunity, break-even analysis
+  - **Check 2: Qualification mismatch** (severity: critical)
+    - Validates confined space and trauma certs
+    - Lists missing certifications
+    - Cannot override
 
-- **Visual Coverage Map**
-  - **Choropleth Map**
-    - Color-coded by utilization:
-      - Green: <50% (capacity available)
-      - Yellow: 50-80% (healthy utilization)
-      - Red: >80% (hiring needed)
-    - Click postcode sector → see details
+  - **Check 3: Overtime violation** (severity: critical)
+    - Calls `check_working_time_compliance()` function
+    - Returns current weekly hours and violation details
+    - Cannot override (UK law)
 
-  - **Sector Detail View**
-    - Assigned medic (primary, secondary)
-    - Utilization % (weekly, monthly)
-    - Recent bookings in sector
-    - Rejection rate
-    - Average travel time to jobs
+  - **Check 4: Insufficient rest** (severity: critical)
+    - Calculates hours between shifts
+    - Displays last shift location and end time
+    - Cannot override (UK law)
 
-  - **Admin Drag-Drop Reassignment**
-    - Drag medic from one sector to another
-    - Supports overlapping territories (medic can cover multiple sectors)
-    - Effective date for reassignment
-    - Notification to medic about new territory
+  - **Check 5: Travel time infeasible** (severity: warning)
+    - Checks back-to-back shifts with insufficient travel time
+    - Uses `travel_time_cache` table for accuracy
+    - Can override (medic may choose to rush)
 
-  - **Real-Time Updates**
-    - Map refreshes every 5 minutes
-    - Shows pending bookings, confirmed bookings, in-progress shifts
-    - Live utilization recalculation
+  - **Check 6: Time-off conflict** (severity: critical)
+    - Checks approved time-off requests from `medic_availability`
+    - Displays reason for time-off
+    - Cannot override (respects medic preferences)
 
-- **Calendar Integration**
-  - **iCal Feed Support**
-    - Google Calendar sync (read-only)
-    - Outlook Calendar sync (read-only)
-    - iCloud Calendar sync (read-only)
+  - **Returns**:
+    - `can_assign`: Boolean (true if no critical conflicts)
+    - `conflicts`: Array of conflict objects with type, severity, message, details
+    - `recommendation`: Human-readable guidance for admin
 
-  - **Availability Checking**
-    - Check medic calendar before auto-assignment
-    - Respect medic time-off blocks
-    - Prevent double-booking
+#### 4. **Urgent Shift Handling** (Last-Minute <24 Hours)
+- ✅ **last-minute-broadcast** - Uber-style first-to-accept system
+  - **Auto-Applied Urgency Premium**:
+    - <1 hour: 75% premium (e.g., £30/hr → £52.50/hr)
+    - 1-3 hours: 50% premium (e.g., £30/hr → £45/hr)
+    - 3-6 hours: 20% premium (e.g., £30/hr → £36/hr)
+    - 6-24 hours: 0% premium (standard rate)
 
-  - **Calendar Event Creation**
-    - Auto-create calendar event when booking confirmed
-    - .ics file attached to confirmation email
-    - Includes: Shift details, site address, client contact
+  - **Broadcast Process**:
+    1. Admin triggers broadcast for unassigned booking
+    2. System validates shift is <24 hours away
+    3. Calculates and applies urgency premium
+    4. Finds all eligible medics (opted-in to rush jobs, within 30 miles)
+    5. Sends simultaneous push notifications to all eligible medics
+    6. Displays boosted rate and "First to accept gets shift!" message
+
+  - **Race Condition Handling**:
+    - Atomic database update with `WHERE medic_id IS NULL` clause
+    - Only one medic can accept (others get "Shift already taken" error)
+    - Response time tracking (minutes from broadcast to acceptance)
+    - Automatic confirmation notification to winning medic
+
+  - **Fallback Expansion**:
+    - 15-minute timeout: If no response, expand radius to 45 miles
+    - 30-minute timeout: Alert admin for manual intervention
+    - Prevents urgent shifts from going unfilled
+
+#### 5. **Medic Self-Service Features**
+- ✅ **medic-availability** - Time-off requests and availability calendar
+  - **Time-Off Requests**:
+    - Medic submits date range with reason (vacation, sick leave, training, personal)
+    - Status: pending → approved/denied by admin
+    - Blocks auto-assignment during approved time-off
+    - Email notifications on approval/denial
+
+  - **Availability Calendar**:
+    - Medic sets recurring unavailable days (e.g., "unavailable every Tuesday")
+    - One-time unavailable dates (e.g., "Feb 20 for appointment")
+    - Overrides auto-assignment (prevents offers on blocked dates)
+
+  - **Admin Approval Workflow**:
+    - Admin views pending requests in dashboard
+    - Can approve/deny with notes
+    - Batch approval for multiple dates
+    - Audit trail of all decisions
+
+- ✅ **shift-swap** - Peer-to-peer shift marketplace
+  - **Swap Offer Process**:
+    1. Medic offers existing confirmed shift for swap
+    2. Provides reason (sick, family emergency, scheduling conflict)
+    3. System broadcasts to all qualified medics
+    4. Accepting medic must have required certifications
+    5. Admin reviews and approves/denies swap
+
+  - **Qualification Validation**:
+    - Checks accepting medic has confined space cert (if required)
+    - Checks accepting medic has trauma cert (if required)
+    - Flags to admin if accepting medic not qualified
+    - Admin can override for training purposes
+
+  - **Swap States**:
+    - `pending` → Offered, waiting for medic to accept
+    - `pending_approval` → Medic accepted, waiting for admin approval
+    - `approved` → Admin approved, booking reassigned
+    - `denied` → Admin denied, original assignment stands
+    - `cancelled` → Requesting medic cancelled offer
+
+#### 6. **Client Self-Service Features**
+- ✅ **client-preferences** - Favorite medics, ratings, and specific requests
+  - **Favorite Medics**:
+    - Client can add medics to favorites list
+    - Store notes (e.g., "Always on time", "Great with workers")
+    - Track total shifts together and average rating
+    - Favorites get 95% priority score in auto-matching
+
+  - **Medic Ratings** (1-5 stars):
+    - Client rates medic after shift completion
+    - Optional feedback text
+    - Updates medic's `star_rating` in real-time (running average)
+    - Ratings affect future auto-assignment ranking (10% weight)
+
+  - **Request Specific Medic**:
+    - Client requests favorite medic for booking
+    - System runs full conflict detection
+    - If no conflicts: Auto-assign with 95% match score (high priority)
+    - If conflicts: Returns detailed conflict messages, suggests alternatives
+    - Bypasses normal auto-matching algorithm
+
+#### 7. **Recurring Booking Generation**
+- ✅ **recurring-booking-generator** - Weekly/monthly pattern creation
+  - **Pattern Types**:
+    - Weekly (every 7 days)
+    - Biweekly (every 14 days)
+    - Monthly (same day of month, e.g., "1st and 15th")
+    - Custom days of week (e.g., "Every Monday, Wednesday, Friday")
+
+  - **Configuration**:
+    - Start date and end date (or number of occurrences)
+    - Days of week selector (1=Monday, 7=Sunday)
+    - Exception dates (skip bank holidays, company closures)
+    - Shift template selection (predefined time + cert requirements)
+    - Auto-assign option (run auto-scheduler on generated bookings)
+
+  - **Parent-Child Tracking**:
+    - Original booking is "parent" (stores pattern config)
+    - Generated bookings are "children" (reference parent ID)
+    - Edit parent → option to update all future children
+    - Delete parent → option to cancel all future children
+
+#### 8. **Multi-Channel Notifications**
+- ✅ **notification-service** - Push, Email, SMS with deduplication
+  - **Notification Types**:
+    - `shift_assigned` - Medic assigned to booking
+    - `shift_reminder` - 24-hour reminder before shift
+    - `urgent_shift_available` - Broadcast notification (<24 hours)
+    - `shift_swap_offered` - Another medic offered swap
+    - `time_off_approved` - Time-off request approved
+    - `time_off_denied` - Time-off request denied
+    - `certification_expiring` - Cert expires in 30/14 days
+
+  - **Delivery Channels**:
+    - **Push Notifications** (Expo Push API)
+      - Requires medic to have `expo_push_token` in `medic_preferences`
+      - Instant delivery to mobile app
+      - Supports rich notifications (actions, images)
+
+    - **Email** (SendGrid)
+      - Uses `email` field from medics table
+      - HTML templates with booking details
+      - Includes .ics calendar attachment
+
+    - **SMS** (Twilio)
+      - Uses `phone` field from medics table
+      - Short message with link to mobile app
+      - Reserved for urgent shifts only (cost control)
+
+  - **Medic Preferences** (stored in `medic_preferences` table):
+    - `push_notifications_enabled` - Toggle push on/off
+    - `email_notifications_enabled` - Toggle email on/off
+    - `sms_notifications_enabled` - Toggle SMS on/off
+    - Per-notification-type preferences (future enhancement)
+
+  - **Deduplication**:
+    - Tracks sent notifications in `schedule_notifications` table
+    - Checks before sending: "Already sent this booking+type combo?"
+    - Prevents spam (e.g., multiple reminders for same shift)
+    - 24-hour deduplication window
+
+#### 9. **Certification Management**
+- ✅ **cert-expiry-checker** - Daily scheduled job (cron)
+  - **Monitoring**:
+    - Runs daily at 2 AM UTC (via pg_cron or external scheduler)
+    - Checks all medic certifications for expiry dates
+    - Categories: 30-day notice, 14-day warning, expired
+
+  - **Actions**:
+    - **30 days before expiry**: Send email/push notification reminder
+    - **14 days before expiry**: Send urgent warning (daily reminders)
+    - **On expiry**: Auto-disable medic (`available_for_work = false`)
+    - **On expiry**: Remove from all future auto-assignment candidates
+
+  - **Admin Alerts**:
+    - Dashboard shows expiring certs for next 30 days
+    - Email digest to admin every Monday (upcoming expirations)
+    - Critical alert if medic has active shifts but expired cert
+
+#### 10. **Schedule Board Data API**
+- ✅ **schedule-board-api** - Data for admin drag-and-drop calendar UI
+  - **Week View** (`?view=week&date=2026-03-03`):
+    - Returns 7-day grid (Monday-Sunday)
+    - All bookings for the week with medic and client details
+    - Bookings organized by date (easy rendering)
+    - Medic utilization stats:
+      - `weekly_hours`: Total hours worked this week
+      - `utilization_percent`: % of 40-hour week (0-100%)
+      - `shifts_this_week`: Count of shifts
+    - Summary stats: total bookings, unassigned count
+
+  - **Month View** (`?view=month&date=2026-03-01`):
+    - Returns entire month of bookings
+    - Bookings grouped by date
+    - Daily stats for each date:
+      - `total`: Total bookings
+      - `confirmed`: Confirmed bookings
+      - `pending`: Unassigned bookings
+      - `urgent`: Urgent bookings with premium
+    - Monthly summary: total/confirmed/pending counts
+
+  - **Medic Stats**:
+    - Real-time utilization calculation (shifts ÷ 40 hours)
+    - Star rating and certification status
+    - Available for work flag
+    - Sorted by first name (consistent ordering)
+
+### Database Schema (13 New Tables + 2 Functions)
+
+#### Tables:
+1. **medic_availability** - Time-off requests and availability calendar
+   - Tracks date, is_available (boolean), request_type (vacation/sick/training/personal)
+   - Status: pending/approved/denied
+   - Admin approval workflow with approved_by and approved_at
+
+2. **medic_preferences** - Medic settings and preferences
+   - Google Calendar integration (refresh token, sync enabled)
+   - Notification preferences (push, email, SMS toggles)
+   - Rush job opt-in (available_for_rush_jobs boolean)
+   - Max weekly hours limit (default: 48)
+   - Fair distribution tracking (shifts_offered vs shifts_worked)
+
+3. **shift_swaps** - Peer-to-peer swap marketplace
+   - Links booking_id, requesting_medic_id, accepting_medic_id
+   - Status: pending/pending_approval/approved/denied/cancelled
+   - Swap reason and admin notes
+   - Qualification validation flags
+
+4. **auto_schedule_logs** - Audit trail for all auto-assignments
+   - Booking ID, assigned medic, match score, confidence score
+   - All candidates considered (JSON array with scores)
+   - Filters failed (JSON object with reasons)
+   - Decision timestamp and algorithm version
+
+5. **shift_templates** - Reusable shift configurations
+   - Template name (e.g., "Standard 8-Hour Day Shift")
+   - Time range (08:00-16:00)
+   - Certification requirements (confined_space, trauma)
+   - Default rate and break duration
+   - Used by recurring bookings
+
+6. **schedule_notifications** - Deduplication tracking
+   - Booking ID, medic ID, notification type
+   - Sent at timestamp, delivery status
+   - Channel used (push/email/sms)
+   - Prevents duplicate notifications
+
+7. **client_favorite_medics** - Client-medic relationships
+   - Client ID, medic ID, favorited_at timestamp
+   - Notes field (client's private notes about medic)
+   - Total shifts together count
+   - Average client rating (running average)
+
+8. **booking_conflicts** - Conflict detection results
+   - Booking ID, medic ID, conflict type
+   - Severity (critical/warning), can_override (boolean)
+   - Details (JSON with conflict-specific data)
+   - Detected at timestamp
+
+#### PostgreSQL Functions:
+1. **check_working_time_compliance(medic_id, shift_start, shift_end)**
+   - Returns: is_compliant (boolean), violation_type, violation_details, current_weekly_hours
+   - Checks 48-hour weekly limit (rolling 7-day window)
+   - Checks 11-hour rest period (time since last shift)
+   - Called by auto-assign and conflict-detector
+
+2. **calculate_auto_match_score(medic_id, booking_id)**
+   - Returns: total_score (0-100), breakdown (JSON with factor scores)
+   - Implements 7-factor weighted scoring algorithm
+   - Distance: 25%, Qualifications: 20%, Availability: 15%, Utilization: 15%, Rating: 10%, Performance: 10%, Fairness: 5%
+   - Called by auto-assign-medic-v2 for ranking
+
+### Remaining Work (5 UI Tasks)
+
+#### Admin Dashboard UI:
+- **Task #7**: Drag-and-drop schedule board
+  - Uses `schedule-board-api` for data
+  - React/Vite with @dnd-kit library
+  - Real-time conflict detection on drag (calls `conflict-detector`)
+  - Visual indicators for conflicts (red border, tooltip)
+
+- **Task #13**: Analytics dashboard with utilization heatmap
+  - Data available from `schedule-board-api` and database queries
+  - Visualization: D3.js or Recharts
+  - Metrics: Utilization %, fulfillment rate, avg match score
+
+#### Mobile App UI:
+- **Task #11**: "My Schedule" tab for medics
+  - List view of assigned shifts (upcoming, past, pending swaps)
+  - Accept urgent shifts (calls `last-minute-broadcast?action=accept`)
+  - Request time-off (calls `medic-availability?action=request_time_off`)
+  - Offer shift swap (calls `shift-swap?action=offer_swap`)
+
+#### Google Calendar Integration:
+- **Task #2**: OAuth flow for medic Google accounts
+  - Google Calendar API OAuth 2.0 flow
+  - Store refresh token in `medic_preferences.google_calendar_refresh_token`
+  - Read availability from Google Calendar (prevent double-booking)
+
+- **Task #18**: Two-way sync (read availability, write shifts)
+  - Sync medic's Google Calendar to find busy times
+  - Create calendar events when shift assigned
+  - Update events when shift changed/cancelled
+  - Delete events when booking cancelled
+
+### API Endpoints (All Backend Ready)
+
+```bash
+# Auto-assign single booking
+POST /functions/v1/auto-assign-medic-v2
+{\"booking_id\": \"uuid\"}
+
+# Bulk auto-assign all unassigned
+POST /functions/v1/auto-assign-all
+{\"limit\": 10}
+
+# Check for conflicts before assigning
+POST /functions/v1/conflict-detector
+{\"booking_id\": \"uuid\", \"medic_id\": \"uuid\", ...}
+
+# Broadcast urgent shift
+POST /functions/v1/last-minute-broadcast?action=broadcast
+{\"booking_id\": \"uuid\"}
+
+# Medic accepts urgent shift
+POST /functions/v1/last-minute-broadcast?action=accept
+{\"booking_id\": \"uuid\", \"medic_id\": \"uuid\"}
+
+# Request time off
+POST /functions/v1/medic-availability?action=request_time_off
+{\"medic_id\": \"uuid\", \"start_date\": \"2026-03-01\", \"end_date\": \"2026-03-05\"}
+
+# Approve time off
+POST /functions/v1/medic-availability?action=approve_time_off
+{\"medic_id\": \"uuid\", \"dates\": [\"2026-03-01\"], \"approved_by\": \"admin_uuid\"}
+
+# Offer shift swap
+POST /functions/v1/shift-swap?action=offer_swap
+{\"booking_id\": \"uuid\", \"requesting_medic_id\": \"uuid\", \"swap_reason\": \"Sick\"}
+
+# Add favorite medic
+POST /functions/v1/client-preferences?action=add_favorite
+{\"client_id\": \"uuid\", \"medic_id\": \"uuid\", \"notes\": \"Always on time\"}
+
+# Rate medic
+POST /functions/v1/client-preferences?action=rate_medic
+{\"client_id\": \"uuid\", \"medic_id\": \"uuid\", \"booking_id\": \"uuid\", \"rating\": 5}
+
+# Request specific medic
+POST /functions/v1/client-preferences?action=request_medic
+{\"booking_id\": \"uuid\", \"requested_medic_id\": \"uuid\"}
+
+# Create recurring booking
+POST /functions/v1/recurring-booking-generator
+{\"client_id\": \"uuid\", \"pattern\": \"weekly\", \"days_of_week\": [1,3,5], ...}
+
+# Get week view for schedule board
+GET /functions/v1/schedule-board-api?view=week&date=2026-03-03
+
+# Run cert expiry check
+GET /functions/v1/cert-expiry-checker
+```
+
+### Documentation Files
+- **SCHEDULING_API_DOCS.md** - Complete API reference with request/response examples
+- **BACKEND_COMPLETE.md** - Backend completion summary (14 of 19 tasks done)
+- **FEATURES.md** - This file (comprehensive feature documentation)
 
 ---
 
@@ -3679,9 +4024,9 @@ SELECT generate_location_report(
 
 ---
 
-**Document Version**: 1.1
-**Last Updated**: 2026-02-15 (Added Phase 4.6: Customer Onboarding & Contract Management)
-**Next Review**: After Phase 1.5 completion
+**Document Version**: 1.2
+**Last Updated**: 2026-02-15 (Updated Phase 7.5 with complete auto-scheduling backend documentation - 11 Edge Functions, 13 tables, 2 PostgreSQL functions)
+**Next Review**: After Phase 7.5 UI completion
 
 ---
 
