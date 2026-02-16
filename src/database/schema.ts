@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb'
 
 export const schema = appSchema({
-  version: 1,
+  version: 2,
   tables: [
     tableSchema({
       name: 'treatments',
@@ -10,11 +10,15 @@ export const schema = appSchema({
         { name: 'org_id', type: 'string', isIndexed: true },
         { name: 'worker_id', type: 'string', isIndexed: true },
         { name: 'medic_id', type: 'string' },
+        { name: 'reference_number', type: 'string', isIndexed: true }, // SITE-YYYYMMDD-NNN format (TREAT-09)
+        { name: 'status', type: 'string' }, // draft/complete (for workflow state)
         { name: 'injury_type', type: 'string' },
-        { name: 'body_part', type: 'string' },
+        { name: 'body_part', type: 'string', isOptional: true },
+        { name: 'mechanism_of_injury', type: 'string', isOptional: true }, // How the injury occurred (TREAT-04)
         { name: 'severity', type: 'string' }, // minor/moderate/major/critical
-        { name: 'treatment_notes', type: 'string' },
-        { name: 'outcome', type: 'string' },
+        { name: 'treatment_types', type: 'string', isOptional: true }, // JSON array of selected treatment IDs (TREAT-05)
+        { name: 'treatment_notes', type: 'string', isOptional: true },
+        { name: 'outcome', type: 'string', isOptional: true },
         { name: 'is_riddor_reportable', type: 'boolean' },
         { name: 'photo_uris', type: 'string' }, // JSON array stored as string
         { name: 'signature_uri', type: 'string', isOptional: true },
@@ -35,7 +39,16 @@ export const schema = appSchema({
         { name: 'phone', type: 'string', isOptional: true },
         { name: 'emergency_contact_name', type: 'string', isOptional: true },
         { name: 'emergency_contact_phone', type: 'string', isOptional: true },
+        { name: 'emergency_contact_relationship', type: 'string', isOptional: true },
         { name: 'health_notes', type: 'string', isOptional: true },
+        { name: 'allergies', type: 'string', isOptional: true },
+        { name: 'current_medications', type: 'string', isOptional: true },
+        { name: 'pre_existing_conditions', type: 'string', isOptional: true },
+        { name: 'blood_type', type: 'string', isOptional: true },
+        { name: 'cscs_card_number', type: 'string', isOptional: true },
+        { name: 'cscs_expiry_date', type: 'number', isOptional: true },
+        { name: 'certifications', type: 'string', isOptional: true }, // JSON array
+        { name: 'is_incomplete', type: 'boolean' },
         { name: 'consent_given', type: 'boolean' },
         { name: 'consent_date', type: 'number', isOptional: true },
         { name: 'created_at', type: 'number' },

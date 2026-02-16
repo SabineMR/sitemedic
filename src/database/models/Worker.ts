@@ -20,6 +20,15 @@ export default class Worker extends Model {
   @field('emergency_contact_name') emergencyContactName?: string
   @field('emergency_contact_phone') emergencyContactPhone?: string
   @field('health_notes') healthNotes?: string
+  @field('allergies') allergies?: string
+  @field('current_medications') currentMedications?: string
+  @field('pre_existing_conditions') preExistingConditions?: string
+  @field('blood_type') bloodType?: string
+  @field('cscs_card_number') cscsCardNumber?: string
+  @field('cscs_expiry_date') cscsExpiryDate?: number
+  @field('certifications') certifications?: string // JSON array: [{type: string, expiry: number}]
+  @field('emergency_contact_relationship') emergencyContactRelationship?: string
+  @field('is_incomplete') isIncomplete!: boolean // True if created via quick-add
   @field('consent_given') consentGiven!: boolean
   @field('consent_date') consentDate?: number
   @field('created_at') createdAt!: number
