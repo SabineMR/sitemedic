@@ -3,7 +3,9 @@
  * Phase 6: RIDDOR Auto-Flagging - Plan 04
  */
 
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
+
+const supabase = createClient();
 
 export interface RIDDORIncident {
   id: string;

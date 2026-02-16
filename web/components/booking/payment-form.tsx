@@ -7,9 +7,11 @@
 
 import { useState, useEffect } from 'react';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { stripePromise } from '@/lib/stripe/client';
+import { loadStripe } from '@/lib/stripe/client';
 import { Button } from '@/components/ui/button';
 import type { BookingFormData, PricingBreakdown } from '@/lib/booking/types';
+
+const stripePromise = loadStripe();
 
 interface PaymentFormProps {
   clientId: string;

@@ -12,11 +12,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { validatePayout } from '@/lib/payouts/calculator';
-import Stripe from 'stripe';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia',
-});
+import { stripe } from '@/lib/stripe/server';
 
 export async function POST(request: Request) {
   try {

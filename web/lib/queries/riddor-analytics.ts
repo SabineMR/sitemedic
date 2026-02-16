@@ -3,7 +3,9 @@
  * Phase 6: RIDDOR Auto-Flagging - Plan 06
  */
 
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
+
+const supabase = createClient();
 
 export interface OverrideStats {
   totalAutoFlags: number;

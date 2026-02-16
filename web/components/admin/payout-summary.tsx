@@ -66,7 +66,7 @@ export default function PayoutSummary() {
       setData(data);
 
       // Pre-select all medics with valid Stripe accounts
-      const validMedics = new Set(
+      const validMedics = new Set<string>(
         data.medics
           .filter(
             (m: MedicPayout) => m.stripe_account_id && m.stripe_onboarding_complete
@@ -151,8 +151,8 @@ export default function PayoutSummary() {
     );
   }
 
-  const medicsWith Issues = data.medics.filter(
-    (m) => !m.stripe_account_id || !m.stripe_onboarding_complete
+  const medicsWithIssues = data.medics.filter(
+    (m: MedicPayout) => !m.stripe_account_id || !m.stripe_onboarding_complete
   );
 
   const selectedTotal = data.medics
