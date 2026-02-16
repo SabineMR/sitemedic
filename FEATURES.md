@@ -644,10 +644,10 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
   - Fixed all import paths in app directory files (../../src → ../src, etc.)
   - Fixed import paths in tasks/backgroundSyncTask.ts (../../src/services → ../src/services)
   - Fixed import paths in components/forms/WorkerSearchPicker.tsx (../../../src → ../../src)
-  - Fixed React version compatibility (downgraded React 19.2.4 → 18.2.0 to match React Native 0.81.5)
-    - Updated react from ^19.2.4 to 18.2.0
-    - Updated react-dom from 19.1.0 to 18.2.0
-    - Updated @types/react from ^19.2.14 to ~18.2.0
+  - Fixed React version compatibility for Expo SDK 54 (requires React 19.1.0 exactly)
+    - Updated react from ^19.2.4 to 19.1.0 (Expo SDK 54 requirement)
+    - Updated react-dom from 19.1.0 to 19.1.0 (already correct)
+    - Updated @types/react to ~19.1.0 (matches React version)
   - Removed custom `index.js` (backed up to `index.backup.js`)
   - Original root App.tsx backed up to `App.backup.tsx` for reference
   - **All Phase 2 features are now accessible via 4-tab navigation**:
