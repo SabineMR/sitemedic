@@ -629,12 +629,23 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
 **Status**: ✅ **COMPLETED** - All plans complete (10/10 plans) - 2026-02-15
 **Goal**: Treatment logging, worker profiles, near-miss capture, daily safety checks (100% offline with gloves-on usability)
 
-### iOS Mobile App Setup ✅ **COMPLETED - 2026-02-15**
+### iOS Mobile App Setup ✅ **COMPLETED - 2026-02-16**
 - **iOS Native Build Configuration**
   - Generated iOS native project using `expo run:ios`
   - CocoaPods dependency installation (95+ pods including Expo modules)
   - Xcode project configuration with bundle identifier: `com.sitemedic.app`
   - iOS 26.2 simulator compatibility (iPhone 15)
+
+- **✅ App Entry Point Fixed - 2026-02-16**
+  - Updated `index.js` to use `expo-router/entry` (was using custom App.tsx that only showed placeholder)
+  - Mobile app with full tab navigation now loads correctly
+  - Background sync task registration moved to `mobile/app/_layout.tsx`
+  - Original root App.tsx backed up to `App.backup.tsx` for reference
+  - **All Phase 2 features are now accessible via 4-tab navigation**:
+    - Home tab: Quick actions, daily check prompts, worker lookup, stats
+    - Treatments tab: Treatment list, quick log, full treatment forms
+    - Workers tab: Worker registry with search and certification status
+    - Safety tab: Near-miss reporting and daily safety checks
 
 - **pnpm Module Resolution Fix**
   - Created custom `index.js` entry point to bypass pnpm symlink issues

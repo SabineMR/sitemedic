@@ -11,6 +11,9 @@
  * Configures StatusBar for outdoor readability (dark-content).
  */
 
+// MUST be imported at top level to register background task at global scope
+import '../tasks/backgroundSyncTask';
+
 import React, { useEffect, useState } from 'react';
 import { View, StatusBar } from 'react-native';
 import { Stack } from 'expo-router';
