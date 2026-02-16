@@ -1,4 +1,4 @@
--- 020_riddor_deadline_cron.sql
+-- 021_riddor_deadline_cron.sql
 -- RIDDOR Deadline Tracking Cron Job
 -- Phase 6: RIDDOR Auto-Flagging - Plan 05
 --
@@ -13,6 +13,9 @@
 -- Enable required extensions (if not already enabled)
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE EXTENSION IF NOT EXISTS pg_net;
+
+-- Drop existing job if it exists (for migration idempotency)
+SELECT cron.unschedule('riddor-deadline-checker');
 
 -- Schedule RIDDOR deadline checker
 -- Cron expression: '0 9 * * *' = Every day at 09:00 UTC (9 AM UK time)
