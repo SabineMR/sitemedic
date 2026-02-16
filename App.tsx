@@ -1,3 +1,6 @@
+// MUST be imported at top level to register background task at global scope
+import './mobile/tasks/backgroundSyncTask'
+
 import React, { useState, useEffect } from 'react'
 import { StatusBar } from 'expo-status-bar'
 import { StyleSheet, Text, View, ActivityIndicator } from 'react-native'
@@ -5,6 +8,9 @@ import { AuthProvider } from './src/contexts/AuthContext'
 import { SyncProvider } from './src/contexts/SyncContext'
 import { SyncStatusIndicator } from './src/components/SyncStatusIndicator'
 import { OfflineBanner } from './src/components/OfflineBanner'
+import { SyncErrorDisplay } from './src/components/SyncErrorDisplay'
+import { RiddorSyncAlert } from './src/components/RiddorSyncAlert'
+import { PhotoUploadProgress } from './src/components/PhotoUploadProgress'
 import { initDatabase } from './src/lib/watermelon'
 
 export default function App() {
@@ -50,7 +56,15 @@ export default function App() {
     <AuthProvider>
       <SyncProvider>
         <View style={styles.appContainer}>
+          {/* Sync feedback layer - renders at top of screen */}
+          <RiddorSyncAlert />
+          <SyncErrorDisplay />
+          <PhotoUploadProgress />
+
+          {/* Existing OfflineBanner */}
           <OfflineBanner />
+
+          {/* Existing SyncStatusIndicator and navigation */}
           <View style={styles.container}>
             <Text style={styles.text}>SiteMedic</Text>
             <SyncStatusIndicator />
