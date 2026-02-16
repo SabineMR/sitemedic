@@ -1,46 +1,37 @@
-/**
- * POST /api/bookings/calculate-cost
- * Phase 6.5-05: Calculate out-of-territory cost with Google Maps integration
- *
- * Flow:
- * 1. Fetch medic home postcode from database
- * 2. Check travel_time_cache for existing route data
- * 3. If cache miss: call Google Maps Distance Matrix API
- * 4. Calculate travel bonus vs room/board cost
- * 5. Return recommendation with cost breakdown
- */
-
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { calculateOutOfTerritoryCost } from '@/lib/bookings/out-of-territory';
 
-export const dynamic = 'force-dynamic';
+const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
 
-interface CostCalculationRequest {
+interface CalculateCostRequest {
   medicId: string;
   sitePostcode: string;
   shiftHours: number;
   baseRate: number;
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
-    const body: CostCalculationRequest = await request.json();
 
-    // Validate required fields
-    if (!body.medicId || !body.sitePostcode || !body.shiftHours || !body.baseRate) {
-      return NextResponse.json(
-        { error: 'Missing required fields: medicId, sitePostcode, shiftHours, baseRate' },
-        { status: 400 }
-      );
+    // Authenticate user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Validate postcode format (basic UK postcode validation)
-    const postcodeRegex = /^[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}$/i;
-    if (!postcodeRegex.test(body.sitePostcode.trim())) {
+    const body: CalculateCostRequest = await req.json();
+    const { medicId, sitePostcode, shiftHours, baseRate } = body;
+
+    // Validate inputs
+    if (!medicId || !sitePostcode || !shiftHours || !baseRate) {
       return NextResponse.json(
-        { error: 'Invalid UK postcode format' },
+        { error: 'Missing required fields: medicId, sitePostcode, shiftHours, baseRate' },
         { status: 400 }
       );
     }
@@ -48,124 +39,98 @@ export async function POST(request: NextRequest) {
     // Fetch medic home postcode
     const { data: medic, error: medicError } = await supabase
       .from('medics')
-      .select('home_postcode, first_name, last_name')
-      .eq('id', body.medicId)
+      .select('home_postcode')
+      .eq('id', medicId)
       .single();
 
-    if (medicError || !medic) {
+    if (medicError || !medic?.home_postcode) {
       return NextResponse.json(
-        { error: 'Medic not found' },
+        { error: 'Medic not found or missing home postcode' },
         { status: 404 }
       );
     }
 
     const medicPostcode = medic.home_postcode;
-    const sitePostcode = body.sitePostcode.trim().toUpperCase();
 
-    // Check cache for existing route data
-    const { data: cachedRoute, error: cacheError } = await supabase
+    // Check travel_time_cache for existing result
+    const { data: cachedTravel } = await supabase
       .from('travel_time_cache')
       .select('*')
       .eq('origin_postcode', medicPostcode)
       .eq('destination_postcode', sitePostcode)
       .gt('expires_at', new Date().toISOString())
-      .order('cached_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .single();
 
     let distance_miles: number;
     let travel_time_minutes: number;
     let cached = false;
 
-    if (cachedRoute && !cacheError) {
-      // Use cached data
-      distance_miles = cachedRoute.distance_miles;
-      travel_time_minutes = cachedRoute.travel_time_minutes;
+    if (cachedTravel) {
+      // Cache hit
+      console.log('✅ Cache hit - using cached travel data');
+      distance_miles = Number(cachedTravel.distance_miles);
+      travel_time_minutes = cachedTravel.travel_time_minutes;
       cached = true;
     } else {
-      // Cache miss: call Google Maps Distance Matrix API
-      const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+      // Cache miss - call Google Maps Distance Matrix API
+      console.log('❌ Cache miss - calling Google Maps API');
 
-      if (!GOOGLE_MAPS_API_KEY) {
-        console.error('GOOGLE_MAPS_API_KEY not configured');
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(
+          medicPostcode
+        )}&destinations=${encodeURIComponent(sitePostcode)}&units=imperial&key=${GOOGLE_MAPS_API_KEY}`
+      );
+
+      if (!response.ok) {
+        return NextResponse.json({ error: 'Google Maps API request failed' }, { status: 500 });
+      }
+
+      const data = await response.json();
+
+      const element = data.rows?.[0]?.elements?.[0];
+      if (element?.status !== 'OK') {
         return NextResponse.json(
-          { error: 'Google Maps API key not configured' },
-          { status: 500 }
+          { error: 'Could not calculate route - invalid postcode or unreachable destination' },
+          { status: 400 }
         );
       }
 
-      try {
-        const mapsResponse = await fetch(
-          `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(medicPostcode)}&destinations=${encodeURIComponent(sitePostcode)}&units=imperial&key=${GOOGLE_MAPS_API_KEY}`
-        );
+      // Convert meters to miles, seconds to minutes
+      distance_miles = Number((element.distance.value / 1609.34).toFixed(2));
+      travel_time_minutes = Math.round(element.duration.value / 60);
 
-        if (!mapsResponse.ok) {
-          throw new Error(`Google Maps API returned ${mapsResponse.status}`);
-        }
+      // Cache result for 7 days
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
 
-        const mapsData = await mapsResponse.json();
+      await supabase.from('travel_time_cache').insert({
+        origin_postcode: medicPostcode,
+        destination_postcode: sitePostcode,
+        travel_time_minutes,
+        distance_miles,
+        cached_at: new Date().toISOString(),
+        expires_at: expiresAt.toISOString(),
+      });
 
-        if (mapsData.status !== 'OK') {
-          console.error('Google Maps API error:', mapsData.status, mapsData.error_message);
-          return NextResponse.json(
-            { error: `Google Maps API error: ${mapsData.status}` },
-            { status: 400 }
-          );
-        }
-
-        const element = mapsData.rows[0]?.elements[0];
-        if (!element || element.status !== 'OK') {
-          return NextResponse.json(
-            { error: 'Could not calculate route between postcodes' },
-            { status: 400 }
-          );
-        }
-
-        // Convert meters to miles, seconds to minutes
-        distance_miles = Number((element.distance.value / 1609.34).toFixed(2));
-        travel_time_minutes = Math.round(element.duration.value / 60);
-
-        // Cache result for 7 days
-        await supabase.from('travel_time_cache').insert({
-          origin_postcode: medicPostcode,
-          destination_postcode: sitePostcode,
-          travel_time_minutes,
-          distance_miles,
-          cached_at: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        });
-
-        cached = false;
-      } catch (apiError) {
-        console.error('Error calling Google Maps API:', apiError);
-        return NextResponse.json(
-          { error: 'Failed to calculate route distance' },
-          { status: 500 }
-        );
-      }
+      cached = false;
     }
 
-    // Calculate shift value (with VAT)
-    const shift_value = Number((body.shiftHours * body.baseRate * 1.2).toFixed(2));
+    // Calculate shift value (base rate * hours * 1.2 for VAT)
+    const shift_value = Number((shiftHours * baseRate * 1.2).toFixed(2));
 
     // Calculate out-of-territory cost
-    const calculation = calculateOutOfTerritoryCost(
-      distance_miles,
-      travel_time_minutes,
-      shift_value
-    );
+    const calculation = calculateOutOfTerritoryCost(distance_miles, travel_time_minutes, shift_value);
 
     return NextResponse.json({
       calculation,
       cached,
-      medicName: `${medic.first_name} ${medic.last_name}`,
       medicPostcode,
       sitePostcode,
     });
   } catch (error) {
-    console.error('Error in /api/bookings/calculate-cost:', error);
+    console.error('Error calculating cost:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
