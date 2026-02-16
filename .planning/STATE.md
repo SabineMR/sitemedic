@@ -8,18 +8,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 **Current focus:** Phase 2 - Mobile Core
 
 ## Current Position
-Phase: 6.5 of 7 (Payments & Payouts) — In progress
-Plan: 9 of 10 in current phase
-Status: In progress
-Last activity: 2026-02-16 — Completed 06.5-09-PLAN.md (Stripe Onboarding Webhook & GB Validation)
-Progress: [███████████████] 100% (55/55 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6, 6.5)
+Phase: 6.5 of 7 (Payments & Payouts) — Complete
+Plan: 10 of 10 in current phase
+Status: Phase complete
+Last activity: 2026-02-16 — Completed 06.5-10-PLAN.md (Out-of-Territory Workflow Integration)
+Progress: [███████████████] 100% (56/56 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6, 6.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 55
+- Total plans completed: 56
 - Average duration: 4.4 min
-- Total execution time: 4.01 hours
+- Total execution time: 4.06 hours
 
 **By Phase:**
 
@@ -34,11 +34,11 @@ Progress: [███████████████] 100% (55/55 plans acro
 | 04.6-customer-onboarding | 7/7 | 52 min | 7.4 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
-| 06.5-payments-payouts | 9/10 | 41 min | 4.6 min |
+| 06.5-payments-payouts | 10/10 | 44 min | 4.4 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.5-06 (1 min), 06.5-07 (2 min), 06.5-08 (2 min), 06.5-09 (2 min), upcoming: 06.5-10
-- Trend: Phase 6.5 nearing completion - Stripe webhook and GB validation added, 1 plan remaining
+- Last 5 plans: 06.5-07 (2 min), 06.5-08 (2 min), 06.5-09 (2 min), 06.5-10 (3 min), Phase 6.5 complete
+- Trend: Phase 6.5 complete - Out-of-territory workflow integration finished
 
 *Updated after each plan completion*
 
