@@ -1,5 +1,5 @@
 import * as BackgroundTask from 'expo-background-task';
-import { BACKGROUND_SYNC_TASK } from '../../mobile/tasks/backgroundSyncTask';
+import { BACKGROUND_SYNC_TASK } from '../../tasks/backgroundSyncTask';
 
 export async function registerBackgroundSync(): Promise<void> {
   try {
