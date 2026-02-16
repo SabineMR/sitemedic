@@ -14,6 +14,9 @@ import { useTreatments } from '@/lib/queries/treatments';
 import { DataTable } from './data-table';
 import { treatmentColumns } from './treatments-columns';
 import { DateRangeFilter } from './date-range-filter';
+import { ExportButtons } from './export-buttons';
+import { exportTreatmentsCSV } from '@/lib/utils/export-csv';
+import { exportTreatmentsPDF } from '@/lib/utils/export-pdf';
 import {
   Select,
   SelectContent,
@@ -89,43 +92,51 @@ export function TreatmentsTable({ initialData }: TreatmentsTableProps) {
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4">
-        <DateRangeFilter
-          onDateRangeChange={(from, to) => setDateRange({ from, to })}
-        />
+      {/* Filters and Export */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-4">
+          <DateRangeFilter
+            onDateRangeChange={(from, to) => setDateRange({ from, to })}
+          />
 
-        <Select value={severityFilter} onValueChange={setSeverityFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Severity" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Severities</SelectItem>
-            <SelectItem value="minor">Minor</SelectItem>
-            <SelectItem value="moderate">Moderate</SelectItem>
-            <SelectItem value="major">Major</SelectItem>
-            <SelectItem value="critical">Critical</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={severityFilter} onValueChange={setSeverityFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Severity" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Severities</SelectItem>
+              <SelectItem value="minor">Minor</SelectItem>
+              <SelectItem value="moderate">Moderate</SelectItem>
+              <SelectItem value="major">Major</SelectItem>
+              <SelectItem value="critical">Critical</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Select value={outcomeFilter} onValueChange={setOutcomeFilter}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Outcome" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Outcomes</SelectItem>
-            <SelectItem value="returned_to_work">Returned to Work</SelectItem>
-            <SelectItem value="sent_home">Sent Home</SelectItem>
-            <SelectItem value="hospital_referral">Hospital Referral</SelectItem>
-            <SelectItem value="ambulance_called">Ambulance Called</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={outcomeFilter} onValueChange={setOutcomeFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Outcome" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Outcomes</SelectItem>
+              <SelectItem value="returned_to_work">Returned to Work</SelectItem>
+              <SelectItem value="sent_home">Sent Home</SelectItem>
+              <SelectItem value="hospital_referral">Hospital Referral</SelectItem>
+              <SelectItem value="ambulance_called">Ambulance Called</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Input
-          placeholder="Search worker name..."
-          value={workerSearch}
-          onChange={(e) => setWorkerSearch(e.target.value)}
-          className="w-[200px]"
+          <Input
+            placeholder="Search worker name..."
+            value={workerSearch}
+            onChange={(e) => setWorkerSearch(e.target.value)}
+            className="w-[200px]"
+          />
+        </div>
+
+        {/* Export buttons */}
+        <ExportButtons
+          onExportCSV={() => exportTreatmentsCSV(filteredTreatments)}
+          onExportPDF={() => exportTreatmentsPDF(filteredTreatments)}
         />
       </div>
 

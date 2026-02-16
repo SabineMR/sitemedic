@@ -5,6 +5,8 @@ import { Worker } from '@/types/database.types';
 import { useWorkers } from '@/lib/queries/workers';
 import { DataTable } from './data-table';
 import { workersColumns } from './workers-columns';
+import { ExportButtons } from './export-buttons';
+import { exportWorkersCSV } from '@/lib/utils/export-csv';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -56,42 +58,47 @@ export function WorkersTable({ initialData }: WorkersTableProps) {
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4">
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">Company</label>
-          <Input
-            placeholder="Search company..."
-            value={companyFilter}
-            onChange={(e) => setCompanyFilter(e.target.value)}
-            className="w-[200px]"
-          />
+      {/* Filters and Export */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-4">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Company</label>
+            <Input
+              placeholder="Search company..."
+              value={companyFilter}
+              onChange={(e) => setCompanyFilter(e.target.value)}
+              className="w-[200px]"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Role</label>
+            <Input
+              placeholder="Search role..."
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="w-[200px]"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Cert Status</label>
+            <Select value={certStatusFilter} onValueChange={setCertStatusFilter}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="expiring">Expiring Soon</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">Role</label>
-          <Input
-            placeholder="Search role..."
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="w-[200px]"
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">Cert Status</label>
-          <Select value={certStatusFilter} onValueChange={setCertStatusFilter}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="expiring">Expiring Soon</SelectItem>
-              <SelectItem value="expired">Expired</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Export button (CSV only for workers) */}
+        <ExportButtons onExportCSV={() => exportWorkersCSV(filteredData)} />
       </div>
 
       {/* Table */}
