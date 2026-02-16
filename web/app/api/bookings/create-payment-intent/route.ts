@@ -101,7 +101,6 @@ export async function POST(request: NextRequest) {
         special_notes: body.specialNotes,
         is_recurring: body.isRecurring,
         recurrence_pattern: body.recurrencePattern,
-        recurring_weeks: body.recurringWeeks,
         // Pricing fields
         base_rate: body.pricing.baseRate,
         urgency_premium_percent: body.pricing.urgencyPremiumPercent,
@@ -127,7 +126,7 @@ export async function POST(request: NextRequest) {
     // STEP 2: Fetch client to get/create Stripe customer
     const { data: client, error: clientError } = await supabase
       .from('clients')
-      .select('stripe_customer_id, email, company_name')
+      .select('stripe_customer_id, contact_email, company_name')
       .eq('id', body.clientId)
       .single();
 
@@ -143,7 +142,7 @@ export async function POST(request: NextRequest) {
     // Create Stripe customer if doesn't exist
     if (!stripeCustomerId) {
       const customer = await stripe.customers.create({
-        email: client.email,
+        email: client.contact_email,
         name: client.company_name,
         metadata: {
           client_id: body.clientId,

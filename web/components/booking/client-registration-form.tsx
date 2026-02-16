@@ -66,8 +66,10 @@ export function ClientRegistrationForm({ onRegistered }: ClientRegistrationFormP
           id: authData.user.id, // Use auth user ID as client ID
           company_name: companyName,
           contact_name: contactName,
-          email,
-          phone,
+          contact_email: email,
+          contact_phone: phone,
+          billing_address: 'To be provided',
+          billing_postcode: 'TBD',
           payment_terms: 'prepay',
           credit_limit: 0,
           outstanding_balance: 0,

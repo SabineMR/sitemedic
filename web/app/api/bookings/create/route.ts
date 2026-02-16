@@ -128,7 +128,6 @@ export async function POST(request: NextRequest) {
         special_notes: body.specialNotes,
         is_recurring: body.isRecurring,
         recurrence_pattern: body.recurrencePattern,
-        recurring_weeks: body.recurringWeeks,
         // Pricing fields
         base_rate: body.pricing.baseRate,
         urgency_premium_percent: body.pricing.urgencyPremiumPercent,
