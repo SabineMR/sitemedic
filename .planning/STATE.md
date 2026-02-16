@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 5 of 7 (PDF Generation)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 05-01-PLAN.md (PDF Generation Core)
+Last activity: 2026-02-16 — Completed 05-02-PLAN.md (PDF Storage and Email Delivery)
 
-Progress: [███████████░] 100% (30/30 plans across Phases 1, 1.5, 2, 3, 4, 5)
+Progress: [███████████░] 100% (31/31 plans across Phases 1, 1.5, 2, 3, 4, 5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 30
+- Total plans completed: 31
 - Average duration: 3.9 min
-- Total execution time: 2.04 hours
+- Total execution time: 2.09 hours
 
 **By Phase:**
 
@@ -32,11 +32,11 @@ Progress: [███████████░] 100% (30/30 plans across Phases
 | 02-mobile-core | 9/9 | 50 min | 5.6 min |
 | 03-sync-engine | 7/7 | 24 min | 3.4 min |
 | 04-web-dashboard | 4/6 | 41 min | 10.3 min |
-| 05-pdf-generation | 1/3 | 4.5 min | 4.5 min |
+| 05-pdf-generation | 2/3 | 7.5 min | 3.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-02 (6 min), 04-03 (12 min), 04-04 (9 min), 04-05 (15 min), 05-01 (4.5 min)
-- Trend: Phase 5 started - PDF generation core with React-PDF components and Edge Function delivered
+- Last 5 plans: 04-03 (12 min), 04-04 (9 min), 04-05 (15 min), 05-01 (4.5 min), 05-02 (3 min)
+- Trend: Phase 5 progressing - PDF storage and email delivery pipeline complete
 
 *Updated after each plan completion*
 
@@ -250,6 +250,15 @@ Recent decisions affecting current work:
 - D-05-01-008: Parallel data fetching with Promise.all for <10 second generation constraint
 - D-05-01-009: Brand colors: primary #003366 (dark navy), accent #2563EB (blue), success/warning/danger for compliance
 
+**From Plan 05-02:**
+- D-05-02-001: 7-day signed URL expiry for security and UX balance
+- D-05-02-002: Upsert strategy for weekly_reports (unique on org_id + week_ending)
+- D-05-02-003: Email sent via Resend API (not SMTP) for reliability
+- D-05-02-004: PDF attached to email + download link for accessibility
+- D-05-02-005: Graceful degradation if RESEND_API_KEY missing (PDF still generated)
+- D-05-02-006: GET endpoint regenerates expired signed URLs automatically
+- D-05-02-007: Cron trigger returns JSON, manual trigger returns PDF buffer
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -277,6 +286,8 @@ Recent decisions affecting current work:
 - Add Google Maps API key to Supabase secrets (GOOGLE_MAPS_API_KEY)
 - Enable Distance Matrix API in Google Cloud Console
 - Deploy Supabase migration 014_storage_buckets.sql to create treatment-photos bucket (Plan 03-02)
+- Add Resend API key to Supabase secrets (RESEND_API_KEY) and verify sitemedic.co.uk domain (Plan 05-02)
+- Deploy Supabase migration 015_safety_reports_storage.sql to create safety-reports bucket and weekly_reports table (Plan 05-02)
 
 ### Blockers/Concerns
 
@@ -284,8 +295,8 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T05:01:02Z
-Stopped at: Completed 05-01-PLAN.md — PDF Generation Core (React-PDF components, Edge Function handler, parallel data queries)
+Last session: 2026-02-16T05:07:11Z
+Stopped at: Completed 05-02-PLAN.md — PDF Storage and Email Delivery (storage bucket, signed URLs, Resend email, tracking table)
 Resume file: None
 
 ---
