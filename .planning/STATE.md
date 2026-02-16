@@ -114,6 +114,15 @@ Recent decisions affecting current work:
 - D-05.5-03-004: Yellow left border + warning icon for hours discrepancies (visual scan identifies issues without reading every row)
 - D-05.5-03-005: Removed toast notifications temporarily (sonner not installed, optimistic updates provide visual feedback)
 
+**From Plan 05.5-06:**
+- D-05.5-06-001: Payment reliability score formula: ((successful - late_payments * 2) / total) * 100, clamped 0-100
+- D-05.5-06-002: Net 30 upgrade requires active status, <=2 late payments, min £500 credit limit
+- D-05.5-06-003: At Risk clients defined as late_payments >2 OR outstanding balance >80% credit limit
+- D-05.5-06-004: Admin overview uses parallel queries (Promise.all) for faster load times
+- D-05.5-06-005: 60-second polling interval for all admin real-time metrics
+- D-05.5-06-006: Monthly revenue calculated from platform_fee sum on completed bookings this month
+- D-05.5-06-007: Weekly payouts from timesheets with payout_status='paid' and paid_at >= 7 days ago
+
 **From Plan 01.5-04:**
 - D-01.5-04-001: Store postcodes at AREA+DISTRICT level (outward code) not full sector for territory granularity
 - D-01.5-04-002: Embed compact area definitions in Edge Function, generate sectors programmatically at runtime to avoid size/timeout
@@ -349,35 +358,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T06:23:26Z
-Stopped at: Completed 04.5-02-PLAN.md — Customer Booking Flow (calendar picker, live pricing, recurring bookings)
+Last session: 2026-02-16T06:30:17Z
+Stopped at: Completed 05.5-06-PLAN.md — Client Management with Net 30 Upgrade & Admin Overview (reliability scoring, payment terms upgrade/downgrade, real-time metrics)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) in progress (1/3 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) in progress (3/4 plans)*
-- D-05.5-04-005: Color-coded utilization bands green <50%, yellow 50-80%, red >80% (matches existing admin patterns, legend + numeric percentages for accessibility)
-
-### Pending Todos
-
-- Add Stripe API keys to Supabase secrets (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PUBLISHABLE_KEY)
-- Configure Stripe webhook endpoint in Stripe Dashboard for 4 event types
-- Add Google Maps API key to Supabase secrets (GOOGLE_MAPS_API_KEY)
-- Enable Distance Matrix API in Google Cloud Console
-- Deploy Supabase migration 014_storage_buckets.sql to create treatment-photos bucket (Plan 03-02)
-- Add Resend API key to Supabase secrets (RESEND_API_KEY) and verify sitemedic.co.uk domain (Plan 05-02)
-- Deploy Supabase migration 015_safety_reports_storage.sql to create safety-reports bucket and weekly_reports table (Plan 05-02)
-- Deploy Supabase migration 016_weekly_report_cron.sql to enable pg_cron scheduled job (Plan 05-03)
-- Configure Vault secrets in Supabase Dashboard: project_url and service_role_key for pg_cron job authentication (Plan 05-03)
-
-### Blockers/Concerns
-
-None. External API key configuration pending but does not block development.
-
-## Session Continuity
-
-Last session: 2026-02-16T06:24:47Z
-Stopped at: Completed 05.5-04-PLAN.md — Territory Coverage Dashboard (Leaflet map, color-coded utilization, coverage gap alerts)
-Resume file: None
-
----
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) in progress (2/3 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (4/4 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) in progress (2/3 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans)*
