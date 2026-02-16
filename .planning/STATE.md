@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 3 of 7 (Sync Engine)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 03-01-PLAN.md
+Last activity: 2026-02-16 — Completed 03-02-PLAN.md
 
-Progress: [████████░░] 82.6% (19/23 plans across Phases 1, 1.5, 2, 3)
+Progress: [████████░░] 87.0% (20/23 plans across Phases 1, 1.5, 2, 3)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 19
+- Total plans completed: 20
 - Average duration: 3.6 min
-- Total execution time: 1.17 hours
+- Total execution time: 1.24 hours
 
 **By Phase:**
 
@@ -30,11 +30,11 @@ Progress: [████████░░] 82.6% (19/23 plans across Phases 1, 1
 | 01-foundation | 5/5 | 20 min | 4 min |
 | 01.5-business-foundation | 4/4 | 10 min | 2.5 min |
 | 02-mobile-core | 9/9 | 50 min | 5.6 min |
-| 03-sync-engine | 1/3 | 3 min | 3 min |
+| 03-sync-engine | 2/3 | 7 min | 3.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-06 (session), 02-07 (session), 02-09 (8 min), 02-10 (5 min), 03-01 (3 min)
-- Trend: Phase 3 started - fast dependency installation and infrastructure creation
+- Last 5 plans: 02-07 (session), 02-09 (8 min), 02-10 (5 min), 03-01 (3 min), 03-02 (4 min)
+- Trend: Phase 3 progressing efficiently - photo upload infrastructure established
 
 *Updated after each plan completion*
 
@@ -163,6 +163,13 @@ Recent decisions affecting current work:
 - D-03-01-002: Background task registration is non-fatal (logs error if fails, foreground sync is primary strategy)
 - D-03-01-003: Photo uploads deferred to Plan 03-03 integration phase (different constraints: WiFi-only, progressive upload)
 
+**From Plan 03-02:**
+- D-03-02-001: Progressive photo tiers: thumbnail 150px/50%, preview 800px/70%, full original/90%
+- D-03-02-002: WiFi-only constraint for full-quality uploads, thumbnails/previews use any connection
+- D-03-02-003: Max 2 concurrent uploads to avoid overwhelming device/network
+- D-03-02-004: Photo uploads persist in WatermelonDB sync_queue with tableName='photo_uploads'
+- D-03-02-005: Use 'base64' string encoding instead of FileSystem.EncodingType for expo-file-system v19
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -189,6 +196,7 @@ Recent decisions affecting current work:
 - Configure Stripe webhook endpoint in Stripe Dashboard for 4 event types
 - Add Google Maps API key to Supabase secrets (GOOGLE_MAPS_API_KEY)
 - Enable Distance Matrix API in Google Cloud Console
+- Deploy Supabase migration 014_storage_buckets.sql to create treatment-photos bucket (Plan 03-02)
 
 ### Blockers/Concerns
 
@@ -196,9 +204,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T03:19:42Z
-Stopped at: Completed 03-01-PLAN.md — Sync Infrastructure
+Last session: 2026-02-16T03:20:47Z
+Stopped at: Completed 03-02-PLAN.md — Progressive Photo Upload Pipeline
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) in progress (1/3 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) in progress (2/3 plans)*
