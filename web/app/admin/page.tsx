@@ -13,8 +13,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import CurrencyWithTooltip from '../../components/CurrencyWithTooltip';
+import { useAdminOverview, RecentActivity } from '@/lib/queries/admin/overview';
 import {
   Users,
   Calendar,
@@ -31,90 +31,35 @@ import {
   XCircle,
 } from 'lucide-react';
 
-interface DashboardStats {
-  activeMedics: number;
-  todayBookings: number;
-  pendingBookings: number;
-  issuesCount: number;
-  totalRevenue: number; // IMPORTANT: Display with currency={true} in StatCard for USD conversion
-  weeklyPayouts: number; // IMPORTANT: Display with currency={true} in StatCard for USD conversion
-}
-
-interface RecentActivity {
-  id: string;
-  type: 'booking' | 'issue' | 'medic' | 'payment';
-  message: string;
-  timestamp: string;
-  status?: 'success' | 'warning' | 'error';
-  amount?: number; // For payment activities - enables CurrencyWithTooltip with USD conversion
-}
-
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<DashboardStats>({
-    activeMedics: 0,
-    todayBookings: 0,
-    pendingBookings: 0,
-    issuesCount: 0,
-    totalRevenue: 0,
-    weeklyPayouts: 0,
-  });
+  const { data: overview, isLoading, error } = useAdminOverview();
 
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 flex items-center justify-center">
+        <div className="text-white text-xl">Loading dashboard...</div>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 flex items-center justify-center">
+        <div className="text-red-400 text-xl">Failed to load dashboard data</div>
+      </div>
+    );
+  }
 
-  const loadDashboardData = async () => {
-    // TODO: Replace with actual Supabase queries
-    setStats({
-      activeMedics: 12,
-      todayBookings: 8,
-      pendingBookings: 3,
-      issuesCount: 2,
-      totalRevenue: 8450,
-      weeklyPayouts: 3200,
-    });
-
-    setRecentActivity([
-      {
-        id: '1',
-        type: 'booking',
-        message: 'New booking from ABC Construction - London E1',
-        timestamp: '5 minutes ago',
-        status: 'success',
-      },
-      {
-        id: '2',
-        type: 'issue',
-        message: 'Low battery alert for Sarah Johnson',
-        timestamp: '12 minutes ago',
-        status: 'warning',
-      },
-      {
-        id: '3',
-        type: 'medic',
-        message: 'Mike Williams completed shift at City Tower',
-        timestamp: '1 hour ago',
-        status: 'success',
-      },
-      {
-        id: '4',
-        type: 'payment',
-        message: 'Weekly payout processed',
-        amount: 3200,
-        timestamp: '2 hours ago',
-        status: 'success',
-      },
-      {
-        id: '5',
-        type: 'booking',
-        message: 'Booking cancellation - XYZ Development',
-        timestamp: '3 hours ago',
-        status: 'error',
-      },
-    ]);
-  };
+  // Ensure overview data exists
+  if (!overview) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 flex items-center justify-center">
+        <div className="text-gray-400 text-xl">No data available</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
@@ -134,37 +79,37 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
           <StatCard
             label="Active Medics"
-            value={stats.activeMedics}
+            value={overview.activeMedics}
             icon={<Users className="w-5 h-5" />}
-            trend="+2 from yesterday"
+            trend="Available for work"
             color="blue"
           />
           <StatCard
             label="Today's Bookings"
-            value={stats.todayBookings}
+            value={overview.todayBookings}
             icon={<Calendar className="w-5 h-5" />}
-            trend="3 completed"
+            trend="Shifts today"
             color="green"
           />
           <StatCard
             label="Pending Bookings"
-            value={stats.pendingBookings}
+            value={overview.pendingBookings}
             icon={<Clock className="w-5 h-5" />}
             trend="Awaiting assignment"
             color="yellow"
-            highlight={stats.pendingBookings > 0}
+            highlight={overview.pendingBookings > 0}
           />
           <StatCard
             label="Active Issues"
-            value={stats.issuesCount}
+            value={overview.issuesCount}
             icon={<AlertTriangle className="w-5 h-5" />}
             trend="Require attention"
             color="red"
-            highlight={stats.issuesCount > 0}
+            highlight={overview.issuesCount > 0}
           />
           <StatCard
             label="Revenue (MTD)"
-            value={stats.totalRevenue}
+            value={overview.totalRevenue}
             icon={<DollarSign className="w-5 h-5" />}
             trend="Month to date"
             color="purple"
@@ -172,9 +117,9 @@ export default function AdminDashboard() {
           />
           <StatCard
             label="Weekly Payouts"
-            value={stats.weeklyPayouts}
+            value={overview.weeklyPayouts}
             icon={<CreditCard className="w-5 h-5" />}
-            trend="Last payout"
+            trend="Last 7 days"
             color="cyan"
             currency={true}
           />
@@ -192,7 +137,7 @@ export default function AdminDashboard() {
               </div>
               <div className="p-6">
                 <div className="space-y-3">
-                  {recentActivity.map((activity) => (
+                  {overview.recentActivity.map((activity) => (
                     <ActivityItem key={activity.id} activity={activity} />
                   ))}
                 </div>
