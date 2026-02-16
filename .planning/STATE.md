@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 5.5 of 7 (Admin Operations) — In progress
-Plan: 1 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 05.5-01-PLAN.md (Bookings Management with Approval Workflow)
+Last activity: 2026-02-16 — Completed 05.5-03-PLAN.md (Timesheet Batch Approval for Friday Payout)
 
-Progress: [████████████░] 95% (37/39 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5)
+Progress: [████████████░] 97% (38/39 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 37
-- Average duration: 3.9 min
-- Total execution time: 2.43 hours
+- Total plans completed: 38
+- Average duration: 4.0 min
+- Total execution time: 2.51 hours
 
 **By Phase:**
 
@@ -34,11 +34,11 @@ Progress: [████████████░] 95% (37/39 plans across Phas
 | 04-web-dashboard | 6/6 | 46 min | 7.7 min |
 | 04.5-marketing-booking | 1/3 | 10 min | 10 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
-| 05.5-admin-operations | 1/4 | 5.7 min | 5.7 min |
+| 05.5-admin-operations | 3/4 | 10.7 min | 3.6 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-03 (4 min), 05-04 (2 min), 04.5-01 (10 min), 05.5-01 (5.7 min)
-- Trend: Admin operations phase started - Bookings approval with bulk operations and optimistic updates
+- Last 5 plans: 05-04 (2 min), 04.5-01 (10 min), 05.5-01 (5.7 min), 05.5-03 (5 min)
+- Trend: Admin operations phase - Batch approval patterns with PostgreSQL bulk upsert (10-100x faster than N+1 queries)
 
 *Updated after each plan completion*
 
@@ -106,6 +106,13 @@ Recent decisions affecting current work:
 - D-01.5-03-006: Deny recommendation when cost >50% of shift value to prevent unprofitable bookings
 - D-01.5-03-007: All out-of-territory bookings require admin approval regardless of cost
 - D-01.5-03-008: Cache cleanup scheduled daily at 3 AM UTC via pg_cron (manual fallback provided)
+
+**From Plan 05.5-03:**
+- D-05.5-03-001: Use single Supabase upsert() for batch timesheet approval (20 timesheets <5s, vs 5-10s with N individual UPDATEs)
+- D-05.5-03-002: TanStack Query onMutate for optimistic updates (instant UI feedback vs 1-2s server round-trip)
+- D-05.5-03-003: Payout summary card shows total/medic count/timesheet count before approval (financial transparency prevents accidental large payouts)
+- D-05.5-03-004: Yellow left border + warning icon for hours discrepancies (visual scan identifies issues without reading every row)
+- D-05.5-03-005: Removed toast notifications temporarily (sonner not installed, optimistic updates provide visual feedback)
 
 **From Plan 01.5-04:**
 - D-01.5-04-001: Store postcodes at AREA+DISTRICT level (outward code) not full sector for territory granularity
@@ -325,9 +332,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T06:12:27Z
-Stopped at: Completed 05.5-02-PLAN.md — Medic Management Dashboard (roster table with utilization bars, territory assignments, availability toggle)
+Last session: 2026-02-16T06:14:41Z
+Stopped at: Completed 05.5-03-PLAN.md — Timesheet Batch Approval for Friday Payout (bulk upsert, select-all, payout summary, optimistic updates)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) in progress (1/3 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) in progress (2/4 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) in progress (1/3 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) in progress (3/4 plans)*
