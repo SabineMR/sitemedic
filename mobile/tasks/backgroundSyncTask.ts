@@ -12,12 +12,10 @@ TaskManager.defineTask(BACKGROUND_SYNC_TASK, async () => {
     // Photo uploads handled separately in Plan 03-02
     // Will be added here after PhotoUploadQueue is created
 
-    return result.failed === 0
-      ? TaskManager.BackgroundFetchResult.NewData
-      : TaskManager.BackgroundFetchResult.Failed;
+    // Return void - task result is communicated via expo-background-task registration
   } catch (error) {
     console.error('[BackgroundSync] Task failed:', error);
-    return TaskManager.BackgroundFetchResult.Failed;
+    throw error; // Re-throw to mark task as failed
   }
 });
 
