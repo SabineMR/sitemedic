@@ -19,6 +19,7 @@ import { Q } from '@nozbe/watermelondb'
 import { supabase } from '../lib/supabase'
 import NetInfo from '@react-native-community/netinfo'
 import SyncQueueItem from '../database/models/SyncQueueItem'
+import * as Crypto from 'expo-crypto'
 
 export class SyncQueue {
   private isProcessing = false
@@ -41,12 +42,14 @@ export class SyncQueue {
     priority: number = 1
   ): Promise<void> {
     const database = getDatabase()
+    const idempotencyKey = Crypto.randomUUID()
 
     await database.write(async () => {
       await database.collections.get<SyncQueueItem>('sync_queue').create((item) => {
         item.operation = operation
         item.tableName = tableName
         item.recordId = recordId
+        item.idempotencyKey = idempotencyKey
         item.payload = JSON.stringify(payload)
         item.priority = priority
         item.retryCount = 0
@@ -187,8 +190,40 @@ export class SyncQueue {
 
     switch (item.operation) {
       case 'create': {
-        const { data, error } = await supabase.from(item.tableName as any).insert(payload).select()
-        if (error) throw error
+        // Idempotency: client_id is a client-generated UUID included in every create payload.
+        // If the server has a unique constraint on client_id, retrying this create will
+        // result in a conflict (23505) instead of a duplicate record.
+        // Server-side: Add `client_id UUID UNIQUE` column to Supabase tables in a future migration.
+        // For now, client_id is sent but ignored by server until the migration is applied.
+        const createPayload = { ...payload, client_id: item.idempotencyKey }
+        const { data, error } = await supabase.from(item.tableName as any).insert(createPayload).select()
+
+        if (error) {
+          // If duplicate detected (unique constraint on client_id), treat as success
+          if (error.code === '23505' && error.message?.includes('client_id')) {
+            console.log(`[SyncQueue] Duplicate create detected for ${item.tableName} (client_id: ${item.idempotencyKey}), treating as success`)
+            // Still try to get the existing server record's ID
+            const { data: existing } = await supabase
+              .from(item.tableName as any)
+              .select('id')
+              .eq('client_id', item.idempotencyKey as any)
+              .single()
+            if (existing) {
+              // Update local server_id
+              const database = getDatabase()
+              const localRecord = await database.collections
+                .get(item.tableName)
+                .find(item.recordId)
+              await database.write(async () => {
+                await localRecord.update((record: any) => {
+                  record.serverId = (existing as any).id
+                })
+              })
+            }
+            return // Don't throw - treat as success
+          }
+          throw error
+        }
 
         // Update local WatermelonDB record's server_id with returned UUID
         if (data && data.length > 0) {
