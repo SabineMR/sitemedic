@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { createBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { NearMissWithReporter } from '@/types/database.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -26,7 +26,7 @@ export async function fetchNearMisses(supabase: SupabaseClient): Promise<NearMis
  * Client-side hook for near-misses with polling
  */
 export function useNearMisses(initialData: NearMissWithReporter[]) {
-  const supabase = createBrowserClient();
+  const supabase = createClient();
 
   return useQuery({
     queryKey: ['near-misses'],
