@@ -16,11 +16,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1.5: Business Operations Foundation** (INSERTED) - Database schema for bookings, territories, clients, payments; Stripe Connect; Google Maps API; UK postcodes
 - [x] **Phase 2: Mobile Core** - Treatment logger, worker profiles, near-miss, daily checks (local-only)
 - [x] **Phase 3: Sync Engine** - Mobile-to-backend data flow with photo upload
-- [ ] **Phase 4: Web Dashboard** - Manager reporting UI with compliance scoring
-- [ ] **Phase 4.5: Marketing Website & Booking Portal** (INSERTED) - Public marketing site, client self-service booking portal with Stripe payments, auto-matching
+- [x] **Phase 4: Web Dashboard** - Manager reporting UI with compliance scoring
+- [x] **Phase 4.5: Marketing Website & Booking Portal** (INSERTED) - Public marketing site, client self-service booking portal with Stripe payments, auto-matching
 - [ ] **Phase 4.6: Customer Onboarding & Contract Management** (INSERTED) - Service agreement generation, document portal, flexible payment terms, digital signatures
-- [ ] **Phase 5: PDF Generation** - Weekly safety reports for HSE audits
-- [ ] **Phase 5.5: Admin Operations Dashboards** (INSERTED) - Admin dashboard for bookings, medics, territories, revenue, timesheets, client management
+- [x] **Phase 5: PDF Generation** - Weekly safety reports for HSE audits
+- [x] **Phase 5.5: Admin Operations Dashboards** (INSERTED) - Admin dashboard for bookings, medics, territories, revenue, timesheets, client management
 - [ ] **Phase 6: RIDDOR Auto-Flagging** - Smart compliance detection with deadline tracking
 - [ ] **Phase 6.5: Payment Processing & Payouts** (INSERTED) - Client payment processing, weekly medic payouts via UK Faster Payments, IR35 compliance, invoice generation
 - [ ] **Phase 7: Certification Tracking** - Expiry monitoring with progressive alerts
@@ -163,12 +163,12 @@ Plans:
 **Plans**: 6 plans
 
 Plans:
-- [ ] 04-01-PLAN.md -- Dashboard scaffold with auth, Supabase SSR utilities, and responsive layout shell
-- [ ] 04-02-PLAN.md -- Overview page with traffic-light compliance score and weekly summary stats
-- [ ] 04-03-PLAN.md -- Treatment log with filtering/sorting, detail view with photos, and reusable DataTable
-- [ ] 04-04-PLAN.md -- Near-miss log and worker registry pages with search and filters
-- [ ] 04-05-PLAN.md -- Data export (CSV and PDF) and responsive polish
-- [ ] 04-06-PLAN.md -- Integration verification checkpoint
+- [x] 04-01-PLAN.md -- Dashboard scaffold with auth, Supabase SSR utilities, and responsive layout shell
+- [x] 04-02-PLAN.md -- Overview page with traffic-light compliance score and weekly summary stats
+- [x] 04-03-PLAN.md -- Treatment log with filtering/sorting, detail view with photos, and reusable DataTable
+- [x] 04-04-PLAN.md -- Near-miss log and worker registry pages with search and filters
+- [x] 04-05-PLAN.md -- Data export (CSV and PDF) and responsive polish
+- [x] 04-06-PLAN.md -- Integration verification checkpoint
 
 ### Phase 4.5: Marketing Website & Booking Portal (INSERTED)
 **Goal**: Public-facing marketing website and client self-service booking portal operational with Stripe payment processing and auto-matching to medics.
@@ -192,10 +192,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 04.5-01-PLAN.md -- Marketing website with Next.js SSG (homepage, pricing, trust signals)
-- [ ] 04.5-02-PLAN.md -- Booking portal calendar and site location input
-- [ ] 04.5-03-PLAN.md -- Stripe payment integration (prepay vs Net 30 logic)
-- [ ] 04.5-04-PLAN.md -- Auto-matching UI and booking confirmation flow
+- [x] 04.5-01-PLAN.md -- Marketing website with Next.js SSG (homepage, pricing, trust signals)
+- [x] 04.5-02-PLAN.md -- Booking portal calendar and site location input
+- [x] 04.5-03-PLAN.md -- Stripe payment integration (prepay vs Net 30 logic)
+- [x] 04.5-04-PLAN.md -- Auto-matching UI and booking confirmation flow
 
 ### Phase 4.6: Customer Onboarding & Contract Management (INSERTED)
 **Goal**: Automated service agreement generation with business info auto-filled, document portal for phone sales, flexible payment terms (half upfront, remainder after completion), and digital signature collection.
@@ -299,10 +299,15 @@ Plans:
   7. RIDDOR report tracks status (Draft / Submitted / Confirmed)
   8. Override patterns track for algorithm tuning (if 80% overridden, review logic)
 
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] TBD during planning
+- [ ] 06-01-PLAN.md -- Database schema and RIDDOR detection Edge Function with confidence scoring
+- [ ] 06-02-PLAN.md -- Mobile medic override UI workflow with reason capture
+- [ ] 06-03-PLAN.md -- HSE F2508 PDF generation with form field mapping
+- [ ] 06-04-PLAN.md -- Web dashboard RIDDOR pages with deadline countdown
+- [ ] 06-05-PLAN.md -- Deadline tracking cron job and email notifications
+- [ ] 06-06-PLAN.md -- Override pattern analytics dashboard for algorithm tuning
 
 ### Phase 6.5: Payment Processing & Payouts (INSERTED)
 **Goal**: Full payment processing operational with client charging (card + Net 30), automated weekly medic payouts via UK Faster Payments, IR35 compliance, and out-of-territory cost management.
@@ -397,11 +402,11 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 | 2. Mobile Core | 10/10 | Complete | 2026-02-15 |
 | 3. Sync Engine | 7/7 | Complete | 2026-02-16 |
 | 4. Web Dashboard | 6/6 | Complete | 2026-02-16 |
-| 4.5. Marketing Website & Booking Portal | 0/4 | Not started | - |
+| 4.5. Marketing Website & Booking Portal | 4/4 | Complete | 2026-02-16 |
 | 4.6. Customer Onboarding & Contract Management | 0/7 | Not started | - |
 | 5. PDF Generation | 4/4 | Complete | 2026-02-16 |
 | 5.5. Admin Operations Dashboards | 6/6 | Complete | 2026-02-16 |
-| 6. RIDDOR Auto-Flagging | 0/TBD | Not started | - |
+| 6. RIDDOR Auto-Flagging | 0/6 | Not started | - |
 | 6.5. Payment Processing & Payouts | 0/5 | Not started | - |
 | 7. Certification Tracking | 0/TBD | Not started | - |
 | 7.5. Territory Management & Auto-Assignment | 0/5 | Not started | - |
@@ -413,7 +418,7 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Coverage: 83/83 v1 requirements mapped*
 *Business operations phases added: 2026-02-15 -- 5 decimal phases (1.5, 4.5, 5.5, 6.5, 7.5) with 24 plans total for multi-medic scaling (booking portal, payments, territory management)*
 *Phase 1.5 planned: 2026-02-15 -- 4 plans in 1 wave (all parallel, DB schema and Google Maps API already exist from prior session)*
-*Phase 4.6 added: 2026-02-15 -- Customer onboarding & contract management with service agreement generation, document portal for phone sales, flexible payment terms (half upfront + remainder after completion/Net 30), digital signatures, and payment schedule enforcement (5 plans)*
+*Phase 4.6 added: 2026-02-15 -- Customer onboarding & contract management with service agreement generation, document portal for phone sales, flexible payment terms (half upfront + remainder after completion/Net 30), digital signatures, and payment schedule enforcement (7 plans)*
 *Phase 2 planned: 2026-02-15 -- 8 plans in 3 waves (2 parallel foundation, 4 parallel features, 2 integration)*
 *Phase 2 gap closure: 2026-02-15 -- 2 gap closure plans (02-09, 02-10) addressing 3 verification gaps (auto-save timing, template presets, offline import paths)*
 *Phase 2 complete: 2026-02-15 -- 10/10 plans executed, verification passed (10/10 must-haves), goal achieved (offline mobile core with gloves-on usability)*
@@ -424,3 +429,4 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Phase 5.5 planned: 2026-02-16 -- 6 plans in 2 waves (3 parallel Wave 1: bookings/medics/timesheets, 3 parallel Wave 2: territories/revenue/clients)*
 *Phase 5.5 complete: 2026-02-16 -- 6/6 plans executed, verification passed (10/10 must-haves), goal achieved (admin dashboard operational with booking management, medic roster, territory coverage map, revenue tracking, timesheet approval, client management)*
 *Phase 4.6 planned: 2026-02-16 -- 7 plans in 4 waves (2 parallel foundation: schema+PDF, 2 parallel UI: signing+admin creation, 2 parallel delivery: email+dashboard, 1 enforcement: payments+booking gate)*
+*Phase 6 planned: 2026-02-16 -- 6 plans in 3 waves (2 parallel Wave 1: detection+mobile, 2 parallel Wave 2: F2508+dashboard, 2 sequential Wave 3: notifications+analytics)*
