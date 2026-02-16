@@ -8,18 +8,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 **Current focus:** Phase 2 - Mobile Core
 
 ## Current Position
-Phase: 6.5 of 7 (Payments & Payouts) — Complete
-Plan: 10 of 10 in current phase
+Phase: 4.5 of 7 (Marketing & Booking)
+Plan: 5 of 5 in current phase
 Status: Phase complete
-Last activity: 2026-02-16 — Completed 06.5-10-PLAN.md (Out-of-Territory Workflow Integration)
-Progress: [███████████████] 100% (56/56 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6, 6.5)
+Last activity: 2026-02-16 — Completed 04.5-05-PLAN.md (Real Booking Data in Confirmation)
+Progress: [███████████████] 100% (57/57 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6, 6.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 56
-- Average duration: 4.4 min
-- Total execution time: 4.06 hours
+- Total plans completed: 57
+- Average duration: 4.3 min
+- Total execution time: 4.09 hours
 
 **By Phase:**
 
@@ -30,15 +30,15 @@ Progress: [███████████████] 100% (56/56 plans acro
 | 02-mobile-core | 9/9 | 50 min | 5.6 min |
 | 03-sync-engine | 7/7 | 24 min | 3.4 min |
 | 04-web-dashboard | 6/6 | 46 min | 7.7 min |
-| 04.5-marketing-booking | 4/4 | 33 min | 8.3 min |
+| 04.5-marketing-booking | 5/5 | 35 min | 7 min |
 | 04.6-customer-onboarding | 7/7 | 52 min | 7.4 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
 | 06.5-payments-payouts | 10/10 | 44 min | 4.4 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.5-07 (2 min), 06.5-08 (2 min), 06.5-09 (2 min), 06.5-10 (3 min), Phase 6.5 complete
-- Trend: Phase 6.5 complete - Out-of-territory workflow integration finished
+- Last 5 plans: 06.5-09 (2 min), 06.5-10 (3 min), 04.5-05 (2 min)
+- Trend: Phase 4.5 complete - Marketing booking flow with real database data
 
 *Updated after each plan completion*
 
@@ -326,6 +326,11 @@ Recent decisions affecting current work:
 - D-04.5-04-007: Prepay recurring bookings created as pending_payment, Net 30 as confirmed
 - D-04.5-04-008: Calendar invite uses text/calendar MIME type with METHOD=REQUEST
 
+**From Plan 04.5-05:**
+- D-04.5-05-001: Fetch booking data after auto-match completes (not before payment) to ensure accurate database state
+- D-04.5-05-002: Calculate recurring weeks from recurring_until date field (schema uses date, not week count per D-04.5-03-007)
+- D-04.5-05-003: Include medic star_rating in booking detail API to fix hardcoded 4.8 fallback in match route
+
 **From Plan 05.5-02:**
 - D-05.5-02-001: Use TanStack Query for data fetching with 60-second polling for near-real-time updates
 - D-05.5-02-002: Calculate utilization as (confirmed bookings this week / 5 working days) × 100, capped at 100%
@@ -452,9 +457,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T22:29:15Z
-Stopped at: Completed 06.5-06-PLAN.md — Platform Fee Calculation Fix (Corrected payout split from 60/40 to roadmap-aligned 71.4/28.6, fixing revenue loss from £30 medic / £42 client rate arithmetic)
+Last session: 2026-02-16T22:46:00Z
+Stopped at: Completed 04.5-05-PLAN.md — Real Booking Data in Confirmation (Created GET /api/bookings/{id} endpoint and replaced hardcoded mock data with real database queries)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (3/3 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6.5 (Payments & Payouts) in progress (6/10 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6.5 (Payments & Payouts) complete (10/10 plans)*
