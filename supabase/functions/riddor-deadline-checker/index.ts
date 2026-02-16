@@ -50,6 +50,7 @@ Deno.serve(async (req: Request) => {
           company
         ),
         organizations (
+          id,
           company_name,
           site_address,
           phone
@@ -87,9 +88,18 @@ Deno.serve(async (req: Request) => {
 
     for (const incident of incidents) {
       try {
-        // TODO: Fetch actual site manager email from profiles table
-        // For now, using organization phone as placeholder
-        const siteManagerEmail = 'site-manager@example.com'; // Replace with actual lookup
+        // Fetch site manager email from profiles table
+        const { data: siteManager, error: managerError } = await supabase
+          .from('profiles')
+          .select('email, first_name, last_name')
+          .eq('org_id', incident.organizations.id)
+          .eq('role', 'site_manager')
+          .single();
+
+        if (managerError || !siteManager) {
+          console.warn(`No site manager found for organization ${incident.organizations.company_name} (incident ${incident.id})`);
+          continue; // Skip this incident, no one to email
+        }
 
         await sendDeadlineEmail({
           incidentId: incident.id,
@@ -101,7 +111,8 @@ Deno.serve(async (req: Request) => {
           deadlineDate: incident.deadline_date,
           daysRemaining: 3,
           dashboardUrl: `${Deno.env.get('NEXT_PUBLIC_APP_URL') || 'http://localhost:30500'}/riddor/${incident.id}`,
-          siteManagerEmail,
+          siteManagerEmail: siteManager.email,
+          siteManagerName: `${siteManager.first_name} ${siteManager.last_name}`,
           orgName: incident.organizations.company_name,
         });
 

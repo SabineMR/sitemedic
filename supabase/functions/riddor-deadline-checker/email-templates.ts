@@ -18,6 +18,7 @@ interface DeadlineEmailData {
   daysRemaining: number;
   dashboardUrl: string;
   siteManagerEmail: string;
+  siteManagerName: string;
   orgName: string;
 }
 
@@ -98,6 +99,10 @@ export async function sendDeadlineEmail(data: DeadlineEmailData): Promise<void> 
             </div>
 
             <div class="content">
+              <p style="font-size: 16px; margin-bottom: 20px;">
+                Hello ${data.siteManagerName},
+              </p>
+
               <p style="font-size: 16px; margin-bottom: 20px;">
                 A RIDDOR-reportable incident at <strong>${data.orgName}</strong> requires HSE submission.
               </p>
