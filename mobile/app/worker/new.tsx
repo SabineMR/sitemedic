@@ -12,6 +12,7 @@ import { getDatabase } from '../../../src/lib/watermelon';
 import Worker from '../../../src/database/models/Worker';
 import LargeTapButton from '../../components/ui/LargeTapButton';
 import BottomSheetPicker from '../../components/ui/BottomSheetPicker';
+import { useSync } from '../../../src/contexts/SyncContext';
 
 interface WorkerInductionFormData {
   // Basic Info
@@ -73,6 +74,7 @@ export default function WorkerInductionForm({
   workerId?: string;
   onComplete?: () => void;
 }) {
+  const { enqueueSyncItem } = useSync();
   const [worker, setWorker] = useState<Worker | null>(null);
   const [showBloodTypePicker, setShowBloodTypePicker] = useState(false);
   const [showRelationshipPicker, setShowRelationshipPicker] = useState(false);
@@ -204,11 +206,37 @@ export default function WorkerInductionForm({
     }
 
     try {
+      const isNew = worker.isIncomplete;
+
       await worker.update((w) => {
         w.isIncomplete = false;
         w.consentGiven = true;
         w.consentDate = Date.now();
       });
+
+      // Enqueue for sync to backend
+      await enqueueSyncItem(
+        isNew ? 'create' : 'update',
+        'workers',
+        worker.id,
+        {
+          org_id: worker.orgId,
+          first_name: worker.firstName,
+          last_name: worker.lastName,
+          company: worker.company,
+          role: worker.role,
+          phone: worker.phone,
+          emergency_contact_name: worker.emergencyContactName,
+          emergency_contact_phone: worker.emergencyContactPhone,
+          health_notes: worker.healthNotes,
+          consent_given: worker.consentGiven,
+          consent_date: worker.consentDate ? new Date(worker.consentDate).toISOString() : null,
+          created_at: new Date(worker.createdAt).toISOString(),
+          updated_at: new Date(worker.updatedAt).toISOString(),
+          last_modified_at: worker.lastModifiedAt,
+        },
+        1 // Normal priority
+      );
 
       if (onComplete) {
         onComplete();

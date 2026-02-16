@@ -21,6 +21,8 @@ import SafetyCheck from '../../../src/database/models/SafetyCheck';
 import { DAILY_CHECK_ITEMS } from '../../services/taxonomy/daily-check-items';
 import { DailyChecklistItem } from '../../components/safety/DailyChecklistItem';
 import { AutoSaveIndicator } from '../../components/forms/AutoSaveForm';
+import { useSync } from '../../../src/contexts/SyncContext';
+import { photoUploadQueue } from '../../../src/services/PhotoUploadQueue';
 
 interface ChecklistItem {
   id: string;
@@ -31,6 +33,7 @@ interface ChecklistItem {
 
 export default function DailyCheckScreen() {
   const router = useRouter();
+  const { enqueueSyncItem } = useSync();
   const [isLoading, setIsLoading] = useState(true);
   const [safetyCheck, setSafetyCheck] = useState<SafetyCheck | null>(null);
   const [items, setItems] = useState<ChecklistItem[]>([]);
@@ -177,6 +180,31 @@ export default function DailyCheckScreen() {
         record.updatedAt = Date.now();
         record.lastModifiedAt = Date.now();
       });
+
+      // Enqueue for sync to backend
+      await enqueueSyncItem(
+        'create',
+        'safety_checks',
+        safetyCheck.id,
+        {
+          org_id: safetyCheck.orgId,
+          medic_id: safetyCheck.medicId,
+          check_date: new Date(safetyCheck.checkDate).toISOString().split('T')[0], // DATE format for server
+          items: safetyCheck.items, // Already parsed by WatermelonDB @json decorator
+          overall_status: safetyCheck.overallStatus,
+          created_at: new Date(safetyCheck.createdAt).toISOString(),
+          updated_at: new Date(safetyCheck.updatedAt).toISOString(),
+          last_modified_at: safetyCheck.lastModifiedAt,
+        },
+        1 // Normal priority
+      );
+
+      // Queue photos if any
+      if (safetyCheck.photoUris && safetyCheck.photoUris.length > 0) {
+        for (let i = 0; i < safetyCheck.photoUris.length; i++) {
+          await photoUploadQueue.enqueuePhoto(safetyCheck.photoUris[i], safetyCheck.id, 'safety_checks', i);
+        }
+      }
 
       // Navigate back to safety tab
       router.back();

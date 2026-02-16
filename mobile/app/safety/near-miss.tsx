@@ -31,11 +31,14 @@ import NearMissQuickCapture from '../../components/safety/NearMissQuickCapture';
 import LargeTapButton from '../../components/ui/LargeTapButton';
 import StatusBadge from '../../components/ui/StatusBadge';
 import { NEAR_MISS_CATEGORIES } from '../../services/taxonomy/near-miss-categories';
+import { useSync } from '../../../src/contexts/SyncContext';
+import { photoUploadQueue } from '../../../src/services/PhotoUploadQueue';
 
 type SeverityLevel = 'minor' | 'major' | 'fatal';
 
 export default function NearMissCapture() {
   const database = useDatabase();
+  const { enqueueSyncItem } = useSync();
 
   // Form state
   const [record, setRecord] = useState<NearMiss | null>(null);
@@ -191,9 +194,47 @@ export default function NearMissCapture() {
       return;
     }
 
-    // Mark as complete (in production, would update status field)
-    Alert.alert('Success', 'Near-miss report submitted');
-    // TODO: Navigate back to safety tab
+    try {
+      if (record) {
+        // Enqueue for sync to backend
+        await enqueueSyncItem(
+          'create',
+          'near_misses',
+          record.id,
+          {
+            org_id: record.orgId,
+            reported_by: record.reportedBy,
+            category: record.category,
+            severity: record.severity,
+            description: record.description,
+            location: record.location,
+            corrective_action: record.correctiveAction,
+            created_at: new Date(record.createdAt).toISOString(),
+            updated_at: new Date(record.updatedAt).toISOString(),
+            last_modified_at: record.lastModifiedAt,
+          },
+          1 // Normal priority
+        );
+
+        // Queue photos for progressive upload
+        if (record.photoUris && record.photoUris.length > 0) {
+          for (let i = 0; i < record.photoUris.length; i++) {
+            await photoUploadQueue.enqueuePhoto(
+              record.photoUris[i],
+              record.id,
+              'near_misses',
+              i
+            );
+          }
+        }
+
+        Alert.alert('Success', 'Near-miss report submitted');
+        // TODO: Navigate back to safety tab
+      }
+    } catch (error) {
+      console.error('Failed to submit near-miss report:', error);
+      Alert.alert('Error', 'Failed to submit report');
+    }
   };
 
   const handleSaveDraft = () => {

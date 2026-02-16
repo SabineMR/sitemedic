@@ -30,6 +30,7 @@ import { INJURY_TYPES } from '../../services/taxonomy/injury-types';
 import { TREATMENT_TYPES } from '../../services/taxonomy/treatment-types';
 import { OUTCOME_CATEGORIES } from '../../services/taxonomy/outcome-categories';
 import { BODY_PARTS } from '../../services/taxonomy/body-parts';
+import { useSync } from '../../../src/contexts/SyncContext';
 
 export default function TreatmentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

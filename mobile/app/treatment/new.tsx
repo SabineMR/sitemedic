@@ -39,6 +39,8 @@ import BodyDiagramPicker from '../../components/forms/BodyDiagramPicker';
 import { INJURY_TYPES } from '../../services/taxonomy/injury-types';
 import { TREATMENT_TYPES } from '../../services/taxonomy/treatment-types';
 import { OUTCOME_CATEGORIES } from '../../services/taxonomy/outcome-categories';
+import { useSync } from '../../../src/contexts/SyncContext';
+import { photoUploadQueue } from '../../../src/services/PhotoUploadQueue';
 
 // Common mechanism presets (TREAT-04)
 const MECHANISM_PRESETS = [
@@ -53,6 +55,9 @@ const MECHANISM_PRESETS = [
 ];
 
 export default function NewTreatmentScreen() {
+  // Sync context
+  const { enqueueSyncItem } = useSync();
+
   // Treatment record state
   const [treatment, setTreatment] = useState<Treatment | null>(null);
   const [referenceNumber, setReferenceNumber] = useState<string>('');
@@ -228,6 +233,45 @@ export default function NewTreatmentScreen() {
           t.updatedAt = Date.now();
           t.lastModifiedAt = Date.now();
         });
+
+        // Enqueue for sync to backend
+        await enqueueSyncItem(
+          'create',
+          'treatments',
+          treatment.id,
+          {
+            org_id: treatment.orgId,
+            worker_id: treatment.workerId,
+            medic_id: treatment.medicId,
+            reference_number: treatment.referenceNumber,
+            status: treatment.status,
+            injury_type: treatment.injuryType,
+            body_part: treatment.bodyPart,
+            mechanism_of_injury: treatment.mechanismOfInjury,
+            severity: treatment.severity,
+            treatment_types: treatment.treatmentTypes,
+            treatment_notes: treatment.treatmentNotes,
+            outcome: treatment.outcome,
+            is_riddor_reportable: treatment.isRiddorReportable,
+            signature_uri: treatment.signatureUri,
+            created_at: new Date(treatment.createdAt).toISOString(),
+            updated_at: new Date(treatment.updatedAt).toISOString(),
+            last_modified_at: treatment.lastModifiedAt,
+          },
+          treatment.isRiddorReportable ? 0 : 1 // RIDDOR = priority 0 (immediate)
+        );
+
+        // Queue photos for progressive upload
+        if (treatment.photoUris && treatment.photoUris.length > 0) {
+          for (let i = 0; i < treatment.photoUris.length; i++) {
+            await photoUploadQueue.enqueuePhoto(
+              treatment.photoUris[i],
+              treatment.id,
+              'treatments',
+              i
+            );
+          }
+        }
 
         Alert.alert('Success', 'Treatment logged successfully', [
           {
