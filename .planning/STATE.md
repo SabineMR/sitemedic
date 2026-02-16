@@ -125,6 +125,18 @@ Recent decisions affecting current work:
 - D-02-01-009: Emoji icons on near-miss categories for faster visual scanning
 - D-02-01-010: Priority order on daily checks (1-10) for systematic inspection workflow
 
+**From Plan 02-04:**
+- D-02-04-001: Auto-save debounce 500ms (exceeds TREAT-10 requirement of 10s for faster UX)
+- D-02-04-002: Reference number format SITE-YYYYMMDD-NNN with daily sequential counter
+- D-02-04-003: RIDDOR detection automatic based on isRiddorReportable flag in INJURY_TYPES taxonomy
+- D-02-04-004: Treatment status workflow draft→complete (draft editable, complete read-only)
+- D-02-04-005: Mechanism presets: 8 common injury scenarios as quick-select chips above free text
+- D-02-04-006: Treatment types multi-select checkboxes (not single picker) for combined treatments
+- D-02-04-007: Body part selection grid layout (not SVG diagram) for faster build and better gloves-on usability
+- D-02-04-008: Signature mandatory for completion, stored as base64 PNG
+- D-02-04-009: Photo limit 4 enforced via PhotoCapture maxPhotos prop per TREAT-06
+- D-02-04-010: BottomSheetPicker renderCustomContent prop for custom picker UIs like BodyDiagramPicker
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -158,9 +170,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T00:54:28Z
-Stopped at: Completed 02-03-PLAN.md — Worker Profile System
+Last session: 2026-02-16T00:54:06Z
+Stopped at: Completed 02-04-PLAN.md — Treatment Logging Workflow
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) in progress (2/8 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) in progress (3/8 plans)*

@@ -626,7 +626,7 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
 ---
 
 ## Phase 2: Mobile Core
-**Status**: 🚧 **IN PROGRESS** - Plans 02-01, 02-02, and 02-03 complete (3/8 plans)
+**Status**: 🚧 **IN PROGRESS** - Plans 02-01, 02-02, 02-03, and 02-04 complete (4/8 plans)
 **Goal**: Treatment logging, worker profiles, near-miss capture, daily safety checks
 
 ### Completed (Plan 02-01):
@@ -735,6 +735,61 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
       - emergency_contact_relationship (STRING)
       - is_incomplete (BOOLEAN)
     - Migration with addColumns for backward compatibility
+
+### Completed (Plan 02-04): ✅ **NEW - 2026-02-16**
+- **Treatment Logging Workflow** (mobile/app/treatment/ + mobile/components/forms/)
+  - **AutoSaveForm Hook** (mobile/components/forms/AutoSaveForm.tsx)
+    - useAutoSave hook with debounced WatermelonDB updates (500ms default, configurable)
+    - Accepts Model instance, formValues object, fieldMapping, debounceMs
+    - Returns isSaving boolean and lastSaved timestamp
+    - AutoSaveIndicator component shows "Saving..." / "Saved {time}" visual feedback
+    - Defensive error handling (logs but doesn't crash)
+
+  - **BodyDiagramPicker Component** (mobile/components/forms/BodyDiagramPicker.tsx)
+    - 2-column grid layout with BODY_PARTS taxonomy (15 anatomical regions)
+    - 56pt minimum tap targets for gloves-on usability
+    - Visual selection feedback (blue border + background)
+    - Scrollable for all body parts
+
+  - **New Treatment Screen** (mobile/app/treatment/new.tsx - 450+ lines)
+    - **6-Section Complete Clinical Form** supporting all TREAT-01 through TREAT-12:
+      1. Worker Selection via WorkerSearchPicker (TREAT-01)
+      2. Injury Details: Category (RIDDOR + minor taxonomy), Body Part (BodyDiagramPicker), Mechanism (8 presets + free text) (TREAT-02, 03, 04)
+      3. Treatment Given: Multi-select checkboxes (14 types), Additional notes (TREAT-05)
+      4. Photos: Up to 4 via PhotoCapture (TREAT-06)
+      5. Outcome: 7 categories (returned to work, sent home, hospital, ambulance, etc.) (TREAT-07)
+      6. Signature: Digital signature via SignaturePad, mandatory for completion (TREAT-08)
+    - **Reference Number Generation**: SITE-YYYYMMDD-NNN format with daily sequential counter (TREAT-09)
+    - **Auto-save every 500ms** via useAutoSave hook (exceeds TREAT-10 requirement of 10s)
+    - **RIDDOR Auto-Detection**: Amber warning banner shown when injury type has isRiddorReportable=true
+    - **Treatment Status**: Creates record as 'draft' on mount, marks 'complete' on validation pass
+    - **Mechanism Presets**: 8 common injury scenarios (Struck by object, Fall, Manual handling, Sharp edge, Slip/trip, Caught in machinery, Repetitive strain, Chemical exposure)
+    - **Multi-select Treatment Types**: Checkboxes with visual checkmarks (supports combined treatments)
+    - **Validation**: Requires worker, injury type, and signature before completion
+
+  - **Treatment View/Edit Screen** (mobile/app/treatment/[id].tsx - 370+ lines)
+    - Read-only mode when status='complete'
+    - Editable mode when status='draft'
+    - All fields displayed with proper labels
+    - Photos displayed as full-width images
+    - Signature displayed as image preview
+    - RIDDOR flag shown prominently with red banner
+    - Treatment history integration with worker profiles
+    - Delete draft functionality
+    - PDF export placeholder (Phase 7)
+
+  - **Enhanced BottomSheetPicker** (mobile/components/ui/BottomSheetPicker.tsx)
+    - Added renderCustomContent prop for custom picker UIs
+    - Enables BodyDiagramPicker integration
+    - Made items/onSelect optional when using custom content
+
+  - **Extended Treatment Model** (Schema v1 → v2)
+    - Added 4 fields to treatments table:
+      - reference_number (STRING, indexed) - SITE-YYYYMMDD-NNN format
+      - status (STRING) - draft/complete workflow state
+      - mechanism_of_injury (STRING, optional) - How injury occurred
+      - treatment_types (STRING, optional) - JSON array of treatment IDs
+    - Updated Treatment model with new properties and sanitizers
 
 ### Features:
 - **Treatment Logger**
