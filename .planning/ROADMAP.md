@@ -14,8 +14,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Backend API, auth, encrypted offline storage, sync infrastructure
 - [x] **Phase 1.5: Business Operations Foundation** (INSERTED) - Database schema for bookings, territories, clients, payments; Stripe Connect; Google Maps API; UK postcodes
-- [ ] **Phase 2: Mobile Core** - Treatment logger, worker profiles, near-miss, daily checks (local-only)
-- [ ] **Phase 3: Sync Engine** - Mobile-to-backend data flow with photo upload
+- [x] **Phase 2: Mobile Core** - Treatment logger, worker profiles, near-miss, daily checks (local-only)
+- [x] **Phase 3: Sync Engine** - Mobile-to-backend data flow with photo upload
 - [ ] **Phase 4: Web Dashboard** - Manager reporting UI with compliance scoring
 - [ ] **Phase 4.5: Marketing Website & Booking Portal** (INSERTED) - Public marketing site, client self-service booking portal with Stripe payments, auto-matching
 - [ ] **Phase 4.6: Customer Onboarding & Contract Management** (INSERTED) - Service agreement generation, document portal, flexible payment terms, digital signatures
@@ -139,8 +139,8 @@ Plans:
 - [x] 03-03-PLAN.md -- Enhance SyncQueue with RIDDOR fast retry, LWW conflict resolution, and scheduler wiring
 - [x] 03-04-PLAN.md -- Sync feedback UI (error display, RIDDOR critical alert, photo upload progress)
 - [x] 03-05-PLAN.md -- Wire all Phase 2 forms to sync queue and mount sync UI in App.tsx
-- [ ] 03-06-PLAN.md -- [GAP CLOSURE] Add battery/network runtime constraints to background sync task
-- [ ] 03-07-PLAN.md -- [GAP CLOSURE] Add client-generated UUID idempotency keys to prevent duplicate creates on retry
+- [x] 03-06-PLAN.md -- [GAP CLOSURE] Add battery/network runtime constraints to background sync task
+- [x] 03-07-PLAN.md -- [GAP CLOSURE] Add client-generated UUID idempotency keys to prevent duplicate creates on retry
 
 ### Phase 4: Web Dashboard
 **Goal**: Site managers can view treatment logs, worker registry, near-miss reports, and compliance scores in real-time from desktop browser.
@@ -390,7 +390,7 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 | 1. Foundation | 5/5 | Complete | 2026-02-15 |
 | 1.5. Business Operations Foundation | 4/4 | Complete | 2026-02-15 |
 | 2. Mobile Core | 10/10 | Complete | 2026-02-15 |
-| 3. Sync Engine | 5/7 | In Progress | - |
+| 3. Sync Engine | 7/7 | Complete | 2026-02-16 |
 | 4. Web Dashboard | 0/6 | Not started | - |
 | 4.5. Marketing Website & Booking Portal | 0/4 | Not started | - |
 | 4.6. Customer Onboarding & Contract Management | 0/5 | Not started | - |
@@ -415,3 +415,4 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Phase 3 planned: 2026-02-15 -- 5 plans in 3 waves (2 parallel foundation, 2 parallel enhancement, 1 integration with checkpoint)*
 *Phase 3 progress: 2026-02-15 -- 4/5 plans complete (03-01 through 03-04 executed, 03-05 remaining for full phase completion)*
 *Phase 3 gap closure: 2026-02-15 -- 2 gap closure plans (03-06, 03-07) addressing 2 verification gaps (battery constraints for background sync, client-generated UUID idempotency keys for duplicate prevention)*
+*Phase 3 complete: 2026-02-16 -- 7/7 plans executed (initial 5 + 2 gap closure), verification passed (10/10 must-haves), goal achieved (automatic background sync with battery-friendly constraints and duplicate prevention)*
