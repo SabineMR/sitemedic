@@ -111,6 +111,9 @@ importers:
       '@babel/core':
         specifier: ^7.29.0
         version: 7.29.0
+      '@morrowdigital/watermelondb-expo-plugin':
+        specifier: ^2.3.3
+        version: 2.3.3
       '@types/react':
         specifier: ~19.1.0
         version: 19.1.17
@@ -981,6 +984,9 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@morrowdigital/watermelondb-expo-plugin@2.3.3':
+    resolution: {integrity: sha512-380NyK5fPEqBfWorqREc1zQkAuxITSN8cdf15TaOwAdbvIwjeF1TjvztUNC8eqJum0AHdU2xQLHMph3rndQtNQ==}
 
   '@nozbe/lokijs@1.5.12-wmelon6':
     resolution: {integrity: sha512-GXsaqY8qTJ6xdCrGyno2t+ON2aj6PrUDdvhbrkxK/0Fp12C4FGvDg1wS+voLU9BANYHEnr7KRWfItDZnQkjoAg==}
@@ -4722,6 +4728,8 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@morrowdigital/watermelondb-expo-plugin@2.3.3': {}
 
   '@nozbe/lokijs@1.5.12-wmelon6': {}
 

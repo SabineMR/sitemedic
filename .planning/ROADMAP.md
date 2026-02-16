@@ -246,10 +246,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 05-01-PLAN.md -- Edge Function with @react-pdf/renderer document components and data queries
-- [ ] 05-02-PLAN.md -- Storage bucket, PDF upload, Resend email delivery, and signed URLs
-- [ ] 05-03-PLAN.md -- pg_cron Friday scheduling and dashboard reports page with on-demand generation
-- [ ] 05-04-PLAN.md -- Integration verification checkpoint
+- [x] 05-01-PLAN.md -- Edge Function with @react-pdf/renderer document components and data queries
+- [x] 05-02-PLAN.md -- Storage bucket, PDF upload, Resend email delivery, and signed URLs
+- [x] 05-03-PLAN.md -- pg_cron Friday scheduling and dashboard reports page with on-demand generation
+- [x] 05-04-PLAN.md -- Integration verification checkpoint
 
 ### Phase 5.5: Admin Operations Dashboards (INSERTED)
 **Goal**: Admin dashboard operational with booking management, medic roster, territory coverage map, revenue tracking, timesheet approval, and client management capabilities.
@@ -397,7 +397,7 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 | 4. Web Dashboard | 6/6 | Complete | 2026-02-16 |
 | 4.5. Marketing Website & Booking Portal | 0/4 | Not started | - |
 | 4.6. Customer Onboarding & Contract Management | 0/5 | Not started | - |
-| 5. PDF Generation | 0/4 | Not started | - |
+| 5. PDF Generation | 4/4 | Complete | 2026-02-16 |
 | 5.5. Admin Operations Dashboards | 0/6 | Not started | - |
 | 6. RIDDOR Auto-Flagging | 0/TBD | Not started | - |
 | 6.5. Payment Processing & Payouts | 0/5 | Not started | - |
