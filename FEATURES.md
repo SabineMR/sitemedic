@@ -656,6 +656,29 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
     - Workers tab: Worker registry with search and certification status
     - Safety tab: Near-miss reporting and daily safety checks
 
+- **✅ WatermelonDB Native Module Integration Fixed - 2026-02-15**
+  - **Problem**: WatermelonDB native modules not linking properly, causing app crash on startup
+    - Error: `NativeModules.WMDatabaseBridge is not defined!`
+    - Root cause: `@lovesworking/watermelondb-expo-plugin-sdk-52-plus` only supports Expo SDK 52-53
+    - App stuck in reload loop, blank screen for users
+
+  - **Solution**: Switched to SDK 54-compatible plugin
+    - Removed: `@lovesworking/watermelondb-expo-plugin-sdk-52-plus@1.0.3` (SDK 52-53 only)
+    - Installed: `@morrowdigital/watermelondb-expo-plugin@2.3.3` (SDK 54 compatible, actively maintained)
+    - Updated `app.json` plugins configuration to use new plugin
+    - Removed duplicate simdjson pod entry from Podfile (plugin handles this automatically)
+
+  - **Performance Optimization**: Re-enabled JSI mode in `src/lib/watermelon.ts`
+    - Changed `jsi: false` to `jsi: true` for improved database performance on iOS
+    - JSI (JavaScript Interface) provides faster native bridge communication
+
+  - **Build Configuration**:
+    - Successfully ran `npx expo prebuild --clean` with new plugin
+    - Pod install completed: 100 dependencies, 102 total pods installed
+    - WatermelonDB and simdjson auto-linked correctly via Expo modules
+
+  - **Impact**: Database now initializes successfully, app loads to 4-tab navigation
+
 - **pnpm Module Resolution Fix**
   - Created custom `index.js` entry point to bypass pnpm symlink issues
   - Updated `package.json` main field from `node_modules/expo/AppEntry.js` to `index.js`
