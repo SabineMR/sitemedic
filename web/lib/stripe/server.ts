@@ -13,6 +13,6 @@ export const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 
 // Initialize Stripe with API version
 export const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2024-12-18.acacia', // Latest stable version
+  apiVersion: '2026-01-28.clover', // Latest stable version
   typescript: true,
 });
