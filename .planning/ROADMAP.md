@@ -131,10 +131,14 @@ Plans:
   9. Client-generated UUIDs prevent duplicate records on retry
   10. Progressive photo upload syncs preview first, full-quality later
 
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] TBD during planning
+- [ ] 03-01-PLAN.md -- Install sync dependencies and create hybrid foreground/background sync scheduler
+- [ ] 03-02-PLAN.md -- Progressive photo upload pipeline with WiFi-only constraints and Supabase Storage
+- [ ] 03-03-PLAN.md -- Enhance SyncQueue with RIDDOR fast retry, LWW conflict resolution, and scheduler wiring
+- [ ] 03-04-PLAN.md -- Sync feedback UI (error display, RIDDOR critical alert, photo upload progress)
+- [ ] 03-05-PLAN.md -- Wire all Phase 2 forms to sync queue and mount sync UI in App.tsx
 
 ### Phase 4: Web Dashboard
 **Goal**: Site managers can view treatment logs, worker registry, near-miss reports, and compliance scores in real-time from desktop browser.
@@ -379,7 +383,7 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 | 1. Foundation | 5/5 | Complete | 2026-02-15 |
 | 1.5. Business Operations Foundation | 4/4 | Complete | 2026-02-15 |
 | 2. Mobile Core | 9/10 | Complete | 2026-02-15 |
-| 3. Sync Engine | 0/TBD | Not started | - |
+| 3. Sync Engine | 0/5 | Not started | - |
 | 4. Web Dashboard | 0/TBD | Not started | - |
 | 4.5. Marketing Website & Booking Portal | 0/4 | Not started | - |
 | 4.6. Customer Onboarding & Contract Management | 0/5 | Not started | - |
@@ -401,3 +405,4 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Phase 2 planned: 2026-02-15 -- 8 plans in 3 waves (2 parallel foundation, 4 parallel features, 2 integration)*
 *Phase 2 gap closure: 2026-02-15 -- 2 gap closure plans (02-09, 02-10) addressing 3 verification gaps (auto-save timing, template presets, offline import paths)*
 *Phase 2 complete: 2026-02-15 -- 9 plans executed, verification passed (10/10 must-haves), goal achieved (offline mobile core with gloves-on usability)*
+*Phase 3 planned: 2026-02-15 -- 5 plans in 3 waves (2 parallel foundation, 2 parallel enhancement, 1 integration with checkpoint)*
