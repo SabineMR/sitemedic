@@ -109,13 +109,13 @@ Requirements for MVP launch. Each maps to roadmap phases.
 
 ### PDF Report Generation
 
-- [ ] **PDF-01**: Weekly safety report auto-generated every Friday with professional formatting
-- [ ] **PDF-02**: PDF includes: project name, week ending date, medic name, compliance score, treatment summary, near-miss summary, certification status, RIDDOR status, open actions
-- [ ] **PDF-03**: PDF generation completes in <10 seconds (server-side via Supabase Edge Functions)
-- [ ] **PDF-04**: PDF includes company branding (logo, colors)
-- [ ] **PDF-05**: Site manager can download PDF or receive via email
-- [ ] **PDF-06**: PDF stored in Supabase Storage with signed URL for secure access
-- [ ] **PDF-07**: PDF is audit-ready for HSE inspectors, principal contractors, insurers
+- [x] **PDF-01**: Weekly safety report auto-generated every Friday with professional formatting
+- [x] **PDF-02**: PDF includes: project name, week ending date, medic name, compliance score, treatment summary, near-miss summary, certification status, RIDDOR status, open actions
+- [x] **PDF-03**: PDF generation completes in <10 seconds (server-side via Supabase Edge Functions)
+- [x] **PDF-04**: PDF includes company branding (logo, colors)
+- [x] **PDF-05**: Site manager can download PDF or receive via email
+- [x] **PDF-06**: PDF stored in Supabase Storage with signed URL for secure access
+- [x] **PDF-07**: PDF is audit-ready for HSE inspectors, principal contractors, insurers
 
 ### Certification Tracking & Alerts
 
@@ -128,7 +128,7 @@ Requirements for MVP launch. Each maps to roadmap phases.
 
 ### Email Notifications
 
-- [ ] **NOTIF-01**: Site manager receives email when weekly PDF report is ready
+- [x] **NOTIF-01**: Site manager receives email when weekly PDF report is ready
 - [ ] **NOTIF-02**: Site manager receives email when RIDDOR deadline approaches (3 days before)
 - [ ] **NOTIF-03**: Site manager receives email when worker certification expires
 - [ ] **NOTIF-04**: Email notifications use professional template with company branding
@@ -294,14 +294,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EXPORT-01 | Phase 4 | Complete |
 | EXPORT-02 | Phase 4 | Complete |
 | EXPORT-03 | Phase 4 | Complete |
-| PDF-01 | Phase 5 | Pending |
-| PDF-02 | Phase 5 | Pending |
-| PDF-03 | Phase 5 | Pending |
-| PDF-04 | Phase 5 | Pending |
-| PDF-05 | Phase 5 | Pending |
-| PDF-06 | Phase 5 | Pending |
-| PDF-07 | Phase 5 | Pending |
-| NOTIF-01 | Phase 5 | Pending |
+| PDF-01 | Phase 5 | Complete |
+| PDF-02 | Phase 5 | Complete |
+| PDF-03 | Phase 5 | Complete |
+| PDF-04 | Phase 5 | Complete |
+| PDF-05 | Phase 5 | Complete |
+| PDF-06 | Phase 5 | Complete |
+| PDF-07 | Phase 5 | Complete |
+| NOTIF-01 | Phase 5 | Complete |
 | RIDD-01 | Phase 6 | Pending |
 | RIDD-02 | Phase 6 | Pending |
 | RIDD-03 | Phase 6 | Pending |
