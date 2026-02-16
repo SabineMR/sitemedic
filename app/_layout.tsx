@@ -15,7 +15,7 @@
 import '../tasks/backgroundSyncTask';
 
 import React, { useEffect, useState } from 'react';
-import { View, StatusBar } from 'react-native';
+import { View, Text, StatusBar } from 'react-native';
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -26,11 +26,33 @@ import { initDatabase } from '../src/lib/watermelon';
 
 export default function RootLayout() {
   const [database, setDatabase] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Initialize WatermelonDB on mount
   useEffect(() => {
-    initDatabase().then(setDatabase);
+    console.log('[RootLayout] Initializing database...');
+    initDatabase()
+      .then((db) => {
+        console.log('[RootLayout] Database initialized successfully');
+        setDatabase(db);
+      })
+      .catch((err) => {
+        console.error('[RootLayout] Database initialization failed:', err);
+        setError(err.message || String(err));
+      });
   }, []);
+
+  // Show error if database initialization failed
+  if (error) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#FFF', padding: 20, justifyContent: 'center' }}>
+        <View style={{ padding: 20, backgroundColor: '#fee', borderRadius: 8 }}>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: '#c00' }}>Database Error</Text>
+          <Text style={{ fontSize: 14, color: '#600' }}>{error}</Text>
+        </View>
+      </View>
+    );
+  }
 
   // Don't render app until database is initialized
   if (!database) {
