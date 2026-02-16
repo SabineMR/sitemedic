@@ -3866,7 +3866,7 @@ A comprehensive customer account management page displaying all construction com
 ---
 
 ## Phase 6.5: Payment Processing & Payouts (NEW)
-**Status**: 🔄 **IN PROGRESS** - 4/5 plans complete (Client payments ✅, Weekly payouts ✅, Out-of-territory costs ✅, IR35 compliance ✅)
+**Status**: ✅ **COMPLETED** - 5/5 plans complete (Client payments ✅, Weekly payouts ✅, Invoicing ✅, IR35 compliance ✅, Out-of-territory costs ✅)
 **Goal**: Full payment processing with client charging and weekly medic payouts
 
 ### Features:
@@ -3877,12 +3877,44 @@ A comprehensive customer account management page displaying all construction com
     - Payment confirmation email
     - Receipt generation (PDF)
 
-  - **Net 30 Invoicing**
-    - Invoice generation with VAT (20%)
-    - PDF invoice delivery via email (Friday)
-    - Payment terms: Net 30 (due 30 days from invoice date)
-    - Late payment reminders (auto-send at 7, 14, 21 days)
-    - Statutory late fees (£40 for <£1000, £70 for £1000-9999, £100 for £10k+)
+  - **Net 30 Invoicing** ✅ **COMPLETED**
+    - **Invoice PDF Generator** (`web/lib/invoices/pdf-generator.ts`):
+      - @react-pdf/renderer template with company details, line items, VAT breakdown
+      - Displays subtotal, VAT (20%), total, Net 30 payment terms
+      - Late fee display when applicable (£40-£100)
+      - Footer with payment instructions and Late Payment Act notice
+    - **Invoice Generation Edge Function** (`supabase/functions/generate-invoice-pdf`):
+      - Queries invoice with client and line items
+      - Generates PDF and uploads to Supabase Storage
+      - Updates invoice status to 'sent' with PDF URL
+      - HTML fallback for Deno environment
+    - **Invoice Generation API** (`/api/invoices/generate`):
+      - Validates bookings are completed and not already invoiced
+      - Calculates subtotal (pre-VAT), VAT (20%), total
+      - Creates invoice record with line items (one per booking)
+      - Triggers PDF generation via Edge Function
+      - Returns invoice and PDF URL
+    - **Late Fee Calculator** (`web/lib/invoices/late-fees.ts`):
+      - UK Late Payment Act statutory fees: £40 (<£1k), £70 (£1k-10k), £100 (£10k+)
+      - Interest calculator (Bank of England rate + 8%)
+    - **Late Payment Tracker** (`web/components/invoices/late-payment-tracker.tsx`):
+      - Displays overdue invoices with color coding (yellow/orange/red)
+      - Shows days overdue, late fee amount, last reminder sent
+      - "Send Reminder" and "Mark as Paid" buttons
+      - Auto-refreshes every 60 seconds
+      - Filters by overdue bracket (1-7, 8-14, 15+ days)
+    - **Automated Reminder System** (`/api/invoices/send-reminder`):
+      - Sends reminder emails at 7, 14, 21 day intervals
+      - Calculates days overdue and statutory late fees
+      - Updates invoice status to 'overdue'
+      - Applies late fee at 21 days (£40-£100 based on amount)
+      - Tracks reminder history (prevents duplicate sends)
+    - **pg_cron Automation** (`020_late_payment_reminders.sql`):
+      - Daily job runs at 10am GMT checking for overdue invoices
+      - Finds invoices 7/14/21 days past due date
+      - Calls send-reminder API for each overdue invoice
+      - Optimized indexes for fast reminder queries
+      - Zero manual intervention required
 
   - **Platform Fee Structure**
     - 40% markup (transparent to clients)
