@@ -226,7 +226,7 @@ export class SyncQueue {
 
         // Compare timestamps - server updated_at is TIMESTAMPTZ, convert to epoch ms
         if (serverRecord) {
-          const serverUpdatedAt = new Date(serverRecord.updated_at).getTime()
+          const serverUpdatedAt = new Date((serverRecord as any).updated_at).getTime()
           const localModifiedAt = payload.last_modified_at || payload.updated_at || 0
 
           if (serverUpdatedAt > localModifiedAt) {
