@@ -7,8 +7,9 @@
 
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { useMedicLocationsStore } from '@/stores/useMedicLocationsStore';
 
 // Import map component dynamically (client-side only - Leaflet doesn't work with SSR)
 const MedicTrackingMap = dynamic(() => import('@/components/admin/MedicTrackingMap'), {
@@ -20,7 +21,7 @@ const MedicTrackingMap = dynamic(() => import('@/components/admin/MedicTrackingM
   ),
 });
 
-interface MedicLocation {
+export interface MedicLocation {
   medic_id: string;
   medic_name: string;
   booking_id: string;
@@ -33,95 +34,29 @@ interface MedicLocation {
   recorded_at: string;
   status: 'on_site' | 'traveling' | 'break' | 'issue' | 'offline';
   issue_type?: 'late_arrival' | 'battery_low' | 'connection_lost' | 'not_moving';
-}
-
-interface Alert {
-  id: string;
-  medic_id: string;
-  medic_name: string;
-  alert_type: string;
-  severity: 'critical' | 'warning' | 'info';
-  message: string;
-  timestamp: string;
+  last_event?: string;
 }
 
 export default function CommandCenter() {
-  const [activeMedics, setActiveMedics] = useState<MedicLocation[]>([]);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [selectedMedic, setSelectedMedic] = useState<MedicLocation | null>(null);
   const [filterMode, setFilterMode] = useState<'all' | 'issues'>('all');
-  const [isLoading, setIsLoading] = useState(true);
 
-  // WebSocket connection for real-time updates
+  // Real-time medic locations from Zustand store
+  const subscribe = useMedicLocationsStore((state) => state.subscribe);
+  const unsubscribe = useMedicLocationsStore((state) => state.unsubscribe);
+  const activeMedics = useMedicLocationsStore((state) => state.getActiveMedics());
+  const isConnected = useMedicLocationsStore((state) => state.isConnected);
+
+  // Subscribe to real-time updates on mount
   useEffect(() => {
-    // Load initial data
-    loadActiveMedics();
+    console.log('[CommandCenter] Subscribing to real-time updates...');
+    subscribe();
 
-    // Set up real-time subscription (Supabase Realtime)
-    // TODO: Implement Supabase Realtime subscription in Task #4
-    // For now, poll every 10 seconds
-    const interval = setInterval(loadActiveMedics, 10000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  /**
-   * Load all currently active medics
-   */
-  const loadActiveMedics = async () => {
-    try {
-      // TODO: Replace with actual Supabase query
-      // For now, mock data to show the UI
-      const mockData: MedicLocation[] = [
-        {
-          medic_id: '1',
-          medic_name: 'John Smith',
-          booking_id: 'booking-1',
-          site_name: 'ABC Construction - London E1',
-          latitude: 51.5074,
-          longitude: -0.1278,
-          accuracy_meters: 8.5,
-          battery_level: 78,
-          connection_type: '4G',
-          recorded_at: new Date().toISOString(),
-          status: 'on_site',
-        },
-        {
-          medic_id: '2',
-          medic_name: 'Sarah Johnson',
-          booking_id: 'booking-2',
-          site_name: 'XYZ Development - London N1',
-          latitude: 51.5354,
-          longitude: -0.1426,
-          accuracy_meters: 12.3,
-          battery_level: 18,
-          connection_type: '4G',
-          recorded_at: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-          status: 'issue',
-          issue_type: 'battery_low',
-        },
-        {
-          medic_id: '3',
-          medic_name: 'Mike Williams',
-          booking_id: 'booking-3',
-          site_name: 'City Tower Project - London EC1',
-          latitude: 51.5194,
-          longitude: -0.1270,
-          accuracy_meters: 6.8,
-          battery_level: 92,
-          connection_type: '5G',
-          recorded_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-          status: 'traveling',
-        },
-      ];
-
-      setActiveMedics(mockData);
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error loading active medics:', error);
-      setIsLoading(false);
-    }
-  };
+    return () => {
+      console.log('[CommandCenter] Unsubscribing from real-time updates...');
+      unsubscribe();
+    };
+  }, [subscribe, unsubscribe]);
 
   /**
    * Handle medic marker click
@@ -152,9 +87,19 @@ export default function CommandCenter() {
       <header className="bg-gray-800 border-b border-gray-700 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Medic Command Center</h1>
+            <h1 className="text-2xl font-bold flex items-center gap-3">
+              Medic Command Center
+              {/* Connection status indicator */}
+              <span
+                className={`inline-block w-3 h-3 rounded-full ${
+                  isConnected ? 'bg-green-500' : 'bg-red-500'
+                }`}
+                title={isConnected ? 'Connected' : 'Disconnected'}
+              />
+            </h1>
             <p className="text-gray-400 text-sm mt-1">
-              Live tracking • {activeMedics.length} active medics
+              {isConnected ? '🟢 Live tracking' : '🔴 Connecting...'} • {activeMedics.length}{' '}
+              active medics
             </p>
           </div>
 

@@ -392,20 +392,21 @@ class LocationTrackingService {
   }
 
   /**
-   * Send location ping to backend
+   * Send location ping to backend (via Supabase Edge Function)
    */
   private async sendLocationPing(ping: LocationPing): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('medic_location_pings')
-        .insert(ping);
+      // Use Edge Function instead of direct table insert for better validation
+      const { data, error } = await supabase.functions.invoke('medic-location-ping', {
+        body: { pings: [ping] },
+      });
 
       if (error) {
         console.error('[LocationTracking] Error sending ping:', error);
         // Queue for retry
         await this.queueOffline(ping);
       } else {
-        console.log('[LocationTracking] Ping sent successfully');
+        console.log('[LocationTracking] Ping sent successfully:', data);
       }
     } catch (error) {
       console.error('[LocationTracking] Network error sending ping:', error);
@@ -422,14 +423,15 @@ class LocationTrackingService {
       const isOnline = await this.isOnline();
 
       if (isOnline) {
-        const { error } = await supabase
-          .from('medic_shift_events')
-          .insert(event);
+        // Use Edge Function instead of direct table insert for validation
+        const { data, error } = await supabase.functions.invoke('medic-shift-event', {
+          body: event,
+        });
 
         if (error) {
           console.error('[LocationTracking] Error creating event:', error);
         } else {
-          console.log('[LocationTracking] Event created:', event.event_type);
+          console.log('[LocationTracking] Event created:', event.event_type, data);
         }
       } else {
         console.log('[LocationTracking] Offline - event will be created when connection restored');
@@ -479,34 +481,45 @@ class LocationTrackingService {
 
     console.log(`[LocationTracking] Syncing ${this.offlineQueue.length} queued pings...`);
 
+    const queueSize = this.offlineQueue.length;
+
     try {
-      // Batch insert for performance
-      const { error } = await supabase
-        .from('medic_location_pings')
-        .insert(this.offlineQueue);
+      // Batch insert via Edge Function (supports up to 50 pings per request)
+      const BATCH_SIZE = 50;
+      for (let i = 0; i < this.offlineQueue.length; i += BATCH_SIZE) {
+        const batch = this.offlineQueue.slice(i, i + BATCH_SIZE);
+        const { data, error } = await supabase.functions.invoke('medic-location-ping', {
+          body: { pings: batch },
+        });
 
-      if (error) {
-        console.error('[LocationTracking] Error syncing queue:', error);
-      } else {
-        console.log('[LocationTracking] Queue synced successfully');
-        // Clear queue
-        this.offlineQueue = [];
-        await AsyncStorage.removeItem(OFFLINE_QUEUE_KEY);
-
-        // Create connection_restored event
-        const medicId = await AsyncStorage.getItem('@sitemedic:medic_id');
-        const bookingJson = await AsyncStorage.getItem('@sitemedic:current_booking');
-        if (medicId && bookingJson) {
-          const booking = JSON.parse(bookingJson);
-          await this.createShiftEvent({
-            medic_id: medicId,
-            booking_id: booking.id,
-            event_type: 'connection_restored',
-            event_timestamp: new Date().toISOString(),
-            source: 'system_detected',
-            notes: `Connection restored - synced ${this.offlineQueue.length} queued pings`,
-          });
+        if (error) {
+          console.error('[LocationTracking] Error syncing batch:', error);
+          // Keep failed pings in queue
+          return;
         }
+
+        console.log(`[LocationTracking] Synced batch ${i / BATCH_SIZE + 1}:`, data);
+      }
+
+      console.log('[LocationTracking] All batches synced successfully');
+
+      // Clear queue
+      this.offlineQueue = [];
+      await AsyncStorage.removeItem(OFFLINE_QUEUE_KEY);
+
+      // Create connection_restored event
+      const medicId = await AsyncStorage.getItem('@sitemedic:medic_id');
+      const bookingJson = await AsyncStorage.getItem('@sitemedic:current_booking');
+      if (medicId && bookingJson) {
+        const booking = JSON.parse(bookingJson);
+        await this.createShiftEvent({
+          medic_id: medicId,
+          booking_id: booking.id,
+          event_type: 'connection_restored',
+          event_timestamp: new Date().toISOString(),
+          source: 'system_detected',
+          notes: `Connection restored - synced ${queueSize} queued pings`,
+        });
       }
     } catch (error) {
       console.error('[LocationTracking] Network error syncing queue:', error);
