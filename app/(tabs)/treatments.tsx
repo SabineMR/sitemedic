@@ -20,7 +20,9 @@ import {
   Pressable,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import { Q } from '@nozbe/watermelondb';
 import { getDatabase } from '../../src/lib/watermelon';
@@ -28,6 +30,7 @@ import Treatment from '../../src/database/models/Treatment';
 import Worker from '../../src/database/models/Worker';
 import LargeTapButton from '../../components/ui/LargeTapButton';
 import StatusBadge from '../../components/ui/StatusBadge';
+import SwipeableListItem from '../../components/ui/SwipeableListItem';
 import { INJURY_TYPES } from '../../services/taxonomy/injury-types';
 import { OUTCOME_CATEGORIES } from '../../services/taxonomy/outcome-categories';
 
@@ -121,6 +124,38 @@ export default function TreatmentsScreen() {
     router.push(`/treatment/${treatmentId}`);
   };
 
+  // Delete treatment with confirmation
+  const handleDeleteTreatment = async (treatmentId: string, treatmentRef: string) => {
+    Alert.alert(
+      'Delete Treatment',
+      `Are you sure you want to delete treatment ${treatmentRef}? This action cannot be undone.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const database = getDatabase();
+              const treatment = await database.get<Treatment>('treatments').find(treatmentId);
+              await database.write(async () => {
+                await treatment.markAsDeleted();
+              });
+              // Reload treatments list
+              await loadTreatments();
+            } catch (error) {
+              console.error('Failed to delete treatment:', error);
+              Alert.alert('Error', 'Failed to delete treatment. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   // Get outcome badge status color
   const getOutcomeBadgeStatus = (outcomeId: string | undefined): 'green' | 'amber' | 'red' | 'grey' => {
     if (!outcomeId) return 'grey';
@@ -157,57 +192,63 @@ export default function TreatmentsScreen() {
     });
 
     return (
-      <Pressable
-        style={({ pressed }) => [styles.treatmentItem, pressed && styles.treatmentItemPressed]}
-        onPress={() => handleTreatmentPress(item.id)}
+      <SwipeableListItem
+        onDelete={() => handleDeleteTreatment(item.id, item.referenceNumber || 'Unknown')}
+        onEdit={() => handleTreatmentPress(item.id)}
+        editLabel="View"
       >
-        {/* Header: Reference Number + Status */}
-        <View style={styles.itemHeader}>
-          <Text style={styles.referenceNumber}>{item.referenceNumber}</Text>
-          <View style={styles.statusContainer}>
-            {item.isRiddorReportable && (
-              <View style={styles.riddorBadge}>
-                <Text style={styles.riddorBadgeText}>RIDDOR</Text>
+        <Pressable
+          style={({ pressed }) => [styles.treatmentItem, pressed && styles.treatmentItemPressed]}
+          onPress={() => handleTreatmentPress(item.id)}
+        >
+          {/* Header: Reference Number + Status */}
+          <View style={styles.itemHeader}>
+            <Text style={styles.referenceNumber}>{item.referenceNumber}</Text>
+            <View style={styles.statusContainer}>
+              {item.isRiddorReportable && (
+                <View style={styles.riddorBadge}>
+                  <Text style={styles.riddorBadgeText}>RIDDOR</Text>
+                </View>
+              )}
+              <View style={styles.statusBadge}>
+                <Text style={styles.statusBadgeText}>
+                  {item.status === 'complete' ? 'Complete' : 'Draft'}
+                </Text>
               </View>
-            )}
-            <View style={styles.statusBadge}>
-              <Text style={styles.statusBadgeText}>
-                {item.status === 'complete' ? 'Complete' : 'Draft'}
-              </Text>
             </View>
           </View>
-        </View>
 
-        {/* Worker + Injury Type */}
-        <View style={styles.itemRow}>
-          <Text style={styles.workerName}>{item.workerName}</Text>
-          <Text style={styles.separator}>•</Text>
-          <Text style={styles.injuryType}>{injuryLabel}</Text>
-        </View>
+          {/* Worker + Injury Type */}
+          <View style={styles.itemRow}>
+            <Text style={styles.workerName}>{item.workerName}</Text>
+            <Text style={styles.separator}>•</Text>
+            <Text style={styles.injuryType}>{injuryLabel}</Text>
+          </View>
 
-        {/* Date + Time */}
-        <View style={styles.itemRow}>
-          <Text style={styles.dateTime}>
-            {dateStr} at {timeStr}
-          </Text>
-        </View>
+          {/* Date + Time */}
+          <View style={styles.itemRow}>
+            <Text style={styles.dateTime}>
+              {dateStr} at {timeStr}
+            </Text>
+          </View>
 
-        {/* Outcome Badge */}
-        <View style={styles.itemFooter}>
-          <StatusBadge
-            status={outcomeBadgeStatus}
-            label={outcomeLabel}
-            size="small"
-          />
-        </View>
-      </Pressable>
+          {/* Outcome Badge */}
+          <View style={styles.itemFooter}>
+            <StatusBadge
+              status={outcomeBadgeStatus}
+              label={outcomeLabel}
+              size="small"
+            />
+          </View>
+        </Pressable>
+      </SwipeableListItem>
     );
   };
 
   // Empty state
   if (!loading && treatments.length === 0) {
     return (
-      <View style={styles.container}>
+      <GestureHandlerRootView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Treatment Log</Text>
@@ -232,12 +273,12 @@ export default function TreatmentsScreen() {
             />
           </View>
         </View>
-      </View>
+      </GestureHandlerRootView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Treatment Log</Text>
@@ -285,7 +326,7 @@ export default function TreatmentsScreen() {
           }
         />
       )}
-    </View>
+    </GestureHandlerRootView>
   );
 }
 

@@ -16,7 +16,9 @@ import {
   StyleSheet,
   FlatList,
   Pressable,
+  Alert,
 } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import { useDatabase } from '@nozbe/watermelondb/hooks';
 import { Q } from '@nozbe/watermelondb';
@@ -24,6 +26,7 @@ import { withObservables } from '@nozbe/watermelondb/react';
 import Worker from '../../src/database/models/Worker';
 import LargeTapButton from '../../components/ui/LargeTapButton';
 import StatusBadge from '../../components/ui/StatusBadge';
+import SwipeableListItem from '../../components/ui/SwipeableListItem';
 
 interface WorkersListProps {
   workers: Worker[];
@@ -51,6 +54,34 @@ function WorkersList({ workers }: WorkersListProps) {
   // Navigate to worker profile
   const handleWorkerPress = (workerId: string) => {
     router.push(`/worker/${workerId}`);
+  };
+
+  // Delete worker with confirmation
+  const handleDeleteWorker = async (worker: Worker) => {
+    Alert.alert(
+      'Delete Worker',
+      `Are you sure you want to delete ${worker.firstName} ${worker.lastName}? This will also delete all associated treatments and cannot be undone.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await worker.database.write(async () => {
+                await worker.markAsDeleted();
+              });
+            } catch (error) {
+              console.error('Failed to delete worker:', error);
+              Alert.alert('Error', 'Failed to delete worker. Please try again.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   // Get certification status for a worker
@@ -99,37 +130,43 @@ function WorkersList({ workers }: WorkersListProps) {
     const certStatus = getCertificationStatus(item);
 
     return (
-      <Pressable
-        style={styles.workerCard}
-        onPress={() => handleWorkerPress(item.id)}
-        hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+      <SwipeableListItem
+        onDelete={() => handleDeleteWorker(item)}
+        onEdit={() => handleWorkerPress(item.id)}
+        editLabel="View"
       >
-        <View style={styles.workerInfo}>
-          <Text style={styles.workerName}>
-            {item.firstName} {item.lastName}
-          </Text>
-          <Text style={styles.workerCompany}>{item.company}</Text>
-          {item.role && <Text style={styles.workerRole}>{item.role}</Text>}
-        </View>
+        <Pressable
+          style={styles.workerCard}
+          onPress={() => handleWorkerPress(item.id)}
+          hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+        >
+          <View style={styles.workerInfo}>
+            <Text style={styles.workerName}>
+              {item.firstName} {item.lastName}
+            </Text>
+            <Text style={styles.workerCompany}>{item.company}</Text>
+            {item.role && <Text style={styles.workerRole}>{item.role}</Text>}
+          </View>
 
-        <View style={styles.workerMeta}>
-          {item.isIncomplete && (
-            <StatusBadge status="amber" label="Incomplete" size="small" />
-          )}
-          <StatusBadge
-            status={certStatus}
-            label={
-              certStatus === 'red'
-                ? 'Expired'
-                : certStatus === 'amber'
-                  ? 'Expiring'
-                  : 'Current'
-            }
-            size="small"
-          />
-          <Text style={styles.arrow}>▶</Text>
-        </View>
-      </Pressable>
+          <View style={styles.workerMeta}>
+            {item.isIncomplete && (
+              <StatusBadge status="amber" label="Incomplete" size="small" />
+            )}
+            <StatusBadge
+              status={certStatus}
+              label={
+                certStatus === 'red'
+                  ? 'Expired'
+                  : certStatus === 'amber'
+                    ? 'Expiring'
+                    : 'Current'
+              }
+              size="small"
+            />
+            <Text style={styles.arrow}>▶</Text>
+          </View>
+        </Pressable>
+      </SwipeableListItem>
     );
   };
 
@@ -148,7 +185,7 @@ function WorkersList({ workers }: WorkersListProps) {
   );
 
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       {/* Add Worker Button */}
       <View style={styles.header}>
         <LargeTapButton
@@ -179,7 +216,7 @@ function WorkersList({ workers }: WorkersListProps) {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
