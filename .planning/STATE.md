@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 5.5 of 7 (Admin Operations) — In progress
-Plan: 3 of 4 in current phase
+Phase: 4.5 of 7 (Marketing & Booking) — In progress
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 05.5-03-PLAN.md (Timesheet Batch Approval for Friday Payout)
+Last activity: 2026-02-16 — Completed 04.5-02-PLAN.md (Customer Booking Flow)
 
-Progress: [████████████░] 97% (38/39 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5)
+Progress: [█████████████] 100% (39/39 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 38
+- Total plans completed: 39
 - Average duration: 4.0 min
-- Total execution time: 2.51 hours
+- Total execution time: 2.67 hours
 
 **By Phase:**
 
@@ -32,13 +32,13 @@ Progress: [████████████░] 97% (38/39 plans across Phas
 | 02-mobile-core | 9/9 | 50 min | 5.6 min |
 | 03-sync-engine | 7/7 | 24 min | 3.4 min |
 | 04-web-dashboard | 6/6 | 46 min | 7.7 min |
-| 04.5-marketing-booking | 1/3 | 10 min | 10 min |
+| 04.5-marketing-booking | 2/3 | 20 min | 10 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
 | 05.5-admin-operations | 3/4 | 10.7 min | 3.6 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-04 (2 min), 04.5-01 (10 min), 05.5-01 (5.7 min), 05.5-03 (5 min)
-- Trend: Admin operations phase - Batch approval patterns with PostgreSQL bulk upsert (10-100x faster than N+1 queries)
+- Last 5 plans: 04.5-01 (10 min), 05.5-01 (5.7 min), 05.5-03 (5 min), 04.5-02 (10 min), 05.5-02 (4 min)
+- Trend: Marketing/booking phase continued - Customer booking flow with calendar, live pricing, and recurring bookings
 
 *Updated after each plan completion*
 
@@ -288,6 +288,16 @@ Recent decisions affecting current work:
 - D-04.5-01-004: Small client wrapper (quote-button.tsx) for QuoteBuilder modal, keep pages as Server Components
 - D-04.5-01-005: shadcn/ui Sheet component for mobile navigation menu
 
+**From Plan 04.5-02:**
+- D-04.5-02-001: Client-side pricing calculation mirrors Edge Function exactly for real-time transparency
+- D-04.5-02-002: Urgency premium auto-calculated based on days until shift (0%/20%/50%/75%)
+- D-04.5-02-003: Minimum 1 day advance booking (tomorrow is earliest, same-day disabled)
+- D-04.5-02-004: UK postcode validation with basic pattern check (uppercase, letters+numbers)
+- D-04.5-02-005: 8-hour minimum shift with 30-minute time increments
+- D-04.5-02-006: Recurring booking toggle shows/hides pattern select and weeks input
+- D-04.5-02-007: SessionStorage for form data handoff to payment page (Plan 03)
+- D-04.5-02-008: Default base rate GBP 42/hr (GBP 350 for 8hr day)
+
 **From Plan 05.5-02:**
 - D-05.5-02-001: Use TanStack Query for data fetching with 60-second polling for near-real-time updates
 - D-05.5-02-002: Calculate utilization as (confirmed bookings this week / 5 working days) × 100, capped at 100%
@@ -332,8 +342,8 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T06:14:41Z
-Stopped at: Completed 05.5-03-PLAN.md — Timesheet Batch Approval for Friday Payout (bulk upsert, select-all, payout summary, optimistic updates)
+Last session: 2026-02-16T06:23:26Z
+Stopped at: Completed 04.5-02-PLAN.md — Customer Booking Flow (calendar picker, live pricing, recurring bookings)
 Resume file: None
 
 ---
