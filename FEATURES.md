@@ -637,8 +637,9 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
   - iOS 26.2 simulator compatibility (iPhone 15)
 
 - **✅ App Entry Point Fixed - 2026-02-16**
-  - Updated `index.js` to use `expo-router/entry` (was using custom App.tsx that only showed placeholder)
-  - Mobile app with full tab navigation now loads correctly
+  - Updated `package.json` main field to `expo-router/entry` (proper Expo Router configuration)
+  - Added `expo-router` plugin to `app.json` plugins array
+  - Removed custom `index.js` (backed up to `index.backup.js`)
   - Background sync task registration moved to `mobile/app/_layout.tsx`
   - Original root App.tsx backed up to `App.backup.tsx` for reference
   - **All Phase 2 features are now accessible via 4-tab navigation**:

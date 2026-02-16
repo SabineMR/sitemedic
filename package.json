@@ -2,7 +2,7 @@
   "name": "sitemedic",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",

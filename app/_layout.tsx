@@ -20,9 +20,9 @@ import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { DatabaseProvider } from '@nozbe/watermelondb/react';
-import { AuthProvider } from '../../src/contexts/AuthContext';
-import { SyncProvider } from '../../src/contexts/SyncContext';
-import { initDatabase } from '../../src/lib/watermelon';
+import { AuthProvider } from '../src/contexts/AuthContext';
+import { SyncProvider } from '../src/contexts/SyncContext';
+import { initDatabase } from '../src/lib/watermelon';
 
 export default function RootLayout() {
   const [database, setDatabase] = useState<any>(null);
