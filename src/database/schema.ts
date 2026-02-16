@@ -1,7 +1,11 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb'
 
+// IMPORTANT: When bumping schema version, add a migration adapter before production release.
+// For development, clearing app data is acceptable. Production requires proper migrations.
+// See: https://nozbe.github.io/WatermelonDB/Advanced/Migrations.html
+
 export const schema = appSchema({
-  version: 2,
+  version: 3,
   tables: [
     tableSchema({
       name: 'treatments',
@@ -94,6 +98,7 @@ export const schema = appSchema({
         { name: 'operation', type: 'string' }, // create/update/delete
         { name: 'table_name', type: 'string' },
         { name: 'record_id', type: 'string' }, // local WatermelonDB ID
+        { name: 'idempotency_key', type: 'string' }, // client-generated UUID for duplicate detection
         { name: 'payload', type: 'string' }, // JSON stringified
         { name: 'priority', type: 'number' }, // 0 = immediate (RIDDOR), 1 = normal
         { name: 'retry_count', type: 'number' },
