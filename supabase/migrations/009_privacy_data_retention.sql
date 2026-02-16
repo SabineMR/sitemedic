@@ -404,12 +404,12 @@ SELECT
   m.first_name || ' ' || m.last_name AS medic_name,
 
   -- Consent status
-  c.consent_given_at,
+  c.consented_at,
   c.consent_version,
   c.withdrawn_at,
   CASE
     WHEN c.withdrawn_at IS NOT NULL THEN 'withdrawn'
-    WHEN c.consent_given_at IS NOT NULL THEN 'active'
+    WHEN c.consented_at IS NOT NULL THEN 'active'
     ELSE 'none'
   END AS consent_status,
 
