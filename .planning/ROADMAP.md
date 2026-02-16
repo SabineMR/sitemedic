@@ -98,17 +98,24 @@ Plans:
   9. Photos compress on-device to 100-200KB before storage
   10. Treatment auto-saves locally every 10 seconds
 
-**Plans**: TBD
+**Plans**: 8 plans
 
 Plans:
-- [ ] TBD during planning
+- [ ] 02-01-PLAN.md -- Dependencies, shared gloves-on UI components, and safety taxonomy data
+- [ ] 02-02-PLAN.md -- Photo capture/compression pipeline and signature pad component
+- [ ] 02-03-PLAN.md -- Worker profiles (search, quick-add, induction form, treatment history)
+- [ ] 02-04-PLAN.md -- Treatment logger core (full form with auto-save, body part picker, RIDDOR flag)
+- [ ] 02-05-PLAN.md -- Treatment quick mode (preset templates) and treatment list view
+- [ ] 02-06-PLAN.md -- Near-miss capture (photo-first, categories, severity, GPS tagging)
+- [ ] 02-07-PLAN.md -- Daily safety checklist (10 items, Green/Amber/Red, completion tracking)
+- [ ] 02-08-PLAN.md -- App navigation, home dashboard, workers tab, and integration verification
 
 ### Phase 3: Sync Engine
 **Goal**: Mobile app data syncs to backend automatically when connectivity available, with photo uploads that don't block workflow and zero data loss during transitions.
 
 **Depends on**: Phase 2
 
-**Requirements**: (No new functional requirements — implements sync for existing Phase 2 data)
+**Requirements**: (No new functional requirements -- implements sync for existing Phase 2 data)
 
 **Success Criteria** (what must be TRUE):
   1. Treatment logged offline syncs to backend when connectivity returns
@@ -369,7 +376,7 @@ Phases execute in numeric order: 1 → 1.5 → 2 → 3 → 4 → 4.5 → 4.6 →
 |-------|----------------|--------|-----------|
 | 1. Foundation | 5/5 | Complete | 2026-02-15 |
 | 1.5. Business Operations Foundation | 4/4 | Complete | 2026-02-15 |
-| 2. Mobile Core | 0/TBD | Not started | - |
+| 2. Mobile Core | 0/8 | Not started | - |
 | 3. Sync Engine | 0/TBD | Not started | - |
 | 4. Web Dashboard | 0/TBD | Not started | - |
 | 4.5. Marketing Website & Booking Portal | 0/4 | Not started | - |
@@ -389,3 +396,4 @@ Phases execute in numeric order: 1 → 1.5 → 2 → 3 → 4 → 4.5 → 4.6 →
 *Business operations phases added: 2026-02-15 -- 5 decimal phases (1.5, 4.5, 5.5, 6.5, 7.5) with 24 plans total for multi-medic scaling (booking portal, payments, territory management)*
 *Phase 1.5 planned: 2026-02-15 -- 4 plans in 1 wave (all parallel, DB schema and Google Maps API already exist from prior session)*
 *Phase 4.6 added: 2026-02-15 -- Customer onboarding & contract management with service agreement generation, document portal for phone sales, flexible payment terms (half upfront + remainder after completion/Net 30), digital signatures, and payment schedule enforcement (5 plans)*
+*Phase 2 planned: 2026-02-15 -- 8 plans in 3 waves (2 parallel foundation, 4 parallel features, 2 integration)*
