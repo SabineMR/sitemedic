@@ -8,20 +8,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 **Current focus:** Phase 2 - Mobile Core
 
 ## Current Position
-Phase: 4.5 of 7 (Marketing & Booking) — Complete
-Plan: 4 of 4 in current phase
+Phase: 6.5 of 7 (Payments & Payouts) — In progress
+Plan: 5 of 5 in current phase
 Status: Phase complete
-Last activity: 2026-02-16 — Completed 04.5-04-PLAN.md (Auto-Matching & Email Confirmation)
-Last activity: 2026-02-16 — Completed 06.5-03-PLAN.md (Invoice Generation with VAT)
-Progress: [██████████████] 100% (49/49 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6)
-Progress: [██████████████▓] 98% (51/52 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6, 6.5)
+Last activity: 2026-02-16 — Completed 06.5-05-PLAN.md (Out-of-Territory Cost Management)
+Progress: [███████████████] 100% (52/52 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6, 6.5)
 
 ## Performance Metrics
 
-- Total plans completed: 49
+**Velocity:**
+- Total plans completed: 52
 - Average duration: 4.5 min
-- Total execution time: 3.70 hours
-- Total execution time: 3.85 hours
+- Total execution time: 3.93 hours
 
 **By Phase:**
 
@@ -31,16 +29,16 @@ Progress: [██████████████▓] 98% (51/52 plans acros
 | 01.5-business-foundation | 4/4 | 10 min | 2.5 min |
 | 02-mobile-core | 9/9 | 50 min | 5.6 min |
 | 03-sync-engine | 7/7 | 24 min | 3.4 min |
-| 04.5-marketing-booking | 4/4 | 33 min | 8.3 min |
+| 04-web-dashboard | 6/6 | 46 min | 7.7 min |
 | 04.5-marketing-booking | 3/3 | 26 min | 8.7 min |
 | 04.6-customer-onboarding | 7/7 | 52 min | 7.4 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
-| 06.5-payments-payouts | 3/5 | 32 min | 10.7 min |
+| 06.5-payments-payouts | 5/5 | 36 min | 7.2 min |
 
-- Last 5 plans: 04.6-06 (8 min), 04.6-07 (6 min), 04.5-03 (6 min), 04.5-04 (7 min), 06.5-02 (4 min)
-- Trend: Phase 4.5 complete - Auto-matching and email confirmation
-- Trend: Phase 6.5 in progress - Invoice generation with VAT and late payment tracking
+**Recent Trend:**
+- Last 5 plans: 06.5-01 (9 min), 06.5-02 (4 min), 06.5-03 (9 min), 06.5-04 (5 min), 06.5-05 (4 min)
+- Trend: Phase 6.5 complete - Payments & payouts system with invoice generation, late payment tracking, payout calculations, and out-of-territory cost management
 
 *Updated after each plan completion*
 
@@ -403,6 +401,13 @@ Recent decisions affecting current work:
 - D-06.5-04-005: Auto-refresh Stripe status every 30 seconds until onboarding complete
 - D-06.5-04-006: Payslip generation: triggered on timesheet.payout_status = 'paid'
 
+**From Plan 06.5-05:**
+- D-06.5-05-001: Travel bonus rate: £2/mile beyond 30-mile free zone (industry standard compensation)
+- D-06.5-05-002: Room/board flat rate: £150 for overnight stay when travel >2 hours (simpler than receipts)
+- D-06.5-05-003: Auto-deny recommendation at 50% cost threshold (prevents unprofitable bookings)
+- D-06.5-05-004: Admin override limit: 75% hard limit (prevents extreme loss-making bookings)
+- D-06.5-05-005: Google Maps cache: 7-day TTL for route data (reduces API costs)
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -427,8 +432,10 @@ Recent decisions affecting current work:
 
 - Add Stripe API keys to Supabase secrets (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PUBLISHABLE_KEY)
 - Configure Stripe webhook endpoint in Stripe Dashboard for 4 event types
-- Add Google Maps API key to Supabase secrets (GOOGLE_MAPS_API_KEY)
+- Add Google Maps API key to environment variables (GOOGLE_MAPS_API_KEY)
 - Enable Distance Matrix API in Google Cloud Console
+- Consider adding admin dashboard for out-of-territory override statistics
+- Monitor Google Maps API usage and set billing alerts
 - Deploy Supabase migration 014_storage_buckets.sql to create treatment-photos bucket (Plan 03-02)
 - Add Resend API key to Supabase secrets (RESEND_API_KEY) and verify sitemedic.co.uk domain (Plan 05-02)
 - Deploy Supabase migration 015_safety_reports_storage.sql to create safety-reports bucket and weekly_reports table (Plan 05-02)
@@ -445,9 +452,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T21:22:49Z
-Stopped at: Completed 04.5-04-PLAN.md — Auto-Matching & Email Confirmation (Auto-matching with 3-step sequence, email confirmation with .ics calendar invites, medic notifications, recurring booking creation)
+Last session: 2026-02-16T21:49:53Z
+Stopped at: Completed 06.5-05-PLAN.md — Out-of-Territory Cost Management (Travel bonus vs room/board calculator with Google Maps integration, 7-day caching, admin approval workflow with 50-75% override limits)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (3/3 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6.5 (Payments & Payouts) in progress (4/5 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (3/3 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6.5 (Payments & Payouts) complete (5/5 plans)*
