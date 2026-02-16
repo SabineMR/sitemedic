@@ -21,6 +21,7 @@ interface MedicAssignmentEmailProps {
     endTime: string;
     siteName: string;
     siteAddress: string;
+    what3wordsAddress?: string;
     siteContactName: string;
     siteContactPhone: string;
     specialNotes?: string;
@@ -64,6 +65,23 @@ export default function MedicAssignmentEmail({
             <Text style={detailValue}>
               {booking.siteName}<br />
               {booking.siteAddress}
+              {booking.what3wordsAddress && (
+                <>
+                  <br />
+                  <br />
+                  <strong>Precise Location (what3words):</strong>{' '}
+                  <a
+                    href={`https://what3words.com/${booking.what3wordsAddress.replace(/^\/+/, '')}`}
+                    style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 'bold' }}
+                  >
+                    {booking.what3wordsAddress}
+                  </a>
+                  <br />
+                  <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                    Use this for exact navigation to the site entrance
+                  </span>
+                </>
+              )}
             </Text>
 
             <Text style={detailLabel}>Site Contact</Text>

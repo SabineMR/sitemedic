@@ -12,7 +12,6 @@ SELECT cron.schedule(
   'check-overdue-invoices-daily',
   '0 10 * * *',
   $$
-  DO $$
   DECLARE
     invoice_rec RECORD;
     project_url TEXT;
@@ -85,7 +84,7 @@ SELECT cron.schedule(
         )
       );
     END LOOP;
-  END $$;
+  END;
   $$
 );
 

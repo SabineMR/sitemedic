@@ -14,6 +14,7 @@ export interface BookingFormData {
   siteName: string;
   siteAddress: string;
   sitePostcode: string;
+  what3wordsAddress?: string; // Optional: ///word.word.word format
   siteContactName: string;
   siteContactPhone: string;
 

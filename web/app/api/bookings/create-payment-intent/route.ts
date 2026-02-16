@@ -27,6 +27,7 @@ interface BookingRequest {
   siteName: string;
   siteAddress: string;
   sitePostcode: string;
+  what3wordsAddress?: string; // Optional what3words address
   siteContactName: string;
   siteContactPhone: string;
   confinedSpaceRequired: boolean;
@@ -94,6 +95,7 @@ export async function POST(request: NextRequest) {
         site_name: body.siteName,
         site_address: body.siteAddress,
         site_postcode: body.sitePostcode,
+        what3words_address: body.what3wordsAddress || null,
         site_contact_name: body.siteContactName,
         site_contact_phone: body.siteContactPhone,
         confined_space_required: body.confinedSpaceRequired,

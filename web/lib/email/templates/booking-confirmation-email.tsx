@@ -21,6 +21,7 @@ interface BookingConfirmationEmailProps {
     endTime: string;
     siteName: string;
     siteAddress: string;
+    what3wordsAddress?: string;
   };
   client: {
     name: string;
@@ -67,6 +68,18 @@ export default function BookingConfirmationEmail({
             <Text style={detailValue}>
               {booking.siteName}<br />
               {booking.siteAddress}
+              {booking.what3wordsAddress && (
+                <>
+                  <br />
+                  <strong>what3words:</strong>{' '}
+                  <a
+                    href={`https://what3words.com/${booking.what3wordsAddress.replace(/^\/+/, '')}`}
+                    style={{ color: '#2563eb', textDecoration: 'underline' }}
+                  >
+                    {booking.what3wordsAddress}
+                  </a>
+                </>
+              )}
             </Text>
 
             <Text style={detailLabel}>Assigned Medic</Text>

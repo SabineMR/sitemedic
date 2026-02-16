@@ -1,4 +1,5 @@
 // UK Late Payment of Commercial Debts (Interest) Act 1998
+
 export function calculateLateFee(invoiceAmount: number): number {
   if (invoiceAmount < 1000) return 40;
   if (invoiceAmount < 10000) return 70;

@@ -7,6 +7,7 @@
 
 import { Input } from '@/components/ui/input';
 import { BookingFormData } from '@/lib/booking/types';
+import { What3WordsInput } from '@/components/ui/what3words-input';
 
 interface LocationInputProps {
   formData: BookingFormData;
@@ -72,6 +73,22 @@ export function LocationInput({ formData, onChange }: LocationInputProps) {
         {formData.sitePostcode && !validatePostcode(formData.sitePostcode) && (
           <p className="mt-1 text-xs text-destructive">Please enter a valid UK postcode</p>
         )}
+      </div>
+
+      <div>
+        <label htmlFor="what3wordsAddress" className="text-sm font-medium">
+          what3words Address (Recommended)
+        </label>
+        <div className="mt-1.5">
+          <What3WordsInput
+            value={formData.what3wordsAddress || ''}
+            onChange={(value) => onChange({ what3wordsAddress: value })}
+            placeholder="e.g., filled.count.soap"
+          />
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Provides 3m x 3m precision for exact site location. Makes it easier for paramedics to find you.
+        </p>
       </div>
 
       <div>

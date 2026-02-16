@@ -316,7 +316,6 @@ export default function TreatmentsScreen() {
           renderItem={renderTreatmentItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
           ListEmptyComponent={
             <View style={styles.emptySearchState}>
               <Text style={styles.emptySearchText}>

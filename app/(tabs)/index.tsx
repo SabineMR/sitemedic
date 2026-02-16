@@ -306,7 +306,7 @@ const enhance = withObservables([], ({ database }: { database: any }) => {
   };
 });
 
-// TEMPORARY: Simple version without observables to test WatermelonDB
+// TEMPORARY: Simple version without observables - withObservables HOC has timing issues
 export default function HomeScreenWrapper() {
   const database = useDatabase();
 
@@ -315,29 +315,77 @@ export default function HomeScreenWrapper() {
     return null;
   }
 
-  // Simple test screen to verify WatermelonDB works
+  // Sleek professional interface
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.content}>
-        <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>
-          🎉 SiteMedic Home
-        </Text>
-        <Text style={{ fontSize: 16, color: '#666', marginBottom: 10 }}>
-          ✅ WatermelonDB initialized successfully!
-        </Text>
-        <Text style={{ fontSize: 14, color: '#999' }}>
-          Database path: {database.adapter._dbName}
-        </Text>
-        <View style={{ marginTop: 40 }}>
-          <Text style={{ fontSize: 18, fontWeight: '600', marginBottom: 15 }}>
-            Quick Actions:
-          </Text>
-          <LargeTapButton
-            title="New Treatment"
-            icon="⚕️"
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Command Center</Text>
+          <View style={styles.statusBadge}>
+            <View style={styles.statusDot} />
+            <Text style={styles.statusText}>SYSTEM ACTIVE</Text>
+          </View>
+        </View>
+
+        {/* Quick Actions Grid */}
+        <View style={styles.actionsGrid}>
+          <Pressable
+            style={styles.actionCard}
             onPress={() => router.push('/treatment/new')}
-            variant="primary"
-          />
+          >
+            <View style={styles.actionIconContainer}>
+              <Text style={styles.actionIcon}>+</Text>
+            </View>
+            <Text style={styles.actionTitle}>New Treatment</Text>
+            <Text style={styles.actionSubtitle}>Document injury</Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.actionCard}
+            onPress={() => router.push('/worker/new')}
+          >
+            <View style={styles.actionIconContainer}>
+              <Text style={styles.actionIcon}>ID</Text>
+            </View>
+            <Text style={styles.actionTitle}>Add Worker</Text>
+            <Text style={styles.actionSubtitle}>Site induction</Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.actionCard}
+            onPress={() => router.push('/safety/near-miss')}
+          >
+            <View style={styles.actionIconContainer}>
+              <Text style={styles.actionIcon}>⚠</Text>
+            </View>
+            <Text style={styles.actionTitle}>Report</Text>
+            <Text style={styles.actionSubtitle}>Near-miss</Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.actionCard}
+            onPress={() => router.push('/safety/daily-check')}
+          >
+            <View style={styles.actionIconContainer}>
+              <Text style={styles.actionIcon}>✓</Text>
+            </View>
+            <Text style={styles.actionTitle}>Daily Check</Text>
+            <Text style={styles.actionSubtitle}>Safety audit</Text>
+          </Pressable>
+        </View>
+
+        {/* System Status */}
+        <View style={styles.systemStatus}>
+          <Text style={styles.systemStatusLabel}>DATABASE STATUS</Text>
+          <View style={styles.systemStatusRow}>
+            <Text style={styles.systemStatusKey}>Connection</Text>
+            <Text style={styles.systemStatusValue}>ACTIVE</Text>
+          </View>
+          <View style={styles.systemStatusRow}>
+            <Text style={styles.systemStatusKey}>Sync</Text>
+            <Text style={styles.systemStatusValue}>READY</Text>
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -350,11 +398,118 @@ export default function HomeScreenWrapper() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#0A0E1A', // Dark professional background
   },
   content: {
+    padding: 20,
+  },
+  // Header Section
+  header: {
+    marginBottom: 32,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E293B',
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#F1F5F9',
+    letterSpacing: 0.5,
+    marginBottom: 12,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10B981', // Green indicator
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#10B981',
+    letterSpacing: 1.2,
+  },
+  // Actions Grid
+  actionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+    marginBottom: 32,
+  },
+  actionCard: {
+    width: '47%',
+    backgroundColor: '#1E293B',
+    borderRadius: 12,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#334155',
+    minHeight: 140,
+  },
+  actionIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#0EA5E9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  actionIcon: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  actionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#F1F5F9',
+    marginBottom: 4,
+  },
+  actionSubtitle: {
+    fontSize: 12,
+    color: '#94A3B8',
+  },
+  // System Status Section
+  systemStatus: {
+    backgroundColor: '#1E293B',
+    borderRadius: 12,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  systemStatusLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748B',
+    letterSpacing: 1.5,
+    marginBottom: 16,
+  },
+  systemStatusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  systemStatusKey: {
+    fontSize: 14,
+    color: '#94A3B8',
+  },
+  systemStatusValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#10B981',
+  },
+  // Legacy styles for old UI (kept for compatibility with unused HomeScreen component)
+  dailyCheckBanner: {
+    borderRadius: 8,
     padding: 16,
-    paddingBottom: 40,
+    marginBottom: 20,
+    minHeight: 80,
   },
   dailyCheckBanner: {
     borderRadius: 8,

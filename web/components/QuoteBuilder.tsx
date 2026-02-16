@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Script from 'next/script';
+import { What3WordsInput } from '@/components/ui/what3words-input';
+import { coordinatesToWhat3Words } from '@/lib/utils/what3words';
 
 interface QuoteBuilderProps {
   onClose: () => void;
@@ -24,6 +26,7 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
     location: '',
     siteAddress: '',
     coordinates: '', // Format: "lat, long" or empty if address is provided
+    what3wordsAddress: '', // Format: ///word.word.word or word.word.word
     startDate: '',
     endDate: '',
     projectPhase: '',
@@ -89,6 +92,15 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
       updateField('siteAddress', address);
       updateField('coordinates', coordinates);
       setAddressAutoFilled(true);
+
+      // Auto-fill what3words address from coordinates
+      if (lat && lng) {
+        coordinatesToWhat3Words(lat, lng).then((result) => {
+          if (result) {
+            updateField('what3wordsAddress', `///${result.words}`);
+          }
+        });
+      }
     });
 
     return () => {
@@ -116,11 +128,19 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
     return recommended;
   };
 
-  // Validate site address or coordinates
+  // Validate site address, coordinates, or what3words
   const isValidLocation = (): boolean => {
-    // Either site address OR coordinates must be provided
+    // Either site address OR coordinates OR what3words must be provided
     const hasAddress = formData.siteAddress.trim().length > 0;
     const hasCoordinates = formData.coordinates.trim().length > 0;
+    const hasWhat3Words = formData.what3wordsAddress.trim().length > 0;
+
+    // what3words takes priority as the most precise
+    if (hasWhat3Words) {
+      // Basic format check: 3 words separated by dots
+      const w3wRegex = /^(\/\/\/)?[a-z]+\.[a-z]+\.[a-z]+$/i;
+      return w3wRegex.test(formData.what3wordsAddress.trim());
+    }
 
     // If coordinates provided, validate format (lat, long)
     if (hasCoordinates && !hasAddress) {
@@ -500,6 +520,47 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
                     </p>
                   </div>
 
+                  {/* what3words address (precise 3m x 3m location) */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      what3words address (recommended for precision)
+                    </label>
+                    <What3WordsInput
+                      value={formData.what3wordsAddress}
+                      onChange={(value, coords) => {
+                        updateField('what3wordsAddress', value);
+                        // If coordinates are provided from what3words, update them
+                        if (coords) {
+                          updateField('coordinates', `${coords.lat}, ${coords.lng}`);
+                        }
+                      }}
+                      placeholder="e.g., filled.count.soap or ///filled.count.soap"
+                      autoFillFromCoordinates={
+                        formData.coordinates && !formData.what3wordsAddress
+                          ? (() => {
+                              const parts = formData.coordinates.split(',').map((s) => s.trim());
+                              if (parts.length === 2) {
+                                const lat = parseFloat(parts[0]);
+                                const lng = parseFloat(parts[1]);
+                                if (!isNaN(lat) && !isNaN(lng)) {
+                                  return { lat, lng };
+                                }
+                              }
+                              return null;
+                            })()
+                          : null
+                      }
+                    />
+                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-xs text-blue-900 font-medium mb-1">
+                        💡 Why what3words?
+                      </p>
+                      <p className="text-xs text-blue-700">
+                        what3words divides the world into 3m x 3m squares and gives each one a unique 3-word address. This is much easier to communicate over phone or radio than GPS coordinates, and ensures paramedics can find the exact location on your construction site.
+                      </p>
+                    </div>
+                  </div>
+
                   {/* Duration flexibility */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -620,9 +681,19 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
                     <div className="flex justify-between">
                       <span className="text-slate-600">Location:</span>
                       <span className="font-medium text-slate-900">
-                        {formData.siteAddress || formData.coordinates}
+                        {formData.what3wordsAddress
+                          ? formData.what3wordsAddress
+                          : formData.siteAddress || formData.coordinates}
                       </span>
                     </div>
+                    {formData.what3wordsAddress && (formData.siteAddress || formData.coordinates) && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Address:</span>
+                        <span className="font-medium text-slate-900 text-xs">
+                          {formData.siteAddress || formData.coordinates}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-slate-600">
                         {formData.durationKnown === 'fixed' ? 'Coverage dates:' : 'Start date:'}
