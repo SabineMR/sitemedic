@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView } from 'react-native';
-import { getDatabase } from '../../../src/lib/watermelon';
-import Worker from '../../../src/database/models/Worker';
-import LargeTapButton from '../../components/ui/LargeTapButton';
+import { getDatabase } from '../../src/lib/watermelon';
+import Worker from '../../src/database/models/Worker';
+import LargeTapButton from '../components/ui/LargeTapButton';
 
 /**
  * WorkerQuickAdd - Minimal quick-add modal

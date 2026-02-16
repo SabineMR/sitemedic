@@ -27,20 +27,20 @@ import {
   Alert,
 } from 'react-native';
 import { router } from 'expo-router';
-import { getDatabase } from '../../../src/lib/watermelon';
-import Treatment from '../../../src/database/models/Treatment';
-import { useAutoSave, AutoSaveIndicator } from '../../components/forms/AutoSaveForm';
-import WorkerSearchPicker from '../../components/forms/WorkerSearchPicker';
-import BottomSheetPicker from '../../components/ui/BottomSheetPicker';
-import LargeTapButton from '../../components/ui/LargeTapButton';
-import PhotoCapture from '../../components/forms/PhotoCapture';
-import SignaturePad from '../../components/forms/SignaturePad';
-import BodyDiagramPicker from '../../components/forms/BodyDiagramPicker';
-import { INJURY_TYPES } from '../../services/taxonomy/injury-types';
-import { TREATMENT_TYPES } from '../../services/taxonomy/treatment-types';
-import { OUTCOME_CATEGORIES } from '../../services/taxonomy/outcome-categories';
-import { useSync } from '../../../src/contexts/SyncContext';
-import { photoUploadQueue } from '../../../src/services/PhotoUploadQueue';
+import { getDatabase } from '../../src/lib/watermelon';
+import Treatment from '../../src/database/models/Treatment';
+import { useAutoSave, AutoSaveIndicator } from '../components/forms/AutoSaveForm';
+import WorkerSearchPicker from '../components/forms/WorkerSearchPicker';
+import BottomSheetPicker from '../components/ui/BottomSheetPicker';
+import LargeTapButton from '../components/ui/LargeTapButton';
+import PhotoCapture from '../components/forms/PhotoCapture';
+import SignaturePad from '../components/forms/SignaturePad';
+import BodyDiagramPicker from '../components/forms/BodyDiagramPicker';
+import { INJURY_TYPES } from '../services/taxonomy/injury-types';
+import { TREATMENT_TYPES } from '../services/taxonomy/treatment-types';
+import { OUTCOME_CATEGORIES } from '../services/taxonomy/outcome-categories';
+import { useSync } from '../../src/contexts/SyncContext';
+import { photoUploadQueue } from '../../src/services/PhotoUploadQueue';
 
 // Common mechanism presets (TREAT-04)
 const MECHANISM_PRESETS = [

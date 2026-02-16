@@ -21,10 +21,10 @@ import {
 import { useDatabase } from '@nozbe/watermelondb/hooks';
 import { Q } from '@nozbe/watermelondb';
 import { withObservables } from '@nozbe/watermelondb/react';
-import NearMiss from '../../../src/database/models/NearMiss';
-import LargeTapButton from '../../components/ui/LargeTapButton';
-import StatusBadge from '../../components/ui/StatusBadge';
-import { NEAR_MISS_CATEGORIES } from '../../services/taxonomy/near-miss-categories';
+import NearMiss from '../../src/database/models/NearMiss';
+import LargeTapButton from '../components/ui/LargeTapButton';
+import StatusBadge from '../components/ui/StatusBadge';
+import { NEAR_MISS_CATEGORIES } from '../services/taxonomy/near-miss-categories';
 
 type TabType = 'near-misses' | 'daily-checks';
 

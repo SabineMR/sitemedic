@@ -12,7 +12,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
-import { useSync } from '../../../src/contexts/SyncContext';
+import { useSync } from '../../src/contexts/SyncContext';
 
 function SyncStatusIndicator() {
   const { state } = useSync();

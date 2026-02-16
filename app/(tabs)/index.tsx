@@ -22,12 +22,12 @@ import { router } from 'expo-router';
 import { useDatabase } from '@nozbe/watermelondb/hooks';
 import { Q } from '@nozbe/watermelondb';
 import { withObservables } from '@nozbe/watermelondb/react';
-import SafetyCheck from '../../../src/database/models/SafetyCheck';
-import Worker from '../../../src/database/models/Worker';
-import Treatment from '../../../src/database/models/Treatment';
-import NearMiss from '../../../src/database/models/NearMiss';
-import LargeTapButton from '../../components/ui/LargeTapButton';
-import { useSync } from '../../../src/contexts/SyncContext';
+import SafetyCheck from '../../src/database/models/SafetyCheck';
+import Worker from '../../src/database/models/Worker';
+import Treatment from '../../src/database/models/Treatment';
+import NearMiss from '../../src/database/models/NearMiss';
+import LargeTapButton from '../components/ui/LargeTapButton';
+import { useSync } from '../../src/contexts/SyncContext';
 
 interface HomeProps {
   todayCheck: SafetyCheck | null;
