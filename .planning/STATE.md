@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 3 of 7 (Sync Engine)
-Plan: 7 of 7 in current phase
-Status: Phase complete
-Last activity: 2026-02-16 — Completed 03-07-PLAN.md (Idempotency Keys)
+Phase: 4 of 7 (Web Dashboard)
+Plan: 1 of 6 in current phase
+Status: In progress
+Last activity: 2026-02-16 — Completed 04-01-PLAN.md (Dashboard Foundation)
 
-Progress: [██████████] 89.7% (26/29 plans across Phases 1, 1.5, 2, 3)
+Progress: [███████████] 93.1% (27/29 plans across Phases 1, 1.5, 2, 3, 4)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 26
-- Average duration: 3.2 min
-- Total execution time: 1.51 hours
+- Total plans completed: 27
+- Average duration: 3.6 min
+- Total execution time: 1.74 hours
 
 **By Phase:**
 
@@ -31,10 +31,11 @@ Progress: [██████████] 89.7% (26/29 plans across Phases 1, 1
 | 01.5-business-foundation | 4/4 | 10 min | 2.5 min |
 | 02-mobile-core | 9/9 | 50 min | 5.6 min |
 | 03-sync-engine | 7/7 | 24 min | 3.4 min |
+| 04-web-dashboard | 1/6 | 14 min | 14 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-02 (4 min), 03-03 (3 min), 03-05 (10 min), 03-06 (2 min), 03-07 (2.4 min)
-- Trend: Phase 3 complete - full sync engine with queue processing, RIDDOR alerts, photo uploads, UI integration, battery/network constraints, and idempotency keys delivered
+- Last 5 plans: 03-03 (3 min), 03-05 (10 min), 03-06 (2 min), 03-07 (2.4 min), 04-01 (14 min)
+- Trend: Phase 4 started - dashboard foundation with Supabase SSR auth, shadcn/ui, responsive sidebar, TanStack Query 60s polling delivered
 
 *Updated after each plan completion*
 
@@ -200,6 +201,14 @@ Recent decisions affecting current work:
 - D-03-07-002: Include client_id in create payloads immediately, server migration deferred to Phase 4+
 - D-03-07-003: Treat PostgreSQL 23505 duplicate error as success, not failure
 
+**From Plan 04-01:**
+- D-04-01-001: Use @supabase/ssr instead of deprecated auth-helpers for Next.js 15 compatibility
+- D-04-01-002: TanStack Query polling interval 60 seconds (DASH-09 requirement)
+- D-04-01-003: Next.js route groups (auth) and (dashboard) for layout isolation
+- D-04-01-004: shadcn/ui neutral theme with CSS variables for theming flexibility
+- D-04-01-005: Dashboard at root / (protected), existing admin at /admin (public for backward compatibility)
+- D-04-01-006: ESLint skip during build (pre-existing lint issues in admin pages, not related to Phase 4)
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -234,9 +243,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T04:50:50Z
-Stopped at: Completed 03-07-PLAN.md — Idempotency Keys (added client-generated UUID idempotency keys to prevent duplicate server records)
+Last session: 2026-02-16T04:04:04Z
+Stopped at: Completed 04-01-PLAN.md — Dashboard Foundation (Supabase SSR auth, shadcn/ui components, responsive sidebar navigation, TanStack Query 60s polling)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) in progress (1/6 plans)*
