@@ -221,13 +221,13 @@ Plans:
 **Plans**: 7 plans
 
 Plans:
-- [ ] 04.6-01-PLAN.md -- Database schema, TypeScript types, state machine, and payment schedule logic
-- [ ] 04.6-02-PLAN.md -- Contract PDF generation Edge Function with auto-fill from booking data
-- [ ] 04.6-03-PLAN.md -- Signature pad component and client-facing signing page
-- [ ] 04.6-04-PLAN.md -- Admin contract creation UI with payment terms selector
-- [ ] 04.6-05-PLAN.md -- Contract sending via Resend email with webhook tracking
-- [ ] 04.6-06-PLAN.md -- Admin contract dashboard, detail view, and template management
-- [ ] 04.6-07-PLAN.md -- Payment milestone enforcement and booking confirmation gate
+- [x] 04.6-01-PLAN.md -- Database schema, TypeScript types, state machine, and payment schedule logic
+- [x] 04.6-02-PLAN.md -- Contract PDF generation Edge Function with auto-fill from booking data
+- [x] 04.6-03-PLAN.md -- Signature pad component and client-facing signing page
+- [x] 04.6-04-PLAN.md -- Admin contract creation UI with payment terms selector
+- [x] 04.6-05-PLAN.md -- Contract sending via Resend email with webhook tracking
+- [x] 04.6-06-PLAN.md -- Admin contract dashboard, detail view, and template management
+- [x] 04.6-07-PLAN.md -- Payment milestone enforcement and booking confirmation gate
 
 ### Phase 5: PDF Generation
 **Goal**: Weekly safety reports auto-generate every Friday and on-demand with professional formatting ready for HSE audits, principal contractors, and insurers.
@@ -405,7 +405,7 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 | 3. Sync Engine | 7/7 | Complete | 2026-02-16 |
 | 4. Web Dashboard | 6/6 | Complete | 2026-02-16 |
 | 4.5. Marketing Website & Booking Portal | 4/4 | Complete | 2026-02-16 |
-| 4.6. Customer Onboarding & Contract Management | 0/7 | Not started | - |
+| 4.6. Customer Onboarding & Contract Management | 7/7 | Complete | 2026-02-16 |
 | 5. PDF Generation | 4/4 | Complete | 2026-02-16 |
 | 5.5. Admin Operations Dashboards | 6/6 | Complete | 2026-02-16 |
 | 6. RIDDOR Auto-Flagging | 0/6 | 🔄 In Progress (DB schema ✅) | - |
@@ -431,5 +431,6 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Phase 5.5 planned: 2026-02-16 -- 6 plans in 2 waves (3 parallel Wave 1: bookings/medics/timesheets, 3 parallel Wave 2: territories/revenue/clients)*
 *Phase 5.5 complete: 2026-02-16 -- 6/6 plans executed, verification passed (10/10 must-haves), goal achieved (admin dashboard operational with booking management, medic roster, territory coverage map, revenue tracking, timesheet approval, client management)*
 *Phase 4.6 planned: 2026-02-16 -- 7 plans in 4 waves (2 parallel foundation: schema+PDF, 2 parallel UI: signing+admin creation, 2 parallel delivery: email+dashboard, 1 enforcement: payments+booking gate)*
+*Phase 4.6 complete: 2026-02-16 -- 7/7 plans executed, verification passed (12/12 must-haves), goal achieved (automated service agreement generation with auto-filled booking data, document portal for phone sales, flexible payment terms with milestone enforcement, digital signature collection with audit trail)*
 *Phase 6 planned: 2026-02-16 -- 6 plans in 3 waves (2 parallel Wave 1: detection+mobile, 2 parallel Wave 2: F2508+dashboard, 2 sequential Wave 3: notifications+analytics)*
 *Phase 6 progress: 2026-02-16 -- Database schema completed (migration 018_riddor_incidents.sql added with riddor_incidents table, RLS policies, performance indexes, and complete audit trail for auto-detection, medic override, deadline management, and F2508 PDF storage)*
