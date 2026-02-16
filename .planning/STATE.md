@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 Phase: 3 of 7 (Sync Engine)
 Plan: 3 of 3 in current phase
 Status: Phase complete
-Last activity: 2026-02-16 — Completed 03-04-PLAN.md
+Last activity: 2026-02-16 — Completed 03-03-PLAN.md (re-execution with fixes)
 
 Progress: [█████████░] 91.3% (21/23 plans across Phases 1, 1.5, 2, 3)
 
@@ -170,6 +170,13 @@ Recent decisions affecting current work:
 - D-03-02-004: Photo uploads persist in WatermelonDB sync_queue with tableName='photo_uploads'
 - D-03-02-005: Use 'base64' string encoding instead of FileSystem.EncodingType for expo-file-system v19
 
+**From Plan 03-03:**
+- D-03-03-001: RIDDOR items (priority 0) retry after 30s initial vs 5min normal, cap at 30min vs 4hr
+- D-03-03-002: Photo uploads filtered from SyncQueue.processPendingItems (tableName !== 'photo_uploads')
+- D-03-03-003: Last-write-wins uses server updated_at vs local last_modified_at, server wins if newer
+- D-03-03-004: SyncContext integrates syncScheduler (start/stop) replacing 10s polling with hybrid strategy
+- D-03-03-005: Background task processes both syncQueue and photoUploadQueue for complete offline sync
+
 **From Plan 03-04:**
 - D-03-04-001: Plain English error messages map technical errors to 4 user-friendly categories (network, auth, server, unknown)
 - D-03-04-002: RIDDOR critical alert threshold set to 3+ retry attempts (~3.5 min of sustained failures)
@@ -211,8 +218,8 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T03:26:02Z
-Stopped at: Completed 03-04-PLAN.md — Sync Feedback UI Components
+Last session: 2026-02-16T03:28:21Z
+Stopped at: Completed 03-03-PLAN.md — Sync Integration (re-execution with RIDDOR fast retry, LWW conflict resolution, photo integration)
 Resume file: None
 
 ---
