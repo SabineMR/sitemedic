@@ -29,6 +29,7 @@ import {
   AlertTriangle,
   Users,
   FileText,
+  FileSignature,
   LogOut,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -54,6 +55,11 @@ const navigation = [
     name: 'Workers',
     href: '/workers',
     icon: Users,
+  },
+  {
+    name: 'Contracts',
+    href: '/contracts',
+    icon: FileSignature,
   },
   {
     name: 'Reports',
