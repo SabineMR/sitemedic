@@ -19,6 +19,7 @@ import {
   StyleSheet,
   Image,
   Alert,
+  Pressable,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { getDatabase } from '../../src/lib/watermelon';
@@ -31,16 +32,43 @@ import { TREATMENT_TYPES } from '../../services/taxonomy/treatment-types';
 import { OUTCOME_CATEGORIES } from '../../services/taxonomy/outcome-categories';
 import { BODY_PARTS } from '../../services/taxonomy/body-parts';
 import { useSync } from '../../src/contexts/SyncContext';
+import RIDDOROverrideModal from '../../components/treatment/RIDDOROverrideModal';
+import { fetchRIDDORIncident, RIDDORIncident } from '../../src/lib/riddor-client';
+import { supabase } from '../../src/lib/supabase';
 
 export default function TreatmentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [treatment, setTreatment] = useState<Treatment | null>(null);
   const [worker, setWorker] = useState<Worker | null>(null);
   const [loading, setLoading] = useState(true);
+  const [riddorIncident, setRiddorIncident] = useState<RIDDORIncident | null>(null);
+  const [showRiddorModal, setShowRiddorModal] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>('');
 
   useEffect(() => {
     loadTreatment();
+    loadCurrentUser();
   }, [id]);
+
+  // Load current user ID for RIDDOR override
+  const loadCurrentUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      setCurrentUserId(user.id);
+    }
+  };
+
+  // Fetch RIDDOR incident if treatment is flagged
+  useEffect(() => {
+    if (treatment?.id) {
+      fetchRIDDORIncident(treatment.id)
+        .then(setRiddorIncident)
+        .catch((error) => {
+          // Silently fail - not all treatments have RIDDOR incidents
+          console.log('No RIDDOR incident for this treatment');
+        });
+    }
+  }, [treatment?.id]);
 
   const loadTreatment = async () => {
     try {
@@ -158,11 +186,44 @@ export default function TreatmentDetailScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {/* RIDDOR Flag Banner */}
-        {treatment.isRiddorReportable && (
-          <View style={styles.riddorBanner}>
-            <Text style={styles.riddorText}>
-              ⚠️ RIDDOR REPORTABLE - This incident must be reported to HSE within 15 days
+        {/* RIDDOR Flag Indicator - Awaiting Review */}
+        {riddorIncident && riddorIncident.medic_confirmed === null && (
+          <View style={styles.riddorSection}>
+            <View style={styles.riddorHeader}>
+              <Text style={styles.riddorBadge}>⚠️ RIDDOR FLAG</Text>
+              <Pressable
+                style={styles.reviewButton}
+                onPress={() => setShowRiddorModal(true)}
+                hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+              >
+                <Text style={styles.reviewButtonText}>Review</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.riddorDetailText}>
+              This treatment may be RIDDOR-reportable. Please review and confirm or dismiss.
+            </Text>
+          </View>
+        )}
+
+        {/* RIDDOR Confirmed Badge */}
+        {riddorIncident && riddorIncident.medic_confirmed === true && (
+          <View style={[styles.riddorSection, styles.riddorConfirmed]}>
+            <Text style={styles.riddorBadgeConfirmed}>✓ RIDDOR CONFIRMED</Text>
+            <Text style={styles.riddorDetailText}>
+              Deadline: {new Date(riddorIncident.deadline_date).toLocaleDateString('en-GB')}
+            </Text>
+            <Text style={styles.riddorDetailTextSmall}>
+              Reason: {riddorIncident.override_reason}
+            </Text>
+          </View>
+        )}
+
+        {/* RIDDOR Dismissed Badge */}
+        {riddorIncident && riddorIncident.medic_confirmed === false && (
+          <View style={[styles.riddorSection, styles.riddorDismissed]}>
+            <Text style={styles.riddorBadgeDismissed}>✗ RIDDOR DISMISSED</Text>
+            <Text style={styles.riddorDetailTextSmall}>
+              Reason: {riddorIncident.override_reason}
             </Text>
           </View>
         )}
@@ -255,6 +316,24 @@ export default function TreatmentDetailScreen() {
           />
         </View>
       </ScrollView>
+
+      {/* RIDDOR Override Modal */}
+      {riddorIncident && (
+        <RIDDOROverrideModal
+          visible={showRiddorModal}
+          onClose={() => setShowRiddorModal(false)}
+          incidentId={riddorIncident.id}
+          confidenceLevel={riddorIncident.confidence_level}
+          detectionReason={`Category: ${riddorIncident.category.replace('_', ' ')}`}
+          deadlineDate={riddorIncident.deadline_date}
+          medicId={currentUserId}
+          onOverrideComplete={async () => {
+            // Refresh RIDDOR incident after override
+            const updated = await fetchRIDDORIncident(treatment!.id);
+            setRiddorIncident(updated);
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -389,5 +468,66 @@ const styles = StyleSheet.create({
   actions: {
     gap: 12,
     marginTop: 16,
+  },
+  riddorSection: {
+    backgroundColor: '#FEF3C7',
+    borderLeftWidth: 4,
+    borderLeftColor: '#F59E0B',
+    padding: 16,
+    marginBottom: 16,
+    borderRadius: 8,
+  },
+  riddorConfirmed: {
+    backgroundColor: '#FEE2E2',
+    borderLeftColor: '#EF4444',
+  },
+  riddorDismissed: {
+    backgroundColor: '#F3F4F6',
+    borderLeftColor: '#6B7280',
+  },
+  riddorHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  riddorBadge: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#92400E',
+  },
+  riddorBadgeConfirmed: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#991B1B',
+    marginBottom: 8,
+  },
+  riddorBadgeDismissed: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#4B5563',
+    marginBottom: 8,
+  },
+  reviewButton: {
+    backgroundColor: '#2563EB',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    minHeight: 36,
+    justifyContent: 'center',
+  },
+  reviewButtonText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  riddorDetailText: {
+    fontSize: 14,
+    color: '#78350F',
+  },
+  riddorDetailTextSmall: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 4,
   },
 });
