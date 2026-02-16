@@ -626,7 +626,7 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
 ---
 
 ## Phase 2: Mobile Core
-**Status**: 🚧 **IN PROGRESS** - Plans 02-01, 02-02, 02-03, and 02-04 complete (4/8 plans)
+**Status**: 🚧 **IN PROGRESS** - Plans 02-01, 02-02, 02-03, 02-04, and 02-05 complete (5/8 plans)
 **Goal**: Treatment logging, worker profiles, near-miss capture, daily safety checks
 
 ### Completed (Plan 02-01):
@@ -790,6 +790,53 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
       - mechanism_of_injury (STRING, optional) - How injury occurred
       - treatment_types (STRING, optional) - JSON array of treatment IDs
     - Updated Treatment model with new properties and sanitizers
+
+### Completed (Plan 02-05): ✅ **NEW - 2026-02-16**
+- **Quick Treatment Templates & Treatment Log List** (mobile/app/treatment/templates.tsx + mobile/app/(tabs)/treatments.tsx)
+  - **PresetTemplateCard Component** (mobile/components/forms/PresetTemplateCard.tsx)
+    - Large tappable cards with 80pt minimum height, full width
+    - Icon (32px emoji) on left, bold label (20pt font), subtitle below (14pt)
+    - High contrast colors for outdoor sunlight readability
+    - Press feedback (opacity 0.8) and extended hit slop for gloves-on use
+    - Selected state with blue border and background
+
+  - **Template Picker Screen** (mobile/app/treatment/templates.tsx - 280+ lines)
+    - **8 Common Construction Injury Presets**:
+      1. Minor Cut 🩹 → laceration + cleaned-dressed + wrist-hand + returned-to-work-same-duties
+      2. Bruise 💢 → contusion + ice-pack + arm-elbow + returned-to-work-same-duties
+      3. Headache 🤕 → headache + rest-welfare + head-face + returned-to-work-same-duties
+      4. Splinter 🪵 → splinter + removed-foreign-body + finger-thumb + returned-to-work-same-duties
+      5. Eye Irritation 👁️ → foreign-body-eye + eye-wash + eye + returned-to-work-same-duties
+      6. Sprain/Strain 🦴 → sprain-strain + ice-pack + ankle-foot + returned-to-work-light-duties
+      7. Minor Burn 🔥 → minor-burn + cleaned-dressed + wrist-hand + returned-to-work-same-duties
+      8. Nausea/Dizziness 😵 → nausea-dizziness + rest-welfare + head-face + returned-to-work-same-duties
+    - **Worker Selection First**: WorkerSearchPicker at top for speed (validates before template selection)
+    - **One-Tap Template Selection**: Creates pre-filled Treatment record with all defaults auto-applied
+    - **Sub-30-Second Workflow** (TREAT-11): Select worker → tap template → quick review/confirm
+    - **Auto-fills 4 Fields**: injuryType, treatment, bodyPart, outcome from preset taxonomy IDs
+    - **Reference Number Generation**: SITE-YYYYMMDD-NNN with daily sequential counter
+    - **Navigates to Review**: Routes to treatment/[id].tsx for quick confirmation before completion
+    - **Fallback to Full Form**: "Full Treatment Form" button for complex injuries or RIDDOR cases
+    - All presets are minor injuries (isRiddorReportable: false, severity: 'minor')
+
+  - **Treatment Log List View** (mobile/app/(tabs)/treatments.tsx - 480+ lines)
+    - **Action Buttons**: Quick Log (→ templates.tsx) + Full Treatment (→ new.tsx) at top, side-by-side, 56pt height
+    - **Search/Filter**: TextInput filters by worker name, injury type label, or reference number
+    - **Sorted List**: All treatments loaded via WatermelonDB, sorted by created_at DESC (most recent first)
+    - **Treatment List Items Display**:
+      - Reference number (bold, e.g., "SITE-20260215-003")
+      - Worker name + injury type on same line
+      - Treatment date + time (formatted DD MMM YYYY at HH:MM)
+      - Outcome badge with color coding (green=low severity, amber=medium, red=high)
+      - RIDDOR flag indicator (red badge) when isRiddorReportable=true
+      - Status label (Complete or Draft) in grey badge
+      - Tap to navigate to treatment/[id].tsx for details
+    - **Empty State**: "No treatments logged today" with call-to-action buttons
+    - **Empty Search State**: Shows "No treatments match {query}" when search returns nothing
+    - **Loading State**: Activity indicator during data load
+    - **Lazy Loading**: FlatList for performance with large treatment datasets (UX-08 requirement)
+    - **Worker Data Loading**: Promises to fetch worker names for each treatment (async map)
+    - **High Contrast Design**: All tap targets 56pt minimum, readable in sunlight
 
 ### Features:
 - **Treatment Logger**
