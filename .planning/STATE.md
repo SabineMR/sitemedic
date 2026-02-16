@@ -8,16 +8,16 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 **Current focus:** Phase 2 - Mobile Core
 
 ## Current Position
-Phase: 6 of 7 (RIDDOR Auto-Flagging)
-Plan: 6 of 6 in current phase
+Phase: 6.5 of 7 (Payment Processing & Payouts)
+Plan: 11 of 11 in current phase
 Status: Phase complete
-Last activity: 2026-02-16 — Completed 06-06-PLAN.md (RIDDOR Analytics Dashboard)
-Progress: [███████████████] 99% (70/71 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6, 6, 6.5)
+Last activity: 2026-02-16 — Completed 06.5-11-PLAN.md (Gap Closure - Payslip PDF & Cron Auth)
+Progress: [████████████████] 100% (71/71 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6, 6, 6.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 70
+- Total plans completed: 71
 - Average duration: 4.4 min
 - Total execution time: 5.1 hours
 
@@ -35,11 +35,11 @@ Progress: [███████████████] 99% (70/71 plans acros
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
 | 06-riddor-auto-flagging | 6/6 | 47 min | 7.8 min |
-| 06.5-payments-payouts | 10/10 | 44 min | 4.4 min |
+| 06.5-payments-payouts | 11/11 | 46 min | 4.2 min |
 
 **Recent Trend:**
-- Last 5 plans: 06-05 (1 min), 06-06 (7 min), 06.5-10 (3 min)
-- Trend: Phase 6 complete - Full RIDDOR compliance system with auto-flagging, deadline tracking, and analytics
+- Last 5 plans: 06-05 (1 min), 06-06 (7 min), 06.5-10 (3 min), 06.5-11 (2 min)
+- Trend: All phases COMPLETE - Payment system fully verified with 12/12 must-haves, ready for production
 
 *Updated after each plan completion*
 
@@ -414,6 +414,11 @@ Recent decisions affecting current work:
 - D-06.5-05-004: Admin override limit: 75% hard limit (prevents extreme loss-making bookings)
 - D-06.5-05-005: Google Maps cache: 7-day TTL for route data (reduces API costs)
 
+**From Plan 06.5-11:**
+- D-06.5-11-001: Use gen_random_uuid() substring for payslip_reference instead of sequential numbering (provides uniqueness without database locks, human-readable PS-20260216-a1b2c3d4 format)
+- D-06.5-11-002: pg_net HTTP POST for Edge Function invocation from trigger (non-blocking async call, doesn't delay transaction commit)
+- D-06.5-11-003: Unschedule and recreate late payment cron instead of ALTER (pg_cron doesn't support ALTER, clean slate approach ensures consistency)
+
 **From Plan 06-03:**
 - D-06-03-001: Use @react-pdf/renderer instead of pdf-lib with fillable PDF template (HSE F2508 not reliably available; matches Phase 5 pattern)
 - D-06-03-002: Store PDFs in {incident_id}/F2508-{timestamp}.pdf format for multiple versions per incident
@@ -463,9 +468,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T23:26:00Z
-Stopped at: Completed 06-06-PLAN.md — RIDDOR Analytics Dashboard (Override analytics with confidence level breakdown, top dismissal reasons, and 80% threshold alerts)
+Last session: 2026-02-16T23:28:00Z
+Stopped at: Completed 06.5-11-PLAN.md — Gap Closure - Payslip PDF & Cron Auth (Closed final 2 verification gaps: payslip_reference field + vault auth pattern consistency)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6 (RIDDOR Auto-Flagging) complete (6/6 plans). Phase 6.5 (Payments & Payouts) complete (10/10 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6 (RIDDOR Auto-Flagging) complete (6/6 plans). Phase 6.5 (Payments & Payouts) complete (11/11 plans). ALL PHASES COMPLETE - 100% (71/71 plans) ✅*

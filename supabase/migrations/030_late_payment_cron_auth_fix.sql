@@ -1,4 +1,4 @@
--- Migration 027: Late Payment Cron Auth Fix
+-- Migration 030: Late Payment Cron Auth Fix
 -- Replace current_setting() with vault.decrypted_secrets pattern
 -- Phase 6.5: Payments & Payouts - Gap Closure
 -- Created: 2026-02-16

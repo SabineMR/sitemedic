@@ -1,4 +1,4 @@
--- Migration 026: Payslip Schema Fix
+-- Migration 029: Payslip Schema Fix
 -- Add payslip_reference field and wire Edge Function trigger
 -- Phase 6.5: Payments & Payouts - Gap Closure
 -- Created: 2026-02-16
@@ -61,7 +61,7 @@ COMMENT ON FUNCTION generate_payslip_pdf_on_insert IS 'Trigger: Calls generate-p
 -- Execution order (cross-table cascade):
 --   1. trigger_generate_payslip_on_payout (migration 024) fires AFTER UPDATE ON timesheets
 --      -> Creates payslip row via INSERT
---   2. trigger_generate_payslip_pdf (this migration 026) fires AFTER INSERT ON payslips
+--   2. trigger_generate_payslip_pdf (this migration 029) fires AFTER INSERT ON payslips
 --      -> Calls Edge Function via pg_net
 -- No alphabetical ordering concern - triggers are on different tables (timesheets vs payslips)
 CREATE TRIGGER trigger_generate_payslip_pdf
