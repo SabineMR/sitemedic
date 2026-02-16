@@ -47,13 +47,13 @@ export async function coordinatesToWhat3Words(
       language,
     });
 
-    if (response.error) {
-      console.error('what3words error:', response.error);
+    if (!response || !response.words) {
+      console.error('what3words: Invalid response');
       return null;
     }
 
     return {
-      words: response.words || '',
+      words: response.words,
       coordinates: response.coordinates || { lat, lng },
       country: response.country || '',
       nearestPlace: response.nearestPlace || '',
@@ -75,14 +75,14 @@ export async function what3WordsToCoordinates(
     // Clean the input - remove leading slashes if present
     const cleanWords = words.replace(/^\/+/, '');
 
-    const response = await w3wClient.convertToCoordinates(cleanWords);
+    const response = await w3wClient.convertToCoordinates({ words: cleanWords });
 
-    if (response.error) {
-      console.error('what3words error:', response.error);
+    if (!response || !response.coordinates) {
+      console.error('what3words: Invalid response for words:', cleanWords);
       return null;
     }
 
-    return response.coordinates || null;
+    return response.coordinates;
   } catch (error) {
     console.error('Failed to convert what3words to coordinates:', error);
     return null;
@@ -99,20 +99,20 @@ export async function autosuggestWhat3Words(
     focus?: { lat: number; lng: number };
     nFocusResults?: number;
     clipToCountry?: string[]; // e.g., ['GB']
-    clipToCircle?: { lat: number; lng: number; radius: number };
+    clipToCircle?: { center: { lat: number; lng: number }; radius: number };
     language?: string;
   }
 ): Promise<What3WordsSuggestion[]> {
   try {
-    const response = await w3wClient.autosuggest(input, options);
+    const response = await w3wClient.autosuggest({ input, ...options });
 
-    if (response.error) {
-      console.error('what3words autosuggest error:', response.error);
+    if (!response || !response.suggestions) {
+      console.error('what3words: Invalid autosuggest response');
       return [];
     }
 
     return (
-      response.suggestions?.map((s: any) => ({
+      response.suggestions.map((s: any) => ({
         words: s.words || '',
         country: s.country || '',
         nearestPlace: s.nearestPlace || '',
