@@ -12,6 +12,16 @@ const sanitizePhotoUris = (raw: string): string[] => {
   }
 }
 
+// Sanitizer for treatment_types JSON array - returns empty array if parse fails
+const sanitizeTreatmentTypes = (raw: string): string[] => {
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
 export default class Treatment extends Model {
   static table = 'treatments'
 
@@ -23,11 +33,15 @@ export default class Treatment extends Model {
   @field('org_id') orgId!: string
   @field('worker_id') workerId!: string
   @field('medic_id') medicId!: string
+  @field('reference_number') referenceNumber!: string
+  @field('status') status!: string // draft | complete
   @field('injury_type') injuryType!: string
-  @field('body_part') bodyPart!: string
+  @field('body_part') bodyPart?: string
+  @text('mechanism_of_injury') mechanismOfInjury?: string
   @field('severity') severity!: string
-  @text('treatment_notes') treatmentNotes!: string
-  @text('outcome') outcome!: string
+  @json('treatment_types', sanitizeTreatmentTypes) treatmentTypes!: string[]
+  @text('treatment_notes') treatmentNotes?: string
+  @text('outcome') outcome?: string
   @field('is_riddor_reportable') isRiddorReportable!: boolean
   @json('photo_uris', sanitizePhotoUris) photoUris!: string[]
   @field('signature_uri') signatureUri?: string
