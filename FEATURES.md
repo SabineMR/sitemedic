@@ -1625,6 +1625,15 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
     - Tailwind CSS styling (dark theme for command center feel)
     - Responsive design (works on tablets and desktop)
     - Currently shows **mock data** (3 test medics for UI demonstration)
+    - **Zustand state management** (real-time store integration):
+      - ✅ **Fixed infinite loop bug** (2026-02-15): Corrected selector pattern to avoid calling getter methods inside Zustand selectors
+      - Issue: Calling `getActiveMedics()` inside selector created new array references on every render, causing infinite re-render loop
+      - Solution: Select the `locations` Map directly and convert to array in component with proper memoization
+      - Files fixed:
+        - `app/admin/command-center/page.tsx` - Command center main page
+        - `components/admin/AlertPanel.tsx` - Alerts panel
+        - `hooks/useRealtimeMedicLocations.ts` - Reusable hook
+      - Best practice: Always select primitive values or state directly from Zustand, never call getter methods inside selectors
 
 ### Performance Targets:
 
@@ -3362,6 +3371,152 @@ A comprehensive bookings management page showing all medic shift bookings with a
 - Client-side filtering for instant results (no server round-trips)
 - Supabase connection pooling for efficient queries
 - Responsive design with mobile optimization
+
+**Currency Display Standards:**
+- All GBP amounts use `CurrencyWithTooltip` component
+- Consistent with admin dashboard currency guidelines
+- Tooltip shows live USD conversion rate
+- Formatted as "£X,XXX.XX" with hover for "$X,XXX.XX USD"
+
+---
+
+## Phase 5.5d: Admin Customers Page (NEW)
+**Status**: ✅ **COMPLETE** - Customers/clients management page with live Supabase data
+**Goal**: Provide admin interface to view, search, and manage client accounts with payment terms, credit status, and booking history
+**Date Completed**: 2026-02-15
+
+### Features:
+
+#### **Customers Management Page** (`/admin/customers`)
+A comprehensive customer account management page displaying all construction company clients with financial tracking, payment terms, and Stripe integration.
+
+**Stats Dashboard:**
+- **Total**: Count of all customer accounts
+- **Active**: Number of active customer accounts
+- **Suspended**: Suspended accounts (highlighted in yellow)
+- **Closed**: Closed/inactive accounts
+- **Net 30**: Number of customers with Net 30 payment terms
+- **At Risk**: Customers with 2+ late payments or near credit limit (highlighted in yellow)
+- **Outstanding Balance**: Total outstanding balance across all Net 30 customers (with GBP → USD tooltip)
+
+**Search & Filters:**
+- **Search Bar**: Search by company name, contact name, email, or postcode
+- **Status Filters**:
+  - All customers (default)
+  - Active customers only
+  - Suspended customers only
+  - Closed customers only
+- **Payment Terms Filters**:
+  - All payment types
+  - Prepay only (card charged on booking)
+  - Net 30 only (invoice with 30-day terms)
+
+**Customers Table Columns:**
+1. **Company**:
+   - Company name with at-risk warning icon (⚠️)
+   - Billing postcode
+   - VAT number (if available)
+2. **Contact**:
+   - Contact name
+   - Email address
+   - Phone number
+3. **Payment Terms**:
+   - Prepay badge (blue) or Net 30 badge (purple)
+4. **Financials** (for Net 30 customers):
+   - Credit limit (with currency tooltip)
+   - Outstanding balance (highlighted in yellow if > 0)
+   - Late payment count (red text)
+   - Shows "Pay on booking" for Prepay customers
+5. **Bookings**:
+   - Total bookings count
+   - Successful/completed bookings (green)
+   - Cancelled bookings (red, if any)
+   - Success rate percentage
+6. **Status**:
+   - ✓ Active (green badge)
+   - ⚠️ Suspended (red badge with suspension reason)
+   - ✗ Closed (gray badge)
+7. **Stripe**:
+   - ✓ Connected (green badge) with Stripe customer ID
+   - "Card on file" indicator if default payment method exists
+   - "Not setup" (yellow badge) if not connected
+8. **Actions**: "View Details →" link to customer detail page
+
+**At-Risk Detection:**
+- Automatically flags customers as "at risk" based on:
+  - 2+ late payments
+  - Outstanding balance > 80% of credit limit (for Net 30 customers)
+- Visual warning icon (⚠️) next to company name
+- Yellow highlight on "At Risk" stat card
+
+**Data Source:**
+- Fetches from `clients` table in Supabase
+- Ordered by company name alphabetically
+- Uses Supabase client (`@/lib/supabase`) for real-time data
+- Automatic loading state with spinner
+
+**Key Features:**
+- **Payment Terms Management**: Clearly distinguishes between Prepay and Net 30 customers
+- **Credit Monitoring**: Tracks credit limits and outstanding balances for Net 30 accounts
+- **Late Payment Tracking**: Displays late payment count and flags at-risk customers
+- **Booking History**: Shows total, successful, and cancelled bookings with success rate
+- **Stripe Integration Status**: Indicates whether customer has Stripe account and payment method
+- **Multi-filter Support**: Combine status filter, payment terms filter, and search
+- **Currency Tooltips**: All GBP amounts show USD conversion on hover
+- **Responsive Design**: Mobile, tablet, and desktop breakpoints
+- **Empty State**: "No customers found" when filters return no results
+- **Professional Dark Theme**: Consistent with admin dashboard design
+
+**Business Intelligence:**
+- **Credit Risk Management**: Identify customers approaching credit limits
+- **Payment Pattern Analysis**: Track late payments and success rates
+- **Customer Segmentation**: Filter by payment terms for targeted management
+- **Stripe Onboarding**: Identify customers needing Stripe setup
+
+**Database Schema Integration:**
+- Displays data from `clients` table in migration `002_business_operations.sql`
+- Shows payment terms (prepay vs net_30)
+- Tracks credit limits and outstanding balances for Net 30 customers
+- Records booking statistics (total, successful, cancelled)
+- Integrates with Stripe (customer_id, payment_method_id)
+- Manages account status (active, suspended, closed)
+
+---
+
+### Technical Implementation (Updated):
+
+**Files Created:**
+- ✅ `web/app/admin/medics/page.tsx` - Medics management page
+- ✅ `web/app/admin/bookings/page.tsx` - Bookings management page
+- ✅ `web/app/admin/customers/page.tsx` - Customers management page
+
+**Navigation:**
+- All pages accessible via sidebar navigation in `web/app/admin/layout.tsx`:
+  - 👨‍⚕️ Medics → `/admin/medics`
+  - 📅 Bookings → `/admin/bookings`
+  - 🏢 Customers → `/admin/customers`
+
+**Dependencies:**
+- Supabase client (`@/lib/supabase`)
+- CurrencyWithTooltip component for GBP → USD conversion
+- React hooks (useState, useEffect)
+- Next.js Link component for navigation
+
+**Data Flow:**
+1. Page component mounts
+2. useEffect triggers data loading function
+3. Supabase query executed with `.select()` and `.order()`
+4. State updated with returned data
+5. Loading state removed
+6. Table renders with fetched data
+7. User can search/filter (client-side filtering for performance)
+
+**Performance:**
+- Initial load shows loading spinner
+- Client-side filtering for instant results (no server round-trips)
+- Supabase connection pooling for efficient queries
+- Responsive design with mobile optimization
+- Efficient stat calculations from in-memory data
 
 **Currency Display Standards:**
 - All GBP amounts use `CurrencyWithTooltip` component
