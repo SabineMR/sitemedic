@@ -20,6 +20,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { networkMonitor } from '../services/NetworkMonitor'
 import { syncQueue } from '../services/SyncQueue'
+import { photoUploadQueue } from '../services/PhotoUploadQueue'
+import { syncScheduler } from '../utils/syncScheduler'
 import { auditLogger } from '../services/AuditLogger'
 import { useAuth } from './AuthContext'
 
@@ -28,6 +30,7 @@ export type SyncStatus = 'synced' | 'syncing' | 'pending' | 'offline' | 'error'
 export interface SyncState {
   status: SyncStatus
   pendingCount: number
+  pendingPhotoCount: number
   isOnline: boolean
   connectionType: string
   lastSyncAt: Date | null
@@ -58,6 +61,7 @@ export function SyncProvider({ children }: SyncProviderProps) {
   const [state, setState] = useState<SyncState>({
     status: 'synced',
     pendingCount: 0,
+    pendingPhotoCount: 0,
     isOnline: true,
     connectionType: 'unknown',
     lastSyncAt: null,
@@ -88,12 +92,18 @@ export function SyncProvider({ children }: SyncProviderProps) {
    */
   const refreshState = useCallback(async () => {
     try {
-      const pendingCount = await syncQueue.getPendingCount()
+      const allItems = await syncQueue.getPendingItems()
+      const photoItems = allItems.filter(item => item.tableName === 'photo_uploads')
+      const dataItems = allItems.filter(item => item.tableName !== 'photo_uploads')
+
+      const pendingCount = dataItems.length
+      const pendingPhotoCount = photoItems.length
       const connectionInfo = networkMonitor.getConnectionInfo()
 
       setState((prev) => ({
         ...prev,
         pendingCount,
+        pendingPhotoCount,
         isOnline: connectionInfo.isOnline,
         connectionType: connectionInfo.connectionType,
         status: updateStatus(connectionInfo.isOnline, pendingCount, isProcessing, prev.lastError),
@@ -119,6 +129,10 @@ export function SyncProvider({ children }: SyncProviderProps) {
       // Sync pending data operations
       const syncResult = await syncQueue.processPendingItems()
       console.log('[SyncContext] Sync result:', syncResult)
+
+      // Process pending photo uploads
+      const photoResult = await photoUploadQueue.processPendingPhotos()
+      console.log('[SyncContext] Photo upload result:', photoResult)
 
       // Sync pending audit logs
       const auditCount = await auditLogger.syncPendingAuditLogs()
@@ -166,6 +180,9 @@ export function SyncProvider({ children }: SyncProviderProps) {
     // Start network monitoring
     networkMonitor.startMonitoring()
 
+    // Start hybrid sync scheduler (foreground 30s + background 15min)
+    syncScheduler.start()
+
     // Listen for connectivity changes
     const unsubscribe = networkMonitor.addListener((isOnline, connectionType) => {
       console.log('[SyncContext] Connectivity changed:', { isOnline, connectionType })
@@ -185,17 +202,18 @@ export function SyncProvider({ children }: SyncProviderProps) {
     // Initial state refresh
     refreshState()
 
-    // Poll pending count every 10 seconds
-    const pollInterval = setInterval(() => {
+    // Refresh UI state every 5 seconds (lighter than sync, just reads counts)
+    const uiRefreshInterval = setInterval(() => {
       refreshState()
-    }, 10000)
+    }, 5000)
 
     // Cleanup
     return () => {
       console.log('[SyncContext] Cleaning up...')
       unsubscribe()
       networkMonitor.stopMonitoring()
-      clearInterval(pollInterval)
+      syncScheduler.stop()
+      clearInterval(uiRefreshInterval)
     }
   }, [isProcessing, updateStatus, refreshState])
 

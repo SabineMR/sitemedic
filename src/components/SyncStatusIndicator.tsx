@@ -79,8 +79,19 @@ export function SyncStatusIndicator() {
         return 'Synced'
       case 'syncing':
         return 'Syncing...'
-      case 'pending':
-        return `${state.pendingCount} pending`
+      case 'pending': {
+        const dataCount = state.pendingCount
+        const photoCount = state.pendingPhotoCount || 0
+        const logicalPhotos = Math.ceil(photoCount / 3)
+
+        if (dataCount > 0 && logicalPhotos > 0) {
+          return `${dataCount} items, ${logicalPhotos} photos`
+        }
+        if (logicalPhotos > 0) {
+          return `${logicalPhotos} photos pending`
+        }
+        return `${dataCount} pending`
+      }
       case 'offline':
         return 'Offline'
       case 'error':
@@ -100,7 +111,8 @@ export function SyncStatusIndicator() {
 
   const statusColor = getStatusColor()
   const statusLabel = getStatusLabel()
-  const showBadge = state.pendingCount > 0 && state.status !== 'syncing'
+  const totalPending = state.pendingCount + Math.ceil((state.pendingPhotoCount || 0) / 3)
+  const showBadge = totalPending > 0 && state.status !== 'syncing'
   const isInteractive = state.status === 'pending' || state.status === 'error'
 
   return (
@@ -123,7 +135,7 @@ export function SyncStatusIndicator() {
         {/* Pending count badge */}
         {showBadge && (
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{state.pendingCount}</Text>
+            <Text style={styles.badgeText}>{totalPending}</Text>
           </View>
         )}
 
