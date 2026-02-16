@@ -1,7 +1,7 @@
 # SiteMedic Features
 
 **Project**: SiteMedic - UK Construction Site Medic Staffing Platform with Bundled Software + Service
-**Last Updated**: 2026-02-15
+**Last Updated**: 2026-02-16
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -910,8 +910,42 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
 ---
 
 ## Phase 3: Sync Engine
-**Status**: Not started
+**Status**: In progress (1/3 plans complete)
 **Goal**: Mobile-to-backend data synchronization with photo uploads
+
+### Completed (Plan 03-01): ✅ **NEW - 2026-02-16**
+- **Sync Dependencies Installed** (4 packages)
+  - expo-background-task: Background task scheduling via iOS BGTaskScheduler
+  - expo-task-manager: Task definition and lifecycle management
+  - react-native-background-upload: Native background file uploads
+  - expo-file-system: File reading for upload preparation
+
+- **Background Sync Task Definition** (mobile/tasks/backgroundSyncTask.ts)
+  - Global-scope TaskManager.defineTask for BACKGROUND_SYNC (Expo requirement)
+  - Processes syncQueue.processPendingItems() to sync data in background
+  - Error handling with throw to mark task as failed
+  - Photo upload integration point (deferred to Plan 03-03)
+
+- **Background Task Registration Service** (src/services/BackgroundSyncTask.ts)
+  - registerBackgroundSync() with 15-minute minimum interval (iOS/Android BGTaskScheduler requirement)
+  - unregisterBackgroundSync() for cleanup
+  - Non-fatal error handling (logs error if registration fails, foreground sync remains primary)
+
+- **Hybrid Sync Scheduler** (src/utils/syncScheduler.ts)
+  - Foreground polling every 30 seconds when app is active (user decision: batch sync every 30s)
+  - Background task scheduling for when app is inactive (15-minute minimum)
+  - App state listener automatically switches between foreground and background sync strategies
+  - Online check before sync attempt (prevents unnecessary retries when offline)
+  - syncNow() manual trigger for immediate sync
+  - Singleton pattern with start/stop lifecycle
+
+- **Sync Strategy**
+  - Hybrid approach balances user expectations with iOS limitations:
+    - Foreground: 30-second polling provides responsive sync when app active
+    - Background: 15-minute tasks handle sync when app backgrounded (iOS BGTaskScheduler minimum)
+  - RIDDOR priority 0 items bypass batch interval (immediate sync via existing SyncQueue.enqueue())
+  - Normal items batch for 30 seconds to reduce network requests
+  - Background task registration is non-fatal (app continues with foreground-only if registration fails)
 
 ### Features:
 - **Background Sync**
