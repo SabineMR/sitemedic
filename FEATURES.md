@@ -1,7 +1,7 @@
 # SiteMedic Features
 
 **Project**: SiteMedic - UK Construction Site Medic Staffing Platform with Bundled Software + Service
-**Last Updated**: 2026-02-15
+**Last Updated**: 2026-02-16
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -910,10 +910,10 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
 ---
 
 ## Phase 3: Sync Engine
-**Status**: In progress (1/3 plans complete)
+**Status**: ✅ **COMPLETED** (3/3 plans complete) - 2026-02-16
 **Goal**: Mobile-to-backend data synchronization with photo uploads
 
-### Completed (Plan 03-01): ✅ **NEW - 2026-02-16**
+### Plan 03-01: Background Sync Infrastructure ✅ **COMPLETED - 2026-02-16**
 - **Sync Dependencies Installed** (4 packages)
   - expo-background-task: Background task scheduling via iOS BGTaskScheduler
   - expo-task-manager: Task definition and lifecycle management
@@ -947,28 +947,102 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
   - Normal items batch for 30 seconds to reduce network requests
   - Background task registration is non-fatal (app continues with foreground-only if registration fails)
 
-### Features:
-- **Background Sync**
-  - Automatic sync when connectivity returns
-  - WiFi-only constraint for large photo uploads
-  - Battery-efficient (WorkManager constraints verified)
-  - Progressive photo upload (preview first, full-quality later)
+### Plan 03-02: Progressive Photo Upload Pipeline ✅ **COMPLETED - 2026-02-16**
+- **Progressive Image Compression** (src/utils/imageCompression.ts)
+  - 3 quality tiers from single photo URI using expo-image-manipulator
+  - Thumbnail: 150px max dimension, 50% quality (~50KB) - fast preview for dashboard
+  - Preview: 800px max dimension, 70% quality (~200KB) - good detail without massive file size
+  - Full: Original size, 90% quality (~2-5MB) - archival/legal documentation
+  - Preserves aspect ratio with SaveFormat.PNG for lossless compression
 
-- **Sync Status Visibility**
-  - Pending item count badge
-  - Sync progress indicators
-  - Failed sync error messages (plain language)
-  - Manual retry button for failed items
+- **PhotoUploadQueue Service** (src/services/PhotoUploadQueue.ts)
+  - WiFi-only constraint enforcement for full-quality uploads (thumbnails/previews upload on any connection)
+  - Max 2 concurrent uploads to prevent overwhelming device/network
+  - Persistent upload tasks in WatermelonDB sync_queue (survives force-quit)
+  - Progress tracking with pendingCount and activeUploads counters
+  - Upload to Supabase Storage 'treatment-photos' bucket with RLS policies
+  - Uses expo-file-system base64 encoding for v19 API compatibility
 
-- **Conflict Resolution**
-  - Last-write-wins strategy
-  - Client-generated UUIDs (prevent duplicate records on retry)
-  - Concurrent edit handling (tested with airplane mode toggles)
+- **Supabase Storage Configuration** (supabase/migrations/014_storage_buckets.sql)
+  - treatment-photos bucket with 50MB file limit (prevents abuse)
+  - RLS policies: insert (authenticated users), select (authenticated users), update (authenticated users)
+  - Path structure: {treatment_id}/{tier}/{filename}.png for organized storage
 
-- **Critical Alert System**
-  - RIDDOR-reportable incidents trigger alerts if sync fails
-  - Escalation workflow for critical data
-  - Admin notification for stuck sync items
+- **Upload Strategy**
+  - All 3 tiers generated immediately on photo capture (responsive UI, no processing delays)
+  - Queued separately with different constraints (thumbnail/preview any network, full WiFi-only)
+  - Progressive availability: Dashboard gets thumbnail fast, full quality when WiFi available
+  - Automatic retry with exponential backoff (same SyncQueue infrastructure)
+
+### Plan 03-04: Sync Feedback UI Components ✅ **COMPLETED - 2026-02-16**
+- **SyncErrorDisplay Component** (src/components/SyncErrorDisplay.tsx)
+  - Plain English error messages for construction site medics (no technical jargon)
+  - Maps technical errors to 4 user-friendly categories:
+    - Network errors: "Unable to reach the server. Check your signal and try again."
+    - Auth errors: "Your session has expired. Please log in again."
+    - Server errors: "The server is temporarily unavailable. Your data is safe and will sync later."
+    - Unknown: "Something went wrong with sync. Your data is saved locally."
+  - Amber warning background (#FFFBEB) with left border emphasis
+  - Manual retry button with 48pt minimum tap target (gloves-on usability)
+  - Auto-dismisses when sync succeeds
+
+- **RiddorSyncAlert Component** (src/components/RiddorSyncAlert.tsx)
+  - Critical persistent banner for RIDDOR-reportable incidents that fail to sync
+  - Only triggers after 3+ retry attempts (RIDDOR_RETRY_THRESHOLD = 3)
+    - Rationale: At 3 retries with exponential backoff (30s, 1min, 2min), item has been failing for ~3.5 minutes
+    - Prevents false alarms on transient network blips (retries 1-2 are normal)
+  - Red background (#FEE2E2) for critical urgency
+  - Non-dismissible until resolved (legal requirement for RIDDOR reporting)
+  - Shows count of failing RIDDOR items: "X reportable incidents have not synced"
+  - Manual "Sync Now" button with 56pt minimum tap target
+  - Checks queue every 10 seconds for RIDDOR failures
+
+- **PhotoUploadProgress Component** (src/components/PhotoUploadProgress.tsx)
+  - Aggregate photo upload indicator (avoids UI spam per Research Pitfall 6)
+  - Shows logical photo count (Math.ceil(pendingPhotoCount / 3)) not raw queue items
+    - Each photo creates 3 queue items (thumbnail, preview, full)
+    - Shows "Uploading 1 photo" instead of confusing "Uploading 3 items"
+  - Light blue background (#EFF6FF) for non-intrusive notification
+  - Auto-dismisses when all photos uploaded
+
+- **Enhanced SyncStatusIndicator** (src/components/SyncStatusIndicator.tsx)
+  - Badge shows combined count: data items + logical photo count
+  - Label breakdown when both present: "X items, Y photos"
+  - Photo-only state: "Y photos pending"
+  - Data-only state: "X pending" (unchanged)
+  - Maintains existing color-coded states (synced/syncing/pending/offline/error)
+  - Maintains 48pt minimum tap target for gloves-on usability
+
+- **SyncContext Enhancement** (src/contexts/SyncContext.tsx)
+  - Added pendingPhotoCount field to SyncState interface
+  - Filters photo_uploads items separately from data sync items
+  - Tracks photo queue size for UI components (PhotoUploadProgress, SyncStatusIndicator)
+  - Integrated photoUploadQueue.processPendingPhotos() in triggerSync()
+
+### Summary of Phase 3 Deliverables:
+- **Background Sync Infrastructure**
+  - Automatic sync when connectivity returns (30-second foreground polling, 15-minute background tasks)
+  - WiFi-only constraint for large photo uploads (thumbnails/previews upload on any connection)
+  - Battery-efficient background task scheduling with non-fatal registration
+  - Hybrid sync strategy balances responsiveness with iOS BGTaskScheduler limitations
+
+- **Progressive Photo Upload**
+  - 3 quality tiers (thumbnail 50KB, preview 200KB, full 2-5MB) from single photo
+  - WiFi-aware upload constraints (prevents cellular data overages)
+  - Max 2 concurrent uploads (prevents overwhelming device/network)
+  - Persistent upload tasks survive force-quit (WatermelonDB sync_queue)
+
+- **Sync Feedback UI**
+  - Plain English error messages (no technical jargon for construction site medics)
+  - Critical RIDDOR alerts after 3+ retry attempts (~3.5 min sustained failure)
+  - Aggregate photo progress (shows "Uploading 1 photo" not "3 items")
+  - Combined badge count (data + photos) in sync status indicator
+
+- **Conflict Resolution** (from Plan 03-03 - inferred from commits)
+  - Last-write-wins strategy for concurrent edits
+  - Client-generated UUIDs prevent duplicate records on retry
+  - RIDDOR fast retry (priority 0) bypasses batch intervals
+  - Photo filtering in sync queue (separates photo uploads from data sync)
 
 ---
 
@@ -4650,8 +4724,15 @@ GET /functions/v1/cert-expiry-checker
 ---
 
 **Document Version**: 1.2
-**Last Updated**: 2026-02-15 (Updated Phase 7.5 with complete auto-scheduling backend documentation - 11 Edge Functions, 13 tables, 2 PostgreSQL functions)
+**Last Updated**: 2026-02-16 (Added app icon for iOS/Android - medical cross design with blue background. Updated Phase 7.5 with complete auto-scheduling backend documentation - 11 Edge Functions, 13 tables, 2 PostgreSQL functions)
 **Next Review**: After Phase 7.5 UI completion
+
+### Recent Changes (2026-02-15)
+- **App Icon Added**: Created professional medical cross icon for SiteMedic mobile app
+  - Design: White medical cross on blue circular background (#0066CC)
+  - Assets created: `icon.png` (1024x1024), `adaptive-icon.png` (Android), `splash-icon.png`, `favicon.png`
+  - Files: `/assets/*.png` (45KB each, upgraded from 70-byte placeholders)
+  - Configuration: Already set in `app.json` - icons will appear after rebuild
 
 ---
 
