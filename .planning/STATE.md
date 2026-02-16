@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 4.6 of 7 (Customer Onboarding & Contract Management) — In progress
-Plan: 3 of 6 in current phase
+Plan: 4 of 6 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 04.6-03-PLAN.md (Contract Signing Interface)
+Last activity: 2026-02-16 — Completed 04.6-04-PLAN.md (Contract Creation Interface)
 
-Progress: [█████████████░] 96% (43/45 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6)
+Progress: [█████████████░] 98% (44/45 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5, 4.6)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 43
-- Average duration: 4.1 min
-- Total execution time: 3.09 hours
+- Total plans completed: 44
+- Average duration: 4.3 min
+- Total execution time: 3.16 hours
 
 **By Phase:**
 
@@ -33,13 +33,13 @@ Progress: [█████████████░] 96% (43/45 plans across P
 | 03-sync-engine | 7/7 | 24 min | 3.4 min |
 | 04-web-dashboard | 6/6 | 46 min | 7.7 min |
 | 04.5-marketing-booking | 2/3 | 20 min | 10 min |
-| 04.6-customer-onboarding | 3/6 | 21 min | 7 min |
+| 04.6-customer-onboarding | 4/6 | 34 min | 8.5 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 05.5-02 (4 min), 05.5-06 (6 min), 04.6-01 (2 min), 04.6-02 (6 min), 04.6-03 (13 min)
-- Trend: Client-facing contract signing interface complete - public pages with signature capture, canvas drawing, typed name fallback, PDF regeneration
+- Last 5 plans: 05.5-06 (6 min), 04.6-01 (2 min), 04.6-02 (6 min), 04.6-03 (13 min), 04.6-04 (13 min)
+- Trend: Contract creation interface complete - admin workflow with payment term previews and async PDF generation
 
 *Updated after each plan completion*
 
@@ -340,6 +340,17 @@ Recent decisions affecting current work:
 - D-04.6-03-003: Signature audit trail captures IP, user agent, and timestamp (extract IP from x-forwarded-for or x-real-ip headers)
 - D-04.6-03-004: PDF regeneration triggered automatically after signature (non-blocking: signature save succeeds even if PDF fails)
 
+**From Plan 04.6-04:**
+- D-04.6-04-001: Payment terms selector shows live GBP amounts for each option calculated using calculatePaymentSchedule function
+- D-04.6-04-002: Prepay clients filtered to full_prepay and split_50_50 options only (no Net 30 without upgrade)
+- D-04.6-04-003: Custom payment terms validate upfront + completion + net30 equals booking total (1 penny tolerance)
+- D-04.6-04-004: Contract preview uses HTML with draft watermark styled via CSS transform rotate(-45deg)
+- D-04.6-04-005: Dashboard page filters bookings without existing contracts by checking contracts table where status != 'terminated'
+- D-04.6-04-006: API route generates shareable_token using crypto.randomUUID() for public client signing links
+- D-04.6-04-007: PDF generation called asynchronously via Edge Function (doesn't block contract creation)
+- D-04.6-04-008: Contract events logged with event_type='version_created' and actor_ip from x-forwarded-for header
+- D-04.6-04-009: Supabase query result transformed to handle nested clients relation returned as array
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -378,8 +389,8 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T19:21:19Z
-Stopped at: Completed 04.6-03-PLAN.md — Contract Signing Interface (public page with signature capture, canvas drawing, typed name fallback, audit trail, PDF regeneration)
+Last session: 2026-02-16T19:21:01Z
+Stopped at: Completed 04.6-04-PLAN.md — Contract Creation Interface (admin workflow with payment term previews and async PDF generation)
 Resume file: None
 
 ---
