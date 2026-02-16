@@ -334,7 +334,7 @@ Plans:
   11. Admin sees cost breakdown and can approve/deny out-of-territory booking
   12. System denies booking if out-of-territory cost >50% of shift cost (admin can override)
 
-**Plans**: 10 plans
+**Plans**: 11 plans
 
 Plans:
 - [x] 06.5-01-PLAN.md -- Client payment processing with Stripe (card, 3D Secure)
@@ -342,11 +342,12 @@ Plans:
 - [x] 06.5-03-PLAN.md -- Invoice generation with VAT and late payment handling
 - [x] 06.5-04-PLAN.md -- IR35 compliance and medic onboarding flow
 - [x] 06.5-05-PLAN.md -- Out-of-territory cost management (travel bonus vs room/board)
-- [ ] 06.5-06-PLAN.md -- [GAP CLOSURE] Fix platform fee calculation (71.4/28.6) and renumber migrations
-- [ ] 06.5-07-PLAN.md -- [GAP CLOSURE] Wire Resend email for late payment reminders and schedule pg_cron jobs
-- [ ] 06.5-08-PLAN.md -- [GAP CLOSURE] Create payslip PDF generation Edge Function
-- [ ] 06.5-09-PLAN.md -- [GAP CLOSURE] Add Stripe onboarding webhook and GB bank validation
-- [ ] 06.5-10-PLAN.md -- [GAP CLOSURE] Wire out-of-territory approval into booking workflow
+- [x] 06.5-06-PLAN.md -- [GAP CLOSURE] Fix platform fee calculation (71.4/28.6) and renumber migrations
+- [x] 06.5-07-PLAN.md -- [GAP CLOSURE] Wire Resend email for late payment reminders and schedule pg_cron jobs
+- [x] 06.5-08-PLAN.md -- [GAP CLOSURE] Create payslip PDF generation Edge Function
+- [x] 06.5-09-PLAN.md -- [GAP CLOSURE] Add Stripe onboarding webhook and GB bank validation
+- [x] 06.5-10-PLAN.md -- [GAP CLOSURE] Wire out-of-territory approval into booking workflow
+- [ ] 06.5-11-PLAN.md -- [GAP CLOSURE] Fix payslip_reference schema and late payment cron vault auth
 
 ### Phase 7: Certification Tracking
 **Goal**: System tracks UK certifications with progressive expiry alerts, prevents expired workers from logging incidents, and surfaces compliance status to managers.
@@ -416,7 +417,7 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 | 5. PDF Generation | 4/4 | Complete | 2026-02-16 |
 | 5.5. Admin Operations Dashboards | 6/6 | Complete | 2026-02-16 |
 | 6. RIDDOR Auto-Flagging | 0/6 | In Progress (DB schema done) | - |
-| 6.5. Payment Processing & Payouts | 5/10 | Gap closure in progress | - |
+| 6.5. Payment Processing & Payouts | 10/11 | Gap closure in progress | - |
 | 7. Certification Tracking | 0/TBD | Not started | - |
 | 7.5. Territory Management & Auto-Assignment | 0/5 | Not started | - |
 
@@ -447,3 +448,4 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Phase 6 planned: 2026-02-16 -- 6 plans in 3 waves (2 parallel Wave 1: detection+mobile, 2 parallel Wave 2: F2508+dashboard, 2 sequential Wave 3: notifications+analytics)*
 *Phase 6 progress: 2026-02-16 -- Database schema completed (migration 018_riddor_incidents.sql added with riddor_incidents table, RLS policies, performance indexes, and complete audit trail for auto-detection, medic override, deadline management, and F2508 PDF storage)*
 *Phase 6.5 gap closure: 2026-02-16 -- 5 gap closure plans (06.5-06 through 06.5-10) addressing 5 critical gaps and 3 partial implementations (platform fee fix, email integration, payslip PDF, Stripe webhook, out-of-territory wiring)*
+*Phase 6.5 gap closure v2: 2026-02-16 -- 1 gap closure plan (06.5-11) addressing final 2 gaps: payslip_reference schema mismatch and late payment cron vault auth pattern*
