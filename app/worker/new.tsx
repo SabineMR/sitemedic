@@ -168,25 +168,28 @@ export default function WorkerInductionForm({
 
     const timer = setTimeout(async () => {
       try {
-        await worker.update((w) => {
-          w.firstName = formValues.firstName || '';
-          w.lastName = formValues.lastName || '';
-          w.company = formValues.company || '';
-          w.role = formValues.role || '';
-          w.cscsCardNumber = formValues.cscsCardNumber;
-          w.cscsExpiryDate = formValues.cscsExpiryDate;
-          w.emergencyContactName = formValues.emergencyContactName;
-          w.emergencyContactPhone = formValues.emergencyContactPhone;
-          w.emergencyContactRelationship = formValues.emergencyContactRelationship;
-          w.allergies = formValues.allergies;
-          w.currentMedications = formValues.currentMedications;
-          w.preExistingConditions = formValues.preExistingConditions;
-          w.bloodType = formValues.bloodType;
-          w.certifications = formValues.certifications
-            ? JSON.stringify(formValues.certifications)
-            : undefined;
-          w.updatedAt = Date.now();
-          w.lastModifiedAt = Date.now();
+        const database = getDatabase();
+        await database.write(async () => {
+          await worker.update((w) => {
+            w.firstName = formValues.firstName || '';
+            w.lastName = formValues.lastName || '';
+            w.company = formValues.company || '';
+            w.role = formValues.role || '';
+            w.cscsCardNumber = formValues.cscsCardNumber;
+            w.cscsExpiryDate = formValues.cscsExpiryDate;
+            w.emergencyContactName = formValues.emergencyContactName;
+            w.emergencyContactPhone = formValues.emergencyContactPhone;
+            w.emergencyContactRelationship = formValues.emergencyContactRelationship;
+            w.allergies = formValues.allergies;
+            w.currentMedications = formValues.currentMedications;
+            w.preExistingConditions = formValues.preExistingConditions;
+            w.bloodType = formValues.bloodType;
+            w.certifications = formValues.certifications
+              ? JSON.stringify(formValues.certifications)
+              : undefined;
+            w.updatedAt = Date.now();
+            w.lastModifiedAt = Date.now();
+          });
         });
       } catch (error) {
         console.error('Auto-save failed:', error);
@@ -207,11 +210,14 @@ export default function WorkerInductionForm({
 
     try {
       const isNew = worker.isIncomplete;
+      const database = getDatabase();
 
-      await worker.update((w) => {
-        w.isIncomplete = false;
-        w.consentGiven = true;
-        w.consentDate = Date.now();
+      await database.write(async () => {
+        await worker.update((w) => {
+          w.isIncomplete = false;
+          w.consentGiven = true;
+          w.consentDate = Date.now();
+        });
       });
 
       // Enqueue for sync to backend

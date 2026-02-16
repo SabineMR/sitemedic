@@ -19,7 +19,7 @@ export async function initDatabase(): Promise<Database> {
   const adapter = new SQLiteAdapter({
     schema,
     migrations,
-    jsi: true, // Enabled - JSI provides better performance
+    jsi: false, // Disabled for now - will enable JSI later for better performance
     // NOTE: encryptionKey will be passed here once SQLCipher integration is ready (Phase 2)
     // WatermelonDB's SQLCipher support is not yet merged (PR #907)
   })

@@ -306,12 +306,46 @@ const enhance = withObservables([], ({ database }: { database: any }) => {
   };
 });
 
+// TEMPORARY: Simple version without observables to test WatermelonDB
 export default function HomeScreenWrapper() {
   const database = useDatabase();
-  const EnhancedHome = enhance(HomeScreen);
 
-  return <EnhancedHome database={database} />;
+  // Don't render until database is ready
+  if (!database) {
+    return null;
+  }
+
+  // Simple test screen to verify WatermelonDB works
+  return (
+    <View style={styles.container}>
+      <ScrollView style={styles.content}>
+        <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>
+          🎉 SiteMedic Home
+        </Text>
+        <Text style={{ fontSize: 16, color: '#666', marginBottom: 10 }}>
+          ✅ WatermelonDB initialized successfully!
+        </Text>
+        <Text style={{ fontSize: 14, color: '#999' }}>
+          Database path: {database.adapter._dbName}
+        </Text>
+        <View style={{ marginTop: 40 }}>
+          <Text style={{ fontSize: 18, fontWeight: '600', marginBottom: 15 }}>
+            Quick Actions:
+          </Text>
+          <LargeTapButton
+            title="New Treatment"
+            icon="⚕️"
+            onPress={() => router.push('/treatment/new')}
+            variant="primary"
+          />
+        </View>
+      </ScrollView>
+    </View>
+  );
 }
+
+// TODO: Re-enable withObservables once we debug the HOC issue
+// const EnhancedHome = enhance(HomeScreen);
 
 const styles = StyleSheet.create({
   container: {

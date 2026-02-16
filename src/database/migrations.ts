@@ -1,4 +1,4 @@
-import { schemaMigrations, addColumns } from '@nozbe/watermelondb/Schema/migrations'
+import { schemaMigrations, addColumns, createTable } from '@nozbe/watermelondb/Schema/migrations'
 
 export default schemaMigrations({
   migrations: [
@@ -17,6 +17,23 @@ export default schemaMigrations({
             { name: 'cscs_expiry_date', type: 'number', isOptional: true },
             { name: 'certifications', type: 'string', isOptional: true },
             { name: 'is_incomplete', type: 'boolean', isOptional: false },
+          ],
+        }),
+      ],
+    },
+    {
+      toVersion: 3,
+      steps: [
+        createTable({
+          name: 'audit_log',
+          columns: [
+            { name: 'user_id', type: 'string' },
+            { name: 'table_name', type: 'string' },
+            { name: 'record_id', type: 'string' },
+            { name: 'operation', type: 'string' },
+            { name: 'context', type: 'string', isOptional: true },
+            { name: 'synced', type: 'boolean' },
+            { name: 'created_at', type: 'number' },
           ],
         }),
       ],
