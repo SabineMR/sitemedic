@@ -189,13 +189,14 @@ Plans:
   9. New clients must prepay via card (Stripe Payment Intent with 3D Secure)
   10. Recurring bookings can be created (same medic, weekly schedule)
 
-**Plans**: 4 plans
+**Plans**: 5 plans
 
 Plans:
 - [x] 04.5-01-PLAN.md -- Marketing website with Next.js SSG (homepage, pricing, trust signals)
 - [x] 04.5-02-PLAN.md -- Booking portal calendar and site location input
 - [x] 04.5-03-PLAN.md -- Stripe payment integration (prepay vs Net 30 logic)
 - [x] 04.5-04-PLAN.md -- Auto-matching UI and booking confirmation flow
+- [ ] 04.5-05-PLAN.md -- [GAP CLOSURE] Fix confirmation page mock data with real Supabase queries
 
 ### Phase 4.6: Customer Onboarding & Contract Management (INSERTED)
 **Goal**: Automated service agreement generation with business info auto-filled, document portal for phone sales, flexible payment terms (half upfront, remainder after completion), and digital signature collection.
