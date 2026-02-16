@@ -89,7 +89,7 @@ export default function BookingConfirmationEmail({
           <Hr style={hr} />
 
           <Text style={footer}>
-            Guardian Medics Ltd - UK paramedic staffing with built-in compliance
+            Apex Safety Group Ltd - UK paramedic staffing with built-in compliance
           </Text>
         </Container>
       </Body>

@@ -6,7 +6,7 @@ export const dynamic = 'force-static';
 export const revalidate = 86400; // Revalidate daily (24 hours)
 
 export const metadata: Metadata = {
-  title: 'Pricing - Guardian Medics',
+  title: 'Pricing - Apex Safety Group',
   description: 'Transparent pricing for professional paramedics with built-in compliance. One daily rate, everything included.',
 };
 

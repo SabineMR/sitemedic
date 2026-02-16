@@ -11,7 +11,7 @@ export default function SiteFooter() {
               UK paramedic staffing with built-in compliance.
             </p>
             <p className="text-xs text-slate-500">
-              Guardian Medics Ltd<br />
+              Apex Safety Group Ltd<br />
               Registered in England and Wales
             </p>
           </div>
@@ -40,7 +40,7 @@ export default function SiteFooter() {
 
         <div className="border-t border-slate-800 pt-8 text-center">
           <p className="text-xs text-slate-500">
-            &copy; 2026 Guardian Medics Ltd. All rights reserved.
+            &copy; 2026 Apex Safety Group Ltd. All rights reserved.
           </p>
         </div>
       </div>
