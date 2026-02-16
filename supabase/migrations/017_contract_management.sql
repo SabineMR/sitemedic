@@ -154,7 +154,7 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
-COMMENT ON TABLE storage.buckets IS 'Storage bucket for contract PDFs (10MB limit, PDF-only, private)';
+-- COMMENT ON TABLE storage.buckets IS 'Storage bucket for contract PDFs (10MB limit, PDF-only, private)';
 
 -- ============================================================================
 -- RLS Policies for storage.contracts bucket
@@ -167,8 +167,10 @@ TO authenticated
 USING (
   bucket_id = 'contracts' AND
   auth.uid() IN (
-    SELECT created_by FROM contracts
-    WHERE storage_path LIKE 'contracts/' || id::text || '%'
+    SELECT c.created_by
+    FROM contracts c
+    JOIN contract_versions cv ON cv.contract_id = c.id
+    WHERE cv.storage_path = storage.objects.name
   )
 );
 

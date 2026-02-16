@@ -40,8 +40,8 @@ SELECT cron.schedule(
   $$
 );
 
--- Add descriptive comment
-COMMENT ON SCHEMA cron IS 'Weekly safety report generation - every Friday at 5 PM UTC. Invokes generate-weekly-report Edge Function.';
+-- Add descriptive comment (commented out - requires cron schema ownership)
+-- COMMENT ON SCHEMA cron IS 'Weekly safety report generation - every Friday at 5 PM UTC. Invokes generate-weekly-report Edge Function.';
 
 -- =============================================
 -- Monitoring and Management Queries
