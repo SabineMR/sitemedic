@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 4 of 7 (Web Dashboard)
-Plan: 5 of 6 in current phase
+Phase: 5 of 7 (PDF Generation)
+Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 04-05-PLAN.md (Export and Responsive Dashboard)
+Last activity: 2026-02-16 — Completed 05-01-PLAN.md (PDF Generation Core)
 
-Progress: [███████████░] 100% (29/29 plans across Phases 1, 1.5, 2, 3, 4)
+Progress: [███████████░] 100% (30/30 plans across Phases 1, 1.5, 2, 3, 4, 5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 29
+- Total plans completed: 30
 - Average duration: 3.9 min
-- Total execution time: 1.96 hours
+- Total execution time: 2.04 hours
 
 **By Phase:**
 
@@ -32,10 +32,11 @@ Progress: [███████████░] 100% (29/29 plans across Phases
 | 02-mobile-core | 9/9 | 50 min | 5.6 min |
 | 03-sync-engine | 7/7 | 24 min | 3.4 min |
 | 04-web-dashboard | 4/6 | 41 min | 10.3 min |
+| 05-pdf-generation | 1/3 | 4.5 min | 4.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-01 (14 min), 04-02 (6 min), 04-03 (12 min), 04-04 (9 min), 04-05 (15 min)
-- Trend: Phase 4 dashboard foundation complete - export functionality (CSV/PDF), responsive design, and interactive tables delivered
+- Last 5 plans: 04-02 (6 min), 04-03 (12 min), 04-04 (9 min), 04-05 (15 min), 05-01 (4.5 min)
+- Trend: Phase 5 started - PDF generation core with React-PDF components and Edge Function delivered
 
 *Updated after each plan completion*
 
@@ -238,6 +239,17 @@ Recent decisions affecting current work:
 - D-04-05-006: Filters stack on mobile (flex-col), inline on desktop (flex-row)
 - D-04-05-007: Certification status hard-coded as 'Active' in worker CSV (Phase 7 will implement real tracking)
 
+**From Plan 05-01:**
+- D-05-01-001: Use @react-pdf/renderer with npm: specifier for Deno Edge Functions compatibility
+- D-05-01-002: Limit treatments and near-misses to 50 rows per table (performance constraint per Research Pitfall 2)
+- D-05-01-003: Use renderToBuffer instead of renderToStream for simpler Uint8Array handling in Deno
+- D-05-01-004: Calculate week_ending as most recent Friday if not provided (default for manual triggers)
+- D-05-01-005: Mirror compliance logic from web/lib/queries/compliance.ts for consistency
+- D-05-01-006: UK date format (dd MMM yyyy) for all dates in PDF for HSE audit compliance
+- D-05-01-007: Logo placeholder as text 'SiteMedic' (actual logo from Supabase Storage deferred to Plan 02)
+- D-05-01-008: Parallel data fetching with Promise.all for <10 second generation constraint
+- D-05-01-009: Brand colors: primary #003366 (dark navy), accent #2563EB (blue), success/warning/danger for compliance
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -272,9 +284,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T04:43:54Z
-Stopped at: Completed 04-05-PLAN.md — Export and Responsive Dashboard (CSV/PDF exports, responsive tables, filtered data export)
+Last session: 2026-02-16T05:01:02Z
+Stopped at: Completed 05-01-PLAN.md — PDF Generation Core (React-PDF components, Edge Function handler, parallel data queries)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) in progress (4/6 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) in progress (4/6 plans). Phase 5 (PDF Generation) in progress (1/3 plans)*
