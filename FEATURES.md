@@ -924,7 +924,7 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
 ---
 
 ## Phase 3: Sync Engine
-**Status**: 🔄 **IN PROGRESS** (4/5 plans complete) - 2026-02-16
+**Status**: 🔄 **IN PROGRESS** (5/7 plans complete, 2 gap closure plans pending) - 2026-02-16
 **Goal**: Mobile-to-backend data synchronization with photo uploads
 
 ### Plan 03-01: Background Sync Infrastructure ✅ **COMPLETED - 2026-02-16**
@@ -1058,12 +1058,38 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
   - Tracks photo queue size for UI components (PhotoUploadProgress, SyncStatusIndicator)
   - Integrated photoUploadQueue.processPendingPhotos() in triggerSync()
 
+### Plan 03-06: Battery/Network Runtime Constraints [GAP CLOSURE] - PLANNED
+- **Gap Addressed**: Background sync task only sets minimumInterval (15min), no battery or network constraints
+- **Root Cause**: expo-background-task does NOT expose WorkManager-style constraint APIs (confirmed in research)
+- **Fix Approach**: Runtime guards at task start in tasks/backgroundSyncTask.ts:
+  - Battery check via expo-battery: Skip all sync if battery < 15% AND not charging
+  - Network type check via NetInfo: Skip photo uploads if cellular-only (data sync still proceeds)
+  - All constraints logged for debugging
+- **New Dependency**: expo-battery (for getBatteryLevelAsync and getBatteryStateAsync)
+- **Files Modified**: tasks/backgroundSyncTask.ts, src/services/BackgroundSyncTask.ts (docs), package.json
+- **Impact**: Prevents background sync from draining battery on construction site devices with limited charging access
+
+### Plan 03-07: Client-Generated UUID Idempotency Keys [GAP CLOSURE] - PLANNED
+- **Gap Addressed**: Retry of failed create could create duplicate server records (no idempotency protection)
+- **Root Cause**: WatermelonDB auto-generates IDs, server_id only set after first successful sync
+- **Fix Approach**:
+  - Add `idempotency_key` column to sync_queue schema (WatermelonDB) + SyncQueueItem model
+  - Generate UUID via expo-crypto (already installed) at enqueue time
+  - Include `client_id` field in create payloads sent to Supabase
+  - Handle PostgreSQL 23505 unique constraint violation as success (duplicate detected)
+  - Server-side `client_id UUID UNIQUE` column migration documented for future phase
+- **Schema Change**: WatermelonDB schema version bumped from 2 to 3
+- **Files Modified**: src/database/schema.ts, src/database/models/SyncQueueItem.ts, src/services/SyncQueue.ts
+- **Impact**: Prevents duplicate records when network timeout causes retry of successful create
+
 ### Summary of Phase 3 Deliverables:
 - **Background Sync Infrastructure**
   - Automatic sync when connectivity returns (30-second foreground polling, 15-minute background tasks)
   - WiFi-only constraint for large photo uploads (thumbnails/previews upload on any connection)
   - Battery-efficient background task scheduling with non-fatal registration
   - Hybrid sync strategy balances responsiveness with iOS BGTaskScheduler limitations
+  - [PLANNED] Runtime battery guard: skip background sync if battery < 15% and not charging
+  - [PLANNED] Runtime network guard: skip photo uploads on cellular in background task
 
 - **Progressive Photo Upload**
   - 3 quality tiers (thumbnail 50KB, preview 200KB, full 2-5MB) from single photo
@@ -1079,7 +1105,9 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
 
 - **Conflict Resolution** (from Plan 03-03 - inferred from commits)
   - Last-write-wins strategy for concurrent edits
-  - Client-generated UUIDs prevent duplicate records on retry
+  - [PLANNED] Client-generated UUID idempotency keys prevent duplicate records on retry
+  - [PLANNED] Idempotency key persisted in sync_queue, included as client_id in Supabase create payload
+  - [PLANNED] PostgreSQL 23505 duplicate detection handled gracefully as success
   - RIDDOR fast retry (priority 0) bypasses batch intervals
   - Photo filtering in sync queue (separates photo uploads from data sync)
 
