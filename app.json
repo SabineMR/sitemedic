@@ -34,6 +34,19 @@
         }
       ],
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "SiteMedic needs photo access to document injuries and incidents",
+          "cameraPermission": "SiteMedic needs camera access to document injuries and incidents"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "SiteMedic needs your location to track medic position and log incident locations"
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "ios": {
