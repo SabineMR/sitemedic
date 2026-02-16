@@ -28,6 +28,7 @@ import {
   Stethoscope,
   AlertTriangle,
   Users,
+  FileText,
   LogOut,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -53,6 +54,11 @@ const navigation = [
     name: 'Workers',
     href: '/workers',
     icon: Users,
+  },
+  {
+    name: 'Reports',
+    href: '/reports',
+    icon: FileText,
   },
 ];
 
