@@ -1,9 +1,9 @@
-import { createServerClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { fetchNearMisses } from '@/lib/queries/near-misses';
 import { NearMissesTable } from '@/components/dashboard/near-misses-table';
 
 export default async function NearMissesPage() {
-  const supabase = await createServerClient();
+  const supabase = await createClient();
   const nearMisses = await fetchNearMisses(supabase);
 
   return (
