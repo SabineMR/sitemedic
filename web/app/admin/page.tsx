@@ -197,21 +197,21 @@ export default function AdminDashboard() {
               </div>
               <div className="p-6">
                 <div className="space-y-3">
-                  {stats.pendingBookings > 0 && (
+                  {overview.pendingBookings > 0 && (
                     <AlertItem
                       icon={<Clock className="w-5 h-5" />}
-                      message={`${stats.pendingBookings} bookings pending assignment`}
+                      message={`${overview.pendingBookings} bookings pending assignment`}
                       type="warning"
                     />
                   )}
-                  {stats.issuesCount > 0 && (
+                  {overview.issuesCount > 0 && (
                     <AlertItem
                       icon={<AlertTriangle className="w-5 h-5" />}
-                      message={`${stats.issuesCount} active issues need attention`}
+                      message={`${overview.issuesCount} active issues need attention`}
                       type="error"
                     />
                   )}
-                  {stats.pendingBookings === 0 && stats.issuesCount === 0 && (
+                  {overview.pendingBookings === 0 && overview.issuesCount === 0 && (
                     <div className="text-center py-4 text-gray-500 text-sm flex items-center justify-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-500" />
                       No alerts at this time
