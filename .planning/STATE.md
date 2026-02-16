@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 4.5 of 7 (Marketing & Booking) — In progress
-Plan: 1 of 3 in current phase
+Phase: 5.5 of 7 (Admin Operations) — In progress
+Plan: 2 of 4 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 04.5-01-PLAN.md (Marketing Homepage & Pricing)
+Last activity: 2026-02-16 — Completed 05.5-02-PLAN.md (Medic Management Dashboard)
 
-Progress: [████████████░] 97% (37/38 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5)
+Progress: [████████████░] 97% (38/39 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5, 5.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 37
+- Total plans completed: 38
 - Average duration: 3.8 min
-- Total execution time: 2.46 hours
+- Total execution time: 2.53 hours
 
 **By Phase:**
 
@@ -34,10 +34,11 @@ Progress: [████████████░] 97% (37/38 plans across Phas
 | 04-web-dashboard | 6/6 | 46 min | 7.7 min |
 | 04.5-marketing-booking | 1/3 | 10 min | 10 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
+| 05.5-admin-operations | 2/4 | 8 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-01 (4.5 min), 05-02 (3 min), 05-03 (4 min), 05-04 (2 min), 04.5-01 (10 min)
-- Trend: Marketing/booking phase started - Static homepage and pricing with SSG
+- Last 5 plans: 05-02 (3 min), 05-03 (4 min), 05-04 (2 min), 04.5-01 (10 min), 05.5-02 (4 min)
+- Trend: Admin operations phase started - Medic roster with utilization metrics and availability management
 
 *Updated after each plan completion*
 
@@ -275,6 +276,12 @@ Recent decisions affecting current work:
 - D-04.5-01-004: Small client wrapper (quote-button.tsx) for QuoteBuilder modal, keep pages as Server Components
 - D-04.5-01-005: shadcn/ui Sheet component for mobile navigation menu
 
+**From Plan 05.5-02:**
+- D-05.5-02-001: Use TanStack Query for data fetching with 60-second polling for near-real-time updates
+- D-05.5-02-002: Calculate utilization as (confirmed bookings this week / 5 working days) × 100, capped at 100%
+- D-05.5-02-003: Color-code utilization: green <50%, yellow 50-80%, red >80% for quick visual assessment
+- D-05.5-02-004: Use parallel queries (Promise.all) to avoid N+1 database calls when fetching metrics
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -313,9 +320,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T06:11:14Z
-Stopped at: Completed 04.5-01-PLAN.md — Marketing Homepage & Pricing (static pages with SSG, shared components, <2s load time)
+Last session: 2026-02-16T06:12:27Z
+Stopped at: Completed 05.5-02-PLAN.md — Medic Management Dashboard (roster table with utilization bars, territory assignments, availability toggle)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) in progress (1/3 plans). Phase 5 (PDF Generation) complete (4/4 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) in progress (1/3 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) in progress (2/4 plans)*
