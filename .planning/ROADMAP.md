@@ -98,7 +98,7 @@ Plans:
   9. Photos compress on-device to 100-200KB before storage
   10. Treatment auto-saves locally every 10 seconds
 
-**Plans**: 8 plans
+**Plans**: 10 plans
 
 Plans:
 - [ ] 02-01-PLAN.md -- Dependencies, shared gloves-on UI components, and safety taxonomy data
@@ -109,6 +109,8 @@ Plans:
 - [ ] 02-06-PLAN.md -- Near-miss capture (photo-first, categories, severity, GPS tagging)
 - [ ] 02-07-PLAN.md -- Daily safety checklist (10 items, Green/Amber/Red, completion tracking)
 - [ ] 02-08-PLAN.md -- App navigation, home dashboard, workers tab, and integration verification
+- [ ] 02-09-PLAN.md -- [GAP CLOSURE] Fix auto-save timing (10s) and verify template presets
+- [ ] 02-10-PLAN.md -- [GAP CLOSURE] Fix import paths and verify offline functionality
 
 ### Phase 3: Sync Engine
 **Goal**: Mobile app data syncs to backend automatically when connectivity available, with photo uploads that don't block workflow and zero data loss during transitions.
@@ -166,7 +168,7 @@ Plans:
 
 **Success Criteria** (what must be TRUE):
   1. Marketing website loads in <2 seconds (Lighthouse score >90)
-  2. Client can complete booking end-to-end in <5 minutes (calendar → location → payment → confirmation)
+  2. Client can complete booking end-to-end in <5 minutes (calendar -> location -> payment -> confirmation)
   3. Stripe payment processing works in test mode (card charges successful)
   4. Auto-matching presents ranked medic candidates with transparency (distance, availability, rating)
   5. Pricing breakdown shows base + urgency premium + travel surcharge + VAT (20%)
@@ -195,7 +197,7 @@ Plans:
   1. Service agreement auto-generates with client info (company name, contact, site address, dates) pre-filled from booking
   2. Pricing breakdown in agreement matches booking (base rate, hours, urgency premium, travel, VAT, total)
   3. Admin/sales can select payment terms per booking: Full prepay, Half upfront + half on completion, Half upfront + half Net 30, Full Net 30, Custom terms
-  4. Payment terms in agreement update based on selection (e.g., "50% (£500) due upon signing, 50% (£500) due 30 days after service completion")
+  4. Payment terms in agreement update based on selection (e.g., "50% (500) due upon signing, 50% (500) due 30 days after service completion")
   5. Admin can send service agreement via portal during phone call with client (enter email, click send, get shareable link)
   6. Client receives email with link to view and sign agreement
   7. Client can view agreement in browser and sign digitally (signature pad or typed name)
@@ -291,19 +293,19 @@ Plans:
 
 **Depends on**: Phase 1.5, Phase 5.5
 
-**Requirements**: Stripe payment processing (card, 3D Secure, Payment Intents), Weekly medic payouts (automated Friday job via UK Faster Payments), Platform fee calculation (40% markup transparent to clients), Invoice generation (PDF with VAT 20%, Net 30 terms), Late payment handling (auto-reminders at 7/14/21 days, statutory fees), IR35 compliance (self-employed contractors, Stripe Express accounts, UTR collection), Timesheet workflow (medic logs → manager approves → admin batch-approves → Friday payout), Out-of-territory cost management (travel bonus vs room/board vs deny booking)
+**Requirements**: Stripe payment processing (card, 3D Secure, Payment Intents), Weekly medic payouts (automated Friday job via UK Faster Payments), Platform fee calculation (40% markup transparent to clients), Invoice generation (PDF with VAT 20%, Net 30 terms), Late payment handling (auto-reminders at 7/14/21 days, statutory fees), IR35 compliance (self-employed contractors, Stripe Express accounts, UTR collection), Timesheet workflow (medic logs -> manager approves -> admin batch-approves -> Friday payout), Out-of-territory cost management (travel bonus vs room/board vs deny booking)
 
 **Success Criteria** (what must be TRUE):
   1. Client payment processing works (card charge via Stripe Payment Intent with 3D Secure)
   2. Friday payout job runs automatically (zero failures, every Friday at 9am)
   3. Medics receive funds within 2 business days via UK Faster Payments
-  4. Platform fee calculation correct (medic £30/hr → client £42/hr → platform £12/hr)
+  4. Platform fee calculation correct (medic 30/hr -> client 42/hr -> platform 12/hr)
   5. Invoice PDF generated with VAT (20%) and Net 30 terms for established clients
-  6. Late payment auto-reminders send at 7, 14, 21 days with statutory late fees (£40-100)
+  6. Late payment auto-reminders send at 7, 14, 21 days with statutory late fees (40-100)
   7. Medic onboarding captures IR35 status (self-employed vs umbrella company)
   8. Stripe Express account onboarding link works (medic completes bank details)
   9. Payslip PDF generated (gross, deductions, net) for medic records
-  10. Out-of-territory bookings calculate travel bonus (£2/mile beyond 30 miles) vs room/board cost
+  10. Out-of-territory bookings calculate travel bonus (2/mile beyond 30 miles) vs room/board cost
   11. Admin sees cost breakdown and can approve/deny out-of-territory booking
   12. System denies booking if out-of-territory cost >50% of shift cost (admin can override)
 
@@ -348,9 +350,9 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. UK postcode sector database fully seeded (~11,232 sectors) with assignment capability
   2. Can assign primary + secondary medic to postcode sector (drag-drop in admin UI)
-  3. Auto-assignment algorithm ranks medics by: distance (via Google Maps) → utilization (<70% preferred) → qualifications (required certs) → availability (calendar check) → rating (>4.5 stars)
+  3. Auto-assignment algorithm ranks medics by: distance (via Google Maps) -> utilization (<70% preferred) -> qualifications (required certs) -> availability (calendar check) -> rating (>4.5 stars)
   4. Out-of-territory logic calculates travel time from secondary medic's home to site
-  5. System compares travel bonus (£2/mile beyond 30 miles) vs room/board cost (overnight stay)
+  5. System compares travel bonus (2/mile beyond 30 miles) vs room/board cost (overnight stay)
   6. Admin sees cost breakdown and system recommends deny if cost >50% shift value
   7. Coverage gap alerts trigger when booking rejection rate >10% in territory for 3+ weeks
   8. Hiring recommendations display: "Hire medic in North London (N1-N22 sectors, 85% utilization)"
@@ -370,13 +372,13 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 1.5 → 2 → 3 → 4 → 4.5 → 4.6 → 5 → 5.5 → 6 → 6.5 → 7 → 7.5
+Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5.5 -> 6 -> 6.5 -> 7 -> 7.5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 5/5 | Complete | 2026-02-15 |
 | 1.5. Business Operations Foundation | 4/4 | Complete | 2026-02-15 |
-| 2. Mobile Core | 0/8 | Not started | - |
+| 2. Mobile Core | 0/10 | Not started | - |
 | 3. Sync Engine | 0/TBD | Not started | - |
 | 4. Web Dashboard | 0/TBD | Not started | - |
 | 4.5. Marketing Website & Booking Portal | 0/4 | Not started | - |
@@ -397,3 +399,4 @@ Phases execute in numeric order: 1 → 1.5 → 2 → 3 → 4 → 4.5 → 4.6 →
 *Phase 1.5 planned: 2026-02-15 -- 4 plans in 1 wave (all parallel, DB schema and Google Maps API already exist from prior session)*
 *Phase 4.6 added: 2026-02-15 -- Customer onboarding & contract management with service agreement generation, document portal for phone sales, flexible payment terms (half upfront + remainder after completion/Net 30), digital signatures, and payment schedule enforcement (5 plans)*
 *Phase 2 planned: 2026-02-15 -- 8 plans in 3 waves (2 parallel foundation, 4 parallel features, 2 integration)*
+*Phase 2 gap closure: 2026-02-15 -- 2 gap closure plans (02-09, 02-10) addressing 3 verification gaps (auto-save timing, template presets, offline import paths)*
