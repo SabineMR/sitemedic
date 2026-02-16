@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/lib/supabase/client';
 import { calculateLateFee } from '@/lib/invoices/late-fees';
 
 interface OverdueInvoice {
@@ -30,7 +30,7 @@ export default function LatePaymentTracker({
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | '1-7' | '8-14' | '15+'>('all');
   const [clientFilter, setClientFilter] = useState<string>('');
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   const fetchOverdueInvoices = async () => {
     try {

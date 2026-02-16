@@ -1,6 +1,5 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { calculateLateFee } from '@/lib/invoices/late-fees';
 
 export const dynamic = 'force-dynamic';
@@ -10,25 +9,25 @@ interface SendReminderRequest {
   reminderType: '7_days' | '14_days' | '21_days';
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session } } = await supabase.auth.getSession();
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     // Allow both admin users and automated system (service role)
     const authHeader = request.headers.get('authorization');
     const isServiceRole = authHeader?.includes(process.env.SUPABASE_SERVICE_ROLE_KEY || '');
 
-    if (!session && !isServiceRole) {
+    if ((authError || !user) && !isServiceRole) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // If authenticated as user, verify admin role
-    if (session) {
-      const { data: profile } = await supabase
+    if (user) {
+      const { data: profile} = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', session.user.id)
+        .eq('id', user.id)
         .single();
 
       if (profile?.role !== 'admin') {
@@ -181,10 +180,10 @@ SiteMedic Accounts Team
       late_fee_applied: daysOverdue >= 21 ? lateFee : 0,
       days_overdue: daysOverdue,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error sending reminder:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: 'Internal server error', details: error?.message || 'Unknown error' },
       { status: 500 }
     );
   }

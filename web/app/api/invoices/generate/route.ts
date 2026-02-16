@@ -1,6 +1,5 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,12 +9,12 @@ interface GenerateInvoiceRequest {
   invoiceDate?: string;
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session } } = await supabase.auth.getSession();
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -23,7 +22,7 @@ export async function POST(request: Request) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single();
 
     if (profile?.role !== 'admin') {
@@ -90,7 +89,7 @@ export async function POST(request: Request) {
       .in('booking_id', bookingIds);
 
     if (existingLineItems && existingLineItems.length > 0) {
-      const alreadyInvoiced = existingLineItems.map(item => item.booking_id);
+      const alreadyInvoiced = existingLineItems.map((item: any) => item.booking_id);
       return NextResponse.json(
         { error: `Bookings already invoiced: ${alreadyInvoiced.join(', ')}` },
         { status: 400 }
@@ -98,7 +97,7 @@ export async function POST(request: Request) {
     }
 
     // Calculate totals
-    const subtotal = bookings.reduce((sum, booking) => sum + parseFloat(booking.total), 0);
+    const subtotal = bookings.reduce((sum: number, booking: any) => sum + parseFloat(booking.total), 0);
     const vat = subtotal * 0.20; // 20% UK VAT
     const total = subtotal + vat;
 
@@ -131,7 +130,7 @@ export async function POST(request: Request) {
     }
 
     // Insert invoice line items
-    const lineItems = bookings.map(booking => ({
+    const lineItems = bookings.map((booking: any) => ({
       invoice_id: invoice.id,
       booking_id: booking.id,
       description: `Medic service - ${booking.site_name} on ${booking.shift_date}`,
@@ -176,10 +175,10 @@ export async function POST(request: Request) {
         pdf_url: pdfData?.pdf_url || null,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error generating invoice:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: 'Internal server error', details: error?.message || 'Unknown error' },
       { status: 500 }
     );
   }
