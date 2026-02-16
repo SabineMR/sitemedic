@@ -143,8 +143,8 @@ serve(async (req) => {
         continue;
       }
 
-      // Validate payout amount (should be 60% of booking total)
-      const expectedPayout = Number(((booking.total * 60) / 100).toFixed(2));
+      // Validate payout amount (should be 71.4% of booking total)
+      const expectedPayout = Number(((booking.total * 71.4) / 100).toFixed(2));
       const actualPayout = Number(timesheet.payout_amount);
 
       if (Math.abs(expectedPayout - actualPayout) > 0.01) {
