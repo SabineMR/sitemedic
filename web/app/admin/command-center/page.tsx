@@ -49,12 +49,16 @@ export default function CommandCenter() {
   // Real-time medic locations from Zustand store
   const subscribe = useMedicLocationsStore((state) => state.subscribe);
   const unsubscribe = useMedicLocationsStore((state) => state.unsubscribe);
-  const activeMedics = useMedicLocationsStore((state) => state.getActiveMedics());
+  const locations = useMedicLocationsStore((state) => state.locations);
   const isConnected = useMedicLocationsStore((state) => state.isConnected);
 
+  // Convert Map to array (memoized by Zustand's shallow comparison)
+  const activeMedics = Array.from(locations.values());
+
   // Real-time alerts from Zustand store
-  const alertsCount = useMedicAlertsStore((state) => state.getActiveAlerts().length);
-  const criticalAlertsCount = useMedicAlertsStore((state) => state.getCriticalAlertsCount());
+  const alerts = useMedicAlertsStore((state) => state.alerts);
+  const alertsCount = alerts.length;
+  const criticalAlertsCount = alerts.filter((a) => a.alert_severity === 'critical').length;
 
   // Subscribe to real-time updates on mount
   useEffect(() => {

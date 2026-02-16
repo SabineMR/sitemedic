@@ -15,7 +15,7 @@ export default function AlertPanel() {
   const [resolveNote, setResolveNote] = useState<{ alertId: string; note: string } | null>(null);
 
   // Store state
-  const alerts = useMedicAlertsStore((state) => state.getActiveAlerts());
+  const alerts = useMedicAlertsStore((state) => state.alerts);
   const subscribe = useMedicAlertsStore((state) => state.subscribe);
   const unsubscribe = useMedicAlertsStore((state) => state.unsubscribe);
   const dismissAlert = useMedicAlertsStore((state) => state.dismissAlert);

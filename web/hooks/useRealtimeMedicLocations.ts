@@ -14,9 +14,12 @@ import { useMedicLocationsStore } from '@/stores/useMedicLocationsStore';
 export function useRealtimeMedicLocations() {
   const subscribe = useMedicLocationsStore((state) => state.subscribe);
   const unsubscribe = useMedicLocationsStore((state) => state.unsubscribe);
-  const locations = useMedicLocationsStore((state) => state.getActiveMedics());
+  const locationsMap = useMedicLocationsStore((state) => state.locations);
   const isConnected = useMedicLocationsStore((state) => state.isConnected);
   const lastUpdate = useMedicLocationsStore((state) => state.lastUpdate);
+
+  // Convert Map to array (memoized by Zustand's shallow comparison)
+  const locations = Array.from(locationsMap.values());
 
   useEffect(() => {
     subscribe();
