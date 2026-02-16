@@ -1,5 +1,6 @@
 import { AppState, AppStateStatus } from 'react-native';
 import { syncQueue } from '../services/SyncQueue';
+import { photoUploadQueue } from '../services/PhotoUploadQueue';
 import { registerBackgroundSync } from '../services/BackgroundSyncTask';
 import { networkMonitor } from '../services/NetworkMonitor';
 
@@ -70,7 +71,16 @@ export class SyncScheduler {
     if (!isOnline) {
       return { processed: 0, failed: 0 };
     }
-    return syncQueue.processPendingItems();
+
+    // Process data sync
+    const dataResult = await syncQueue.processPendingItems();
+
+    // Process photo uploads (non-blocking, runs concurrently next cycle if still processing)
+    photoUploadQueue.processPendingPhotos().catch(err =>
+      console.error('[SyncScheduler] Photo processing error:', err)
+    );
+
+    return dataResult;
   }
 }
 
