@@ -27,10 +27,12 @@ import {
   useAvailableMedics,
   type BookingWithRelations,
 } from '@/lib/queries/admin/bookings';
+import { useQueryClient } from '@tanstack/react-query';
 import { BulkActionToolbar } from './bulk-action-toolbar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { OutOfTerritoryApproval } from './out-of-territory-approval';
 import {
   Select,
   SelectContent,
@@ -88,6 +90,7 @@ export function BookingApprovalTable({ initialData }: BookingApprovalTableProps)
   const approveMutation = useApproveBookings();
   const rejectMutation = useRejectBookings();
   const reassignMutation = useReassignBooking();
+  const queryClient = useQueryClient();
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -96,6 +99,9 @@ export function BookingApprovalTable({ initialData }: BookingApprovalTableProps)
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [needsApprovalFilter, setNeedsApprovalFilter] = useState(false);
+
+  // Out-of-territory approval state
+  const [selectedOOTBooking, setSelectedOOTBooking] = useState<string | null>(null);
 
   // Reassign dialog state
   const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
@@ -373,6 +379,52 @@ export function BookingApprovalTable({ initialData }: BookingApprovalTableProps)
               {badge.label}
             </Badge>
           );
+        },
+      },
+      {
+        id: 'territory',
+        header: 'Territory',
+        cell: ({ row }) => {
+          const booking = row.original;
+          const isOutOfTerritory = booking.requires_manual_approval || booking.out_of_territory_cost > 0;
+
+          if (!isOutOfTerritory) {
+            return <span className="text-gray-500">-</span>;
+          }
+
+          // Approved: status is confirmed and had out-of-territory cost
+          if (booking.status === 'confirmed' && booking.out_of_territory_cost > 0) {
+            return (
+              <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                Approved
+              </span>
+            );
+          }
+
+          // Denied: status is cancelled
+          if (booking.status === 'cancelled') {
+            return (
+              <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+                Denied
+              </span>
+            );
+          }
+
+          // Pending: show review button
+          if (booking.status === 'pending') {
+            return (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                onClick={() => setSelectedOOTBooking(booking.id)}
+              >
+                Review Cost
+              </Button>
+            );
+          }
+
+          return <span className="text-gray-500">-</span>;
         },
       },
       {
@@ -812,6 +864,31 @@ export function BookingApprovalTable({ initialData }: BookingApprovalTableProps)
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Out-of-Territory Approval Modal */}
+      {selectedOOTBooking && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b flex justify-between items-center">
+              <h2 className="text-lg font-semibold">Out-of-Territory Review</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedOOTBooking(null);
+                  // Invalidate bookings query to refetch any approval/denial changes
+                  queryClient.invalidateQueries({ queryKey: ['admin-bookings'] });
+                }}
+              >
+                Close
+              </Button>
+            </div>
+            <div className="p-4">
+              <OutOfTerritoryApproval bookingId={selectedOOTBooking} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
