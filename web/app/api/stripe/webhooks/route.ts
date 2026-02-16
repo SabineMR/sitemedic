@@ -66,7 +66,6 @@ export async function POST(request: NextRequest) {
           .from('bookings')
           .update({
             status: 'confirmed',
-            payment_status: 'paid',
           })
           .eq('id', bookingId);
 
@@ -111,7 +110,6 @@ export async function POST(request: NextRequest) {
           .from('bookings')
           .update({
             status: 'cancelled',
-            payment_status: 'failed',
             cancellation_reason: 'Payment failed',
           })
           .eq('id', bookingId);
