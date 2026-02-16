@@ -3186,6 +3186,191 @@ SELECT generate_location_report(
 
 ---
 
+## Phase 5.5c: Admin Medics & Bookings Pages (NEW)
+**Status**: ✅ **COMPLETE** - Medics and Bookings management pages with live Supabase data
+**Goal**: Provide admin interface to view, search, and filter medics and bookings with real-time data
+**Date Completed**: 2026-02-15
+
+### Features:
+
+#### **Medics Management Page** (`/admin/medics`)
+A comprehensive medics roster page displaying all medics from the database with search, filtering, and detailed information.
+
+**Stats Dashboard:**
+- **Total Medics**: Count of all medics in the system
+- **Available**: Number of medics currently available for work
+- **Needs Onboarding**: Count of medics with incomplete Stripe onboarding (highlighted in yellow)
+- **High Performers**: Number of medics with 4.5+ star rating
+
+**Search & Filters:**
+- **Search Bar**: Search by name, email, or phone number
+- **Filter Buttons**:
+  - All medics (default)
+  - Available medics only
+  - Unavailable medics only
+
+**Medics Table Columns:**
+1. **Medic Info**: Full name and home postcode
+2. **Contact**: Email and phone number
+3. **Certifications**: Visual badges for:
+   - Confined Space certification (blue badge)
+   - Trauma certification (red badge)
+   - Shows "None" if no certifications
+4. **Performance Metrics**:
+   - Star rating (0.00-5.00 with yellow star icon)
+   - Total shifts completed
+   - RIDDOR compliance rate (percentage)
+5. **Status**:
+   - Available (green badge with checkmark)
+   - Unavailable (red badge with reason displayed below)
+6. **Stripe Status**:
+   - Active (green badge) - onboarding complete
+   - Pending (yellow badge with warning icon) - needs onboarding
+7. **Actions**: "View Details →" link to individual medic page
+
+**Data Source:**
+- Fetches from `medics` table in Supabase
+- Ordered by last name alphabetically
+- Uses Supabase client (`@/lib/supabase`) for real-time data
+- Automatic loading state with spinner
+
+**Key Features:**
+- Responsive design (mobile, tablet, desktop breakpoints)
+- Real-time filtering and search (client-side for performance)
+- Visual highlighting for medics needing onboarding
+- Empty state handling ("No medics found")
+- Professional dark theme matching admin dashboard
+
+---
+
+#### **Bookings Management Page** (`/admin/bookings`)
+A comprehensive bookings management page showing all medic shift bookings with advanced filtering, search, and revenue tracking.
+
+**Stats Dashboard:**
+- **Total Bookings**: All bookings in the system
+- **Pending**: Bookings awaiting medic assignment (highlighted in yellow)
+- **Confirmed**: Bookings with assigned medic
+- **In Progress**: Currently active shifts
+- **Completed**: Finished shifts
+- **Cancelled**: Cancelled bookings
+- **Needs Approval**: Bookings requiring manual admin approval (highlighted in yellow)
+
+**Revenue Card:**
+- Large featured card showing total revenue from completed bookings
+- Uses `CurrencyWithTooltip` component for GBP → USD conversion on hover
+- Gradient green background with currency icon
+
+**Search & Filters:**
+- **Search Bar**: Search by site name, postcode, client company name, or medic name
+- **Status Filters** (color-coded buttons):
+  - All bookings (blue)
+  - Pending (yellow)
+  - Confirmed (green)
+  - In Progress (cyan)
+  - Completed (purple)
+  - Cancelled (red)
+- **Date Filters**:
+  - All dates
+  - Today
+  - Upcoming (future dates)
+  - Past (historical dates)
+
+**Bookings Table Columns:**
+1. **Date & Time**:
+   - Shift date (formatted DD MMM YYYY)
+   - Start and end time (HH:MM format)
+   - Total hours
+2. **Site**:
+   - Site name
+   - Postcode
+3. **Client**: Company name (from joined `clients` table)
+4. **Medic**:
+   - Assigned medic name (or "Unassigned" in yellow)
+   - Auto-matched indicator (blue text)
+   - Manual approval flag (yellow warning icon)
+5. **Requirements**:
+   - Confined Space badge (blue)
+   - Trauma badge (red)
+   - Urgency premium percentage badge (orange)
+   - Shows "Standard" if no special requirements
+6. **Pricing** (all with GBP → USD tooltips):
+   - Total amount charged to client
+   - Platform fee (40% markup)
+   - Medic payout (60% of revenue)
+7. **Status**: Color-coded status badges:
+   - ⏳ Pending (yellow)
+   - ✓ Confirmed (green)
+   - 🔵 In Progress (cyan)
+   - ✓ Completed (purple)
+   - ✗ Cancelled (red)
+8. **Actions**: "View Details →" link to booking detail page
+
+**Data Source:**
+- Fetches from `bookings` table with joins to:
+  - `clients` table (for company name)
+  - `medics` table (for medic first/last name)
+- Ordered by shift date (descending), then created date
+- Uses Supabase client for real-time data
+- Automatic loading state
+
+**Key Features:**
+- **Currency Tooltips**: All GBP amounts show USD conversion on hover
+- **Advanced Filtering**: Combine status filters, date filters, and search
+- **Results Counter**: Shows "X of Y bookings" based on active filters
+- **Responsive Table**: Horizontal scroll on smaller screens
+- **Empty State**: "No bookings found" when filters return no results
+- **Visual Badges**: Color-coded status and requirement indicators
+- **Professional Dark Theme**: Consistent with admin dashboard design
+
+**Database Schema Integration:**
+- Displays data from migration `002_business_operations.sql`
+- Shows booking pricing breakdown (base rate, urgency premium, travel surcharge, VAT, total)
+- Tracks platform fee (40%) and medic payout (60%) split
+- Indicates auto-matched bookings vs manual assignments
+- Flags bookings requiring manual approval
+
+---
+
+### Technical Implementation:
+
+**Files Created:**
+- ✅ `web/app/admin/medics/page.tsx` - Medics management page
+- ✅ `web/app/admin/bookings/page.tsx` - Bookings management page
+
+**Navigation:**
+- Both pages accessible via sidebar navigation in `web/app/admin/layout.tsx`:
+  - 👨‍⚕️ Medics → `/admin/medics`
+  - 📅 Bookings → `/admin/bookings`
+
+**Dependencies:**
+- Supabase client (`@/lib/supabase`)
+- CurrencyWithTooltip component for GBP → USD conversion
+- React hooks (useState, useEffect)
+- Next.js Link component for navigation
+
+**Data Flow:**
+1. Page component mounts
+2. useEffect triggers `loadMedics()` or `loadBookings()`
+3. Supabase query executed with `.select()` and `.order()`
+4. State updated with returned data
+5. Loading state removed
+6. Table renders with fetched data
+7. User can search/filter (client-side filtering for performance)
+
+**Performance:**
+- Initial load shows loading spinner
+- Client-side filtering for instant results (no server round-trips)
+- Supabase connection pooling for efficient queries
+- Responsive design with mobile optimization
+
+**Currency Display Standards:**
+- All GBP amounts use `CurrencyWithTooltip` component
+- Consistent with admin dashboard currency guidelines
+- Tooltip shows live USD conversion rate
+- Formatted as "£X,XXX.XX" with hover for "$X,XXX.XX USD"
+
+---
+
 ## Phase 6: RIDDOR Auto-Flagging
 **Status**: Not started
 **Goal**: Intelligent RIDDOR detection with deadline tracking
