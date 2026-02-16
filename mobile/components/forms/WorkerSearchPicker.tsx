@@ -2,8 +2,8 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable } from 'react-native';
 import { AutocompleteDropdown } from 'react-native-autocomplete-dropdown';
 import { Q } from '@nozbe/watermelondb';
-import { getDatabase } from '../../src/lib/watermelon';
-import Worker from '../../src/database/models/Worker';
+import { getDatabase } from '../../../src/lib/watermelon';
+import Worker from '../../../src/database/models/Worker';
 import LargeTapButton from '../ui/LargeTapButton';
 
 export interface WorkerSearchPickerProps {

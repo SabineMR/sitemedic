@@ -27,8 +27,8 @@ import {
   Alert,
 } from 'react-native';
 import { router } from 'expo-router';
-import { getDatabase } from '../../src/lib/watermelon';
-import Treatment from '../../src/database/models/Treatment';
+import { getDatabase } from '../../../src/lib/watermelon';
+import Treatment from '../../../src/database/models/Treatment';
 import { useAutoSave, AutoSaveIndicator } from '../../components/forms/AutoSaveForm';
 import WorkerSearchPicker from '../../components/forms/WorkerSearchPicker';
 import BottomSheetPicker from '../../components/ui/BottomSheetPicker';

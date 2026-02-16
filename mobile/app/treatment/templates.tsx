@@ -12,8 +12,8 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Alert } from 'react-native';
 import { router } from 'expo-router';
-import { getDatabase } from '../../src/lib/watermelon';
-import Treatment from '../../src/database/models/Treatment';
+import { getDatabase } from '../../../src/lib/watermelon';
+import Treatment from '../../../src/database/models/Treatment';
 import WorkerSearchPicker from '../../components/forms/WorkerSearchPicker';
 import PresetTemplateCard from '../../components/forms/PresetTemplateCard';
 import LargeTapButton from '../../components/ui/LargeTapButton';

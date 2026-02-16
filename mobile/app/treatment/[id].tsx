@@ -21,9 +21,9 @@ import {
   Alert,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { getDatabase } from '../../src/lib/watermelon';
-import Treatment from '../../src/database/models/Treatment';
-import Worker from '../../src/database/models/Worker';
+import { getDatabase } from '../../../src/lib/watermelon';
+import Treatment from '../../../src/database/models/Treatment';
+import Worker from '../../../src/database/models/Worker';
 import LargeTapButton from '../../components/ui/LargeTapButton';
 import StatusBadge from '../../components/ui/StatusBadge';
 import { INJURY_TYPES } from '../../services/taxonomy/injury-types';
