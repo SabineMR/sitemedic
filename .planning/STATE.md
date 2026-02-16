@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 5 of 7 (PDF Generation) — Complete
-Plan: 4 of 4 in current phase
-Status: Phase complete
-Last activity: 2026-02-16 — Completed 05-04-PLAN.md (Phase 5 PDF Generation Verification)
+Phase: 4.5 of 7 (Marketing & Booking) — In progress
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-16 — Completed 04.5-01-PLAN.md (Marketing Homepage & Pricing)
 
-Progress: [████████████] 100% (36/36 plans across Phases 1, 1.5, 2, 3, 4, 5)
+Progress: [████████████░] 97% (37/38 plans across Phases 1, 1.5, 2, 3, 4, 4.5, 5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 36
-- Average duration: 3.9 min
-- Total execution time: 2.36 hours
+- Total plans completed: 37
+- Average duration: 3.8 min
+- Total execution time: 2.46 hours
 
 **By Phase:**
 
@@ -32,11 +32,12 @@ Progress: [████████████] 100% (36/36 plans across Phases
 | 02-mobile-core | 9/9 | 50 min | 5.6 min |
 | 03-sync-engine | 7/7 | 24 min | 3.4 min |
 | 04-web-dashboard | 6/6 | 46 min | 7.7 min |
+| 04.5-marketing-booking | 1/3 | 10 min | 10 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-06 (5 min), 05-01 (4.5 min), 05-02 (3 min), 05-03 (4 min), 05-04 (2 min)
-- Trend: Phase 5 complete - Verified PDF generation pipeline production-ready with HSE-audit formatting
+- Last 5 plans: 05-01 (4.5 min), 05-02 (3 min), 05-03 (4 min), 05-04 (2 min), 04.5-01 (10 min)
+- Trend: Marketing/booking phase started - Static homepage and pricing with SSG
 
 *Updated after each plan completion*
 
@@ -267,6 +268,13 @@ Recent decisions affecting current work:
 - D-05-03-005: On-demand generation triggers browser download of PDF blob (no need to refetch list, polling handles it)
 - D-05-03-006: Manual trigger returns PDF as Blob via Edge Function response (different from cron trigger which returns JSON)
 
+**From Plan 04.5-01:**
+- D-04.5-01-001: Use (marketing) route group for shared layout without affecting URL structure
+- D-04.5-01-002: Move dashboard to /dashboard path to resolve route group conflict between (marketing) and (dashboard)
+- D-04.5-01-003: SSG with force-static and 86400s (24h) revalidation for optimal CDN caching
+- D-04.5-01-004: Small client wrapper (quote-button.tsx) for QuoteBuilder modal, keep pages as Server Components
+- D-04.5-01-005: shadcn/ui Sheet component for mobile navigation menu
+
 **From Plan 02-07:**
 
 **From Plan 02-06:**
@@ -305,9 +313,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T05:23:10Z
-Stopped at: Completed 05-04-PLAN.md — Phase 5 PDF Generation Verification (human-verified professional HSE-audit formatting, automated scheduling, dashboard UI)
+Last session: 2026-02-16T06:11:14Z
+Stopped at: Completed 04.5-01-PLAN.md — Marketing Homepage & Pricing (static pages with SSG, shared components, <2s load time)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 5 (PDF Generation) complete (4/4 plans)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) in progress (1/3 plans). Phase 5 (PDF Generation) complete (4/4 plans)*
