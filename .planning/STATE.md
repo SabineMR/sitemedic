@@ -20,8 +20,8 @@ Progress: [███████░░░] 65% (13/20 plans across all active ph
 
 **Velocity:**
 - Total plans completed: 14
-- Average duration: 4.0 min
-- Total execution time: 0.93 hours
+- Average duration: 4.2 min
+- Total execution time: 1.02 hours
 
 **By Phase:**
 
@@ -29,11 +29,11 @@ Progress: [███████░░░] 65% (13/20 plans across all active ph
 |-------|-------|-------|----------|
 | 01-foundation | 5/5 | 20 min | 4 min |
 | 01.5-business-foundation | 4/4 | 10 min | 2.5 min |
-| 02-mobile-core | 5/8 | 29 min | 5.8 min |
+| 02-mobile-core | 5/8 | 37 min | 7.4 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-03 (5 min), 02-04 (7 min), 02-05 (5 min), 02-10 (5 min)
-- Trend: Mobile Core plans averaging 5.8 min (bug fixes faster than new features)
+- Last 5 plans: 02-04 (7 min), 02-05 (5 min), 02-09 (8 min), 02-10 (5 min)
+- Trend: Mobile Core gap closure plans taking longer (8 min) vs feature plans (5-7 min)
 
 *Updated after each plan completion*
 
@@ -126,7 +126,7 @@ Recent decisions affecting current work:
 - D-02-01-010: Priority order on daily checks (1-10) for systematic inspection workflow
 
 **From Plan 02-04:**
-- D-02-04-001: Auto-save debounce 500ms (exceeds TREAT-10 requirement of 10s for faster UX)
+- D-02-04-001: Auto-save debounce 500ms (exceeds TREAT-10 requirement of 10s for faster UX) — SUPERSEDED by D-02-09-001 (changed to 10000ms)
 - D-02-04-002: Reference number format SITE-YYYYMMDD-NNN with daily sequential counter
 - D-02-04-003: RIDDOR detection automatic based on isRiddorReportable flag in INJURY_TYPES taxonomy
 - D-02-04-004: Treatment status workflow draft→complete (draft editable, complete read-only)
@@ -149,6 +149,10 @@ Recent decisions affecting current work:
 - D-02-05-009: Load worker names via Promise.all for each treatment (parallel loading with fallback to 'Unknown Worker')
 - D-02-05-010: Quick Log and Full Treatment buttons side-by-side at top (visual hierarchy emphasizes quick entry)
 
+**From Plan 02-09:**
+- D-02-09-001: Auto-save interval 10000ms (10 seconds) instead of 500ms to match TREAT-10, reduce database writes, and prevent UI jank from synchronous WatermelonDB operations
+- D-02-09-002: Template taxonomy IDs verified against source files with verification comment added
+
 **From Plan 02-10:**
 - D-02-10-001: Verified all files at depth 3 from project root (mobile/app/treatment/, mobile/app/(tabs)/, mobile/components/forms/) require ../../../ to reach src/lib/watermelon.ts
 - D-02-10-002: Approved checkpoint via code verification instead of runtime testing when iOS simulator runtime unavailable (grep confirmed all import paths correct, depth calculations validated)
@@ -169,7 +173,7 @@ Recent decisions affecting current work:
 - D-02-07-005: Daily reset keyed by check_date epoch milliseconds (new checklist per day)
 - D-02-07-006: Previous days' incomplete checklists archived as in_progress (not deleted, audit trail)
 - D-02-07-007: Completion requires all 10 items to have status (isAllComplete gate)
-- D-02-07-008: Auto-save debounce 500ms on field changes (status/photo/note)
+- D-02-07-008: Auto-save debounce 500ms on field changes (status/photo/note) — SUPERSEDED by D-02-09-001 (changed to 10000ms)
 - D-02-07-009: Progress indicator shows completed/total count with green progress bar
 - D-02-07-010: Complete button shows "Complete X more items" when incomplete for user guidance
 
