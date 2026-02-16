@@ -129,32 +129,37 @@ export default function MedicsPage() {
       <div className="p-8">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <StatCard label="Total Medics" value={stats.total} icon="👨‍⚕️" color="blue" />
+          <StatCard
+            label="Total Medics"
+            value={stats.total}
+            icon={<Users className="w-5 h-5" />}
+            color="blue"
+          />
           <StatCard
             label="Available"
             value={stats.available}
-            icon="✓"
+            icon={<CheckCircle className="w-5 h-5" />}
             color="green"
             subtitle={`${stats.total - stats.available} unavailable`}
           />
           <StatCard
             label="Needs Onboarding"
             value={stats.needsOnboarding}
-            icon="⚠️"
+            icon={<AlertTriangle className="w-5 h-5" />}
             color={stats.needsOnboarding > 0 ? 'yellow' : 'green'}
             highlight={stats.needsOnboarding > 0}
           />
           <StatCard
             label="High Performers"
             value={stats.highPerformers}
-            icon="⭐"
+            icon={<Star className="w-5 h-5" />}
             color="purple"
             subtitle="4.5+ rating"
           />
         </div>
 
         {/* Filters & Search */}
-        <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-6">
+        <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 p-6 mb-6 shadow-2xl">
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Search */}
             <div className="flex-1">
@@ -163,7 +168,7 @@ export default function MedicsPage() {
                 placeholder="Search by name, email, or phone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               />
             </div>
 
@@ -192,30 +197,30 @@ export default function MedicsPage() {
         </div>
 
         {/* Medics Table */}
-        <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+        <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 overflow-hidden shadow-2xl">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-900 border-b border-gray-700">
+              <thead className="bg-gray-900/50 border-b border-gray-700/50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                     Medic
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                     Contact
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                     Certifications
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                     Performance
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                     Stripe
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -254,34 +259,36 @@ function StatCard({
 }: {
   label: string;
   value: number;
-  icon: string;
+  icon: React.ReactNode;
   color: 'blue' | 'green' | 'yellow' | 'purple';
   subtitle?: string;
   highlight?: boolean;
 }) {
   const colorClasses = {
-    blue: 'from-blue-600 to-blue-700',
-    green: 'from-green-600 to-green-700',
-    yellow: 'from-yellow-600 to-yellow-700',
-    purple: 'from-purple-600 to-purple-700',
+    blue: 'from-blue-500 to-blue-600',
+    green: 'from-green-500 to-green-600',
+    yellow: 'from-yellow-500 to-yellow-600',
+    purple: 'from-purple-500 to-purple-600',
   };
 
   return (
     <div
-      className={`bg-gray-800 rounded-lg p-6 border ${
-        highlight ? 'border-yellow-500/50 ring-2 ring-yellow-500/20' : 'border-gray-700'
+      className={`group bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border transition-all duration-300 hover:shadow-2xl hover:scale-105 ${
+        highlight
+          ? 'border-yellow-500/50 ring-2 ring-yellow-500/20 shadow-lg shadow-yellow-500/10'
+          : 'border-gray-700/50 hover:border-gray-600/50'
       }`}
     >
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-gray-400 text-sm font-medium">{label}</span>
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider">{label}</span>
         <div
-          className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center`}
+          className={`w-11 h-11 rounded-xl bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110`}
         >
-          <span className="text-xl">{icon}</span>
+          <span className="text-white">{icon}</span>
         </div>
       </div>
-      <div className="text-3xl font-bold text-white mb-1">{value}</div>
-      {subtitle && <div className="text-gray-500 text-xs">{subtitle}</div>}
+      <div className="text-3xl font-bold text-white mb-2 tracking-tight">{value}</div>
+      {subtitle && <div className="text-gray-500 text-xs font-medium">{subtitle}</div>}
     </div>
   );
 }
@@ -303,10 +310,10 @@ function FilterButton({
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-3 rounded-lg font-medium transition ${
+      className={`px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
         active
-          ? 'bg-blue-600 text-white'
-          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+          ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/20 scale-105'
+          : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 hover:scale-105'
       }`}
     >
       {label} ({count})
@@ -321,65 +328,63 @@ function MedicRow({ medic }: { medic: Medic }) {
   const fullName = `${medic.first_name} ${medic.last_name}`;
 
   return (
-    <tr className="hover:bg-gray-700/50 transition">
+    <tr className="hover:bg-gray-700/30 transition-all duration-200 group">
       {/* Medic Info */}
-      <td className="px-6 py-4">
-        <div>
-          <div className="font-medium text-white">{fullName}</div>
-          <div className="text-sm text-gray-400">{medic.home_postcode}</div>
+      <td className="px-6 py-3">
+        <div className="font-medium text-white text-sm">
+          {fullName} <span className="text-gray-500 font-normal">• {medic.home_postcode}</span>
         </div>
       </td>
 
       {/* Contact */}
-      <td className="px-6 py-4">
-        <div className="text-sm">
-          <div className="text-gray-300">{medic.email}</div>
-          <div className="text-gray-400">{medic.phone}</div>
+      <td className="px-6 py-3">
+        <div className="text-sm text-gray-300">
+          {medic.email}
+          <br />
+          {medic.phone}
         </div>
       </td>
 
       {/* Certifications */}
-      <td className="px-6 py-4">
+      <td className="px-6 py-3">
         <div className="flex gap-2">
           {medic.has_confined_space_cert && (
-            <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full font-medium">
+            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full font-medium">
               Confined Space
             </span>
           )}
           {medic.has_trauma_cert && (
-            <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full font-medium">
+            <span className="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full font-medium">
               Trauma
             </span>
           )}
           {!medic.has_confined_space_cert && !medic.has_trauma_cert && (
-            <span className="text-gray-500 text-sm">None</span>
+            <span className="text-gray-500 text-xs">None</span>
           )}
         </div>
       </td>
 
       {/* Performance */}
-      <td className="px-6 py-4">
-        <div className="text-sm">
-          <div className="flex items-center gap-1 mb-1">
-            <span className="text-yellow-400">⭐</span>
-            <span className="text-white font-medium">{medic.star_rating.toFixed(2)}</span>
-          </div>
-          <div className="text-gray-400 text-xs">
-            {medic.total_shifts_completed} shifts • {medic.riddor_compliance_rate.toFixed(0)}%
-            compliance
-          </div>
+      <td className="px-6 py-3">
+        <div className="flex items-center gap-1 text-sm">
+          <span className="text-yellow-400">⭐</span>
+          <span className="text-white font-medium">{medic.star_rating.toFixed(2)}</span>
+        </div>
+        <div className="text-gray-400 text-xs mt-0.5">
+          {medic.total_shifts_completed} shifts • {medic.riddor_compliance_rate.toFixed(0)}%
+          compliance
         </div>
       </td>
 
       {/* Status */}
-      <td className="px-6 py-4">
+      <td className="px-6 py-3">
         {medic.available_for_work ? (
-          <span className="px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded-full font-medium">
+          <span className="inline-flex items-center px-2.5 py-1 bg-green-500/20 text-green-400 text-xs rounded-full font-medium">
             ✓ Available
           </span>
         ) : (
           <div>
-            <span className="px-3 py-1 bg-red-500/20 text-red-400 text-sm rounded-full font-medium">
+            <span className="inline-flex items-center px-2.5 py-1 bg-red-500/20 text-red-400 text-xs rounded-full font-medium">
               Unavailable
             </span>
             {medic.unavailable_reason && (
@@ -390,23 +395,23 @@ function MedicRow({ medic }: { medic: Medic }) {
       </td>
 
       {/* Stripe Status */}
-      <td className="px-6 py-4">
+      <td className="px-6 py-3">
         {medic.stripe_onboarding_complete ? (
-          <span className="px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded-full font-medium">
+          <span className="inline-flex items-center px-2.5 py-1 bg-green-500/20 text-green-400 text-xs rounded-full font-medium">
             ✓ Active
           </span>
         ) : (
-          <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 text-sm rounded-full font-medium">
+          <span className="inline-flex items-center px-2.5 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full font-medium">
             ⚠️ Pending
           </span>
         )}
       </td>
 
       {/* Actions */}
-      <td className="px-6 py-4 text-right">
+      <td className="px-6 py-3 text-right">
         <Link
           href={`/admin/medics/${medic.id}`}
-          className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+          className="text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors duration-150"
         >
           View Details →
         </Link>

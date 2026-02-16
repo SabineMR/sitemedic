@@ -3218,24 +3218,30 @@ A comprehensive medics roster page displaying all medics from the database with 
   - Available medics only
   - Unavailable medics only
 
-**Medics Table Columns:**
-1. **Medic Info**: Full name and home postcode
-2. **Contact**: Email and phone number
-3. **Certifications**: Visual badges for:
+**Medics Table Columns** (Streamlined, Compact Design):
+1. **Medic Info**: Full name and home postcode displayed inline with bullet separator for space efficiency
+2. **Contact**: Email and phone number (stacked for readability)
+3. **Certifications**: Compact visual badges with reduced padding:
    - Confined Space certification (blue badge)
    - Trauma certification (red badge)
    - Shows "None" if no certifications
-4. **Performance Metrics**:
+4. **Performance Metrics** (Compact 2-line layout):
    - Star rating (0.00-5.00 with yellow star icon)
-   - Total shifts completed
-   - RIDDOR compliance rate (percentage)
-5. **Status**:
+   - Total shifts completed and RIDDOR compliance rate (percentage) on second line
+5. **Status** (Compact badges):
    - Available (green badge with checkmark)
    - Unavailable (red badge with reason displayed below)
-6. **Stripe Status**:
+6. **Stripe Status** (Compact badges):
    - Active (green badge) - onboarding complete
    - Pending (yellow badge with warning icon) - needs onboarding
 7. **Actions**: "View Details →" link to individual medic page
+
+**Table Design Optimizations:**
+- Reduced vertical padding (`py-3` instead of `py-4`) for more compact rows
+- Smaller badge sizes with inline-flex alignment for visual consistency
+- Inline display of related data (name + postcode) to maximize horizontal space
+- Smaller text sizes for secondary information while maintaining readability
+- Optimized to display more medics per screen without sacrificing usability
 
 **Data Source:**
 - Fetches from `medics` table in Supabase
