@@ -15,6 +15,7 @@ import {
   MapPin,
   Calendar,
   ClipboardList,
+  Clock,
   Users,
   Building2,
   TrendingUp,
@@ -64,6 +65,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: <ClipboardList className="w-5 h-5" />,
       // badge: unassignedBookingsCount, // TODO: Fetch from store
       badgeColor: 'yellow',
+    },
+    {
+      name: 'Timesheets',
+      href: '/admin/timesheets',
+      icon: <Clock className="w-5 h-5" />,
     },
     {
       name: 'Medics',

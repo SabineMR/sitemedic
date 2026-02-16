@@ -10,7 +10,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { toast } from 'sonner';
 
 // =============================================================================
 // TYPES
@@ -275,12 +274,13 @@ export function useBatchApproveTimesheets() {
       if (context?.previousAll) {
         queryClient.setQueryData(['timesheets', 'all'], context.previousAll);
       }
-      toast.error('Failed to approve timesheets. Please try again.');
+      // TODO: Add toast notification when toast library is set up
     },
 
     // Success notification
     onSuccess: (data) => {
-      toast.success(`Successfully approved ${data.count} timesheet${data.count === 1 ? '' : 's'} for payout`);
+      console.log(`Successfully approved ${data.count} timesheet${data.count === 1 ? '' : 's'} for payout`);
+      // TODO: Add toast notification when toast library is set up
     },
 
     // Refetch to ensure consistency
@@ -388,12 +388,13 @@ export function useBatchRejectTimesheets() {
       if (context?.previousAll) {
         queryClient.setQueryData(['timesheets', 'all'], context.previousAll);
       }
-      toast.error('Failed to reject timesheets. Please try again.');
+      // TODO: Add toast notification when toast library is set up
     },
 
     // Success notification
     onSuccess: (data) => {
-      toast.success(`Rejected ${data.count} timesheet${data.count === 1 ? '' : 's'}`);
+      console.log(`Rejected ${data.count} timesheet${data.count === 1 ? '' : 's'}`);
+      // TODO: Add toast notification when toast library is set up
     },
 
     // Refetch to ensure consistency
