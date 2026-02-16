@@ -36,45 +36,45 @@ Requirements for MVP launch. Each maps to roadmap phases.
 
 ### Treatment Logger (Mobile App)
 
-- [ ] **TREAT-01**: Medic can select worker from site roster or quick-add new worker
-- [ ] **TREAT-02**: Medic can log injury/illness category from pick list (Section 8.1 taxonomy)
-- [ ] **TREAT-03**: Medic can select body part affected via tap on body diagram or pick list
-- [ ] **TREAT-04**: Medic can describe mechanism of injury (free text + common presets)
-- [ ] **TREAT-05**: Medic can record treatment given (pick list + free text)
-- [ ] **TREAT-06**: Medic can attach up to 4 photos with on-device compression (resize to 1200px, compress to 100-200KB)
-- [ ] **TREAT-07**: Medic can record outcome (Returned to work / Light duties / Referred to GP / A&E / Sent home)
-- [ ] **TREAT-08**: Medic can capture worker's digital signature confirming treatment received
-- [ ] **TREAT-09**: Each treatment log gets unique reference number (format: SITE-YYYYMMDD-001)
-- [ ] **TREAT-10**: Treatment logger auto-saves locally every 10 seconds (offline resilience)
-- [ ] **TREAT-11**: Quick log mode for minor treatments (<30 second completion: Worker + Category + Treatment + Outcome)
-- [ ] **TREAT-12**: Full log mode for significant treatments with complete detail capture
+- [x] **TREAT-01**: Medic can select worker from site roster or quick-add new worker
+- [x] **TREAT-02**: Medic can log injury/illness category from pick list (Section 8.1 taxonomy)
+- [x] **TREAT-03**: Medic can select body part affected via tap on body diagram or pick list
+- [x] **TREAT-04**: Medic can describe mechanism of injury (free text + common presets)
+- [x] **TREAT-05**: Medic can record treatment given (pick list + free text)
+- [x] **TREAT-06**: Medic can attach up to 4 photos with on-device compression (resize to 1200px, compress to 100-200KB)
+- [x] **TREAT-07**: Medic can record outcome (Returned to work / Light duties / Referred to GP / A&E / Sent home)
+- [x] **TREAT-08**: Medic can capture worker's digital signature confirming treatment received
+- [x] **TREAT-09**: Each treatment log gets unique reference number (format: SITE-YYYYMMDD-001)
+- [x] **TREAT-10**: Treatment logger auto-saves locally every 10 seconds (offline resilience)
+- [x] **TREAT-11**: Quick log mode for minor treatments (<30 second completion: Worker + Category + Treatment + Outcome)
+- [x] **TREAT-12**: Full log mode for significant treatments with complete detail capture
 
 ### Near-Miss Capture (Mobile App)
 
-- [ ] **NEAR-01**: Medic can report near-miss in <45 seconds (category + photo + description + severity)
-- [ ] **NEAR-02**: Medic can select near-miss category from pick list (Fall from height / Struck by object / Slip-trip / Electrical / etc.)
-- [ ] **NEAR-03**: Medic can capture up to 4 photos of near-miss scene
-- [ ] **NEAR-04**: Medic can describe near-miss via free text or voice-to-text
-- [ ] **NEAR-05**: Medic can select severity potential (What COULD have happened: Minor / Major / Fatal)
-- [ ] **NEAR-06**: Near-miss accessible from home screen in ONE tap (big visible button)
-- [ ] **NEAR-07**: GPS coordinates auto-attached to near-miss report
+- [x] **NEAR-01**: Medic can report near-miss in <45 seconds (category + photo + description + severity)
+- [x] **NEAR-02**: Medic can select near-miss category from pick list (Fall from height / Struck by object / Slip-trip / Electrical / etc.)
+- [x] **NEAR-03**: Medic can capture up to 4 photos of near-miss scene
+- [x] **NEAR-04**: Medic can describe near-miss via free text or voice-to-text
+- [x] **NEAR-05**: Medic can select severity potential (What COULD have happened: Minor / Major / Fatal)
+- [x] **NEAR-06**: Near-miss accessible from home screen in ONE tap (big visible button)
+- [x] **NEAR-07**: GPS coordinates auto-attached to near-miss report
 
 ### Daily Safety Snapshot (Mobile App)
 
-- [ ] **DAILY-01**: Medic completes 10-item safety checklist each morning (3-5 minute target)
-- [ ] **DAILY-02**: Each checklist item has Green/Amber/Red status + optional photo + note
-- [ ] **DAILY-03**: Checklist items cover: First aid kit, AED, eyewash, welfare facilities, site access, PPE, housekeeping, weather, hazards, emergency vehicle access
-- [ ] **DAILY-04**: App prompts medic to complete checklist when opening app on workday morning
-- [ ] **DAILY-05**: Incomplete checklists flag on dashboard for site manager visibility
+- [x] **DAILY-01**: Medic completes 10-item safety checklist each morning (3-5 minute target)
+- [x] **DAILY-02**: Each checklist item has Green/Amber/Red status + optional photo + note
+- [x] **DAILY-03**: Checklist items cover: First aid kit, AED, eyewash, welfare facilities, site access, PPE, housekeeping, weather, hazards, emergency vehicle access
+- [x] **DAILY-04**: App prompts medic to complete checklist when opening app on workday morning
+- [x] **DAILY-05**: Incomplete checklists flag on dashboard for site manager visibility
 
 ### Worker Health Profiles (Mobile App)
 
-- [ ] **WORK-01**: Medic can add worker during site induction with health screening data
-- [ ] **WORK-02**: Worker profile includes: name, company, role, emergency contact, allergies, medications, pre-existing conditions, blood type, CSCS card number + expiry
-- [ ] **WORK-03**: Medic can view worker's treatment history on this project
-- [ ] **WORK-04**: Medic can pull up any worker's profile in 2 taps during emergency
-- [ ] **WORK-05**: Worker profile shows certification expiry dates with visual status (green/amber/red)
-- [ ] **WORK-06**: Worker data is GDPR-compliant (encrypted, access-controlled, retention policy enforced)
+- [x] **WORK-01**: Medic can add worker during site induction with health screening data
+- [x] **WORK-02**: Worker profile includes: name, company, role, emergency contact, allergies, medications, pre-existing conditions, blood type, CSCS card number + expiry
+- [x] **WORK-03**: Medic can view worker's treatment history on this project
+- [x] **WORK-04**: Medic can pull up any worker's profile in 2 taps during emergency
+- [x] **WORK-05**: Worker profile shows certification expiry dates with visual status (green/amber/red)
+- [x] **WORK-06**: Worker data is GDPR-compliant (encrypted, access-controlled, retention policy enforced)
 
 ### RIDDOR Reporting
 
@@ -87,12 +87,12 @@ Requirements for MVP launch. Each maps to roadmap phases.
 
 ### Photo Handling
 
-- [ ] **PHOTO-01**: Photos captured with EXIF metadata preservation
-- [ ] **PHOTO-02**: Photos compressed on-device before upload (resize to 1200px, compress to 100-200KB JPEG)
-- [ ] **PHOTO-03**: Photo upload happens in background (doesn't block medic workflow)
-- [ ] **PHOTO-04**: Progressive upload: low-quality preview syncs first, full-quality later
-- [ ] **PHOTO-05**: Photo upload uses WiFi-only constraint to avoid mobile data costs
-- [ ] **PHOTO-06**: Original photos retained on device for 30 days before cleanup
+- [x] **PHOTO-01**: Photos captured with EXIF metadata preservation
+- [x] **PHOTO-02**: Photos compressed on-device before upload (resize to 1200px, compress to 100-200KB JPEG)
+- [x] **PHOTO-03**: Photo upload happens in background (doesn't block medic workflow)
+- [x] **PHOTO-04**: Progressive upload: low-quality preview syncs first, full-quality later
+- [x] **PHOTO-05**: Photo upload uses WiFi-only constraint to avoid mobile data costs
+- [x] **PHOTO-06**: Original photos retained on device for 30 days before cleanup
 
 ### Web Dashboard (Site Manager)
 
@@ -135,14 +135,14 @@ Requirements for MVP launch. Each maps to roadmap phases.
 
 ### Mobile UX & Performance
 
-- [ ] **UX-01**: Gloves-on usability (48x48pt minimum tap targets, ideally 56x56 for primary actions)
-- [ ] **UX-02**: Bright-light readability (high contrast, no light grey text)
-- [ ] **UX-03**: One-hand operation for core workflows (treatment log, near-miss capture)
-- [ ] **UX-04**: No training required (familiar patterns, obvious labelling)
-- [ ] **UX-05**: Treatment logging completes in <90 seconds for full log, <30 seconds for quick log
-- [ ] **UX-06**: Near-miss capture completes in <45 seconds
-- [ ] **UX-07**: Daily safety check completes in <5 minutes
-- [ ] **UX-08**: App launches instantly regardless of offline data volume (lazy loading)
+- [x] **UX-01**: Gloves-on usability (48x48pt minimum tap targets, ideally 56x56 for primary actions)
+- [x] **UX-02**: Bright-light readability (high contrast, no light grey text)
+- [x] **UX-03**: One-hand operation for core workflows (treatment log, near-miss capture)
+- [x] **UX-04**: No training required (familiar patterns, obvious labelling)
+- [x] **UX-05**: Treatment logging completes in <90 seconds for full log, <30 seconds for quick log
+- [x] **UX-06**: Near-miss capture completes in <45 seconds
+- [x] **UX-07**: Daily safety check completes in <5 minutes
+- [x] **UX-08**: App launches instantly regardless of offline data volume (lazy loading)
 
 ### Data Export
 
