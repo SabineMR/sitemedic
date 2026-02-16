@@ -436,7 +436,7 @@ export async function fetchTerritoriesWithMetrics(): Promise<TerritoryWithMetric
   }
 
   // Get most recent metric for each postcode sector
-  const metricsByPostcode = new Map<string, typeof metricsResult.data extends Array<infer T> ? T : never>();
+  const metricsByPostcode = new Map<string, any>();
   if (metricsResult.data) {
     metricsResult.data.forEach(metric => {
       if (!metricsByPostcode.has(metric.postcode_sector)) {

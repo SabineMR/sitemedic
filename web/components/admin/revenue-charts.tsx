@@ -63,7 +63,7 @@ export function RevenueTrendChart({ data }: RevenueTrendChartProps) {
             borderRadius: '8px',
             color: '#F3F4F6',
           }}
-          formatter={(value: number) => [`£${value.toLocaleString()}`, '']}
+          formatter={(value: any) => [`£${(value || 0).toLocaleString()}`, '']}
           labelStyle={{ color: '#D1D5DB' }}
         />
         <Legend
@@ -144,10 +144,11 @@ export function TerritoryRevenueChart({ data }: TerritoryRevenueChartProps) {
               borderRadius: '8px',
               color: '#F3F4F6',
             }}
-            formatter={(value: number, name: string) => {
-              if (name === 'platformFees') return [`£${value.toLocaleString()}`, 'Platform Fees'];
-              if (name === 'medicPayouts') return [`£${value.toLocaleString()}`, 'Medic Payouts'];
-              return [value, name];
+            formatter={(value: any, name: string) => {
+              const val = value || 0;
+              if (name === 'platformFees') return [`£${val.toLocaleString()}`, 'Platform Fees'];
+              if (name === 'medicPayouts') return [`£${val.toLocaleString()}`, 'Medic Payouts'];
+              return [`£${val.toLocaleString()}`, name];
             }}
             labelFormatter={(label) => `Territory: ${label}`}
           />
