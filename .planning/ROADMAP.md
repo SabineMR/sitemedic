@@ -10,7 +10,7 @@ See: `.planning/milestones/v1.0-ROADMAP.md`
 ## v1.1 — Post-MVP Polish & Data Completeness
 **Status:** 🔧 In Progress
 **Source:** Codebase gap analysis (2026-02-17)
-**Phases:** 08 → 15 (8 phases, ~32 plans)
+**Phases:** 08 → 15 (8 phases, ~33 plans)
 
 ### Overview
 
@@ -47,9 +47,10 @@ Plans:
 
 ---
 
-### Phase 09: Booking Data Completeness
+### Phase 09: Booking Data Completeness ✅ COMPLETE
 **Goal:** Surface all booking data that is collected but never displayed — ensuring admins, clients, and medics see the full picture.
 **Priority:** HIGH
+**Completed:** 2026-02-17
 
 **Problem:** Many booking fields are stored in the database but never shown in any UI view: `specialNotes`, `recurrencePattern`, `what3words_address`, `site_contact_name`, `site_contact_phone`, `approval_reason`, `cancellation_reason`, `refund_amount`.
 
@@ -68,9 +69,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — What3WordsDisplay component + API fix + confirmation page data surfacing
-- [ ] 09-02-PLAN.md — BookingWithRelations type fix + admin booking detail Sheet panel
-- [ ] 09-03-PLAN.md — Wire View Details button + What3Words integration + recurring chain view
+- [x] 09-01-PLAN.md — What3WordsDisplay component + API fix + confirmation page data surfacing
+- [x] 09-02-PLAN.md — BookingWithRelations type fix + admin booking detail Sheet panel
+- [x] 09-03-PLAN.md — Wire View Details button + What3Words integration + recurring chain view
 
 ---
 
@@ -154,13 +155,14 @@ Plans:
 3. Medic utilisation table sortable by utilisation %
 4. Coverage gap table shows sectors with >10% rejection rate
 
-**Plans:** 4 plans
+**Plans:** 5 plans
 
 Plans:
 - [ ] 12-04-PLAN.md — Analytics data API: TanStack Query hooks for all chart data sources (Wave 1)
-- [ ] 12-01-PLAN.md — Territory analytics tab: heatmap, hiring trigger cards, coverage gap table (Wave 2)
-- [ ] 12-02-PLAN.md — Assignment analytics tab: success rate chart, failure breakdown (Wave 2)
-- [ ] 12-03-PLAN.md — Medic utilisation tab: sortable table, OOT bookings, late arrival heatmap (Wave 2)
+- [ ] 12-01-PLAN.md — Territory analytics components: heatmap, hiring trigger cards, coverage gap table (Wave 2)
+- [ ] 12-02-PLAN.md — Assignment analytics components: success rate chart, failure breakdown (Wave 2)
+- [ ] 12-03-PLAN.md — Medic utilisation components: sortable table, OOT bookings, late arrival heatmap (Wave 2)
+- [ ] 12-05-PLAN.md — Wire all 3 new tabs into analytics page in single pass (Wave 3)
 
 ---
 
