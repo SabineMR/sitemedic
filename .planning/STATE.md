@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.1 complete — all 8 phases shipped (08 → 15)
 
 ## Current Position
-Phase: v1.1 — Phase 13 (UX Polish) — In progress
-Plan: 13-03 complete (3/4 in Phase 13). 1 plan remaining.
-Status: In progress — 1 plan remaining in Phase 13 (UX Polish)
-Last activity: 2026-02-17 — Completed 13-03-PLAN.md: geofence exit alerts via haversine + create_medic_alert RPC
-Progress: [███░] 75% (3/4 plans executed in Phase 13)
+Phase: v1.1 — Phase 13 (UX Polish) — Complete
+Plan: 13-04 complete (4/4 in Phase 13). Phase 13 complete.
+Status: Phase complete — Phase 13 (UX Polish) all 4 plans done
+Last activity: 2026-02-17 — Completed 13-04-PLAN.md: RIDDOR auto-save, audit trail, photo gallery
+Progress: [████] 100% (4/4 plans executed in Phase 13)
 
 ## Performance Metrics
 
@@ -41,8 +41,8 @@ Progress: [███░] 75% (3/4 plans executed in Phase 13)
 | 15-code-quality | 3/3 | ~8 min | ~2.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 09-03 (2 min), 10-04 (7 min), 15-01 (?), 15-02 (?), 15-03 (2 min)
-- Trend: Phase 15 complete — TypeScript strict fixes, mock data removal, manual medic assignment all shipped
+- Last 5 plans: 13-01, 13-02 (geofence map picker), 13-03 (geofence exit alerts), 13-04 (RIDDOR auto-save + audit trail, 6 min)
+- Trend: Phase 13 complete — all UX polish shipped. Phase 13 now 4/4 plans done.
 
 *Updated after each plan completion*
 
@@ -586,10 +586,17 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 - D-13-03-002: onPingReceived registered inside loadGeofences().then() — guarantees Map populated before first ping is evaluated
 - D-13-03-003: Per-ping callback pattern (setOnPingReceived) decouples store from alert business logic — extensible for future per-ping side effects
 
+**From Plan 13-04:**
+- D-13-04-001: useRef for autoSaveTimer (not useState) — prevents re-render cascade on each 30s debounce reschedule
+- D-13-04-002: hasInitialized ref pattern guards against auto-save firing on initial incident data load from query
+- D-13-04-003: SECURITY DEFINER on trigger function enables auth.uid() in PostgreSQL trigger context (returns NULL without it)
+- D-13-04-004: Auto-save is silent (no toast) and swallows errors — best-effort draft persistence, not user-facing action
+- D-13-04-005: photo_uris typed as string[] | null in RIDDORIncident.treatments — JSONB array paths, not actual URLs
+
 ## Session Continuity
 
-Last session: 2026-02-17T19:48:17Z
-Stopped at: Completed 13-03-PLAN.md — geofence exit alerts, haversine distance check, create_medic_alert RPC integration.
+Last session: 2026-02-17T19:48:36Z
+Stopped at: Completed 13-04-PLAN.md — RIDDOR auto-save (useRef debounce), riddor_status_history audit trail, Evidence Photos gallery. Phase 13 complete.
 Resume file: None
 
 ---
