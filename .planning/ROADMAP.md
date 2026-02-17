@@ -75,20 +75,20 @@ Plans:
 ---
 
 ### Phase 10: Real-Time Operations Polish
-**Goal:** Complete the real-time medic tracking, fix the broken payment failure path, and make the alert system actionable.
+**Goal:** Make the command centre actually usable in a live shift: admins know who each dot on the map is, can act on every alert, and users can recover from payment failures without calling support.
 **Priority:** HIGH
 
 **Problem:** Three critical operational gaps — (1) medic location pings have no names or booking context (TODO in code), (2) payment failures have no recovery UI leaving users stuck, (3) the alert system defines 9 alert types but none are actionable with escalation, notes, or suggested actions.
 
 **Requirements:**
-- `useMedicLocationsStore` resolves the TODO: join medic name, photo, booking site, and shift times to each location ping
-- Command center map marker shows medic name + current booking on hover/tap
+- `useMedicLocationsStore` resolves the TODO: join medic name, booking site, and shift times to each location ping (photo descoped — no column exists)
+- Command center map marker shows medic name + current booking site + shift hours on hover/tap
 - Payment failure screen has: retry button, "Contact Support" mailto link, reference number
 - Alert panel: `dismissal_notes` and `resolution_notes` input when dismissing/resolving
-- Alert panel: bulk dismiss for non-critical alerts
-- Alert panel: suggested action per alert type (e.g., "Battery low → Call medic")
-- Alert panel: auto-escalation if unacknowledged after 15 minutes (highlight + sound)
-- Command center contact button: fallback to "Send message" when `medicPhone` is null
+- Alert panel: bulk dismiss for non-critical alerts (low/medium severity only)
+- Alert panel: suggested action per alert type (static lookup, 9 alert types)
+- Alert panel: auto-escalation if unacknowledged after 15 minutes (red pulse + sound once per alert)
+- Command center contact button: fallback to "Send Message" mailto when `medicPhone` is null
 
 **Success Criteria:**
 1. Command center shows "Kai Jensen — Royal Exchange Site, 07:00-15:00" on map marker
@@ -97,6 +97,13 @@ Plans:
 4. Unacknowledged `geofence_failure` alert escalates to red pulsing state after 15 minutes
 
 **Plans:** 5 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Resolve location store TODO: medicContext Map with joined medic+booking query
+- [ ] 10-02-PLAN.md — Map marker popup: add shift time display to Leaflet Popup
+- [ ] 10-03-PLAN.md — Payment retry: retry button, reference number, support mailto
+- [ ] 10-04-PLAN.md — Alert notes end-to-end + bulk dismiss for non-critical alerts
+- [ ] 10-05-PLAN.md — Alert escalation timer, suggested actions, contact fallback
 
 ---
 
