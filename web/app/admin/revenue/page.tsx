@@ -13,10 +13,13 @@
 
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Banknote, TrendingUp, Users, Building2 } from 'lucide-react';
+import { Banknote, TrendingUp, Users, Building2, Download } from 'lucide-react';
 import { useRevenue, calculateCashFlowGap, type TimeRange } from '@/lib/queries/admin/revenue';
 import { CashFlowWarning } from '@/components/admin/cash-flow-warning';
 import CurrencyWithTooltip from '@/components/CurrencyWithTooltip';
+import { useRequireOrg } from '@/contexts/org-context';
+import { createClient } from '@/lib/supabase/client';
+import { exportInvoicesCSV } from '@/lib/utils/export-csv';
 
 // Lazy-load Recharts chart components — defers the ~220KB recharts bundle
 // until data is ready, improving initial TTI for the Revenue page.
@@ -36,9 +39,38 @@ const MedicEarningsChart = dynamic(
 export default function RevenuePage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('last_12_weeks');
   const { data, isLoading, error } = useRevenue(timeRange);
+  const orgId = useRequireOrg();
+  const [isExporting, setIsExporting] = useState(false);
 
   // Calculate cash flow warning
   const cashFlowWarning = data ? calculateCashFlowGap(data.summary) : null;
+
+  // Export invoice history as CSV
+  const handleExportInvoices = async () => {
+    setIsExporting(true);
+    try {
+      const weeksMap: Record<TimeRange, number> = {
+        last_4_weeks: 28,
+        last_12_weeks: 84,
+        last_52_weeks: 364,
+      };
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - (weeksMap[timeRange] || 84));
+
+      const supabase = createClient();
+      const { data: bookings } = await supabase
+        .from('bookings')
+        .select('shift_date, site_postcode, total_amount, platform_fee, medic_payout, status, clients(company_name)')
+        .eq('org_id', orgId)
+        .eq('status', 'completed')
+        .gte('shift_date', startDate.toISOString().split('T')[0])
+        .order('shift_date', { ascending: false });
+
+      exportInvoicesCSV(bookings || []);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   if (error) {
     return (
@@ -62,38 +94,50 @@ export default function RevenuePage() {
           </p>
         </div>
 
-        {/* Time Range Selector */}
-        <div className="flex items-center gap-2 bg-gray-800/50 rounded-lg p-1">
+        <div className="flex items-center gap-3">
+          {/* Export Button */}
           <button
-            onClick={() => setTimeRange('last_4_weeks')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              timeRange === 'last_4_weeks'
-                ? 'bg-blue-600 text-white shadow-lg'
-                : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-            }`}
+            onClick={handleExportInvoices}
+            disabled={isExporting}
+            className="flex items-center gap-2 px-4 py-2.5 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 text-gray-300 hover:text-white rounded-lg font-medium text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            4 Weeks
+            <Download className="w-4 h-4" />
+            {isExporting ? 'Exporting...' : 'Export CSV'}
           </button>
-          <button
-            onClick={() => setTimeRange('last_12_weeks')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              timeRange === 'last_12_weeks'
-                ? 'bg-blue-600 text-white shadow-lg'
-                : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-            }`}
-          >
-            12 Weeks
-          </button>
-          <button
-            onClick={() => setTimeRange('last_52_weeks')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              timeRange === 'last_52_weeks'
-                ? 'bg-blue-600 text-white shadow-lg'
-                : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-            }`}
-          >
-            52 Weeks
-          </button>
+
+          {/* Time Range Selector */}
+          <div className="flex items-center gap-2 bg-gray-800/50 rounded-lg p-1">
+            <button
+              onClick={() => setTimeRange('last_4_weeks')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                timeRange === 'last_4_weeks'
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+              }`}
+            >
+              4 Weeks
+            </button>
+            <button
+              onClick={() => setTimeRange('last_12_weeks')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                timeRange === 'last_12_weeks'
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+              }`}
+            >
+              12 Weeks
+            </button>
+            <button
+              onClick={() => setTimeRange('last_52_weeks')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                timeRange === 'last_52_weeks'
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+              }`}
+            >
+              52 Weeks
+            </button>
+          </div>
         </div>
       </div>
 

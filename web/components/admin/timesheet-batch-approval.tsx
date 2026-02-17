@@ -28,6 +28,7 @@ import {
   DollarSign,
   Users,
   FileText,
+  Download,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -61,6 +62,7 @@ import {
   useBatchRejectTimesheets,
   calculatePayoutSummary,
 } from '@/lib/queries/admin/timesheets';
+import { exportTimesheetsCSV } from '@/lib/utils/export-csv';
 
 // =============================================================================
 // UTILITY FUNCTIONS
@@ -356,6 +358,17 @@ export function TimesheetBatchApproval({ initialData }: TimesheetBatchApprovalPr
             Total pending: <span className="text-white font-medium">{formatCurrency(pendingTotal)}</span>
           </div>
         </div>
+
+        <Button
+          onClick={() => exportTimesheetsCSV(initialData)}
+          variant="outline"
+          size="sm"
+          className="border-gray-600 hover:bg-gray-700"
+          disabled={initialData.length === 0}
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Export CSV
+        </Button>
       </div>
 
       {/* Payout Summary Card (visible when items selected) */}
