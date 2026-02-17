@@ -16,6 +16,7 @@ import MedicTimeline from '@/components/admin/MedicTimeline';
 import AlertPanel from '@/components/admin/AlertPanel';
 import AlertToast from '@/components/admin/AlertToast';
 import { createClient } from '@/lib/supabase/client';
+import { useGeofenceExitMonitor } from '@/hooks/useGeofenceExitMonitor';
 
 // Import map component dynamically (client-side only - Leaflet doesn't work with SSR)
 const MedicTrackingMap = dynamic(() => import('@/components/admin/MedicTrackingMap'), {
@@ -80,6 +81,29 @@ export default function CommandCenter() {
 
   // Convert Map to array (memoized by Zustand's shallow comparison)
   const activeMedics = Array.from(locations.values());
+
+  // Geofence exit monitor — load geofences once, check each ping via haversine distance
+  const setOnPingReceived = useMedicLocationsStore((state) => state.setOnPingReceived);
+  const { loadGeofences, checkPing } = useGeofenceExitMonitor();
+
+  useEffect(() => {
+    loadGeofences().then(() => {
+      setOnPingReceived((ping) => {
+        checkPing(
+          ping.medic_id,
+          ping.booking_id,
+          ping.medic_name,
+          ping.site_name,
+          ping.latitude,
+          ping.longitude,
+          ping.ping_id,
+        );
+      });
+    });
+    return () => {
+      setOnPingReceived(null);
+    };
+  }, [loadGeofences, checkPing, setOnPingReceived]);
 
   // Real-time alerts from Zustand store
   const alerts = useMedicAlertsStore((state) => state.alerts);

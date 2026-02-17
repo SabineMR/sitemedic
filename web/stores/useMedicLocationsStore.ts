@@ -50,6 +50,16 @@ export interface MedicLocation {
   shift_end_time?: string;   // "15:00:00" from context — for map marker display
 }
 
+interface PingPayload {
+  medic_id: string;
+  booking_id: string;
+  medic_name: string;
+  site_name: string;
+  latitude: number;
+  longitude: number;
+  ping_id?: string;
+}
+
 interface MedicLocationsState {
   // State
   locations: Map<string, MedicLocation>; // Key: medic_id
@@ -57,6 +67,7 @@ interface MedicLocationsState {
   isConnected: boolean;
   lastUpdate: Date | null;
   subscriptionChannel: RealtimeChannel | null;
+  onPingReceived: ((ping: PingPayload) => void) | null;
 
   // Actions
   updateLocation: (medicId: string, location: Partial<MedicLocation>) => void;
@@ -66,6 +77,7 @@ interface MedicLocationsState {
   unsubscribe: () => void;
   getActiveMedics: () => MedicLocation[];
   getMedicById: (medicId: string) => MedicLocation | undefined;
+  setOnPingReceived: (callback: ((ping: PingPayload) => void) | null) => void;
 }
 
 // Debounce map: Prevents updating same medic more than once per second
@@ -78,6 +90,7 @@ export const useMedicLocationsStore = create<MedicLocationsState>((set, get) => 
   isConnected: false,
   lastUpdate: null,
   subscriptionChannel: null,
+  onPingReceived: null,
 
   /**
    * Update a medic's location (with debouncing)
@@ -224,6 +237,20 @@ export const useMedicLocationsStore = create<MedicLocationsState>((set, get) => 
             shift_start_time: context?.shift_start_time,
             shift_end_time: context?.shift_end_time,
           });
+
+          // Notify geofence monitor (if wired) so it can check distance on each ping
+          const onPing = get().onPingReceived;
+          if (onPing) {
+            onPing({
+              medic_id: ping.medic_id,
+              booking_id: context?.booking_id ?? ping.booking_id,
+              medic_name: context?.medic_name ?? 'Unknown Medic',
+              site_name: context?.site_name ?? 'Unknown Site',
+              latitude: ping.latitude,
+              longitude: ping.longitude,
+              ping_id: ping.id,
+            });
+          }
         }
       )
       .on(
@@ -303,6 +330,15 @@ export const useMedicLocationsStore = create<MedicLocationsState>((set, get) => 
    */
   getMedicById: (medicId: string) => {
     return get().locations.get(medicId);
+  },
+
+  /**
+   * Register a callback that fires on every incoming medic_location_pings INSERT.
+   * Used by useGeofenceExitMonitor in command-center to check distance per ping.
+   * Pass null to unregister (call on component unmount).
+   */
+  setOnPingReceived: (callback) => {
+    set({ onPingReceived: callback });
   },
 }));
 
