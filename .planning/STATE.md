@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 09 (Booking Data Completeness) — In progress
-Plan: 09-02 complete (2/3 in Phase 09).
-Status: In progress — 09-01 and 09-02 done, awaiting 09-03
-Last activity: 2026-02-17 — Completed 09-02-PLAN.md (BookingWithRelations type fix, BookingDetailPanel Sheet component)
-Progress: [████████████████████] Phase 08 100% complete. Phase 09: 2/3 plans done.
+Phase: v1.1 — Phase 09 (Booking Data Completeness) — COMPLETE
+Plan: 09-03 complete (3/3 in Phase 09). Phase 09 fully done.
+Status: Phase 09 complete — ready for Phase 10 or Phase 11
+Last activity: 2026-02-17 — Completed 09-03-PLAN.md (View Details wired, What3WordsDisplay in admin panel, recurring chain table)
+Progress: [████████████████████] Phase 09 100% complete (3/3 plans done).
 
 ## Performance Metrics
 
@@ -40,8 +40,8 @@ Progress: [████████████████████] Phase 0
 | 07.5-territory-auto-assignment | 5/5 | 19 min | 3.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 07.5-04 (3 min), 07.5-05 (5 min), 08-03 (?), 08-04 (?), 09-01 (2 min)
-- Trend: Phase 09 started — booking confirmation now surfaces what3words and special notes to clients
+- Last 5 plans: 08-03 (?), 08-04 (?), 09-01 (2 min), 09-02 (?), 09-03 (2 min)
+- Trend: Phase 09 complete — admin booking detail panel fully wired with View Details, What3WordsDisplay, and recurring chain table
 
 *Updated after each plan completion*
 
