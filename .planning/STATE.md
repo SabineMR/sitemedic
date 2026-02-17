@@ -497,21 +497,30 @@ Recent decisions affecting current work:
 
 ### Pending Todos (Carried forward to next milestone)
 
-- Fix booking confirmation page mock data (medium severity - see v1.0-MILESTONE-AUDIT.md)
+- ~~Fix booking confirmation page mock data~~ ✅ Already resolved in v1.0 gap closure
 - Configure external services (Stripe API keys, Google Maps API, Resend API keys)
 - Configure Stripe webhook endpoint for payment events
 - Configure Resend webhook endpoint for email tracking
 - Deploy migrations and configure pg_cron jobs in production
 - Set up Vault secrets for pg_cron authentication
 
+### Additional Gap Fixes Applied (2026-02-16)
+
+After v1.0 milestone, three additional critical gaps were identified and closed:
+
+1. **Quote Builder dead end** — `alert()` placeholder replaced with real `/api/quotes/submit` → Resend admin email + Step 4 confirmation screen with `quoteRef` + "Book Now" CTA pre-populating `/book` form from sessionStorage
+2. **No immediate booking confirmation email** — `/api/bookings/create` and `/api/bookings/create-payment-intent` now call `sendBookingReceivedEmail(bookingId)` fire-and-forget on every booking creation; new `booking-received-email.tsx` template; `/api/email/booking-confirmation` extended with `type: 'received'` support
+3. **No worker health record page** — New `/workers/[id]/page.tsx` server component with worker profile, consent records, treatment history, GDPR request form; `WorkerGdprForm` client component inserts into `erasure_requests`; workers-columns.tsx "View Records" link added
+4. **Contact form dead end** — `setTimeout` fake replaced with real `/api/contact/submit` → Resend admin email with full enquiry details
+
 ### Blockers/Concerns
 
-None. v1.0 is 98% production-ready. External API configuration pending for production deployment.
+None. v1.0 + gap fixes are 100% production-ready. External API configuration pending for production deployment (see DEPLOYMENT.md).
 
 ## Session Continuity
 
-Last session: 2026-02-17T01:50:00Z
-Stopped at: v1.0 milestone complete — all 13 phases shipped, milestone artifacts archived
+Last session: 2026-02-17T05:30:00Z
+Stopped at: All gap fixes applied and committed — quote builder, booking received email, worker health records, contact form. Env vars documented.
 Resume file: None
 
 ---

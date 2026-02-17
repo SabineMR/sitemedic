@@ -12,11 +12,26 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { Banknote, TrendingUp, Users, Building2 } from 'lucide-react';
 import { useRevenue, calculateCashFlowGap, type TimeRange } from '@/lib/queries/admin/revenue';
-import { RevenueTrendChart, TerritoryRevenueChart, MedicEarningsChart } from '@/components/admin/revenue-charts';
 import { CashFlowWarning } from '@/components/admin/cash-flow-warning';
 import CurrencyWithTooltip from '@/components/CurrencyWithTooltip';
+
+// Lazy-load Recharts chart components — defers the ~220KB recharts bundle
+// until data is ready, improving initial TTI for the Revenue page.
+const RevenueTrendChart = dynamic(
+  () => import('@/components/admin/revenue-charts').then((m) => ({ default: m.RevenueTrendChart })),
+  { ssr: false, loading: () => <div className="flex items-center justify-center h-[400px] text-gray-400">Loading chart...</div> }
+);
+const TerritoryRevenueChart = dynamic(
+  () => import('@/components/admin/revenue-charts').then((m) => ({ default: m.TerritoryRevenueChart })),
+  { ssr: false, loading: () => <div className="flex items-center justify-center h-[350px] text-gray-400">Loading chart...</div> }
+);
+const MedicEarningsChart = dynamic(
+  () => import('@/components/admin/revenue-charts').then((m) => ({ default: m.MedicEarningsChart })),
+  { ssr: false, loading: () => <div className="flex items-center justify-center h-[350px] text-gray-400">Loading chart...</div> }
+);
 
 export default function RevenuePage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('last_12_weeks');

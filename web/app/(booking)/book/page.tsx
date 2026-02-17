@@ -2,37 +2,21 @@
  * Book a Medic Page
  * Phase 4.5: Customer-facing booking form
  *
- * Reads quoteData from sessionStorage (set by QuoteBuilder "Book Now" CTA)
- * and passes it as prefillData to BookingForm.
+ * Server component — exports metadata for SEO.
+ * Client-side sessionStorage prefill (from QuoteBuilder "Book Now" CTA)
+ * is handled by <BookPageClient>.
  */
 
-'use client';
+import { Metadata } from 'next';
+import { BookPageClient } from './book-page-client';
 
-import { useEffect, useState } from 'react';
-import { BookingForm } from '@/components/booking/booking-form';
-
-interface QuoteData {
-  location?: string;
-  siteAddress?: string;
-  specialRequirements?: string[];
-  confinedSpaceRequired?: boolean;
-  traumaSpecialistRequired?: boolean;
-}
+export const metadata: Metadata = {
+  title: 'Book a Medic - Apex Safety Group',
+  description:
+    'Book qualified paramedics for your construction site. Select dates, configure shift requirements, and see real-time pricing.',
+};
 
 export default function BookPage() {
-  const [prefillData, setPrefillData] = useState<QuoteData | null>(null);
-
-  useEffect(() => {
-    const raw = sessionStorage.getItem('quoteData');
-    if (raw) {
-      try {
-        setPrefillData(JSON.parse(raw));
-      } catch {
-        // Ignore malformed data
-      }
-    }
-  }, []);
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -43,8 +27,8 @@ export default function BookPage() {
         </p>
       </div>
 
-      {/* Booking Form */}
-      <BookingForm prefillData={prefillData} />
+      {/* Booking Form — reads quoteData from sessionStorage if coming from QuoteBuilder */}
+      <BookPageClient />
     </div>
   );
 }

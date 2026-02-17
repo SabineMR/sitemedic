@@ -630,6 +630,7 @@ Automated PDF generation and RIDDOR auto-flagging for HSE compliance.
   - Compression enabled
   - Powered-by header removed for security
   - Workspace root detection configured
+  - **Admin Revenue page**: Recharts chart bundle (~220 KB) lazy-loaded via `next/dynamic` with `ssr: false` — defers heavy charting library until after data arrives, reducing initial TTI
 
 #### **Design System**
 - Tailwind CSS utility-first styling

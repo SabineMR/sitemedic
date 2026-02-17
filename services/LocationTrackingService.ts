@@ -21,6 +21,7 @@ import * as Battery from 'expo-battery';
 import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
+import { beaconService } from './BeaconService';
 
 // Constants
 const LOCATION_TASK_NAME = 'background-location-task';
@@ -28,6 +29,7 @@ const PING_INTERVAL_MS = 30000; // 30 seconds (fixed, no adaptive frequency)
 const GEOFENCE_RADIUS_METERS = 75; // Default geofence radius
 const CONSECUTIVE_PINGS_REQUIRED = 3; // Prevent GPS jitter false positives
 const OFFLINE_QUEUE_KEY = '@sitemedic:location_queue';
+const SHIFT_EVENT_QUEUE_KEY = '@sitemedic:shift_event_queue';
 const BATTERY_WARNING_THRESHOLD = 20; // Show warning at 20%
 
 // Types
@@ -81,6 +83,7 @@ class LocationTrackingService {
     consecutivePingsOutside: 0,
   };
   private offlineQueue: LocationPing[] = [];
+  private offlineEventQueue: ShiftEvent[] = [];
   private batteryWarningShown = false;
 
   /**
@@ -108,8 +111,9 @@ class LocationTrackingService {
     await AsyncStorage.setItem('@sitemedic:current_booking', JSON.stringify(booking));
     await AsyncStorage.setItem('@sitemedic:medic_id', medicId);
 
-    // Load offline queue from storage
+    // Load offline queues from storage
     await this.loadOfflineQueue();
+    await this.loadOfflineEventQueue();
 
     // Start background location tracking
     await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
@@ -126,6 +130,10 @@ class LocationTrackingService {
     });
 
     this.isTracking = true;
+
+    // Start BLE beacon scanning as fallback for no-signal areas
+    // Runs alongside GPS; beacon events only fire when GPS hasn't already handled them
+    await beaconService.startScanning(medicId, booking.id);
 
     // Create shift_started event
     await this.createShiftEvent({
@@ -156,6 +164,9 @@ class LocationTrackingService {
     if (isRegistered) {
       await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     }
+
+    // Stop BLE beacon scanning
+    beaconService.stopScanning();
 
     // Sync any remaining offline queue
     await this.syncOfflineQueue();
@@ -417,29 +428,102 @@ class LocationTrackingService {
 
   /**
    * Create shift event (arrival, departure, etc.)
+   *
+   * WHY: When offline, we can't lose check-in/check-out events — they're
+   * the source of truth for hours and billing. Events queue locally and
+   * sync in timestamp order when connection returns, before GPS pings.
    */
   private async createShiftEvent(event: ShiftEvent): Promise<void> {
     try {
       const isOnline = await this.isOnline();
 
       if (isOnline) {
-        // Use Edge Function instead of direct table insert for validation
         const { data, error } = await supabase.functions.invoke('medic-shift-event', {
           body: event,
         });
 
         if (error) {
           console.error('[LocationTracking] Error creating event:', error);
+          // Queue for retry rather than lose it
+          await this.queueEventOffline(event);
         } else {
           console.log('[LocationTracking] Event created:', event.event_type, data);
         }
       } else {
-        console.log('[LocationTracking] Offline - event will be created when connection restored');
-        // Could queue events too if needed
+        // Queue the event — it will sync when connection returns
+        await this.queueEventOffline(event);
+        console.log('[LocationTracking] Offline - event queued:', event.event_type);
       }
     } catch (error) {
       console.error('[LocationTracking] Error creating shift event:', error);
+      await this.queueEventOffline(event);
     }
+  }
+
+  /**
+   * Queue shift event for offline sync
+   */
+  private async queueEventOffline(event: ShiftEvent): Promise<void> {
+    this.offlineEventQueue.push(event);
+    await AsyncStorage.setItem(SHIFT_EVENT_QUEUE_KEY, JSON.stringify(this.offlineEventQueue));
+    console.log(`[LocationTracking] Event queued offline (${this.offlineEventQueue.length} in queue): ${event.event_type}`);
+  }
+
+  /**
+   * Load offline event queue from storage on startup
+   */
+  private async loadOfflineEventQueue(): Promise<void> {
+    const queueJson = await AsyncStorage.getItem(SHIFT_EVENT_QUEUE_KEY);
+    if (queueJson) {
+      this.offlineEventQueue = JSON.parse(queueJson);
+      console.log(`[LocationTracking] Loaded ${this.offlineEventQueue.length} queued events from storage`);
+    }
+  }
+
+  /**
+   * Sync offline event queue when connection restored
+   *
+   * WHY: Events sync BEFORE pings because the server uses events to build
+   * the shift timeline. If pings arrive before the arrival event, the
+   * server has orphaned location data with no shift context.
+   */
+  private async syncOfflineEventQueue(): Promise<void> {
+    if (this.offlineEventQueue.length === 0) return;
+
+    console.log(`[LocationTracking] Syncing ${this.offlineEventQueue.length} queued events...`);
+
+    // Sort by timestamp so the server receives them in chronological order
+    const sortedEvents = [...this.offlineEventQueue].sort(
+      (a, b) => new Date(a.event_timestamp).getTime() - new Date(b.event_timestamp).getTime()
+    );
+
+    const successfullySynced: string[] = [];
+
+    for (const event of sortedEvents) {
+      try {
+        const { error } = await supabase.functions.invoke('medic-shift-event', {
+          body: event,
+        });
+
+        if (error) {
+          console.error('[LocationTracking] Failed to sync event:', event.event_type, error);
+          // Stop — don't skip events, order matters for state machine validation
+          break;
+        }
+
+        successfullySynced.push(event.event_timestamp);
+        console.log('[LocationTracking] Synced queued event:', event.event_type);
+      } catch (error) {
+        console.error('[LocationTracking] Network error syncing event:', error);
+        break;
+      }
+    }
+
+    // Remove only the events that successfully synced
+    this.offlineEventQueue = this.offlineEventQueue.filter(
+      (e) => !successfullySynced.includes(e.event_timestamp)
+    );
+    await AsyncStorage.setItem(SHIFT_EVENT_QUEUE_KEY, JSON.stringify(this.offlineEventQueue));
   }
 
   /**
@@ -463,19 +547,22 @@ class LocationTrackingService {
   }
 
   /**
-   * Sync offline queue when connection restored
+   * Sync all offline queues when connection restored
    *
-   * WHY: When medic's phone reconnects to network, send all queued pings
-   * from when they were offline. This ensures we don't lose location data.
+   * WHY: Events sync first so the server has the shift timeline context
+   * before GPS pings arrive. Order: events → pings.
    */
   async syncOfflineQueue(): Promise<void> {
-    if (this.offlineQueue.length === 0) {
+    const isOnline = await this.isOnline();
+    if (!isOnline) {
+      console.log('[LocationTracking] Still offline - cannot sync queues');
       return;
     }
 
-    const isOnline = await this.isOnline();
-    if (!isOnline) {
-      console.log('[LocationTracking] Still offline - cannot sync queue');
+    // Sync events first — server needs shift context before pings
+    await this.syncOfflineEventQueue();
+
+    if (this.offlineQueue.length === 0) {
       return;
     }
 
@@ -604,10 +691,11 @@ class LocationTrackingService {
   /**
    * Get current tracking status
    */
-  getStatus(): { isTracking: boolean; queueSize: number; insideGeofence: boolean } {
+  getStatus(): { isTracking: boolean; queueSize: number; eventQueueSize: number; insideGeofence: boolean } {
     return {
       isTracking: this.isTracking,
       queueSize: this.offlineQueue.length,
+      eventQueueSize: this.offlineEventQueue.length,
       insideGeofence: this.geofenceState.insideGeofence,
     };
   }
