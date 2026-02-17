@@ -103,25 +103,29 @@ export default function AlertPanel() {
   };
 
   /**
-   * Handle dismiss with note
+   * Handle dismiss with note — two-step: first click opens note input, second click confirms
    */
   const handleDismiss = async (alertId: string) => {
     if (dismissNote && dismissNote.alertId === alertId) {
-      await dismissAlert(alertId, dismissNote.note);
+      await dismissAlert(alertId, dismissNote.note || undefined);
       setDismissNote(null);
     } else {
+      // Close any open resolve note for other alerts
+      setResolveNote(null);
       setDismissNote({ alertId, note: '' });
     }
   };
 
   /**
-   * Handle resolve with note
+   * Handle resolve with note — two-step: first click opens note input, second click confirms
    */
   const handleResolve = async (alertId: string) => {
     if (resolveNote && resolveNote.alertId === alertId) {
-      await resolveAlert(alertId, resolveNote.note);
+      await resolveAlert(alertId, resolveNote.note || undefined);
       setResolveNote(null);
     } else {
+      // Close any open dismiss note for other alerts
+      setDismissNote(null);
       setResolveNote({ alertId, note: '' });
     }
   };
@@ -231,26 +235,58 @@ export default function AlertPanel() {
 
                   {/* Dismiss Note Input */}
                   {dismissNote?.alertId === alert.id && (
-                    <input
-                      type="text"
-                      value={dismissNote.note}
-                      onChange={(e) => setDismissNote({ alertId: alert.id, note: e.target.value })}
-                      placeholder="Add dismissal note (optional)"
-                      className="w-full px-3 py-2 bg-gray-900 rounded border border-gray-600 text-white text-sm mb-2"
-                      autoFocus
-                    />
+                    <div className="mt-2 mb-2 space-y-2">
+                      <textarea
+                        value={dismissNote.note}
+                        onChange={(e) => setDismissNote({ alertId: alert.id, note: e.target.value })}
+                        placeholder="Reason for dismissal (optional)..."
+                        className="w-full rounded border border-gray-600 bg-gray-900 p-2 text-sm text-white placeholder-gray-500"
+                        rows={2}
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleDismiss(alert.id)}
+                          className="rounded bg-gray-600 px-3 py-1 text-sm text-white hover:bg-gray-700"
+                        >
+                          Confirm Dismiss
+                        </button>
+                        <button
+                          onClick={() => setDismissNote(null)}
+                          className="rounded border border-gray-600 px-3 py-1 text-sm text-gray-400 hover:bg-gray-700"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
                   )}
 
                   {/* Resolve Note Input */}
                   {resolveNote?.alertId === alert.id && (
-                    <input
-                      type="text"
-                      value={resolveNote.note}
-                      onChange={(e) => setResolveNote({ alertId: alert.id, note: e.target.value })}
-                      placeholder="Add resolution note (optional)"
-                      className="w-full px-3 py-2 bg-gray-900 rounded border border-gray-600 text-white text-sm mb-2"
-                      autoFocus
-                    />
+                    <div className="mt-2 mb-2 space-y-2">
+                      <textarea
+                        value={resolveNote.note}
+                        onChange={(e) => setResolveNote({ alertId: alert.id, note: e.target.value })}
+                        placeholder="Resolution details (optional)..."
+                        className="w-full rounded border border-gray-600 bg-gray-900 p-2 text-sm text-white placeholder-gray-500"
+                        rows={2}
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleResolve(alert.id)}
+                          className="rounded bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
+                        >
+                          Confirm Resolve
+                        </button>
+                        <button
+                          onClick={() => setResolveNote(null)}
+                          className="rounded border border-gray-600 px-3 py-1 text-sm text-gray-400 hover:bg-gray-700"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
                   )}
 
                   {/* Actions */}
