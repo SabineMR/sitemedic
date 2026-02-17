@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireOrgId } from '@/lib/organizations/org-resolver';
+import { sendBookingReceivedEmail } from '@/lib/email/send-booking-received';
 
 export const dynamic = 'force-dynamic';
 
@@ -168,6 +169,11 @@ export async function POST(request: NextRequest) {
         total_bookings: (client as any).total_bookings ? (client as any).total_bookings + 1 : 1,
       })
       .eq('id', body.clientId);
+
+    // Fire-and-forget: send "booking received" acknowledgement to client
+    sendBookingReceivedEmail(booking.id).catch((err) =>
+      console.error('Failed to send booking received email:', err)
+    );
 
     return NextResponse.json({
       bookingId: booking.id,

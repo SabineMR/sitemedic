@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Construction Site Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - Paramedic staffing company using SiteMedic platform
-**Last Updated**: 2026-02-16 (Low-priority gap fixes: medic onboarding route, org setup flow, contract numbers, plus all medium gaps)
+**Last Updated**: 2026-02-16 (Medic portal, full marketing site: /services, /about, /contact)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -12,6 +12,65 @@
 SiteMedic is a comprehensive platform combining **mobile medic software** (offline-first treatment logging, RIDDOR compliance) with **business operations infrastructure** (booking portal, payment processing, territory management). The platform enables construction companies to book medics online while ensuring automatic compliance documentation and reliable medic payouts.
 
 **Business Model**: Software bundled with medic staffing service (no separate software charge). Revenue from medic bookings with 40% platform markup (medic £30/hr → client £42/hr → platform £12/hr). Weekly medic payouts via UK Faster Payments, Net 30 invoicing for established corporate clients.
+
+---
+
+## Recent Updates - Medic Portal + Full Marketing Site (2026-02-16)
+
+### Medic Portal — `web/app/medic/` ✅
+
+A complete green-themed portal for HCPC-registered medics. Authenticated via Supabase; role-guarded (`medic`). Middleware redirects medic role to `/medic` on login.
+
+| Page | Route | Description |
+|------|-------|-------------|
+| **Medic Dashboard** | `/medic` | 4 stat cards (upcoming shifts, pending timesheets, pending payout, star rating); upcoming shifts list; pending timesheets with submit links; Stripe warning banner if onboarding incomplete |
+| **My Shifts** | `/medic/shifts` | All assigned bookings from `bookings` table; upcoming/past/all filter tabs; shift badges (confined space, trauma specialist); ASG contact email |
+| **Timesheets** | `/medic/timesheets` | Submit actual hours worked for completed shifts; discrepancy reason textarea shown if hours differ from scheduled; updates `medic_submitted_at`, `logged_hours`, `medic_confirmed`; pending/history sections |
+| **Payslips** | `/medic/payslips` | Download payslips from `generate-payslip-pdf` edge function; total earned/hours summary cards; handles both `pdf_url` and `pdf_base64` responses |
+| **My Profile** | `/medic/profile` | Availability toggle (`available_for_work`); personal info grid; qualifications badges; IR35/UTR/umbrella status; `StripeOnboardingStatus` component |
+
+**Layout** (`web/app/medic/layout.tsx`): Green-themed sidebar, auth check + redirect to `/login`, sign out button, nav icons (LayoutDashboard, Calendar, Clock, FileText, User).
+
+---
+
+### Marketing Site — Complete ASG Company Website (2026-02-16) ✅
+
+The `/` marketing site is the **Apex Safety Group** company website. SiteMedic is mentioned as their technology platform. `/platform` remains the SiteMedic superadmin dashboard on a separate domain.
+
+#### Site Header Updates — `components/marketing/site-header.tsx` ✅
+- Added `/services`, `/about`, `/contact` to desktop and mobile nav links
+
+#### Site Footer Updates — `components/marketing/site-footer.tsx` ✅
+- Added "About ASG" and "Contact Us" links to the Company column
+
+#### Services Page — `web/app/(marketing)/services/page.tsx` ✅
+Full breakdown of all 4 ASG occupational health service layers:
+- Layer 1: Health Surveillance (audiometry, spirometry, HAVS, skin checks, baselines) — from £45/worker
+- Layer 2: Drug & Alcohol Testing (12-panel oral fluid, evidential breath, all test types) — from £35/test
+- Layer 3: Fitness-to-Work Assessments (plant operators, confined space, height, asbestos) — from £65/worker
+- Layer 4: Mental Health & Wellbeing (MHFA check-ins, PHQ-9/GAD-7, site pulse score) — included
+- Each card shows relevant legislation, colour-coded by layer, "Delivered via SiteMedic platform" callouts
+- Hero with dual CTAs (Book a Site Medic / View Pricing); bottom dark CTA section
+
+#### About Page — `web/app/(marketing)/about/page.tsx` ✅
+Full ASG company story page:
+- Hero: founding story (paramedics who worked construction sites and built the software they needed)
+- Mission section: 2-col with 4 stat cards (100% HCPC, 0 missed RIDDOR, 4-in-1 services, Net 30)
+- "Why we built SiteMedic" section: 3 cards (RIDDOR auto-detection, weekly payouts, compliance dashboard)
+- "The ASG + SiteMedic model" callout box (blue gradient): 4 bullet points explaining the bundled service
+- Values: 4 cards (Clinical First, Honest About the Law, Real-Time by Default, Fair to Medics)
+- CTA section: Book a Medic + Get in Touch links
+
+#### Contact Page — `web/app/(marketing)/contact/page.tsx` + `contact-form.tsx` ✅
+Full contact/enquiry page:
+- Server component `page.tsx` with SEO metadata; client form extracted to `contact-form.tsx`
+- Hero section (dark gradient matching /services and /about)
+- 2-column layout: left = enquiry form (3/4 width), right = sidebar (1/4 width)
+- **Form fields**: first name, last name, company, email, phone, site workforce size (dropdown), enquiry type (dropdown: 7 options), message textarea
+- **Success state**: checkmark icon, personalised confirmation, "Send Another Enquiry" reset button
+- **Sidebar**: direct contact card (email, address, hours), response time info box, "Book a Medic" dark CTA card, "What happens next" 4-step list
+- Bottom section: links to /about, /services, /pricing
+- Privacy Policy consent notice on submit button
 
 ---
 

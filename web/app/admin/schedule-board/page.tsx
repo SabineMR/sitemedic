@@ -43,12 +43,10 @@ export default function ScheduleBoardPage() {
 
   // Initialize data and real-time subscription on mount
   useEffect(() => {
-    console.log('[ScheduleBoard] Page mounted, fetching data...');
     fetchScheduleData();
     subscribe();
 
     return () => {
-      console.log('[ScheduleBoard] Page unmounting, cleaning up...');
       unsubscribe();
     };
   }, [selectedWeekStart]); // Re-fetch when week changes

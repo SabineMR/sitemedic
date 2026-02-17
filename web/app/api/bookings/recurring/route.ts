@@ -49,8 +49,6 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log(`🔄 Creating ${actualWeeks} recurring bookings (${recurrencePattern}) for parent ${parentBookingId}`);
-
     // Calculate date increment (7 for weekly, 14 for biweekly)
     const dayIncrement = recurrencePattern === 'weekly' ? 7 : 14;
 
@@ -114,8 +112,6 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-
-    console.log(`✅ Created ${insertedBookings?.length || 0} recurring bookings`);
 
     return NextResponse.json({
       bookings: insertedBookings || [],

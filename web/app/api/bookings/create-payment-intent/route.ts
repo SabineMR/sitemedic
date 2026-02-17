@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { stripe } from '@/lib/stripe/server';
 import { requireOrgId } from '@/lib/organizations/org-resolver';
+import { sendBookingReceivedEmail } from '@/lib/email/send-booking-received';
 
 export const dynamic = 'force-dynamic';
 
@@ -183,6 +184,11 @@ export async function POST(request: NextRequest) {
         enabled: true, // Enables 3D Secure automatically
       },
     });
+
+    // Fire-and-forget: send "booking received" acknowledgement to client
+    sendBookingReceivedEmail(booking.id).catch((err) =>
+      console.error('Failed to send booking received email:', err)
+    );
 
     return NextResponse.json({
       bookingId: booking.id,

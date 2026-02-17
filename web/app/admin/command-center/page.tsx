@@ -64,11 +64,9 @@ export default function CommandCenter() {
 
   // Subscribe to real-time updates on mount
   useEffect(() => {
-    console.log('[CommandCenter] Subscribing to real-time updates...');
     subscribe();
 
     return () => {
-      console.log('[CommandCenter] Unsubscribing from real-time updates...');
       unsubscribe();
     };
   }, [subscribe, unsubscribe]);

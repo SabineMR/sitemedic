@@ -63,13 +63,11 @@ export async function POST(req: NextRequest) {
 
     if (cachedTravel) {
       // Cache hit
-      console.log('✅ Cache hit - using cached travel data');
       distance_miles = Number(cachedTravel.distance_miles);
       travel_time_minutes = cachedTravel.travel_time_minutes;
       cached = true;
     } else {
       // Cache miss - call Google Maps Distance Matrix API
-      console.log('❌ Cache miss - calling Google Maps API');
 
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(

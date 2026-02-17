@@ -2,7 +2,9 @@
  * Booking Confirmation Email API
  * Phase 4.5: Send confirmation emails with calendar invite
  *
- * SAFETY CHECK: Requires booking.medic_id to be set before sending
+ * Supports two email types:
+ *   type: 'received'  — Immediate acknowledgement sent on booking creation (no medic_id required)
+ *   type: 'confirmed' — Full confirmation with medic details (default; requires medic_id)
  */
 
 import { createClient } from '@/lib/supabase/server';
@@ -10,22 +12,30 @@ import { resend } from '@/lib/email/resend';
 import { generateBookingIcs } from '@/lib/booking/calendar';
 import BookingConfirmationEmail from '@/lib/email/templates/booking-confirmation-email';
 import MedicAssignmentEmail from '@/lib/email/templates/medic-assignment-email';
+import { sendBookingReceivedEmail } from '@/lib/email/send-booking-received';
 import { NextResponse } from 'next/server';
 import { render } from '@react-email/components';
 
 interface EmailRequest {
   bookingId: string;
+  type?: 'received' | 'confirmed';
 }
 
 export async function POST(request: Request) {
   try {
-    const { bookingId }: EmailRequest = await request.json();
+    const { bookingId, type = 'confirmed' }: EmailRequest = await request.json();
 
     if (!bookingId) {
       return NextResponse.json(
         { error: 'bookingId is required' },
         { status: 400 }
       );
+    }
+
+    // Handle 'received' type — delegate to shared helper, no medic required
+    if (type === 'received') {
+      await sendBookingReceivedEmail(bookingId);
+      return NextResponse.json({ clientEmailSent: true, medicEmailSent: false });
     }
 
     const supabase = await createClient();
@@ -78,8 +88,6 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
-    console.log(`📧 Sending confirmation emails for booking ${bookingId}`);
 
     // Generate .ics calendar invite
     const icsString = generateBookingIcs({
@@ -146,7 +154,6 @@ export async function POST(request: Request) {
       if (clientEmailResult.error) {
         console.error('⚠️  Failed to send client email:', clientEmailResult.error);
       } else {
-        console.log('✅ Client email sent:', clientEmailResult.data?.id);
         clientEmailSent = true;
       }
     } catch (error) {
@@ -188,7 +195,6 @@ export async function POST(request: Request) {
       if (medicEmailResult.error) {
         console.error('⚠️  Failed to send medic email:', medicEmailResult.error);
       } else {
-        console.log('✅ Medic email sent:', medicEmailResult.data?.id);
         medicEmailSent = true;
       }
     } catch (error) {

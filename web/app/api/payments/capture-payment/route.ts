@@ -53,8 +53,6 @@ export async function POST(request: NextRequest) {
     // Retrieve Payment Intent from Stripe
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
-    console.log(`Payment Intent ${paymentIntentId} status: ${paymentIntent.status}`);
-
     // Handle different payment statuses
     switch (paymentIntent.status) {
       case 'succeeded':
@@ -87,7 +85,6 @@ export async function POST(request: NextRequest) {
             );
           }
 
-          console.log(`Booking ${payment.booking_id} confirmed after payment success`);
         }
 
         // Log to audit trail

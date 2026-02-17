@@ -148,8 +148,6 @@ SiteMedic Accounts Team
       if (emailError) {
         console.error('Failed to send reminder email:', emailError);
         // Continue processing -- email failure should NOT block invoice update
-      } else {
-        console.log(`✅ ${reminderType} reminder email sent for invoice ${invoice.invoice_number}`);
       }
     } catch (error) {
       console.error('Email send exception:', error);
@@ -177,9 +175,6 @@ SiteMedic Accounts Team
       console.error('Error updating invoice:', updateError);
       return NextResponse.json({ error: 'Failed to update invoice' }, { status: 500 });
     }
-
-    // Log reminder event in audit trail
-    console.log(`✅ ${reminderType} reminder processed for invoice ${invoice.invoice_number}`);
 
     return NextResponse.json({
       success: true,

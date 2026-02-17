@@ -90,8 +90,6 @@ export async function POST(req: NextRequest) {
     let stripeOnboardingUrl = medic.stripe_onboarding_url;
 
     if (!medic.stripe_account_id) {
-      console.log('Creating Stripe Express account for medic:', medicId);
-
       // Call Stripe Connect Edge Function
       const { data: stripeData, error: stripeError } = await supabase.functions.invoke('stripe-connect', {
         body: {
@@ -124,9 +122,6 @@ export async function POST(req: NextRequest) {
         .eq('id', medicId)
         .eq('org_id', orgId);
     }
-
-    // Log IR35 assessment completion
-    console.log(`IR35 assessment completed for medic ${medicId}: ${employment_status}`);
 
     return NextResponse.json({
       success: true,

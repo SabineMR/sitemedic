@@ -92,8 +92,6 @@ export async function POST(request: NextRequest) {
     let stripeCustomerId = client.stripe_customer_id;
 
     if (!stripeCustomerId) {
-      console.log(`Creating Stripe Customer for client ${clientId}`);
-
       const customer = await stripe.customers.create({
         email: client.contact_email,
         name: client.company_name,
@@ -134,8 +132,6 @@ export async function POST(request: NextRequest) {
       automatic_payment_methods: { enabled: true }, // Enables 3D Secure
       capture_method: 'automatic', // Auto-capture on confirmation
     });
-
-    console.log(`Payment Intent created: ${paymentIntent.id} for booking ${bookingId}`);
 
     // Insert into payments table
     // CRITICAL: Set org_id to ensure payment belongs to current org

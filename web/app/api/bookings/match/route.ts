@@ -39,8 +39,6 @@ export async function POST(request: Request) {
 
     const supabase = await createClient();
 
-    console.log(`🎯 Starting auto-match for booking ${bookingId}`);
-
     // **STEP 1: Call auto-assign Edge Function**
     const { data: edgeFunctionResult, error: edgeFunctionError } = await supabase.functions.invoke(
       'auto-assign-medic-v2',
@@ -56,8 +54,6 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-
-    console.log('📊 Edge Function result:', edgeFunctionResult);
 
     // Check if manual approval required (no match or low confidence)
     if (edgeFunctionResult.requires_manual_approval) {
@@ -93,8 +89,6 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log(`✅ Updated booking ${bookingId} with medic ${assignedMedicId}`);
-
     // **STEP 3: Trigger email sending (ONLY after medic_id is persisted)**
     // Call the email endpoint internally
     const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:30500'}/api/email/booking-confirmation`, {
@@ -106,9 +100,6 @@ export async function POST(request: Request) {
     if (!emailResponse.ok) {
       console.error('⚠️  Email sending failed, but booking is confirmed');
       // Don't fail the entire request - booking is still confirmed
-    } else {
-      const emailResult = await emailResponse.json();
-      console.log('📧 Emails sent:', emailResult);
     }
 
     // Format match reasons from Edge Function response

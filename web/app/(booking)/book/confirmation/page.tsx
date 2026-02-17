@@ -60,13 +60,11 @@ function ConfirmationContent() {
       try {
         // Step 1: Verify payment status if coming from Stripe redirect
         if (paymentIntentClientSecret) {
-          console.log('🔍 Verifying payment status...');
           // Payment verification would use Stripe.js here
           // For now, we assume payment succeeded if we got redirected back
         }
 
         // Step 2: Trigger auto-matching (which internally: assigns medic -> updates booking -> sends emails)
-        console.log('🎯 Triggering auto-match...');
         const matchResponse = await fetch('/api/bookings/match', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -81,7 +79,6 @@ function ConfirmationContent() {
         setMatchResult(matchData);
 
         // Step 3: Fetch booking details from database
-        console.log('📋 Fetching booking details...');
         const bookingResponse = await fetch(`/api/bookings/${bookingId}`);
         if (!bookingResponse.ok) {
           throw new Error('Failed to fetch booking details');
@@ -136,7 +133,6 @@ function ConfirmationContent() {
 
         // Step 4: If recurring booking, create child bookings
         if (fetchedBooking.is_recurring && fetchedBooking.recurring_weeks > 0) {
-          console.log('🔄 Creating recurring bookings...');
           const recurringResponse = await fetch('/api/bookings/recurring', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

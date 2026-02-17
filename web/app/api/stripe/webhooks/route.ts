@@ -60,8 +60,6 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ received: true });
         }
 
-        console.log(`✅ Payment succeeded for booking ${bookingId}`);
-
         // Update booking status from 'pending' to 'confirmed'
         const { error: updateError } = await supabase
           .from('bookings')
@@ -104,8 +102,6 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ received: true });
         }
 
-        console.log(`❌ Payment failed for booking ${bookingId}`);
-
         // Update booking status to 'cancelled'
         const { error: updateError } = await supabase
           .from('bookings')
@@ -130,8 +126,6 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ received: true });
         }
 
-        console.log(`Stripe account updated: ${account.id}`);
-
         // Check if this is a Connected account (medic Express account)
         const chargesEnabled = account.charges_enabled;
         const payoutsEnabled = account.payouts_enabled;
@@ -148,17 +142,13 @@ export async function POST(request: NextRequest) {
 
         if (updateError) {
           console.error('Error updating medic onboarding status:', updateError);
-        } else {
-          console.log(
-            `Medic Stripe onboarding ${onboardingComplete ? 'completed' : 'in progress'} for account ${account.id} (charges: ${chargesEnabled}, payouts: ${payoutsEnabled}, details: ${detailsSubmitted})`
-          );
         }
 
         break;
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        break;
     }
 
     return NextResponse.json({ received: true });
