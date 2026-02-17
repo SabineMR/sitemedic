@@ -11,7 +11,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { StripeOnboardingStatus } from '@/components/medics/stripe-onboarding-status';
-import { User, CheckCircle2, XCircle, ToggleLeft, ToggleRight, AlertTriangle, ExternalLink } from 'lucide-react';
+import { User, CheckCircle2, XCircle, ToggleLeft, ToggleRight, AlertTriangle, ExternalLink, FileDown, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -286,13 +286,60 @@ export default function MedicProfilePage() {
       <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
         <h2 className="text-white font-semibold text-lg mb-4">IR35 Status</h2>
         {medic.employment_status ? (
-          <div className="grid grid-cols-2 gap-4">
-            <InfoRow label="Employment Status" value={medic.employment_status.replace('_', ' ')} capitalize />
-            {medic.utr && <InfoRow label="UTR" value={medic.utr} />}
-            {medic.umbrella_company_name && <InfoRow label="Umbrella Company" value={medic.umbrella_company_name} />}
-            {medic.cest_assessment_result && (
-              <InfoRow label="CEST Result" value={medic.cest_assessment_result.replace('_', ' ')} capitalize />
+          <div className="space-y-4">
+            {/* Employment status banner */}
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm ${
+              medic.employment_status === 'umbrella'
+                ? 'bg-purple-900/50 border border-purple-700/50 text-purple-300'
+                : 'bg-blue-900/50 border border-blue-700/50 text-blue-300'
+            }`}>
+              <CheckCircle2 className="w-4 h-4" />
+              {medic.employment_status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+            </div>
+
+            {/* Assessment date */}
+            {medic.cest_assessment_date && (
+              <div className="flex items-center gap-2 text-gray-400 text-sm">
+                <Calendar className="w-4 h-4 text-gray-500" />
+                Last assessed {format(new Date(medic.cest_assessment_date), 'dd MMM yyyy')}
+              </div>
             )}
+
+            {/* CEST PDF download */}
+            {medic.cest_pdf_url && (
+              <a
+                href={medic.cest_pdf_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-700/50 hover:bg-gray-700 border border-gray-600/50 text-gray-200 rounded-xl text-sm transition-colors"
+              >
+                <FileDown className="w-4 h-4 text-green-400" />
+                Download CEST PDF
+              </a>
+            )}
+
+            {/* Detail rows */}
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              {medic.employment_status === 'self_employed' && medic.utr && (
+                <InfoRow label="UTR" value={medic.utr} />
+              )}
+              {medic.employment_status === 'umbrella' && medic.umbrella_company_name && (
+                <InfoRow label="Umbrella Company" value={medic.umbrella_company_name} />
+              )}
+              {medic.cest_assessment_result && (
+                <InfoRow
+                  label="HMRC CEST Result"
+                  value={medic.cest_assessment_result.replace(/_/g, ' ')}
+                  capitalize
+                />
+              )}
+              {medic.cest_assessment_date && (
+                <InfoRow
+                  label="Assessment Date"
+                  value={format(new Date(medic.cest_assessment_date), 'dd MMM yyyy')}
+                />
+              )}
+            </div>
           </div>
         ) : (
           <div className="flex items-center gap-2 text-yellow-400 text-sm">
