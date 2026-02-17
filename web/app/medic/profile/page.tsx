@@ -3,6 +3,7 @@
  *
  * View personal details, IR35 status, availability toggle,
  * and Stripe payout onboarding status.
+ * Shows certification expiry banners for certs expiring within 30 days.
  */
 
 'use client';
@@ -10,8 +11,48 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { StripeOnboardingStatus } from '@/components/medics/stripe-onboarding-status';
-import { User, CheckCircle2, XCircle, ToggleLeft, ToggleRight } from 'lucide-react';
+import { User, CheckCircle2, XCircle, ToggleLeft, ToggleRight, AlertTriangle, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
+
+const RENEWAL_URLS: Record<string, string> = {
+  'CSCS': 'https://www.cscs.uk.com/apply-for-card/',
+  'CPCS': 'https://www.cpcscards.com/renewal',
+  'IPAF': 'https://www.ipaf.org/en/training',
+  'PASMA': 'https://www.pasma.co.uk/training',
+  'Gas Safe': 'https://www.gassaferegister.co.uk/',
+};
+
+interface CertExpiry {
+  type: string;
+  expiry_date: string;
+  cert_number: string;
+  days_remaining: number;
+}
+
+function getExpiringCerts(certifications: Array<{ type: string; expiry_date: string; cert_number: string }> | null): {
+  critical: CertExpiry[];
+  warning: CertExpiry[];
+} {
+  const certs = certifications || [];
+  const now = new Date();
+  const critical: CertExpiry[] = [];
+  const warning: CertExpiry[] = [];
+
+  for (const cert of certs) {
+    const expiry = new Date(cert.expiry_date);
+    const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysLeft <= 0) {
+      critical.push({ ...cert, days_remaining: daysLeft });
+    } else if (daysLeft <= 7) {
+      critical.push({ ...cert, days_remaining: daysLeft });
+    } else if (daysLeft <= 30) {
+      warning.push({ ...cert, days_remaining: daysLeft });
+    }
+  }
+
+  return { critical, warning };
+}
 
 interface MedicData {
   id: string;
@@ -21,10 +62,13 @@ interface MedicData {
   phone: string | null;
   home_postcode: string | null;
   qualifications: string[] | null;
+  certifications: Array<{ type: string; expiry_date: string; cert_number: string }> | null;
   employment_status: string | null;
   utr: string | null;
   umbrella_company_name: string | null;
   cest_assessment_result: string | null;
+  cest_assessment_date: string | null;
+  cest_pdf_url: string | null;
   available_for_work: boolean;
   star_rating: number | null;
   stripe_onboarding_complete: boolean;
@@ -95,12 +139,62 @@ export default function MedicProfilePage() {
     );
   }
 
+  const { critical, warning } = getExpiringCerts(medic.certifications);
+
   return (
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white">My Profile</h1>
         <p className="text-gray-400 mt-1">Your account details and preferences</p>
       </div>
+
+      {/* Critical Certification Banners (expired or expiring in <=7 days) */}
+      {critical.length > 0 && (
+        <div className="bg-red-900/20 border border-red-700/30 rounded-2xl p-4 space-y-2">
+          <div className="flex items-center gap-2 text-red-400 font-semibold">
+            <AlertTriangle className="w-5 h-5" />
+            Urgent: Certification{critical.length > 1 ? 's' : ''} Expiring
+          </div>
+          {critical.map((cert) => (
+            <div key={cert.cert_number} className="flex items-center justify-between text-sm">
+              <span className="text-red-300">
+                {cert.type} {cert.days_remaining <= 0
+                  ? 'has EXPIRED'
+                  : `expires in ${cert.days_remaining} day${cert.days_remaining !== 1 ? 's' : ''}`}
+              </span>
+              {RENEWAL_URLS[cert.type] && (
+                <a href={RENEWAL_URLS[cert.type]} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-red-400 hover:text-red-300 underline text-sm">
+                  Renew now <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Warning Certification Banners (expiring in 8-30 days) */}
+      {warning.length > 0 && (
+        <div className="bg-yellow-900/20 border border-yellow-700/30 rounded-2xl p-4 space-y-2">
+          <div className="flex items-center gap-2 text-yellow-400 font-semibold">
+            <AlertTriangle className="w-5 h-5" />
+            Certification{warning.length > 1 ? 's' : ''} Expiring Soon
+          </div>
+          {warning.map((cert) => (
+            <div key={cert.cert_number} className="flex items-center justify-between text-sm">
+              <span className="text-yellow-300">
+                {cert.type} expires in {cert.days_remaining} day{cert.days_remaining !== 1 ? 's' : ''}
+              </span>
+              {RENEWAL_URLS[cert.type] && (
+                <a href={RENEWAL_URLS[cert.type]} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-yellow-400 hover:text-yellow-300 underline text-sm">
+                  Renew now <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Availability Toggle */}
       <div className={`flex items-center justify-between p-5 rounded-2xl border ${
@@ -158,6 +252,32 @@ export default function MedicProfilePage() {
                 {qual}
               </span>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Certifications */}
+      {(medic.certifications || []).length > 0 && (
+        <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
+          <h2 className="text-white font-semibold text-lg mb-4">Certifications</h2>
+          <div className="space-y-3">
+            {(medic.certifications || []).map((cert) => {
+              const expiry = new Date(cert.expiry_date);
+              const daysLeft = Math.ceil((expiry.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+              const isExpired = daysLeft <= 0;
+              const isWarning = daysLeft > 0 && daysLeft <= 30;
+              return (
+                <div key={cert.cert_number} className="flex items-center justify-between">
+                  <div>
+                    <span className="text-white font-medium">{cert.type}</span>
+                    <span className="text-gray-500 text-sm ml-2">#{cert.cert_number}</span>
+                  </div>
+                  <span className={`text-sm ${isExpired ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-green-400'}`}>
+                    {isExpired ? 'Expired' : `Expires ${format(expiry, 'dd MMM yyyy')}`}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
