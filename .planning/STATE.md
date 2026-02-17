@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 10 (Real-Time Operations Polish) — COMPLETE ✅
-Plan: All 5 plans complete (10-01, 10-02, 10-03, 10-04, 10-05)
-Status: Phase 10 verified 7/7 must-haves — ready for Phase 11
-Last activity: 2026-02-17 — Completed Phase 10 (medicContext store, map popup shift times, payment retry UI, alert notes + bulk dismiss, alert escalation + suggested actions)
-Progress: [████████████████████] Phase 10: 5/5 plans complete, verified ✓
+Phase: v1.1 — Phase 14 (Compliance, Exports & Medic Portal) — In Progress
+Plan: 14-04 complete. All Wave 2 plans executing (14-01, 14-02, 14-03, 14-04, 14-05 done).
+Status: Phase 14 plan 04 done — IR35 section enhanced with employment status banner, assessment date, CEST PDF download link
+Last activity: 2026-02-17 — Completed 14-04-PLAN.md (colored employment status banner, Last assessed date, Download CEST PDF button)
+Progress: [████████████████████] Phase 14: 14-01, 14-02, 14-03, 14-04, 14-05 complete
 
 ## Performance Metrics
 
