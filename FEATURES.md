@@ -48,6 +48,18 @@ Every shift now includes a mileage reimbursement payment on top of the medic's s
 - Stored on timesheet: `mileage_miles`, `mileage_rate_pence` (snapshot), `mileage_reimbursement`
 - Added to `payout_amount` — separate from the booking revenue split
 
+### Mileage Auto-Trigger on Timesheet Approval ✅
+
+When an admin approves timesheets in the batch approval UI, the mileage router is automatically called for every unique (medic, date) pair in the approved batch — **fire-and-forget** so mileage errors never block the approval flow.
+
+Multi-site days are handled efficiently: the daily mileage router (`routeDailyMileage`) builds a full route chain for the medic across all their bookings on that day (home → site1 → site2 → … → home), so a single API call covers all shifts.
+
+| File | Change |
+|------|--------|
+| `web/lib/queries/admin/timesheets.ts` | **Modified** — `useBatchApproveTimesheets` now accepts `{ timesheets: TimesheetWithDetails[], adminUserId }` instead of just `{ timesheetIds, adminUserId }`. In `onSuccess`, deduplicate by `(medic_id, shift_date)` and fire `POST /api/payouts/mileage` for each pair (fire-and-forget with console error on failure). |
+| `web/components/admin/timesheet-batch-approval.tsx` | **Modified** — `handleBatchApprove` passes `timesheets: selectedTimesheets` to the mutation instead of mapping to IDs first. |
+| `supabase/migrations/117_lead_capture_tables.sql` | **Renamed** — Was `116_lead_capture_tables.sql`. Renamed to 117 to resolve numbering collision with `116_experience_tiers_and_mileage.sql`. |
+
 ---
 
 ## Recent Updates — Emergency SOS Alert System (2026-02-17)

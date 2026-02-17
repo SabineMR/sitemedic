@@ -24,7 +24,7 @@
 
 import { BleManager, Device, State } from 'react-native-ble-plx';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../src/lib/supabase';
 
 // Storage keys
 const BEACON_CONFIG_KEY = '@sitemedic:beacon_configs';

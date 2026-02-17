@@ -16,10 +16,30 @@
  * - Alert acknowledgment (clears the full-screen alert on recipient's device)
  */
 
-import * as Notifications from 'expo-notifications';
-import { Audio } from 'expo-av';
-import * as FileSystem from 'expo-file-system';
 import { supabase } from '../src/lib/supabase';
+
+// Lazy-load all native-module-backed packages so the app doesn't crash when
+// running in Expo Go or a build that doesn't include these native modules.
+// Every usage below is guarded with a null check.
+let Notifications: typeof import('expo-notifications') | null = null;
+let Audio: typeof import('expo-av')['Audio'] | null = null;
+let FileSystem: typeof import('expo-file-system') | null = null;
+
+try {
+  Notifications = require('expo-notifications');
+} catch (e) {
+  console.warn('[EmergencyAlert] expo-notifications unavailable — push disabled');
+}
+try {
+  Audio = require('expo-av').Audio;
+} catch (e) {
+  console.warn('[EmergencyAlert] expo-av unavailable — audio recording disabled');
+}
+try {
+  FileSystem = require('expo-file-system');
+} catch (e) {
+  console.warn('[EmergencyAlert] expo-file-system unavailable — file ops disabled');
+}
 
 // Notification channel for emergency alerts (Android)
 const EMERGENCY_CHANNEL_ID = 'emergency';
@@ -67,7 +87,7 @@ interface SendAlertParams {
 }
 
 class EmergencyAlertService {
-  private recording: Audio.Recording | null = null;
+  private recording: any | null = null;
   private transcriptionInterval: ReturnType<typeof setInterval> | null = null;
   private stopRecordingTimeout: ReturnType<typeof setTimeout> | null = null;
   private onTranscriptChunk: ((text: string) => void) | null = null;
@@ -78,32 +98,41 @@ class EmergencyAlertService {
    * Called on app startup from app/_layout.tsx.
    */
   async requestPermissions(): Promise<{ notifications: boolean; microphone: boolean }> {
-    const { status: notifStatus } = await Notifications.requestPermissionsAsync({
-      ios: {
-        allowAlert: true,
-        allowBadge: true,
-        allowSound: true,
-        allowCriticalAlerts: true,
-      },
-    });
+    let notifGranted = false;
 
-    const { status: micStatus } = await Audio.requestPermissionsAsync();
+    if (Notifications) {
+      const { status: notifStatus } = await Notifications.requestPermissionsAsync({
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+          allowCriticalAlerts: true,
+        },
+      });
+      notifGranted = notifStatus === 'granted';
 
-    // Configure Android notification channel for emergency alerts
-    await Notifications.setNotificationChannelAsync(EMERGENCY_CHANNEL_ID, {
-      name: 'Emergency Alerts',
-      importance: Notifications.AndroidImportance.MAX,
-      sound: 'emergency-alert.wav',
-      vibrationPattern: [0, 500, 250, 500, 250, 500],
-      enableLights: true,
-      lightColor: '#EF4444',
-      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-      bypassDnd: true,
-    });
+      // Configure Android notification channel for emergency alerts
+      await Notifications.setNotificationChannelAsync(EMERGENCY_CHANNEL_ID, {
+        name: 'Emergency Alerts',
+        importance: Notifications.AndroidImportance.MAX,
+        sound: 'emergency-alert.wav',
+        vibrationPattern: [0, 500, 250, 500, 250, 500],
+        enableLights: true,
+        lightColor: '#EF4444',
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+        bypassDnd: true,
+      });
+    }
+
+    let micGranted = false;
+    if (Audio) {
+      const { status: micStatus } = await Audio.requestPermissionsAsync();
+      micGranted = micStatus === 'granted';
+    }
 
     return {
-      notifications: notifStatus === 'granted',
-      microphone: micStatus === 'granted',
+      notifications: notifGranted,
+      microphone: micGranted,
     };
   }
 
@@ -112,6 +141,10 @@ class EmergencyAlertService {
    * WHY: Recipients need their token saved so the medic's app can target them.
    */
   async registerPushToken(): Promise<string | null> {
+    if (!Notifications) {
+      console.warn('[EmergencyAlert] Push notifications unavailable — skipping token registration');
+      return null;
+    }
     try {
       const { data: tokenData } = await Notifications.getExpoPushTokenAsync({
         projectId: process.env.EXPO_PUBLIC_PROJECT_ID,
@@ -149,6 +182,10 @@ class EmergencyAlertService {
     onTranscript: (text: string) => void,
     onAutoStop: () => void,
   ): Promise<void> {
+    if (!Audio) {
+      console.warn('[EmergencyAlert] expo-av unavailable — cannot record');
+      return;
+    }
     if (this.recording) {
       console.warn('[EmergencyAlert] Recording already in progress');
       return;
@@ -206,9 +243,11 @@ class EmergencyAlertService {
     this.onTranscriptChunk = null;
 
     // Reset audio mode
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: false,
-    });
+    if (Audio) {
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+      });
+    }
 
     console.log('[EmergencyAlert] Recording stopped, URI:', uri);
     return uri || null;
