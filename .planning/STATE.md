@@ -9,9 +9,9 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 Phase: 7.5 of 8 (Territory Auto-Assignment)
-Plan: 4 of 5 in current phase
+Plan: 3 of 5 in current phase
 Status: In progress
-Last activity: 2026-02-17 — Completed 07.5-04-PLAN.md (Coverage Gap Alerts & Hiring Recommendations UI)
+Last activity: 2026-02-17 — Completed 07.5-03-PLAN.md (Drag-Drop Assignment Panel)
 Progress: [█████████████████░] 96% (81/84 plans across Phases 1-7.5)
 
 ## Performance Metrics
@@ -37,11 +37,11 @@ Progress: [█████████████████░] 96% (81/84 pl
 | 06-riddor-auto-flagging | 8/8 | 50 min | 6.3 min |
 | 06.5-payments-payouts | 12/12 | 49.5 min | 4.1 min |
 | 07-certification-tracking | 4/9 | 9.3 min | 2.3 min |
-| 07.5-territory-auto-assignment | 4/5 | 10 min | 2.5 min |
+| 07.5-territory-auto-assignment | 3/5 | 14 min | 4.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-03 (3 min), 07-04 (2.3 min), 07.5-01 (3 min), 07.5-02 (4 min), 07.5-04 (3 min)
-- Trend: Coverage gap alerts with minimum volume filtering (>10 bookings prevents false positives), hiring recommendations grouped by region, summary stats bar for territory health overview
+- Last 5 plans: 07-04 (2.3 min), 07.5-01 (3 min), 07.5-02 (4 min), 07.5-03 (4 min), 07.5-04 (3 min)
+- Trend: Drag-drop territory assignment UI with @dnd-kit, optimistic TanStack Query mutations, keyboard-accessible fallback for WCAG compliance
 
 *Updated after each plan completion*
 
@@ -450,6 +450,13 @@ Recent decisions affecting current work:
 - D-07.5-02-006: Fairness score removed from total (was 5%, now 0%) - shift distribution less important than distance/utilization/quality factors
 - D-07.5-02-007: Client-side scoring module mirrors Edge Function logic exactly for admin UI transparency (enables "Why this medic?" explanations)
 
+**From Plan 07.5-03:**
+- D-07.5-03-001: Use @dnd-kit/core useDraggable (not useSortable) for free drag-drop between sidebar and territory table (medics drag from list to specific slots, not list reordering)
+- D-07.5-03-002: Split droppable ID format `{territoryId}:{role}` for multi-target drops (each territory has primary and secondary slots, single onDragEnd extracts both)
+- D-07.5-03-003: Optimistic updates with rollback on mutation error (instant UI feedback for drag-drop, matches useUpdateMedicAvailability pattern, prevents state mismatch)
+- D-07.5-03-004: Keyboard fallback via Select dropdown + Assign button (drag-drop not accessible to keyboard-only users or gloves-on medics, WCAG requires alternative)
+- D-07.5-03-005: API route handles both assign and unassign via medic_id null (single endpoint simplifies logic, reduces API surface area)
+
 **From Plan 07.5-04:**
 - D-07.5-04-001: Severity color scheme: red for critical (>25%), yellow for warning (10-25%), green for healthy (standard severity colors align with user expectations)
 - D-07.5-04-002: Region grouping for hiring triggers (admin may want to hire one medic to cover multiple adjacent sectors, e.g., hire 1 Manchester medic for M1, M2, M3)
@@ -505,9 +512,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-17T01:11:10Z
-Stopped at: Completed 07.5-04-PLAN.md — Coverage Gap Alerts & Hiring Recommendations UI (severity-based alerts with minimum volume filtering, hiring recommendations grouped by region)
+Last session: 2026-02-17T01:12:00Z
+Stopped at: Completed 07.5-03-PLAN.md — Drag-Drop Assignment Panel (drag-drop UI with @dnd-kit, optimistic mutations, keyboard fallback for accessibility)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6 (RIDDOR Auto-Flagging) complete (8/8 plans). Phase 6.5 (Payments & Payouts) complete (12/12 plans). Phase 7 (Certification Tracking) in progress (4/9 plans). Phase 7.5 (Territory Auto-Assignment) in progress (4/5 plans). Progress: 81/84 plans (96%)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6 (RIDDOR Auto-Flagging) complete (8/8 plans). Phase 6.5 (Payments & Payouts) complete (12/12 plans). Phase 7 (Certification Tracking) in progress (4/9 plans). Phase 7.5 (Territory Auto-Assignment) in progress (3/5 plans). Progress: 81/84 plans (96%)*
