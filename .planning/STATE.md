@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 Phase: v1.1 — Phase 14 (Compliance, Exports & Medic Portal) — In Progress
-Plan: 14-05 complete. Wave 1 executing.
-Status: Phase 14 plan 05 done — contract detail: signed URL PDF downloads, readable timeline, version badges, milestone tracker
-Last activity: 2026-02-17 — Completed 14-05-PLAN.md (PDF downloads via Supabase signed URLs, formatEventDescription helper, version status badges, payment milestone progress bar)
-Progress: [████████████████████] Phase 14 plans 01, 03, 05 complete
+Plan: 14-02 complete. Wave 1 executing (14-01 done, 14-03 done, 14-05 done, 14-02 done).
+Status: Phase 14 plan 02 done — export buttons wired into RIDDOR (PDF), timesheets (CSV), bookings (CSV), revenue (CSV)
+Last activity: 2026-02-17 — Completed 14-02-PLAN.md (exportRIDDORIncidentsPDF, exportTimesheetsCSV, exportBookingsCSV, exportInvoicesCSV + 4 export buttons)
+Progress: [████████████████████] Phase 14: 14-01, 14-02, 14-03, 14-05 complete
 
 ## Performance Metrics
 
