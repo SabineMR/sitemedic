@@ -28,6 +28,7 @@ import Treatment from '../../src/database/models/Treatment';
 import NearMiss from '../../src/database/models/NearMiss';
 import LargeTapButton from '../../components/ui/LargeTapButton';
 import { useSync } from '../../src/contexts/SyncContext';
+import { useIsTablet } from '../../hooks/useIsTablet';
 
 interface HomeProps {
   todayCheck: SafetyCheck | null;
@@ -309,13 +310,115 @@ const enhance = withObservables([], ({ database }: { database: any }) => {
 // TEMPORARY: Simple version without observables - withObservables HOC has timing issues
 export default function HomeScreenWrapper() {
   const database = useDatabase();
+  const isTablet = useIsTablet();
 
   // Don't render until database is ready
   if (!database) {
     return null;
   }
 
-  // Sleek professional interface
+  const actions = [
+    {
+      icon: '+',
+      title: 'New Treatment',
+      subtitle: 'Document injury',
+      onPress: () => router.push('/treatment/new'),
+    },
+    {
+      icon: 'ID',
+      title: 'Add Worker',
+      subtitle: 'Site induction',
+      onPress: () => router.push('/worker/new'),
+    },
+    {
+      icon: '⚠',
+      title: 'Report',
+      subtitle: 'Near-miss',
+      onPress: () => router.push('/safety/near-miss'),
+    },
+    {
+      icon: '✓',
+      title: 'Daily Check',
+      subtitle: 'Safety audit',
+      onPress: () => router.push('/safety/daily-check'),
+    },
+  ];
+
+  // On tablet: two-column layout with a wider actions panel on the left
+  // and a system status / info panel on the right
+  if (isTablet) {
+    return (
+      <View style={styles.tabletContainer}>
+        {/* Left column: actions */}
+        <View style={styles.tabletLeft}>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <View style={styles.header}>
+              <Text style={styles.headerTitle}>Command Center</Text>
+              <View style={styles.statusBadge}>
+                <View style={styles.statusDot} />
+                <Text style={styles.statusText}>SYSTEM ACTIVE</Text>
+              </View>
+            </View>
+
+            <Text style={styles.sectionHeading}>QUICK ACTIONS</Text>
+            {/* 3-column grid on tablet */}
+            <View style={styles.tabletActionsGrid}>
+              {actions.map((action) => (
+                <Pressable
+                  key={action.title}
+                  style={styles.actionCard}
+                  onPress={action.onPress}
+                >
+                  <View style={styles.actionIconContainer}>
+                    <Text style={styles.actionIcon}>{action.icon}</Text>
+                  </View>
+                  <Text style={styles.actionTitle}>{action.title}</Text>
+                  <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </ScrollView>
+        </View>
+
+        {/* Right column: status panel */}
+        <View style={styles.tabletRight}>
+          <Text style={styles.sectionHeading}>SYSTEM STATUS</Text>
+          <View style={styles.systemStatus}>
+            <View style={styles.systemStatusRow}>
+              <Text style={styles.systemStatusKey}>Connection</Text>
+              <Text style={styles.systemStatusValue}>ACTIVE</Text>
+            </View>
+            <View style={styles.systemStatusRow}>
+              <Text style={styles.systemStatusKey}>Sync</Text>
+              <Text style={styles.systemStatusValue}>READY</Text>
+            </View>
+            <View style={styles.systemStatusRow}>
+              <Text style={styles.systemStatusKey}>Location</Text>
+              <Text style={styles.systemStatusValue}>TRACKING</Text>
+            </View>
+          </View>
+
+          <Text style={[styles.sectionHeading, { marginTop: 24 }]}>TRACKING</Text>
+          <View style={styles.systemStatus}>
+            <View style={styles.systemStatusRow}>
+              <Text style={styles.systemStatusKey}>GPS</Text>
+              <Text style={styles.systemStatusValue}>ON</Text>
+            </View>
+            <View style={styles.systemStatusRow}>
+              <Text style={styles.systemStatusKey}>Beacon Fallback</Text>
+              <Text style={styles.systemStatusValue}>READY</Text>
+            </View>
+            <View style={styles.systemStatusRow}>
+              <Text style={styles.systemStatusKey}>Offline Queue</Text>
+              <Text style={styles.systemStatusValue}>SYNCED</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  // Phone layout (unchanged)
   return (
     <View style={styles.container}>
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -330,49 +433,19 @@ export default function HomeScreenWrapper() {
 
         {/* Quick Actions Grid */}
         <View style={styles.actionsGrid}>
-          <Pressable
-            style={styles.actionCard}
-            onPress={() => router.push('/treatment/new')}
-          >
-            <View style={styles.actionIconContainer}>
-              <Text style={styles.actionIcon}>+</Text>
-            </View>
-            <Text style={styles.actionTitle}>New Treatment</Text>
-            <Text style={styles.actionSubtitle}>Document injury</Text>
-          </Pressable>
-
-          <Pressable
-            style={styles.actionCard}
-            onPress={() => router.push('/worker/new')}
-          >
-            <View style={styles.actionIconContainer}>
-              <Text style={styles.actionIcon}>ID</Text>
-            </View>
-            <Text style={styles.actionTitle}>Add Worker</Text>
-            <Text style={styles.actionSubtitle}>Site induction</Text>
-          </Pressable>
-
-          <Pressable
-            style={styles.actionCard}
-            onPress={() => router.push('/safety/near-miss')}
-          >
-            <View style={styles.actionIconContainer}>
-              <Text style={styles.actionIcon}>⚠</Text>
-            </View>
-            <Text style={styles.actionTitle}>Report</Text>
-            <Text style={styles.actionSubtitle}>Near-miss</Text>
-          </Pressable>
-
-          <Pressable
-            style={styles.actionCard}
-            onPress={() => router.push('/safety/daily-check')}
-          >
-            <View style={styles.actionIconContainer}>
-              <Text style={styles.actionIcon}>✓</Text>
-            </View>
-            <Text style={styles.actionTitle}>Daily Check</Text>
-            <Text style={styles.actionSubtitle}>Safety audit</Text>
-          </Pressable>
+          {actions.map((action) => (
+            <Pressable
+              key={action.title}
+              style={styles.actionCard}
+              onPress={action.onPress}
+            >
+              <View style={styles.actionIconContainer}>
+                <Text style={styles.actionIcon}>{action.icon}</Text>
+              </View>
+              <Text style={styles.actionTitle}>{action.title}</Text>
+              <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
+            </Pressable>
+          ))}
         </View>
 
         {/* System Status */}
@@ -396,6 +469,35 @@ export default function HomeScreenWrapper() {
 // const EnhancedHome = enhance(HomeScreen);
 
 const styles = StyleSheet.create({
+  // ── Tablet layout ──────────────────────────────────────────────────────────
+  tabletContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: '#0A0E1A',
+  },
+  tabletLeft: {
+    flex: 1,
+    borderRightWidth: 1,
+    borderRightColor: '#1E293B',
+    padding: 28,
+  },
+  tabletRight: {
+    width: 320,
+    padding: 28,
+  },
+  tabletActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+  sectionHeading: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748B',
+    letterSpacing: 1.5,
+    marginBottom: 16,
+  },
+  // ── Phone layout ───────────────────────────────────────────────────────────
   container: {
     flex: 1,
     backgroundColor: '#0A0E1A', // Dark professional background

@@ -23,18 +23,25 @@ import { DatabaseProvider } from '@nozbe/watermelondb/react';
 import { AuthProvider } from '../src/contexts/AuthContext';
 import { SyncProvider } from '../src/contexts/SyncContext';
 import { initDatabase } from '../src/lib/watermelon';
+import { beaconService } from '../services/BeaconService';
 
 export default function RootLayout() {
   const [database, setDatabase] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize WatermelonDB on mount
+  // Initialize WatermelonDB and BLE beacon service on mount
   useEffect(() => {
     console.log('[RootLayout] Initializing database...');
     initDatabase()
       .then((db) => {
         console.log('[RootLayout] Database initialized successfully');
         setDatabase(db);
+
+        // Initialize BLE beacon service after DB is ready.
+        // Non-fatal: GPS is primary; beacons are fallback for no-signal areas.
+        beaconService.init().catch((err) => {
+          console.warn('[RootLayout] Beacon service unavailable (BLE not supported on this device):', err);
+        });
       })
       .catch((err) => {
         console.error('[RootLayout] Database initialization failed:', err);

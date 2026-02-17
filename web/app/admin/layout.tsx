@@ -30,6 +30,7 @@ import {
   Crosshair,
   AlertOctagon,
   Shield,
+  Bluetooth,
 } from 'lucide-react';
 import { QueryProvider } from '@/components/providers/query-provider';
 
@@ -180,6 +181,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: 'Geofences',
       href: '/admin/geofences',
       icon: <Crosshair className="w-5 h-5" />,
+    },
+    {
+      name: 'Beacons',
+      href: '/admin/beacons',
+      icon: <Bluetooth className="w-5 h-5" />,
     },
     {
       name: 'Conflicts',

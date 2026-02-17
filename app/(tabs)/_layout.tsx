@@ -1,36 +1,34 @@
 /**
  * Tab Navigation Layout
  *
- * 5-tab navigation: Home, Treatments, Workers, Safety, Settings
+ * Phone: 5-tab bottom bar (80px height, gloves-on usability)
+ * iPad: Left sidebar rail (240px wide) + content fills remaining width
+ *
  * Design specs:
- * - 80px tab bar height (gloves-on usability)
- * - 28px icons, 14px labels
+ * - 80px tab bar height on phone (gloves-on usability)
+ * - 28px icons, 14px labels on phone
  * - High contrast colors (#2563EB active, #6B7280 inactive)
- * - Sync status indicator in header
+ * - Sync status indicator in header (phone) or sidebar footer (iPad)
  */
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { useSync } from '../../src/contexts/SyncContext';
+import { useIsTablet } from '../../hooks/useIsTablet';
+import TabletSidebar from '../../components/ui/TabletSidebar';
 
 function SyncStatusIndicator() {
   const { state } = useSync();
 
   const getStatusColor = () => {
     switch (state.status) {
-      case 'synced':
-        return '#10B981'; // Green
-      case 'syncing':
-        return '#2563EB'; // Blue
-      case 'pending':
-        return '#F59E0B'; // Amber
-      case 'offline':
-        return '#6B7280'; // Grey
-      case 'error':
-        return '#EF4444'; // Red
-      default:
-        return '#6B7280';
+      case 'synced':  return '#10B981';
+      case 'syncing': return '#2563EB';
+      case 'pending': return '#F59E0B';
+      case 'offline': return '#6B7280';
+      case 'error':   return '#EF4444';
+      default:        return '#6B7280';
     }
   };
 
@@ -50,17 +48,23 @@ function SyncStatusIndicator() {
 }
 
 export default function TabsLayout() {
+  const isTablet = useIsTablet();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: true,
-        headerRight: () => <SyncStatusIndicator />,
-        tabBarStyle: styles.tabBar,
+        // On tablet the sidebar handles navigation labels, so hide the header title
+        // to avoid double-labelling. On phone keep the header.
+        headerRight: isTablet ? undefined : () => <SyncStatusIndicator />,
+        tabBarStyle: isTablet ? styles.tabBarHidden : styles.tabBar,
         tabBarActiveTintColor: '#2563EB',
         tabBarInactiveTintColor: '#6B7280',
         tabBarLabelStyle: styles.tabBarLabel,
         tabBarIconStyle: styles.tabBarIcon,
       }}
+      // Replace bottom tab bar with sidebar on iPad
+      tabBar={isTablet ? (props) => <TabletSidebar {...props} /> : undefined}
     >
       <Tabs.Screen
         name="index"
@@ -129,6 +133,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
     backgroundColor: '#FFFFFF',
+  },
+  // Hidden on tablet — sidebar takes over navigation
+  tabBarHidden: {
+    display: 'none',
   },
   tabBarLabel: {
     fontSize: 14,
