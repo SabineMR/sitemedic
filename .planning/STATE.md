@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 Phase: v1.1 — Phase 08 (Lead Capture & Data Persistence) — in progress
-Plan: 08-01 complete (1/4). Next: 08-02 and 08-03 (wave 2, parallel)
-Status: In progress — 08-01 executed
-Last activity: 2026-02-17 — Completed 08-01-PLAN.md (DB migration, RLS policies)
-Progress: [█░░░░░░░░░░░░░░░░░░░] 25% (1/4 plans executed in Phase 08)
+Plan: 08-02 complete (2/4). Wave 2 running parallel: 08-02 done, 08-03 pending
+Status: In progress — 08-02 executed
+Last activity: 2026-02-17 — Completed 08-02-PLAN.md (API DB-first persistence, service-role client)
+Progress: [██░░░░░░░░░░░░░░░░░░] 50% (2/4 plans executed in Phase 08)
 
 ## Performance Metrics
 
