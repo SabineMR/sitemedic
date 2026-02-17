@@ -20,15 +20,38 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Modal,
+  NativeModules,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import * as Notifications from 'expo-notifications';
-import { Audio } from 'expo-av';
 import { emergencyAlertService } from '../../services/EmergencyAlertService';
+
+// Pre-check native modules — avoids Hermes reporting thrown errors in the dev
+// overlay even when caught by try/catch.
+const Notifications: typeof import('expo-notifications') | null =
+  NativeModules.ExpoPushTokenManager ? require('expo-notifications') : null;
+const Audio: typeof import('expo-av')['Audio'] | null =
+  NativeModules.ExponentAV ? require('expo-av').Audio : null;
+
+// Configure foreground notification behaviour only when the module is available
+if (Notifications) {
+  Notifications.setNotificationHandler({
+    handleNotification: async (notification: any) => {
+      const isEmergency = notification.request.content.data?.type === 'emergency';
+      return {
+        shouldShowAlert: true,
+        shouldPlaySound: isEmergency,
+        shouldSetBadge: true,
+        priority: isEmergency
+          ? Notifications.AndroidNotificationPriority.MAX
+          : Notifications.AndroidNotificationPriority.DEFAULT,
+      };
+    },
+  });
+}
 
 interface AlertData {
   alertId: string;
@@ -39,26 +62,11 @@ interface AlertData {
   receivedAt: Date;
 }
 
-// Configure how notifications behave when app is in foreground
-Notifications.setNotificationHandler({
-  handleNotification: async (notification) => {
-    const isEmergency = notification.request.content.data?.type === 'emergency';
-    return {
-      shouldShowAlert: true,
-      shouldPlaySound: isEmergency,
-      shouldSetBadge: true,
-      priority: isEmergency
-        ? Notifications.AndroidNotificationPriority.MAX
-        : Notifications.AndroidNotificationPriority.DEFAULT,
-    };
-  },
-});
-
 export default function EmergencyAlertReceiver() {
   const [activeAlert, setActiveAlert] = useState<AlertData | null>(null);
   const [acknowledging, setAcknowledging] = useState(false);
   const [audioPlaying, setAudioPlaying] = useState(false);
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const soundRef = useRef<any | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   // Pulse animation for the emergency banner
@@ -75,18 +83,18 @@ export default function EmergencyAlertReceiver() {
     return () => pulse.stop();
   }, [activeAlert, pulseAnim]);
 
-  // Listen for incoming notifications
+  // Listen for incoming notifications (only when expo-notifications is available)
   useEffect(() => {
-    // App is open — notification received directly
-    const foregroundSub = Notifications.addNotificationReceivedListener((notification) => {
+    if (!Notifications) return;
+
+    const foregroundSub = Notifications.addNotificationReceivedListener((notification: any) => {
       const data = notification.request.content.data;
       if (data?.type === 'emergency') {
         handleEmergencyAlert(data);
       }
     });
 
-    // App was closed/background — user tapped notification
-    const responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
+    const responseSub = Notifications.addNotificationResponseReceivedListener((response: any) => {
       const data = response.notification.request.content.data;
       if (data?.type === 'emergency') {
         handleEmergencyAlert(data);
@@ -121,6 +129,7 @@ export default function EmergencyAlertReceiver() {
   };
 
   const playAlertSound = async () => {
+    if (!Audio) return;
     try {
       await Audio.setAudioModeAsync({
         playsInSilentModeIOS: true,

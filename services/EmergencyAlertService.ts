@@ -16,29 +16,33 @@
  * - Alert acknowledgment (clears the full-screen alert on recipient's device)
  */
 
+import { NativeModules } from 'react-native';
 import { supabase } from '../src/lib/supabase';
 
-// Lazy-load all native-module-backed packages so the app doesn't crash when
-// running in Expo Go or a build that doesn't include these native modules.
-// Every usage below is guarded with a null check.
+// Pre-check NativeModules before requiring native-backed packages.
+// Hermes reports thrown errors to the dev overlay even when caught by try/catch,
+// so we avoid throwing entirely by only requiring packages whose native modules
+// are actually registered in the current build.
 let Notifications: typeof import('expo-notifications') | null = null;
 let Audio: typeof import('expo-av')['Audio'] | null = null;
 let FileSystem: typeof import('expo-file-system') | null = null;
 
-try {
+if (NativeModules.ExpoPushTokenManager) {
   Notifications = require('expo-notifications');
-} catch (e) {
-  console.warn('[EmergencyAlert] expo-notifications unavailable — push disabled');
+} else {
+  console.warn('[EmergencyAlert] ExpoPushTokenManager not registered — push notifications disabled');
 }
-try {
+
+if (NativeModules.ExponentAV) {
   Audio = require('expo-av').Audio;
-} catch (e) {
-  console.warn('[EmergencyAlert] expo-av unavailable — audio recording disabled');
+} else {
+  console.warn('[EmergencyAlert] ExponentAV not registered — audio recording disabled');
 }
-try {
+
+if (NativeModules.ExponentFileSystem) {
   FileSystem = require('expo-file-system');
-} catch (e) {
-  console.warn('[EmergencyAlert] expo-file-system unavailable — file ops disabled');
+} else {
+  console.warn('[EmergencyAlert] ExponentFileSystem not registered — file system disabled');
 }
 
 // Notification channel for emergency alerts (Android)
@@ -297,6 +301,10 @@ class EmergencyAlertService {
    * Returns the public URL of the uploaded file.
    */
   async uploadAudio(localUri: string): Promise<string | null> {
+    if (!FileSystem) {
+      console.warn('[EmergencyAlert] expo-file-system unavailable — cannot upload audio');
+      return null;
+    }
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
