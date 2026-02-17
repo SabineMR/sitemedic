@@ -37,6 +37,12 @@ export async function PUT(request: NextRequest) {
     const supabase = await createClient();
     const orgId = await requireOrgId();
 
+    const VALID_VERTICALS = new Set([
+      'construction', 'tv_film', 'motorsport', 'festivals',
+      'sporting_events', 'fairs_shows', 'corporate',
+      'private_events', 'education', 'outdoor_adventure',
+    ]);
+
     let body: {
       base_rate?: unknown;
       geofence_default_radius?: unknown;
@@ -44,6 +50,10 @@ export async function PUT(request: NextRequest) {
       admin_email?: unknown;
       net30_eligible?: unknown;
       credit_limit?: unknown;
+      industry_verticals?: unknown;
+      cqc_registered?: unknown;
+      cqc_registration_number?: unknown;
+      cqc_registration_date?: unknown;
     };
 
     try {
@@ -114,6 +124,45 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    // Validate cqc_registration_number: if provided must be a non-empty string
+    if (body.cqc_registration_number !== undefined && body.cqc_registration_number !== null && body.cqc_registration_number !== '') {
+      if (typeof body.cqc_registration_number !== 'string' || body.cqc_registration_number.trim().length === 0) {
+        return NextResponse.json(
+          { error: 'cqc_registration_number must be a non-empty string' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate cqc_registration_date: if provided must be a valid date string
+    if (body.cqc_registration_date !== undefined && body.cqc_registration_date !== null && body.cqc_registration_date !== '') {
+      if (typeof body.cqc_registration_date !== 'string' || isNaN(Date.parse(body.cqc_registration_date))) {
+        return NextResponse.json(
+          { error: 'cqc_registration_date must be a valid date string (YYYY-MM-DD)' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate industry_verticals: must be non-empty array of known vertical IDs
+    if (body.industry_verticals !== undefined) {
+      if (!Array.isArray(body.industry_verticals) || body.industry_verticals.length === 0) {
+        return NextResponse.json(
+          { error: 'industry_verticals must be a non-empty array' },
+          { status: 400 }
+        );
+      }
+      const allValid = (body.industry_verticals as unknown[]).every(
+        (v) => typeof v === 'string' && VALID_VERTICALS.has(v)
+      );
+      if (!allValid) {
+        return NextResponse.json(
+          { error: 'industry_verticals contains an unrecognised vertical ID' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Build update payload — only include defined fields
     const updatePayload: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
@@ -126,6 +175,12 @@ export async function PUT(request: NextRequest) {
     if (body.admin_email !== undefined) updatePayload.admin_email = body.admin_email;
     if (body.net30_eligible !== undefined) updatePayload.net30_eligible = Boolean(body.net30_eligible);
     if (body.credit_limit !== undefined) updatePayload.credit_limit = Number(body.credit_limit);
+    if (body.industry_verticals !== undefined) updatePayload.industry_verticals = body.industry_verticals;
+    if (body.cqc_registered !== undefined) updatePayload.cqc_registered = Boolean(body.cqc_registered);
+    if (body.cqc_registration_number !== undefined)
+      updatePayload.cqc_registration_number = body.cqc_registration_number === '' ? null : body.cqc_registration_number;
+    if (body.cqc_registration_date !== undefined)
+      updatePayload.cqc_registration_date = body.cqc_registration_date === '' ? null : body.cqc_registration_date;
 
     const { data, error } = await supabase
       .from('org_settings')

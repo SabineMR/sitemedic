@@ -6332,9 +6332,36 @@ The system supports four primary user roles:
 
 ---
 
-**Document Version**: 1.2
-**Last Updated**: 2026-02-16 (Added app icon for iOS/Android - medical cross design with blue background. Updated Phase 7.5 with complete auto-scheduling backend documentation - 11 Edge Functions, 13 tables, 2 PostgreSQL functions. Added login form persistence feature.)
+**Document Version**: 1.3
+**Last Updated**: 2026-02-17 (Multi-vertical website rework + org industry vertical picker in admin settings)
 **Next Review**: After Phase 7.5 UI completion
+
+### Recent Changes (2026-02-17)
+
+#### Multi-Vertical Marketing Website Rework
+The entire public-facing website was rewritten from a construction-only position to cover 10 industry verticals:
+- **Core**: Construction & Industrial, TV & Film, Motorsport & Extreme Sports, Music Festivals, Sporting Events, Fairs & Shows
+- **Add-on**: Corporate Events, Private Events, Education & Youth, Outdoor Adventure & Endurance
+
+Files changed: `web/app/(marketing)/page.tsx`, `web/app/(marketing)/services/page.tsx`, `web/app/(marketing)/about/page.tsx`, `web/app/(marketing)/pricing/page.tsx`, `web/app/(marketing)/contact/page.tsx`, `web/app/(marketing)/contact/contact-form.tsx`, `web/components/marketing/hero.tsx`, `web/components/marketing/site-footer.tsx`, `web/components/marketing/trust-signals.tsx`, `web/components/marketing/pricing-table.tsx`, `web/components/QuoteBuilder.tsx`
+
+#### Org Industry Vertical Picker (Admin Settings)
+Each organisation can now declare which industry verticals it serves. This drives context-aware UI labels and compliance checklists across the platform.
+
+**New files:**
+| File | Description |
+|------|-------------|
+| `supabase/migrations/121_org_industry_verticals.sql` | Adds `industry_verticals JSONB NOT NULL DEFAULT '["construction"]'` column to `org_settings` table. GIN index for platform admin filtering. |
+| `web/lib/org-labels.ts` | `useOrgLabels()` hook returning vertical-aware terminology (personSingular, personPlural, locationTerm, periodTerm, eventTerm). Priority order resolves the primary label set when multiple verticals are selected. Also exports `getLabelsForVertical(id)` for platform admin views. |
+
+**Modified files:**
+| File | Change |
+|------|--------|
+| `web/app/api/admin/settings/route.ts` | GET returns `industry_verticals`; PUT validates and persists it (non-empty array, only known vertical IDs). |
+| `web/app/admin/settings/page.tsx` | New **Industry & Verticals** section between Organisation Profile and Business Configuration. 10 toggle-card buttons (one per vertical), each colour-coded with icon, label and description. Separate "Save Verticals" button. `OrgSettings` interface updated with `industry_verticals: VerticalId[]`. |
+| `web/contexts/org-context.tsx` | `OrgContextValue` now includes `industryVerticals: VerticalId[]`. Provider fetches from `org_settings` after resolving the org row and exposes it globally. Exports `VerticalId` type. |
+
+**Valid vertical IDs:** `construction`, `tv_film`, `motorsport`, `festivals`, `sporting_events`, `fairs_shows`, `corporate`, `private_events`, `education`, `outdoor_adventure`
 
 ### Recent Changes (2026-02-16)
 - **Magic Link Authentication**: Replaced password-based login with passwordless authentication

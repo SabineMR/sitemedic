@@ -20,6 +20,14 @@ import { createClient } from '@/lib/supabase/client';
 export type UserRole = 'medic' | 'site_manager' | 'org_admin' | 'platform_admin';
 
 /**
+ * Vertical IDs — mirrors the valid values in org_settings.industry_verticals
+ */
+export type VerticalId =
+  | 'construction' | 'tv_film' | 'motorsport' | 'festivals'
+  | 'sporting_events' | 'fairs_shows' | 'corporate'
+  | 'private_events' | 'education' | 'outdoor_adventure';
+
+/**
  * Organization context value shape
  */
 interface OrgContextValue {
@@ -34,6 +42,9 @@ interface OrgContextValue {
 
   /** Current user's role */
   role: UserRole | null;
+
+  /** Industry verticals this org serves (from org_settings) */
+  industryVerticals: VerticalId[];
 
   /** Loading state - true while fetching user data */
   loading: boolean;
@@ -50,6 +61,7 @@ const defaultContextValue: OrgContextValue = {
   orgSlug: null,
   orgName: null,
   role: null,
+  industryVerticals: [],
   loading: true,
   error: null,
 };
@@ -96,6 +108,7 @@ export function OrgProvider({ children }: OrgProviderProps) {
   const [orgSlug, setOrgSlug] = useState<string | null>(null);
   const [orgName, setOrgName] = useState<string | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
+  const [industryVerticals, setIndustryVerticals] = useState<VerticalId[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -178,11 +191,23 @@ export function OrgProvider({ children }: OrgProviderProps) {
           throw orgError;
         }
 
+        // Fetch industry verticals from org_settings
+        let verticals: VerticalId[] = ['construction'];
+        const { data: orgSettings } = await supabase
+          .from('org_settings')
+          .select('industry_verticals')
+          .eq('org_id', org.id)
+          .single();
+        if (orgSettings?.industry_verticals && Array.isArray(orgSettings.industry_verticals)) {
+          verticals = orgSettings.industry_verticals as VerticalId[];
+        }
+
         if (mounted) {
           setOrgId(org.id);
           setOrgSlug(org.slug);
           setOrgName(org.name);
           setRole(userRole || null);
+          setIndustryVerticals(verticals);
           setLoading(false);
         }
       } catch (err) {
@@ -207,6 +232,7 @@ export function OrgProvider({ children }: OrgProviderProps) {
     orgSlug,
     orgName,
     role,
+    industryVerticals,
     loading,
     error,
   };

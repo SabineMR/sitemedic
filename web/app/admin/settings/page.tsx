@@ -7,10 +7,47 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Settings, Building2, Bell, CreditCard, Shield, Mail, Phone, Loader2, Sliders } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings, Building2, Bell, CreditCard, Shield, Mail, Phone, Loader2, Sliders, Layers, Clapperboard, Gauge, HardHat, Music2, Trophy, FerrisWheel, Briefcase, Star, GraduationCap, Tent, ShieldCheck } from 'lucide-react';
 import { useOrg } from '@/contexts/org-context';
 import { toast } from 'sonner';
+
+type VerticalId =
+  | 'construction' | 'tv_film' | 'motorsport' | 'festivals'
+  | 'sporting_events' | 'fairs_shows' | 'corporate'
+  | 'private_events' | 'education' | 'outdoor_adventure';
+
+const VERTICALS: {
+  id: VerticalId;
+  label: string;
+  desc: string;
+  color: string;
+  icon: React.ReactNode;
+}[] = [
+  { id: 'construction',     label: 'Construction & Industrial', desc: 'Worksites, plant ops, HSE compliance',     color: 'orange',  icon: <HardHat className="w-5 h-5" /> },
+  { id: 'tv_film',          label: 'TV & Film',                 desc: 'Set medic, stunt & production cover',      color: 'violet',  icon: <Clapperboard className="w-5 h-5" /> },
+  { id: 'motorsport',       label: 'Motorsport & Extreme',      desc: 'Track, karting, Motorsport UK events',     color: 'red',     icon: <Gauge className="w-5 h-5" /> },
+  { id: 'festivals',        label: 'Music Festivals',           desc: 'Purple Guide, crowd medicine',             color: 'pink',    icon: <Music2 className="w-5 h-5" /> },
+  { id: 'sporting_events',  label: 'Sporting Events',           desc: 'Stadiums, marathons, FA-governed events',  color: 'green',   icon: <Trophy className="w-5 h-5" /> },
+  { id: 'fairs_shows',      label: 'Fairs & Shows',             desc: 'Agricultural shows, public exhibitions',   color: 'yellow',  icon: <FerrisWheel className="w-5 h-5" /> },
+  { id: 'corporate',        label: 'Corporate Events',          desc: 'Conferences, team away-days',              color: 'blue',    icon: <Briefcase className="w-5 h-5" /> },
+  { id: 'private_events',   label: 'Private Events',            desc: 'Weddings, galas, private parties',         color: 'rose',    icon: <Star className="w-5 h-5" /> },
+  { id: 'education',        label: 'Education & Youth',         desc: 'Schools, universities, youth events',      color: 'teal',    icon: <GraduationCap className="w-5 h-5" /> },
+  { id: 'outdoor_adventure',label: 'Outdoor Adventure',         desc: 'Endurance, OCR, remote access events',     color: 'emerald', icon: <Tent className="w-5 h-5" /> },
+];
+
+const COLOR_MAP: Record<string, string> = {
+  orange:  'border-orange-500/60 bg-orange-500/10 text-orange-300',
+  violet:  'border-violet-500/60 bg-violet-500/10 text-violet-300',
+  red:     'border-red-500/60 bg-red-500/10 text-red-300',
+  pink:    'border-pink-500/60 bg-pink-500/10 text-pink-300',
+  green:   'border-green-500/60 bg-green-500/10 text-green-300',
+  yellow:  'border-yellow-500/60 bg-yellow-500/10 text-yellow-300',
+  blue:    'border-blue-500/60 bg-blue-500/10 text-blue-300',
+  rose:    'border-rose-500/60 bg-rose-500/10 text-rose-300',
+  teal:    'border-teal-500/60 bg-teal-500/10 text-teal-300',
+  emerald: 'border-emerald-500/60 bg-emerald-500/10 text-emerald-300',
+};
 
 interface OrgSettings {
   base_rate: number;
@@ -19,6 +56,10 @@ interface OrgSettings {
   admin_email: string;
   net30_eligible: boolean;
   credit_limit: number;
+  industry_verticals: VerticalId[];
+  cqc_registered: boolean;
+  cqc_registration_number: string | null;
+  cqc_registration_date: string | null;
 }
 
 export default function SettingsPage() {
@@ -28,6 +69,8 @@ export default function SettingsPage() {
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [urgencyInput, setUrgencyInput] = useState('');
+  const [savingVerticals, setSavingVerticals] = useState(false);
+  const [savingCqc, setSavingCqc] = useState(false);
 
   useEffect(() => {
     async function fetchSettings() {
@@ -37,6 +80,11 @@ export default function SettingsPage() {
           throw new Error('Failed to load settings');
         }
         const data: OrgSettings = await res.json();
+        // Back-fill defaults if columns don't exist yet on older rows
+        if (!data.industry_verticals) data.industry_verticals = ['construction'];
+        if (data.cqc_registered === undefined || data.cqc_registered === null) data.cqc_registered = false;
+        if (data.cqc_registration_number === undefined) data.cqc_registration_number = null;
+        if (data.cqc_registration_date === undefined) data.cqc_registration_date = null;
         setSettings(data);
         setUrgencyInput((data.urgency_premiums ?? []).join(', '));
       } catch (err) {
@@ -111,6 +159,76 @@ export default function SettingsPage() {
     }
   }
 
+  function toggleVertical(id: VerticalId) {
+    setSettings((prev) => {
+      if (!prev) return prev;
+      const current = prev.industry_verticals ?? [];
+      const next = current.includes(id)
+        ? current.filter((v) => v !== id)
+        : [...current, id];
+      // Must keep at least one selected
+      if (next.length === 0) return prev;
+      return { ...prev, industry_verticals: next };
+    });
+  }
+
+  async function handleSaveVerticals() {
+    if (!settings) return;
+    setSavingVerticals(true);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ industry_verticals: settings.industry_verticals }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        toast.error(errorData.error ?? 'Failed to save verticals');
+        return;
+      }
+      const updated: OrgSettings = await res.json();
+      setSettings((prev) => prev ? { ...prev, industry_verticals: updated.industry_verticals } : prev);
+      toast.success('Industry verticals saved');
+    } catch {
+      toast.error('Failed to save verticals');
+    } finally {
+      setSavingVerticals(false);
+    }
+  }
+
+  async function handleSaveCqc() {
+    if (!settings) return;
+    setSavingCqc(true);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cqc_registered: settings.cqc_registered,
+          cqc_registration_number: settings.cqc_registration_number ?? '',
+          cqc_registration_date: settings.cqc_registration_date ?? '',
+        }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        toast.error(errorData.error ?? 'Failed to save CQC settings');
+        return;
+      }
+      const updated: OrgSettings = await res.json();
+      setSettings((prev) => prev ? {
+        ...prev,
+        cqc_registered: updated.cqc_registered,
+        cqc_registration_number: updated.cqc_registration_number,
+        cqc_registration_date: updated.cqc_registration_date,
+      } : prev);
+      toast.success('CQC compliance settings saved');
+    } catch {
+      toast.error('Failed to save CQC settings');
+    } finally {
+      setSavingCqc(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
       {/* Header */}
@@ -157,6 +275,70 @@ export default function SettingsPage() {
                 />
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Industry & Verticals */}
+        <section>
+          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <Layers className="w-5 h-5 text-teal-400" />
+            Industry &amp; Verticals
+          </h2>
+          <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 shadow-2xl p-6">
+            {settingsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+                <span className="ml-3 text-gray-400 text-sm">Loading verticals...</span>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-gray-400 mb-5">
+                  Select every type of event or site your organisation covers. This drives
+                  context-aware labels and compliance checklists across the platform.
+                  Select at least one.
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+                  {VERTICALS.map((v) => {
+                    const selected = (settings?.industry_verticals ?? []).includes(v.id);
+                    const colorCls = selected
+                      ? COLOR_MAP[v.color]
+                      : 'border-gray-700 bg-gray-900/40 text-gray-400 hover:border-gray-500';
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => toggleVertical(v.id)}
+                        className={`flex flex-col items-start gap-2 p-3.5 rounded-xl border-2 transition-all duration-150 text-left ${colorCls}`}
+                      >
+                        <span className={selected ? '' : 'opacity-50'}>{v.icon}</span>
+                        <span className="text-xs font-semibold leading-tight">{v.label}</span>
+                        <span className="text-[10px] leading-snug opacity-70">{v.desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-gray-700/50">
+                  <p className="text-xs text-gray-500">
+                    {(settings?.industry_verticals ?? []).length} vertical
+                    {(settings?.industry_verticals ?? []).length !== 1 ? 's' : ''} selected
+                  </p>
+                  <button
+                    onClick={handleSaveVerticals}
+                    disabled={savingVerticals}
+                    className="px-5 py-2.5 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-2"
+                  >
+                    {savingVerticals ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Verticals'
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </section>
 
@@ -310,6 +492,109 @@ export default function SettingsPage() {
                       </>
                     ) : (
                       'Save Configuration'
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+
+        {/* CQC Compliance */}
+        <section>
+          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-blue-400" />
+            CQC Compliance
+          </h2>
+          <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 shadow-2xl p-6 space-y-5">
+            {settingsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+                <span className="ml-3 text-gray-400 text-sm">Loading CQC settings...</span>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-gray-400">
+                  If your organisation is registered with the Care Quality Commission (CQC) as a
+                  regulated health or social care provider, record your details here. These will
+                  appear on client-facing documents and booking confirmations.
+                </p>
+
+                {/* CQC Registered toggle */}
+                <div className="flex items-center justify-between py-3 border-b border-gray-700/50">
+                  <div>
+                    <p className="text-sm font-medium text-white">Organisation is CQC Registered</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      Enable to record your CQC registration number and date
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={settings?.cqc_registered ?? false}
+                      onChange={(e) =>
+                        setSettings((prev) =>
+                          prev ? { ...prev, cqc_registered: e.target.checked } : prev
+                        )
+                      }
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                {/* Registration details — only shown when registered */}
+                {settings?.cqc_registered && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        CQC Registration Number
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.cqc_registration_number ?? ''}
+                        onChange={(e) =>
+                          setSettings((prev) =>
+                            prev ? { ...prev, cqc_registration_number: e.target.value || null } : prev
+                          )
+                        }
+                        placeholder="e.g. 1-XXXXXXXXXX"
+                        className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Your CQC provider ID (format: 1-XXXXXXXXXX).</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Registration Date
+                      </label>
+                      <input
+                        type="date"
+                        value={settings.cqc_registration_date ?? ''}
+                        onChange={(e) =>
+                          setSettings((prev) =>
+                            prev ? { ...prev, cqc_registration_date: e.target.value || null } : prev
+                          )
+                        }
+                        className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Date your CQC registration was granted.</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={handleSaveCqc}
+                    disabled={savingCqc}
+                    className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-2"
+                  >
+                    {savingCqc ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save CQC Settings'
                     )}
                   </button>
                 </div>

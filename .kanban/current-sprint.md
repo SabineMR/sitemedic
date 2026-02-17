@@ -25,6 +25,7 @@
 - Phase 5 — Notification Service (STORY-005): TASK-019 through TASK-024
 - Phase 6 — UX/UI Polish (STORY-006): TASK-025 through TASK-032
 - Phase 7 — Lead CRM (STORY-007): TASK-033 through TASK-037
+- Phase 8 — D&A Post-Incident (STORY-008): TASK-038 through TASK-043
 
 ## Sprint History
 _None yet._
