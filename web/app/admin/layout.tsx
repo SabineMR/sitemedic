@@ -26,6 +26,10 @@ import {
   TrendingUp,
   Settings,
   Banknote,
+  RefreshCw,
+  Crosshair,
+  AlertOctagon,
+  Shield,
 } from 'lucide-react';
 import { QueryProvider } from '@/components/providers/query-provider';
 
