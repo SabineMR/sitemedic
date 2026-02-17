@@ -167,160 +167,6 @@ function performBasicConflictCheck(
   };
 }
 
-/**
- * Generate mock schedule data for local development
- * Used when Supabase edge functions aren't running (Docker not started)
- */
-function generateMockScheduleData(weekStart: string): {
-  medics: MedicWithStats[];
-  bookings: Booking[];
-  dates: string[];
-} {
-  const dates = generateWeekDates(weekStart);
-
-  // Mock medics
-  const medics: MedicWithStats[] = [
-    {
-      id: 'mock-medic-1',
-      first_name: 'John',
-      last_name: 'Smith',
-      star_rating: 4.8,
-      has_confined_space_cert: true,
-      has_trauma_cert: true,
-      weekly_hours: 24,
-      utilization_percent: 60,
-      shifts_this_week: 3,
-    },
-    {
-      id: 'mock-medic-2',
-      first_name: 'Sarah',
-      last_name: 'Johnson',
-      star_rating: 4.5,
-      has_confined_space_cert: false,
-      has_trauma_cert: true,
-      weekly_hours: 16,
-      utilization_percent: 40,
-      shifts_this_week: 2,
-    },
-    {
-      id: 'mock-medic-3',
-      first_name: 'Mike',
-      last_name: 'Davis',
-      star_rating: 4.9,
-      has_confined_space_cert: true,
-      has_trauma_cert: false,
-      weekly_hours: 32,
-      utilization_percent: 80,
-      shifts_this_week: 4,
-    },
-  ];
-
-  // Mock bookings (some assigned, some unassigned)
-  const bookings: Booking[] = [
-    // Assigned bookings
-    {
-      id: 'mock-booking-1',
-      medic_id: 'mock-medic-1',
-      shift_date: dates[0], // Monday
-      shift_start_time: '08:00:00',
-      shift_end_time: '16:00:00',
-      shift_hours: 8,
-      status: 'confirmed',
-      site_name: 'Construction Site A',
-      confined_space_required: true,
-      trauma_specialist_required: false,
-      urgency_premium_percent: 0,
-      clients: { company_name: 'ABC Construction' },
-    },
-    {
-      id: 'mock-booking-2',
-      medic_id: 'mock-medic-1',
-      shift_date: dates[2], // Wednesday
-      shift_start_time: '09:00:00',
-      shift_end_time: '17:00:00',
-      shift_hours: 8,
-      status: 'confirmed',
-      site_name: 'Industrial Park B',
-      confined_space_required: false,
-      trauma_specialist_required: true,
-      urgency_premium_percent: 0,
-      clients: { company_name: 'XYZ Industries' },
-    },
-    {
-      id: 'mock-booking-3',
-      medic_id: 'mock-medic-2',
-      shift_date: dates[1], // Tuesday
-      shift_start_time: '07:00:00',
-      shift_end_time: '15:00:00',
-      shift_hours: 8,
-      status: 'confirmed',
-      site_name: 'Office Building C',
-      confined_space_required: false,
-      trauma_specialist_required: false,
-      urgency_premium_percent: 0,
-      clients: { company_name: 'Tech Corp' },
-    },
-    {
-      id: 'mock-booking-4',
-      medic_id: 'mock-medic-3',
-      shift_date: dates[0], // Monday
-      shift_start_time: '06:00:00',
-      shift_end_time: '14:00:00',
-      shift_hours: 8,
-      status: 'confirmed',
-      site_name: 'Factory D',
-      confined_space_required: true,
-      trauma_specialist_required: false,
-      urgency_premium_percent: 0,
-      clients: { company_name: 'Manufacturing Ltd' },
-    },
-    // Unassigned bookings
-    {
-      id: 'mock-booking-5',
-      medic_id: null,
-      shift_date: dates[3], // Thursday
-      shift_start_time: '08:00:00',
-      shift_end_time: '16:00:00',
-      shift_hours: 8,
-      status: 'pending',
-      site_name: 'Warehouse E',
-      confined_space_required: false,
-      trauma_specialist_required: false,
-      urgency_premium_percent: 0,
-      clients: { company_name: 'Logistics Co' },
-    },
-    {
-      id: 'mock-booking-6',
-      medic_id: null,
-      shift_date: dates[4], // Friday
-      shift_start_time: '10:00:00',
-      shift_end_time: '18:00:00',
-      shift_hours: 8,
-      status: 'urgent_broadcast',
-      site_name: 'Emergency Site F',
-      confined_space_required: true,
-      trauma_specialist_required: true,
-      urgency_premium_percent: 25,
-      clients: { company_name: 'Emergency Services' },
-    },
-    {
-      id: 'mock-booking-7',
-      medic_id: null,
-      shift_date: dates[3], // Thursday
-      shift_start_time: '13:00:00',
-      shift_end_time: '21:00:00',
-      shift_hours: 8,
-      status: 'pending',
-      site_name: 'Night Shift Site G',
-      confined_space_required: false,
-      trauma_specialist_required: true,
-      urgency_premium_percent: 10,
-      clients: { company_name: 'Night Works Ltd' },
-    },
-  ];
-
-  return { medics, bookings, dates };
-}
 
 export const useScheduleBoardStore = create<ScheduleBoardState>((set, get) => ({
   // Initial state
@@ -349,7 +195,7 @@ export const useScheduleBoardStore = create<ScheduleBoardState>((set, get) => ({
 
   /**
    * Fetch schedule data from schedule-board-api edge function
-   * Falls back to mock data if API unavailable (e.g., Docker/Supabase not running)
+   * Sets error state if API unavailable; shows empty grid when no bookings found
    */
   fetchScheduleData: async () => {
     const { selectedWeekStart } = get();
@@ -389,16 +235,11 @@ export const useScheduleBoardStore = create<ScheduleBoardState>((set, get) => ({
         isLoading: false,
       });
     } catch (error) {
-      console.warn('[ScheduleBoard] API unavailable, using mock data for development:', error);
-
-      // Use mock data for local development when Supabase isn't running
-      const mockData = generateMockScheduleData(selectedWeekStart);
       set({
-        medics: mockData.medics,
-        bookings: mockData.bookings,
-        dates: mockData.dates,
+        medics: [],
+        bookings: [],
         isLoading: false,
-        error: 'Using mock data (Supabase not running)',
+        error: error instanceof Error ? error.message : 'Failed to load schedule data',
       });
     }
   },
@@ -429,10 +270,7 @@ export const useScheduleBoardStore = create<ScheduleBoardState>((set, get) => ({
 
       const result: ConflictCheckResult = await response.json();
       return result;
-    } catch (error) {
-      console.warn('[ScheduleBoard] API unavailable, using basic client-side validation:', error);
-
-      // Fallback: Basic client-side conflict checking for development
+    } catch {
       return performBasicConflictCheck(params, get().bookings, get().medics);
     }
   },
