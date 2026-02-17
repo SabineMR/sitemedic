@@ -16,34 +16,17 @@
  * - Alert acknowledgment (clears the full-screen alert on recipient's device)
  */
 
-import { NativeModules } from 'react-native';
 import { supabase } from '../src/lib/supabase';
 
-// Pre-check NativeModules before requiring native-backed packages.
-// Hermes reports thrown errors to the dev overlay even when caught by try/catch,
-// so we avoid throwing entirely by only requiring packages whose native modules
-// are actually registered in the current build.
-let Notifications: typeof import('expo-notifications') | null = null;
-let Audio: typeof import('expo-av')['Audio'] | null = null;
-let FileSystem: typeof import('expo-file-system') | null = null;
+// Lazily require native-backed packages so the service degrades gracefully
+// if the native binary doesn't include them (e.g. a stripped build or Expo Go).
+let Notifications: any = null;
+let Audio: any = null;
+let FileSystem: any = null;
 
-if (NativeModules.ExpoPushTokenManager) {
-  Notifications = require('expo-notifications');
-} else {
-  console.warn('[EmergencyAlert] ExpoPushTokenManager not registered — push notifications disabled');
-}
-
-if (NativeModules.ExponentAV) {
-  Audio = require('expo-av').Audio;
-} else {
-  console.warn('[EmergencyAlert] ExponentAV not registered — audio recording disabled');
-}
-
-if (NativeModules.ExponentFileSystem) {
-  FileSystem = require('expo-file-system');
-} else {
-  console.warn('[EmergencyAlert] ExponentFileSystem not registered — file system disabled');
-}
+try { Notifications = require('expo-notifications'); } catch (_) {}
+try { Audio = require('expo-av').Audio; } catch (_) {}
+try { FileSystem = require('expo-file-system'); } catch (_) {}
 
 // Notification channel for emergency alerts (Android)
 const EMERGENCY_CHANNEL_ID = 'emergency';

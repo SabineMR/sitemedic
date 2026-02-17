@@ -38,20 +38,20 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
 };
 
 export default function NotificationsPage() {
-  const { org } = useOrg();
+  const { orgId } = useOrg();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'critical' | 'warning' | 'info'>('all');
 
   async function fetchNotifications() {
-    if (!org?.id) return;
+    if (!orgId) return;
     setLoading(true);
 
     const supabase = createClient();
     const { data, error } = await supabase
       .from('medic_alerts')
       .select('*')
-      .eq('org_id', org.id)
+      .eq('org_id', orgId)
       .order('created_at', { ascending: false })
       .limit(100);
 
@@ -63,7 +63,7 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     fetchNotifications();
-  }, [org?.id]);
+  }, [orgId]);
 
   async function markResolved(id: string) {
     const supabase = createClient();

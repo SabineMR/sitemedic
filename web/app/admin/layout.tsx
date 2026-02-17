@@ -50,7 +50,7 @@ interface NavItem {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { loading, org } = useOrg();
+  const { loading, orgId } = useOrg();
   const isPlatformAdmin = useIsPlatformAdmin();
   const [userEmail, setUserEmail] = useState<string>('');
   const [userName, setUserName] = useState<string>('Admin');
@@ -66,12 +66,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         supabase
           .from('medic_alerts')
           .select('id', { count: 'exact', head: true })
-          .eq('org_id', org?.id ?? '')
+          .eq('org_id', orgId ?? '')
           .is('resolved_at', null),
         supabase
           .from('bookings')
           .select('id', { count: 'exact', head: true })
-          .eq('org_id', org?.id ?? '')
+          .eq('org_id', orgId ?? '')
           .eq('status', 'pending'),
       ]);
 
@@ -84,10 +84,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       setPendingBookings(bookingsResult.count ?? 0);
     }
 
-    if (!loading && org?.id) {
+    if (!loading && orgId) {
       fetchSidebarData();
     }
-  }, [loading, org?.id]);
+  }, [loading, orgId]);
 
   // Redirect platform admins to /platform (only after loading completes)
   useEffect(() => {

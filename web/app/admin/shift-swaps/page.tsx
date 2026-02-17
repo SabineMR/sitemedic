@@ -39,13 +39,13 @@ const statusColors: Record<string, string> = {
 };
 
 export default function ShiftSwapsPage() {
-  const { org } = useOrg();
+  const { orgId } = useOrg();
   const [swaps, setSwaps] = useState<ShiftSwap[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
 
   async function fetchSwaps() {
-    if (!org?.id) return;
+    if (!orgId) return;
     setLoading(true);
     const supabase = createClient();
     const { data, error } = await supabase
@@ -56,7 +56,7 @@ export default function ShiftSwapsPage() {
         requesting_medic:medics!shift_swaps_requesting_medic_id_fkey(first_name, last_name),
         target_medic:medics!shift_swaps_target_medic_id_fkey(first_name, last_name)
       `)
-      .eq('org_id', org.id)
+      .eq('org_id', orgId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -69,7 +69,7 @@ export default function ShiftSwapsPage() {
 
   useEffect(() => {
     fetchSwaps();
-  }, [org?.id]);
+  }, [orgId]);
 
   async function handleAction(swapId: string, action: 'approved' | 'rejected') {
     setActionId(swapId);

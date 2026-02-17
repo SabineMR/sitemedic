@@ -60,7 +60,7 @@ const emptyForm = {
 };
 
 export default function BeaconsPage() {
-  const { org } = useOrg();
+  const { orgId } = useOrg();
   const [beacons, setBeacons] = useState<SiteBeacon[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -70,12 +70,12 @@ export default function BeaconsPage() {
   const [uuidError, setUuidError] = useState<string | null>(null);
 
   async function fetchBeacons() {
-    if (!org?.id) return;
+    if (!orgId) return;
     const supabase = createClient();
     const { data, error } = await supabase
       .from('site_beacons')
       .select('*')
-      .eq('org_id', org.id)
+      .eq('org_id', orgId)
       .order('site_name');
 
     if (error) {
@@ -88,7 +88,7 @@ export default function BeaconsPage() {
 
   useEffect(() => {
     fetchBeacons();
-  }, [org?.id]);
+  }, [orgId]);
 
   function resetForm() {
     setForm(emptyForm);
@@ -122,7 +122,7 @@ export default function BeaconsPage() {
   }
 
   async function handleSave() {
-    if (!org?.id) return;
+    if (!orgId) return;
 
     const uuidVal = form.uuid.trim().toLowerCase();
     const err = validateUuid(uuidVal, form.beacon_type);
@@ -176,7 +176,7 @@ export default function BeaconsPage() {
     } else {
       const { error } = await supabase.from('site_beacons').insert({
         ...payload,
-        org_id: org.id,
+        org_id: orgId,
         is_active: true,
       });
 

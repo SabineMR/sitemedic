@@ -20,7 +20,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Modal,
-  NativeModules,
   ScrollView,
   StyleSheet,
   Text,
@@ -29,12 +28,10 @@ import {
 } from 'react-native';
 import { emergencyAlertService } from '../../services/EmergencyAlertService';
 
-// Pre-check native modules — avoids Hermes reporting thrown errors in the dev
-// overlay even when caught by try/catch.
-const Notifications: typeof import('expo-notifications') | null =
-  NativeModules.ExpoPushTokenManager ? require('expo-notifications') : null;
-const Audio: typeof import('expo-av')['Audio'] | null =
-  NativeModules.ExponentAV ? require('expo-av').Audio : null;
+let Notifications: any = null;
+let Audio: any = null;
+try { Notifications = require('expo-notifications'); } catch (_) {}
+try { Audio = require('expo-av').Audio; } catch (_) {}
 
 // Configure foreground notification behaviour only when the module is available
 if (Notifications) {

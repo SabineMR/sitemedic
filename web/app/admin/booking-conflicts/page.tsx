@@ -46,14 +46,14 @@ const conflictTypeColors: Record<string, string> = {
 };
 
 export default function BookingConflictsPage() {
-  const { org } = useOrg();
+  const { orgId } = useOrg();
   const [conflicts, setConflicts] = useState<BookingConflict[]>([]);
   const [loading, setLoading] = useState(true);
   const [showResolved, setShowResolved] = useState(false);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
 
   async function fetchConflicts() {
-    if (!org?.id) return;
+    if (!orgId) return;
     setLoading(true);
     const supabase = createClient();
     const query = supabase
@@ -63,7 +63,7 @@ export default function BookingConflictsPage() {
         booking:bookings!inner(site_name, shift_date, shift_start_time, shift_end_time),
         medic:medics!inner(first_name, last_name)
       `)
-      .eq('org_id', org.id)
+      .eq('org_id', orgId)
       .order('created_at', { ascending: false });
 
     if (!showResolved) {
@@ -81,7 +81,7 @@ export default function BookingConflictsPage() {
 
   useEffect(() => {
     fetchConflicts();
-  }, [org?.id, showResolved]);
+  }, [orgId, showResolved]);
 
   async function handleResolve(conflictId: string) {
     setResolvingId(conflictId);

@@ -42,7 +42,7 @@ interface MedicProfile {
 
 export default function MedicPayslipsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: medicId } = use(params);
-  const { org } = useOrg();
+  const { orgId } = useOrg();
   const [medic, setMedic] = useState<MedicProfile | null>(null);
   const [timesheets, setTimesheets] = useState<Timesheet[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +50,7 @@ export default function MedicPayslipsPage({ params }: { params: Promise<{ id: st
 
   useEffect(() => {
     async function fetchData() {
-      if (!org?.id || !medicId) return;
+      if (!orgId || !medicId) return;
       const supabase = createClient();
 
       const [medicResult, timesheetsResult] = await Promise.all([
@@ -73,7 +73,7 @@ export default function MedicPayslipsPage({ params }: { params: Promise<{ id: st
             )
           `)
           .eq('medic_id', medicId)
-          .eq('org_id', org.id)
+          .eq('org_id', orgId)
           .in('payout_status', ['admin_approved', 'paid'])
           .order('created_at', { ascending: false }),
       ]);
@@ -84,7 +84,7 @@ export default function MedicPayslipsPage({ params }: { params: Promise<{ id: st
     }
 
     fetchData();
-  }, [org?.id, medicId]);
+  }, [orgId, medicId]);
 
   async function handleGeneratePayslip(timesheet: Timesheet) {
     setGeneratingId(timesheet.id);
@@ -95,7 +95,7 @@ export default function MedicPayslipsPage({ params }: { params: Promise<{ id: st
         body: {
           timesheet_id: timesheet.id,
           medic_id: medicId,
-          org_id: org?.id,
+          org_id: orgId,
         },
       });
 

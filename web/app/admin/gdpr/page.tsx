@@ -38,19 +38,19 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.R
 };
 
 export default function GdprPage() {
-  const { org } = useOrg();
+  const { orgId } = useOrg();
   const [requests, setRequests] = useState<ErasureRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   async function fetchRequests() {
-    if (!org?.id) return;
+    if (!orgId) return;
     setLoading(true);
     const supabase = createClient();
     const { data, error } = await supabase
       .from('erasure_requests')
       .select('*')
-      .eq('org_id', org.id)
+      .eq('org_id', orgId)
       .order('requested_at', { ascending: false });
 
     if (error) {
@@ -63,7 +63,7 @@ export default function GdprPage() {
 
   useEffect(() => {
     fetchRequests();
-  }, [org?.id]);
+  }, [orgId]);
 
   async function handleProcess(request: ErasureRequest) {
     setProcessingId(request.id);

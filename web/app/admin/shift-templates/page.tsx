@@ -40,7 +40,7 @@ const emptyForm = {
 };
 
 export default function ShiftTemplatesPage() {
-  const { org } = useOrg();
+  const { orgId } = useOrg();
   const [templates, setTemplates] = useState<ShiftTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -49,12 +49,12 @@ export default function ShiftTemplatesPage() {
   const [form, setForm] = useState(emptyForm);
 
   async function fetchTemplates() {
-    if (!org?.id) return;
+    if (!orgId) return;
     const supabase = createClient();
     const { data, error } = await supabase
       .from('shift_templates')
       .select('*')
-      .eq('org_id', org.id)
+      .eq('org_id', orgId)
       .order('name');
 
     if (error) {
@@ -67,7 +67,7 @@ export default function ShiftTemplatesPage() {
 
   useEffect(() => {
     fetchTemplates();
-  }, [org?.id]);
+  }, [orgId]);
 
   function resetForm() {
     setForm(emptyForm);
@@ -90,7 +90,7 @@ export default function ShiftTemplatesPage() {
   }
 
   async function handleSave() {
-    if (!org?.id || !form.name) {
+    if (!orgId || !form.name) {
       toast.error('Template name is required');
       return;
     }
@@ -122,7 +122,7 @@ export default function ShiftTemplatesPage() {
     } else {
       const { error } = await supabase.from('shift_templates').insert({
         ...payload,
-        org_id: org.id,
+        org_id: orgId,
       });
 
       if (error) {

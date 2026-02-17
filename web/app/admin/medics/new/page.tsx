@@ -27,7 +27,7 @@ import { useOrg } from '@/contexts/org-context';
 
 export default function NewMedicPage() {
   const router = useRouter();
-  const { org } = useOrg();
+  const { orgId } = useOrg();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,7 +56,7 @@ export default function NewMedicPage() {
       const supabase = createClient();
 
       const { error: insertError } = await supabase.from('medics').insert({
-        org_id: org?.id,
+        org_id: orgId,
         full_name: form.fullName,
         email: form.email,
         phone: form.phone,
