@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 10 (Real-Time Operations Polish) — In Progress
-Plan: 10-02 complete. Wave 2 executing (10-02 done).
-Status: Phase 10 wave 2 in progress — map popup shift times shipped
-Last activity: 2026-02-17 — Completed 10-02-PLAN.md (map marker popup enhanced with HH:MM shift time display)
-Progress: [████████████████████] Phase 10 wave 1+2 (10-01, 10-02, 10-03, 10-04 done)
+Phase: v1.1 — Phase 14 (Compliance, Exports & Medic Portal) — In Progress
+Plan: 14-03 complete. Wave 1 executing.
+Status: Phase 14 plan 03 done — certification expiry banners on medic profile shipped
+Last activity: 2026-02-17 — Completed 14-03-PLAN.md (red/yellow cert expiry banners with renewal links on medic profile page)
+Progress: [████████████████████] Phase 14 plan 03 complete (14-03 done)
 
 ## Performance Metrics
 
@@ -571,8 +571,8 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 
 ## Session Continuity
 
-Last session: 2026-02-17T18:21:27Z
-Stopped at: Completed 10-02-PLAN.md — map marker popup shift time display (HH:MM–HH:MM) shipped. TypeScript clean.
+Last session: 2026-02-17T18:21:38Z
+Stopped at: Completed 14-03-PLAN.md — certification expiry banners on medic profile page shipped. TypeScript clean.
 Resume file: None
 
 ---
