@@ -24,29 +24,44 @@ interface Geofence {
   created_at: string;
 }
 
-const DEFAULT_RADIUS = 200;
-
 export default function GeofencesPage() {
-  const { org } = useOrg();
+  const { orgId } = useOrg();
   const [geofences, setGeofences] = useState<Geofence[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [defaultRadius, setDefaultRadius] = useState(200);
   const [form, setForm] = useState({
     site_name: '',
     lat: '',
     lng: '',
-    radius_metres: String(DEFAULT_RADIUS),
+    radius_metres: String(200),
   });
 
+  // Fetch geofence_default_radius from org_settings
+  useEffect(() => {
+    async function loadDefaultRadius() {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('org_settings')
+        .select('geofence_default_radius')
+        .single();
+      if (data?.geofence_default_radius) {
+        setDefaultRadius(Number(data.geofence_default_radius));
+        setForm((prev) => ({ ...prev, radius_metres: String(data.geofence_default_radius) }));
+      }
+    }
+    loadDefaultRadius();
+  }, []);
+
   async function fetchGeofences() {
-    if (!org?.id) return;
+    if (!orgId) return;
     const supabase = createClient();
     const { data, error } = await supabase
       .from('geofences')
       .select('*')
-      .eq('org_id', org.id)
+      .eq('org_id', orgId)
       .order('site_name');
 
     if (error) {
@@ -59,10 +74,10 @@ export default function GeofencesPage() {
 
   useEffect(() => {
     fetchGeofences();
-  }, [org?.id]);
+  }, [orgId]);
 
   function resetForm() {
-    setForm({ site_name: '', lat: '', lng: '', radius_metres: String(DEFAULT_RADIUS) });
+    setForm({ site_name: '', lat: '', lng: '', radius_metres: String(defaultRadius) });
     setEditingId(null);
     setShowForm(false);
   }
@@ -79,7 +94,7 @@ export default function GeofencesPage() {
   }
 
   async function handleSave() {
-    if (!org?.id) return;
+    if (!orgId) return;
     const lat = parseFloat(form.lat);
     const lng = parseFloat(form.lng);
     const radius = parseInt(form.radius_metres, 10);
@@ -107,7 +122,7 @@ export default function GeofencesPage() {
       }
     } else {
       const { error } = await supabase.from('geofences').insert({
-        org_id: org.id,
+        org_id: orgId,
         site_name: form.site_name,
         lat,
         lng,

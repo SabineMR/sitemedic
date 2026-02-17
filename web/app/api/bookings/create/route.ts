@@ -108,7 +108,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Server-side pricing validation (validate urgency premium is valid)
-    const validUrgencyPremiums = [0, 20, 50, 75];
+    // Load allowed premiums from org_settings; fallback to [0, 20, 50, 75]
+    const { data: orgSettings } = await supabase
+      .from('org_settings')
+      .select('urgency_premiums')
+      .eq('org_id', orgId)
+      .single();
+    const validUrgencyPremiums: number[] = orgSettings?.urgency_premiums ?? [0, 20, 50, 75];
     if (!validUrgencyPremiums.includes(body.pricing.urgencyPremiumPercent)) {
       return NextResponse.json(
         { error: 'Invalid urgency premium percent' },

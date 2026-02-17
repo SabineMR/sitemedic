@@ -63,7 +63,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@sitemedic.co.uk';
+    let adminEmail = process.env.ADMIN_EMAIL || 'admin@sitemedic.co.uk';
+    if (orgId) {
+      const { data: orgSettings } = await supabase
+        .from('org_settings')
+        .select('admin_email')
+        .eq('org_id', orgId)
+        .single();
+      if (orgSettings?.admin_email) {
+        adminEmail = orgSettings.admin_email;
+      }
+    }
     const fullName = `${body.firstName} ${body.lastName}`;
 
     const emailHtml = `
