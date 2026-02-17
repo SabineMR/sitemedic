@@ -107,11 +107,9 @@ export async function updateSession(request: NextRequest) {
         `User ${user.id} authenticated but has no org_id - redirecting to org setup`
       );
 
-      // For now, just log the warning and allow access
-      // TODO: Uncomment when /setup/organization page is implemented
-      // const url = request.nextUrl.clone();
-      // url.pathname = '/setup/organization';
-      // return NextResponse.redirect(url);
+      const url = request.nextUrl.clone();
+      url.pathname = '/setup/organization';
+      return NextResponse.redirect(url);
     }
   }
 
