@@ -15,6 +15,9 @@ import { TerritoryWithMetrics, getUtilizationColor } from '@/lib/queries/admin/t
 
 interface Props {
   territories: TerritoryWithMetrics[];
+  onTerritoryClick?: (territory: TerritoryWithMetrics) => void;
+  selectedTerritoryId?: string;
+  onRefreshClick?: () => void;
 }
 
 /**
@@ -41,8 +44,9 @@ function MapBoundsAdjuster({ territories }: { territories: TerritoryWithMetrics[
 
 /**
  * TerritoryMapInner - The actual map component
+ * Map auto-refreshes based on parent query refetchInterval (5 minutes)
  */
-function TerritoryMapInner({ territories }: Props) {
+function TerritoryMapInner({ territories, onTerritoryClick, selectedTerritoryId, onRefreshClick }: Props) {
   // Default center: UK center
   const defaultCenter: [number, number] = [54.0, -2.5];
   const defaultZoom = 6;
@@ -66,18 +70,27 @@ function TerritoryMapInner({ territories }: Props) {
       {/* Territory markers */}
       {territories.map((territory) => {
         const fillColor = getUtilizationColor(territory.utilization_pct);
+        const isSelected = selectedTerritoryId === territory.id;
 
         return (
           <CircleMarker
             key={territory.id}
             center={[territory.lat, territory.lng]}
-            radius={12}
+            radius={isSelected ? 16 : 12}
             pathOptions={{
               fillColor,
               fillOpacity: 0.7,
-              color: '#000',
-              weight: 1,
+              color: isSelected ? '#3b82f6' : '#000',
+              weight: isSelected ? 3 : 1,
             }}
+            eventHandlers={{
+              click: () => {
+                if (onTerritoryClick) {
+                  onTerritoryClick(territory);
+                }
+              },
+            }}
+            className={isSelected ? 'animate-pulse' : ''}
           >
             <Popup>
               <div className="text-gray-900 min-w-[200px]">
@@ -145,8 +158,27 @@ function TerritoryMapInner({ territories }: Props) {
           zIndex: 1000,
         }}
       >
-        <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px' }}>
-          Utilization
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <div style={{ fontSize: '12px', fontWeight: 'bold' }}>
+            Utilization
+          </div>
+          {onRefreshClick && (
+            <button
+              onClick={onRefreshClick}
+              style={{
+                background: '#3b82f6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '4px 8px',
+                fontSize: '11px',
+                cursor: 'pointer',
+                marginLeft: '12px',
+              }}
+            >
+              Refresh
+            </button>
+          )}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
