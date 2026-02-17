@@ -1,6 +1,7 @@
 /**
  * Generate Invoice PDF Edge Function
  * Phase 6.5: Creates PDF invoice from invoice record and uploads to Storage
+ * Phase 8: Multi-tenant - Validates invoice belongs to user's organization
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
@@ -13,6 +14,23 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 interface GenerateInvoiceRequest {
   invoiceId: string;
+}
+
+/**
+ * Extract org_id from JWT token
+ */
+function getOrgIdFromRequest(req: Request): string | null {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) return null;
+
+  try {
+    const token = authHeader.replace('Bearer ', '');
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.app_metadata?.org_id || null;
+  } catch (error) {
+    console.error('Error parsing JWT:', error);
+    return null;
+  }
 }
 
 serve(async (req: Request) => {
@@ -28,6 +46,15 @@ serve(async (req: Request) => {
   }
 
   try {
+    // Extract org_id from JWT for multi-tenant validation
+    const userOrgId = getOrgIdFromRequest(req);
+    if (!userOrgId) {
+      return new Response(
+        JSON.stringify({ error: 'Organization ID not found in user session' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { invoiceId }: GenerateInvoiceRequest = await req.json();
 
     if (!invoiceId) {
@@ -37,7 +64,7 @@ serve(async (req: Request) => {
       );
     }
 
-    console.log(`📄 Generating invoice PDF for invoice ID: ${invoiceId}`);
+    console.log(`📄 Generating invoice PDF for invoice ID: ${invoiceId}, org: ${userOrgId}`);
 
     // Fetch invoice with client and line items
     const { data: invoice, error: invoiceError } = await supabase
@@ -55,6 +82,15 @@ serve(async (req: Request) => {
       return new Response(
         JSON.stringify({ error: 'Invoice not found' }),
         { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // CRITICAL: Validate invoice belongs to user's organization (multi-tenant security)
+    if (invoice.org_id !== userOrgId) {
+      console.error(`Security violation: User org ${userOrgId} attempted to access invoice from org ${invoice.org_id}`);
+      return new Response(
+        JSON.stringify({ error: 'Access denied: Invoice belongs to different organization' }),
+        { status: 403, headers: { 'Content-Type': 'application/json' } }
       );
     }
 

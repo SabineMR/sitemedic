@@ -1,11 +1,14 @@
 /**
  * Auto-Assign Medic V2 - Enhanced with 7-Factor Scoring + UK Compliance
- * Phase 1.6: Comprehensive auto-scheduling with overtime blocking
+ * Phase 7.5: Territory Auto-Assignment with Calendar & Certification Validation
  *
  * NEW Features:
- * - 7-factor scoring (distance 25%, qualifications 20%, availability 15%, utilization 15%, rating 10%, performance 10%, fairness 5%)
+ * - 7-factor scoring (distance 30%, utilization 20%, qualifications 15%, availability 15%, rating 15%, performance 5%)
+ * - Calendar conflict detection (prevents double-booking by checking shift time overlap)
+ * - Certification expiry validation (excludes medics with expired certs)
  * - UK Working Time Regulations 1998 enforcement (48-hour week, 11-hour rest)
- * - Google Calendar conflict detection
+ * - Utilization preference (<70% preferred)
+ * - Rating bonus (>4.5 stars)
  * - Fair shift distribution tracking
  * - Comprehensive audit logging (auto_schedule_logs table)
  * - Medic auto-confirmation (no manual acceptance needed)
@@ -44,6 +47,8 @@ interface Medic {
   home_postcode: string;
   has_confined_space_cert: boolean;
   has_trauma_cert: boolean;
+  confined_space_cert_expiry: string | null;
+  trauma_cert_expiry: string | null;
   star_rating: number;
   riddor_compliance_rate: number;
   available_for_work: boolean;
@@ -210,18 +215,17 @@ async function fetchBooking(bookingId: string): Promise<Booking | null> {
  * Filters:
  * 0. SAME ORGANIZATION (org_id match) - CRITICAL FOR MULTI-TENANT ISOLATION
  * 1. Available for work (available_for_work = true, unavailable_until check)
- * 2. Required certifications (confined space, trauma specialist)
- * 3. NOT double-booked (no overlapping shifts on same date)
+ * 2. Required certifications (confined space, trauma specialist) with expiry validation
+ * 3. NOT double-booked (no overlapping shifts on same date with time overlap check)
  * 4. Medic availability calendar (medic_availability table)
  * 5. UK Working Time Regulations compliance (48-hour week, 11-hour rest)
- * 6. Google Calendar conflict check (future enhancement)
  */
 async function findCandidateMedics(booking: Booking, skipOvertimeCheck: boolean): Promise<Medic[]> {
   // Fetch medics from SAME ORGANIZATION ONLY - CRITICAL SECURITY FIX
   console.log(`🔍 Fetching medics for org_id: ${booking.org_id}`);
   const { data: allMedics, error: medicError } = await supabase
     .from('medics')
-    .select('id, first_name, last_name, home_postcode, has_confined_space_cert, has_trauma_cert, star_rating, riddor_compliance_rate, available_for_work, unavailable_until')
+    .select('id, first_name, last_name, home_postcode, has_confined_space_cert, has_trauma_cert, confined_space_cert_expiry, trauma_cert_expiry, star_rating, riddor_compliance_rate, available_for_work, unavailable_until')
     .eq('org_id', booking.org_id); // CRITICAL: Filter by org_id
 
   if (medicError || !allMedics) {
@@ -240,31 +244,88 @@ async function findCandidateMedics(booking: Booking, skipOvertimeCheck: boolean)
 
   console.log(`✅ Filter 1: ${candidates.length} medics available for work`);
 
-  // FILTER 2: Required certifications
+  // FILTER 2: Required certifications with expiry validation
+  const bookingDate = new Date(booking.shift_date);
+
   if (booking.confined_space_required) {
-    candidates = candidates.filter(m => m.has_confined_space_cert);
-    console.log(`✅ Filter 2a: ${candidates.length} have confined space cert`);
+    candidates = candidates.filter(m => {
+      if (!m.has_confined_space_cert) return false;
+      // Check expiry date if present
+      if (m.confined_space_cert_expiry) {
+        const expiryDate = new Date(m.confined_space_cert_expiry);
+        if (expiryDate < bookingDate) {
+          console.log(`❌ Medic ${m.id} excluded - confined space cert expired on ${m.confined_space_cert_expiry}`);
+          return false;
+        }
+      }
+      return true;
+    });
+    console.log(`✅ Filter 2a: ${candidates.length} have valid confined space cert`);
   }
 
   if (booking.trauma_specialist_required) {
-    candidates = candidates.filter(m => m.has_trauma_cert);
-    console.log(`✅ Filter 2b: ${candidates.length} have trauma cert`);
+    candidates = candidates.filter(m => {
+      if (!m.has_trauma_cert) return false;
+      // Check expiry date if present
+      if (m.trauma_cert_expiry) {
+        const expiryDate = new Date(m.trauma_cert_expiry);
+        if (expiryDate < bookingDate) {
+          console.log(`❌ Medic ${m.id} excluded - trauma cert expired on ${m.trauma_cert_expiry}`);
+          return false;
+        }
+      }
+      return true;
+    });
+    console.log(`✅ Filter 2b: ${candidates.length} have valid trauma cert`);
   }
 
-  // FILTER 3: Not double-booked (overlapping shifts on same date)
-  // IMPORTANT: Only check conflicts within the same org
-  const { data: conflicts, error: conflictError } = await supabase
+  // FILTER 3: Calendar conflict check - batch query to prevent N+1
+  // Only proceed if we have candidates to check
+  if (candidates.length === 0) {
+    console.log('⚠️  No candidates after certification filtering');
+    return [];
+  }
+
+  const candidateIds = candidates.map(c => c.id);
+
+  // Batch query: fetch all bookings for these candidates on the same date
+  const { data: conflictingBookings, error: conflictError } = await supabase
     .from('bookings')
-    .select('medic_id')
+    .select('medic_id, shift_start_time, shift_end_time')
     .eq('org_id', booking.org_id) // IMPORTANT: Filter by org_id
     .eq('shift_date', booking.shift_date)
-    .in('status', ['confirmed', 'in_progress'])
-    .not('medic_id', 'is', null);
+    .in('medic_id', candidateIds)
+    .in('status', ['confirmed', 'in_progress']);
 
-  if (!conflictError && conflicts) {
-    const bookedMedicIds = new Set(conflicts.map(c => c.medic_id));
-    candidates = candidates.filter(m => !bookedMedicIds.has(m.id));
-    console.log(`✅ Filter 3: ${candidates.length} not already booked on ${booking.shift_date}`);
+  if (!conflictError && conflictingBookings && conflictingBookings.length > 0) {
+    // Build a Set of medic IDs that have time conflicts
+    const conflictSet = new Set<string>();
+
+    // Parse requested shift times
+    const requestedStart = booking.shift_start_time;
+    const requestedEnd = booking.shift_end_time;
+
+    conflictingBookings.forEach(existingBooking => {
+      if (!existingBooking.medic_id) return;
+
+      // Check if time ranges overlap
+      // Overlap exists if: (start1 < end2) AND (end1 > start2)
+      const hasOverlap =
+        requestedStart < existingBooking.shift_end_time &&
+        requestedEnd > existingBooking.shift_start_time;
+
+      if (hasOverlap) {
+        conflictSet.add(existingBooking.medic_id);
+        console.log(`❌ Medic ${existingBooking.medic_id} has shift conflict: ${existingBooking.shift_start_time}-${existingBooking.shift_end_time} overlaps ${requestedStart}-${requestedEnd}`);
+      }
+    });
+
+    // Filter out medics with conflicts
+    const beforeCount = candidates.length;
+    candidates = candidates.filter(m => !conflictSet.has(m.id));
+    console.log(`✅ Filter 3: ${candidates.length} available (${beforeCount - candidates.length} had calendar conflicts on ${booking.shift_date})`);
+  } else {
+    console.log(`✅ Filter 3: ${candidates.length} available (no existing bookings on ${booking.shift_date})`);
   }
 
   // FILTER 4: Check medic availability calendar (medic_availability table)
