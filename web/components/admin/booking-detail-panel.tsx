@@ -1,0 +1,421 @@
+'use client';
+
+/**
+ * BookingDetailPanel
+ *
+ * Admin booking detail Sheet (slide-over from right).
+ * Shows full operational context for a booking: site contact info,
+ * approval reason, cancellation details, refund amount, and more.
+ */
+
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
+import { Badge } from '@/components/ui/badge';
+import {
+  MapPin,
+  Phone,
+  User,
+  Calendar,
+  Clock,
+  FileText,
+  AlertTriangle,
+  XCircle,
+  DollarSign,
+  Building2,
+} from 'lucide-react';
+import CurrencyWithTooltip from '@/components/CurrencyWithTooltip';
+import type { BookingWithRelations } from '@/lib/queries/admin/bookings';
+import { CheckCircle, Activity } from 'lucide-react';
+
+// Inline pure formatting helper — avoids importing the full what3words module
+// which initialises an API client at module load time
+function formatWhat3Words(words: string): string {
+  const cleanWords = words.replace(/^\/+/, '');
+  return `///${cleanWords}`;
+}
+
+interface BookingDetailPanelProps {
+  booking: BookingWithRelations | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+// Status badge config — matches booking-approval-table.tsx colour scheme
+const STATUS_BADGES: Record<
+  string,
+  { color: string; label: string; icon: React.ReactNode }
+> = {
+  pending: {
+    color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    label: 'Pending',
+    icon: <Clock className="w-3 h-3" />,
+  },
+  confirmed: {
+    color: 'bg-green-500/20 text-green-400 border-green-500/30',
+    label: 'Confirmed',
+    icon: <CheckCircle className="w-3 h-3" />,
+  },
+  in_progress: {
+    color: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+    label: 'In Progress',
+    icon: <Activity className="w-3 h-3" />,
+  },
+  completed: {
+    color: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    label: 'Completed',
+    icon: <CheckCircle className="w-3 h-3" />,
+  },
+  cancelled: {
+    color: 'bg-red-500/20 text-red-400 border-red-500/30',
+    label: 'Cancelled',
+    icon: <XCircle className="w-3 h-3" />,
+  },
+};
+
+const RECURRENCE_LABELS: Record<string, string> = {
+  weekly: 'Weekly',
+  biweekly: 'Bi-weekly',
+};
+
+export function BookingDetailPanel({
+  booking,
+  open,
+  onOpenChange,
+}: BookingDetailPanelProps) {
+  if (!booking) return null;
+
+  const statusBadge = STATUS_BADGES[booking.status] ?? STATUS_BADGES.pending;
+
+  const medicName =
+    booking.medics
+      ? `${booking.medics.first_name} ${booking.medics.last_name}`
+      : 'Unassigned';
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        className="w-[500px] sm:w-[600px] bg-gray-900 border-gray-700 overflow-y-auto"
+      >
+        {/* ── Header ─────────────────────────────────────────── */}
+        <SheetHeader className="pb-4 mb-4 border-b border-gray-700/50">
+          <div className="flex items-start justify-between gap-3 pr-6">
+            <SheetTitle className="text-white text-xl leading-tight">
+              {booking.site_name}
+            </SheetTitle>
+            <Badge className={`${statusBadge.color} flex items-center gap-1.5 shrink-0`}>
+              {statusBadge.icon}
+              {statusBadge.label}
+            </Badge>
+          </div>
+          <SheetDescription className="text-gray-500 text-xs">
+            Booking ID: {booking.id}
+          </SheetDescription>
+        </SheetHeader>
+
+        {/* ── Date & Time ─────────────────────────────────────── */}
+        <section className="border-b border-gray-700/50 pb-4 mb-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+            Date &amp; Time
+          </h3>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-white">
+              <Calendar className="w-4 h-4 text-gray-400 shrink-0" />
+              <span suppressHydrationWarning>
+                {new Date(booking.shift_date).toLocaleDateString('en-GB', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-300">
+              <Clock className="w-4 h-4 text-gray-400 shrink-0" />
+              <span>
+                {booking.shift_start_time.slice(0, 5)} &ndash;{' '}
+                {booking.shift_end_time.slice(0, 5)}
+              </span>
+              <span className="text-gray-500 text-sm">
+                ({booking.shift_hours}h)
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Site Details ─────────────────────────────────────── */}
+        <section className="border-b border-gray-700/50 pb-4 mb-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+            Site Details
+          </h3>
+          <div className="space-y-2">
+            <div className="flex items-start gap-2 text-gray-300">
+              <MapPin className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+              <span>
+                {booking.site_address},{' '}
+                <span className="text-gray-400">{booking.site_postcode}</span>
+              </span>
+            </div>
+
+            {booking.site_contact_name && (
+              <div className="flex items-center gap-2 text-gray-300">
+                <User className="w-4 h-4 text-gray-400 shrink-0" />
+                <span>{booking.site_contact_name}</span>
+              </div>
+            )}
+
+            {booking.site_contact_phone && (
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-gray-400 shrink-0" />
+                <a
+                  href={`tel:${booking.site_contact_phone}`}
+                  className="text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  {booking.site_contact_phone}
+                </a>
+              </div>
+            )}
+
+            {booking.what3words_address && (
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-gray-400 shrink-0" />
+                <span className="font-mono text-sm text-blue-400">
+                  {formatWhat3Words(booking.what3words_address)}
+                </span>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ── Client & Medic ───────────────────────────────────── */}
+        <section className="border-b border-gray-700/50 pb-4 mb-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+            Client &amp; Medic
+          </h3>
+          <div className="space-y-2">
+            {booking.clients?.company_name && (
+              <div className="flex items-center gap-2 text-gray-300">
+                <Building2 className="w-4 h-4 text-gray-400 shrink-0" />
+                <span>{booking.clients.company_name}</span>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <User className="w-4 h-4 text-gray-400 shrink-0" />
+              <span
+                className={booking.medics ? 'text-white' : 'text-yellow-400'}
+              >
+                {medicName}
+              </span>
+              {booking.auto_matched && (
+                <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs ml-1">
+                  Auto-matched
+                </Badge>
+              )}
+            </div>
+
+            {booking.match_score != null && (
+              <div className="text-sm text-gray-400 pl-6">
+                Match score: {booking.match_score}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ── Pricing ──────────────────────────────────────────── */}
+        <section className="border-b border-gray-700/50 pb-4 mb-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+            Pricing
+          </h3>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-white">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-gray-400" />
+                <span className="font-medium">Total</span>
+              </div>
+              <CurrencyWithTooltip amount={booking.total} />
+            </div>
+
+            <div className="flex items-center justify-between text-gray-400 text-sm pl-6">
+              <span>Platform fee</span>
+              <CurrencyWithTooltip amount={booking.platform_fee} />
+            </div>
+
+            <div className="flex items-center justify-between text-gray-400 text-sm pl-6">
+              <span>Medic payout</span>
+              <CurrencyWithTooltip amount={booking.medic_payout} />
+            </div>
+
+            {booking.travel_surcharge > 0 && (
+              <div className="flex items-center justify-between text-gray-400 text-sm pl-6">
+                <span>Travel surcharge</span>
+                <CurrencyWithTooltip amount={booking.travel_surcharge} />
+              </div>
+            )}
+
+            {booking.urgency_premium_percent > 0 && (
+              <div className="flex items-center justify-between text-gray-400 text-sm pl-6">
+                <span>Urgency premium ({booking.urgency_premium_percent}%)</span>
+                <span className="text-orange-400">Applied</span>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ── Approval Details (conditional) ───────────────────── */}
+        {booking.requires_manual_approval && (
+          <section className="border-b border-gray-700/50 pb-4 mb-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+              Approval Details
+            </h3>
+            <div className="space-y-3">
+              {booking.approval_reason && (
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                    <p className="text-blue-300 text-sm">{booking.approval_reason}</p>
+                  </div>
+                </div>
+              )}
+
+              {booking.approved_by && (
+                <div className="text-sm text-gray-400">
+                  Approved by:{' '}
+                  <span className="text-gray-300">{booking.approved_by}</span>
+                </div>
+              )}
+
+              {booking.approved_at && (
+                <div className="text-sm text-gray-400">
+                  Approved at:{' '}
+                  <span className="text-gray-300" suppressHydrationWarning>
+                    {new Date(booking.approved_at).toLocaleDateString('en-GB', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* ── Cancellation Details (conditional) ───────────────── */}
+        {booking.status === 'cancelled' && (
+          <section className="border-b border-gray-700/50 pb-4 mb-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+              Cancellation Details
+            </h3>
+            <div className="space-y-3">
+              {booking.cancellation_reason && (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <XCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                    <p className="text-red-300 text-sm">{booking.cancellation_reason}</p>
+                  </div>
+                </div>
+              )}
+
+              {booking.cancelled_by && (
+                <div className="text-sm text-gray-400">
+                  Cancelled by:{' '}
+                  <span className="text-gray-300">{booking.cancelled_by}</span>
+                </div>
+              )}
+
+              {booking.cancelled_at && (
+                <div className="text-sm text-gray-400">
+                  Cancelled at:{' '}
+                  <span className="text-gray-300" suppressHydrationWarning>
+                    {new Date(booking.cancelled_at).toLocaleDateString('en-GB', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* ── Refund (conditional — only when > 0) ─────────────── */}
+        {booking.refund_amount > 0 && (
+          <section className="border-b border-gray-700/50 pb-4 mb-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+              Refund
+            </h3>
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-green-400 shrink-0" />
+              <span className="text-green-400 font-medium">
+                <CurrencyWithTooltip amount={booking.refund_amount} />
+              </span>
+            </div>
+          </section>
+        )}
+
+        {/* ── Special Notes (conditional) ───────────────────────── */}
+        {booking.special_notes && (
+          <section className="border-b border-gray-700/50 pb-4 mb-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+              Special Notes
+            </h3>
+            <div className="flex items-start gap-2">
+              <FileText className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+              <p className="text-gray-300 text-sm whitespace-pre-wrap">
+                {booking.special_notes}
+              </p>
+            </div>
+          </section>
+        )}
+
+        {/* ── Recurring Info (conditional) ─────────────────────── */}
+        {booking.is_recurring && (
+          <section className="pb-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+              Recurring Booking
+            </h3>
+            <div className="space-y-2">
+              {booking.recurrence_pattern && (
+                <div className="text-sm text-gray-300">
+                  Pattern:{' '}
+                  <span className="text-white">
+                    {RECURRENCE_LABELS[booking.recurrence_pattern] ??
+                      booking.recurrence_pattern}
+                  </span>
+                </div>
+              )}
+              {booking.recurring_until && (
+                <div className="text-sm text-gray-400">
+                  Until:{' '}
+                  <span className="text-gray-300" suppressHydrationWarning>
+                    {new Date(booking.recurring_until).toLocaleDateString(
+                      'en-GB',
+                      { day: 'numeric', month: 'short', year: 'numeric' }
+                    )}
+                  </span>
+                </div>
+              )}
+              <div
+                id="recurring-chain-container"
+                className="mt-3 p-3 rounded-lg bg-gray-800/50 border border-gray-700/50 text-sm text-gray-500"
+              >
+                Loading recurring chain...
+              </div>
+            </div>
+          </section>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+}
