@@ -33,7 +33,7 @@ tech-stack:
 
 key-files:
   created:
-    - supabase/migrations/115_lead_capture_tables.sql
+    - supabase/migrations/116_lead_capture_tables.sql
   modified:
     - web/.env.local.example
 
@@ -80,7 +80,7 @@ Each task was committed atomically:
 **Plan metadata:** pending docs commit
 
 ## Files Created/Modified
-- `supabase/migrations/115_lead_capture_tables.sql` - Migration creating both lead capture tables with 7 indexes and 12 RLS policies
+- `supabase/migrations/116_lead_capture_tables.sql` - Migration creating both lead capture tables with 7 indexes and 12 RLS policies
 - `web/.env.local.example` - Added SUPABASE_SERVICE_ROLE_KEY and ASG_ORG_ID with instructions for obtaining values
 
 ## Decisions Made
@@ -94,10 +94,10 @@ Each task was committed atomically:
 
 None - plan executed exactly as written.
 
-Note: `115_lead_capture_tables.sql` was already present in the repository from a prior commit (`972bf08`) that bundled the migration with the emergency alert system changes. The file content matches the plan spec exactly. Task 2 (.env.local.example) was executed fresh.
+Note: `116_lead_capture_tables.sql` was already present in the repository from a prior commit (`972bf08`) that bundled the migration with the emergency alert system changes. The file content matches the plan spec exactly. Task 2 (.env.local.example) was executed fresh.
 
 ## Issues Encountered
-- Migration file `115_lead_capture_tables.sql` was already committed in `972bf08` (emergency alert commit). File content matched plan spec exactly — no changes required. Task 1 recorded that commit hash as the task commit.
+- Migration file `116_lead_capture_tables.sql` was already committed in `972bf08` (emergency alert commit). File content matched plan spec exactly — no changes required. Task 1 recorded that commit hash as the task commit.
 
 ## User Setup Required
 None - no external service configuration required for the migration itself.
