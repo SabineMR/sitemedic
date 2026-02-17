@@ -66,6 +66,12 @@ export default function SiteFooter() {
                 <Link href="/" className="hover:text-white transition">Home</Link>
               </li>
               <li>
+                <Link href="/about" className="hover:text-white transition">About ASG</Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-white transition">Contact Us</Link>
+              </li>
+              <li>
                 <Link href="/book" className="hover:text-white transition">Book a Medic</Link>
               </li>
               <li>
@@ -73,9 +79,6 @@ export default function SiteFooter() {
               </li>
               <li>
                 <Link href="/complaints" className="hover:text-white transition">Complaints</Link>
-              </li>
-              <li>
-                <Link href="/accessibility-statement" className="hover:text-white transition">Accessibility</Link>
               </li>
             </ul>
           </div>
