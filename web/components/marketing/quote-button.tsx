@@ -14,7 +14,7 @@ export default function QuoteButton({ className = '' }: QuoteButtonProps) {
     <>
       <button
         onClick={() => setShowQuoteBuilder(true)}
-        className={`bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-slate-50 transition border-2 border-blue-600 ${className}`}
+        className={`bg-white text-blue-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-slate-50 active:scale-95 transition border-2 border-blue-600 shadow-sm ${className}`}
       >
         Get Quote
       </button>

@@ -36,36 +36,39 @@ export default function Pricing() {
       {/* FAQ */}
       <section className="pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          <div className="space-y-6">
-            <h3 className="text-3xl font-bold text-slate-900 mb-8">Common questions</h3>
-
-            <div className="border border-slate-200 rounded-xl p-6 hover:border-blue-200 hover:shadow-sm transition">
-              <h4 className="text-lg font-semibold text-slate-900 mb-3">What's included in the price?</h4>
-              <p className="text-slate-600 leading-relaxed">
-                A qualified HCPC-registered paramedic on-site, plus full access to the compliance platform (mobile app, web dashboard, automatic RIDDOR flagging, weekly reports). No separate software fees.
-              </p>
-            </div>
-
-            <div className="border border-slate-200 rounded-xl p-6 hover:border-blue-200 hover:shadow-sm transition">
-              <h4 className="text-lg font-semibold text-slate-900 mb-3">Is there a minimum booking?</h4>
-              <p className="text-slate-600 leading-relaxed">
-                Standard minimum is 1 day (8 hours). For shorter shifts, contact us for custom pricing.
-              </p>
-            </div>
-
-            <div className="border border-slate-200 rounded-xl p-6 hover:border-blue-200 hover:shadow-sm transition">
-              <h4 className="text-lg font-semibold text-slate-900 mb-3">What if there's no mobile signal?</h4>
-              <p className="text-slate-600 leading-relaxed">
-                The app works 100% offline. All data is captured locally and syncs automatically when connectivity returns.
-              </p>
-            </div>
-
-            <div className="border border-slate-200 rounded-xl p-6 hover:border-blue-200 hover:shadow-sm transition">
-              <h4 className="text-lg font-semibold text-slate-900 mb-3">How does RIDDOR auto-flagging work?</h4>
-              <p className="text-slate-600 leading-relaxed">
-                When a treatment is logged, the platform automatically checks it against RIDDOR 2013 criteria. Reportable incidents are flagged with appropriate HSE deadlines and pre-filled forms.
-              </p>
-            </div>
+          <h3 className="text-2xl font-bold text-slate-900 mb-8">Common questions</h3>
+          <div className="grid sm:grid-cols-2 gap-5">
+            {[
+              {
+                q: "What's included in the base price?",
+                a: "An HCPC-registered paramedic on site, plus full access to the SiteMedic compliance platform — treatment logging, RIDDOR auto-flagging, weekly safety reports, and worker health profiles. No separate software fees.",
+              },
+              {
+                q: "Is there a minimum booking?",
+                a: "Standard minimum is 1 day (8 hours). For shorter shifts or bespoke arrangements, contact us for custom pricing.",
+              },
+              {
+                q: "What if there's no mobile signal on site?",
+                a: "The SiteMedic app works 100% offline. All data is captured locally and syncs automatically the moment connectivity returns.",
+              },
+              {
+                q: "How does RIDDOR auto-flagging work?",
+                a: "When a treatment is logged, the platform checks it against RIDDOR 2013 criteria automatically. Reportable incidents are flagged with HSE deadlines and pre-filled notification forms.",
+              },
+              {
+                q: "Can we add clinical services to an existing booking?",
+                a: "Yes. Health surveillance, drug & alcohol testing, and fitness-to-work assessments can be added to any medic booking. We&apos;ll scope the right package for your site.",
+              },
+              {
+                q: "Are clinical add-on prices per visit or per worker?",
+                a: "Health surveillance and drug testing are priced per worker tested. Fitness-to-work assessments are priced per assessment. All results are logged in SiteMedic automatically.",
+              },
+            ].map(({ q, a }) => (
+              <div key={q} className="bg-slate-50 rounded-xl border border-slate-200 p-5 hover:border-blue-200 hover:bg-white hover:shadow-sm transition duration-200">
+                <h4 className="font-semibold text-slate-900 text-sm mb-2">{q}</h4>
+                <p className="text-slate-600 text-sm leading-relaxed">{a}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
