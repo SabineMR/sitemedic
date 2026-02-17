@@ -8,10 +8,13 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useTerritories, calculateCoverageGaps } from '@/lib/queries/admin/territories';
+import { useTerritories } from '@/lib/queries/admin/territories';
 import TerritoryList from '@/components/admin/territory-list';
-import { Map, AlertTriangle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Map, Users, UserCheck, UserX, TrendingUp, Briefcase } from 'lucide-react';
+import { aggregateTerritoryMetrics } from '@/lib/territory/metrics';
+import { detectHiringTriggers } from '@/lib/territory/hiring-triggers';
+import CoverageAlerts from './coverage-alerts';
+import HiringPanel from './hiring-panel';
 
 // Dynamic import for map component to avoid SSR issues with Leaflet
 const TerritoryMap = dynamic(() => import('@/components/admin/territory-map'), {
@@ -26,18 +29,21 @@ const TerritoryMap = dynamic(() => import('@/components/admin/territory-map'), {
 export default function TerritoriesPage() {
   const { data: territories = [], isLoading, error } = useTerritories();
 
-  // Calculate coverage gaps
-  const coverageGaps = calculateCoverageGaps(territories);
+  // Calculate summary statistics
+  const stats = aggregateTerritoryMetrics(territories);
+
+  // Count active hiring triggers
+  const hiringTriggers = detectHiringTriggers(territories);
+  const activeHiringAlerts = hiringTriggers.filter(t => t.severity === 'critical').length;
 
   if (error) {
     return (
       <div className="p-8">
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
+        <div className="bg-red-500/10 border border-red-500 rounded-lg p-4">
+          <p className="text-red-400">
             Failed to load territories. Please try again later.
-          </AlertDescription>
-        </Alert>
+          </p>
+        </div>
       </div>
     );
   }
@@ -57,29 +63,63 @@ export default function TerritoriesPage() {
         </p>
       </div>
 
-      {/* Coverage Gap Alerts */}
-      {coverageGaps.length > 0 && (
-        <div className="px-8 pt-6 space-y-3">
-          {coverageGaps.map((gap) => (
-            <Alert
-              key={gap.territory_id}
-              variant={gap.severity === 'critical' ? 'destructive' : 'default'}
-              className={
-                gap.severity === 'warning'
-                  ? 'border-yellow-500 bg-yellow-500/10'
-                  : ''
-              }
-            >
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <span className="font-semibold">{gap.postcode_sector} ({gap.region})</span>
-                : {gap.rejected_bookings}/{gap.total_bookings} bookings rejected (
-                {gap.rejection_rate.toFixed(1)}%). Consider assigning additional medics.
-              </AlertDescription>
-            </Alert>
-          ))}
+      {/* Summary Stats Bar */}
+      {!isLoading && territories.length > 0 && (
+        <div className="px-8 pt-6">
+          <div className="grid grid-cols-5 gap-4">
+            {/* Total Territories */}
+            <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Users className="h-4 w-4 text-gray-400" />
+                <span className="text-sm text-gray-400">Total Territories</span>
+              </div>
+              <div className="text-2xl font-bold text-white">{stats.total_territories}</div>
+            </div>
+
+            {/* Assigned */}
+            <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <UserCheck className="h-4 w-4 text-green-400" />
+                <span className="text-sm text-gray-400">Assigned</span>
+              </div>
+              <div className="text-2xl font-bold text-white">{stats.assigned_territories}</div>
+            </div>
+
+            {/* Unassigned */}
+            <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <UserX className="h-4 w-4 text-yellow-400" />
+                <span className="text-sm text-gray-400">Unassigned</span>
+              </div>
+              <div className="text-2xl font-bold text-white">{stats.unassigned_territories}</div>
+            </div>
+
+            {/* Average Utilization */}
+            <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp className="h-4 w-4 text-blue-400" />
+                <span className="text-sm text-gray-400">Avg Utilization</span>
+              </div>
+              <div className="text-2xl font-bold text-white">{stats.avg_utilization}%</div>
+            </div>
+
+            {/* Active Hiring Alerts */}
+            <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Briefcase className="h-4 w-4 text-orange-400" />
+                <span className="text-sm text-gray-400">Hiring Alerts</span>
+              </div>
+              <div className="text-2xl font-bold text-white">{activeHiringAlerts}</div>
+            </div>
+          </div>
         </div>
       )}
+
+      {/* Coverage Gap Alerts */}
+      <CoverageAlerts territories={territories} />
+
+      {/* Hiring Recommendations */}
+      <HiringPanel territories={territories} />
 
       {/* Map */}
       <div className="px-8 pt-6 flex-shrink-0" style={{ height: '60vh' }}>

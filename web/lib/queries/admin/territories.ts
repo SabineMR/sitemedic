@@ -42,6 +42,9 @@ export interface TerritoryWithMetrics {
     fulfillment_rate: number; // 0-100
   };
 
+  // Hiring trigger tracking
+  hiring_trigger_weeks: number; // Number of consecutive weeks with hiring triggers
+
   // Map coordinates (approximate centroid for postcode area)
   lat: number;
   lng: number;
@@ -493,6 +496,7 @@ export async function fetchTerritoriesWithMetrics(supabase: SupabaseClient, orgI
         rejection_rate: metric?.rejection_rate || 0,
         fulfillment_rate: metric?.fulfillment_rate || 100,
       },
+      hiring_trigger_weeks: metric?.hiring_trigger_weeks || 0,
       lat: coords.lat,
       lng: coords.lng,
     };
@@ -688,13 +692,17 @@ export function useUnassignMedic() {
 /**
  * Calculate coverage gaps for territories.
  *
- * A coverage gap exists when rejection rate > 10%.
+ * A coverage gap exists when rejection rate > 10% AND total bookings > 10.
  * - Warning severity: rejection rate 10-25%
  * - Critical severity: rejection rate > 25%
+ *
+ * WHY minimum volume filter: Prevents false positives from low-volume territories.
+ * A territory with 1 booking and 1 rejection (100% rejection) isn't a coverage gap,
+ * it's statistical noise. Require 10+ bookings for meaningful analysis.
  */
 export function calculateCoverageGaps(territories: TerritoryWithMetrics[]): CoverageGapAlert[] {
   return territories
-    .filter(t => t.recent_metrics.rejection_rate > 10)
+    .filter(t => t.recent_metrics.rejection_rate > 10 && t.recent_metrics.total_bookings > 10)
     .map(t => ({
       territory_id: t.id,
       postcode_sector: t.postcode_sector,
