@@ -560,7 +560,9 @@ class LocationTrackingService {
     }
 
     // Sync events first — server needs shift context before pings
+    // Order: GPS shift events → beacon events → GPS pings
     await this.syncOfflineEventQueue();
+    await beaconService.syncEventQueue();
 
     if (this.offlineQueue.length === 0) {
       return;
