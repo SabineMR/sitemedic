@@ -265,8 +265,6 @@ export const useMedicAlertsStore = create<MedicAlertsState>((set, get) => ({
       set((state) => ({
         alerts: state.alerts.filter((a) => a.id !== alertId),
       }));
-
-      console.log('[AlertsStore] Alert resolved:', alertId);
     } catch (error) {
       console.error('[AlertsStore] Unexpected error:', error);
     }
@@ -284,17 +282,12 @@ export const useMedicAlertsStore = create<MedicAlertsState>((set, get) => ({
    */
   requestBrowserNotifications: async () => {
     if (typeof window === 'undefined' || !('Notification' in window)) {
-      console.log('[AlertsStore] Browser notifications not supported');
       return;
     }
 
     try {
       const permission = await Notification.requestPermission();
       set({ browserNotificationsEnabled: permission === 'granted' });
-
-      if (permission === 'granted') {
-        console.log('[AlertsStore] Browser notifications enabled');
-      }
     } catch (error) {
       console.error('[AlertsStore] Error requesting notification permission:', error);
     }
