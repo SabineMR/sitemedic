@@ -11,7 +11,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { StripeOnboardingStatus } from '@/components/medics/stripe-onboarding-status';
-import { User, CheckCircle2, XCircle, ToggleLeft, ToggleRight, AlertTriangle, ExternalLink, FileDown, Calendar, ShieldCheck } from 'lucide-react';
+import { User, CheckCircle2, XCircle, ToggleLeft, ToggleRight, AlertTriangle, ExternalLink, FileDown, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -72,7 +72,6 @@ interface MedicData {
   available_for_work: boolean;
   star_rating: number | null;
   stripe_onboarding_complete: boolean;
-  cqc_registration_number: string | null;
 }
 
 export default function MedicProfilePage() {
@@ -347,22 +346,6 @@ export default function MedicProfilePage() {
             <XCircle className="w-4 h-4" />
             IR35 status not yet submitted — contact your administrator
           </div>
-        )}
-      </div>
-
-      {/* CQC Registration */}
-      <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <ShieldCheck className="w-5 h-5 text-blue-400" />
-          <h2 className="text-white font-semibold text-lg">CQC Registration</h2>
-        </div>
-        {medic.cqc_registration_number ? (
-          <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-900/30 border border-blue-700/40 text-blue-200 rounded-xl text-sm font-mono">
-            <ShieldCheck className="w-4 h-4 text-blue-400" />
-            {medic.cqc_registration_number}
-          </span>
-        ) : (
-          <p className="text-gray-500 text-sm">No CQC registration number on file. Contact your administrator if this is required.</p>
         )}
       </div>
 

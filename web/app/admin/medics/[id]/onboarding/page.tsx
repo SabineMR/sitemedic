@@ -16,7 +16,6 @@ import { createClient } from '@/lib/supabase/server';
 import { IR35Form } from '@/components/medics/ir35-form';
 import { StripeOnboardingStatus } from '@/components/medics/stripe-onboarding-status';
 import { CompensationSettings } from '@/components/medics/compensation-settings';
-import { CQCRegistrationCard } from '@/components/medics/cqc-registration-card';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-react';
@@ -219,12 +218,6 @@ export default async function MedicOnboardingPage({ params }: { params: Promise<
             medicName={`${medic.first_name} ${medic.last_name}`}
           />
         </div>
-
-        {/* CQC Registration */}
-        <CQCRegistrationCard
-          medicId={medicId}
-          initialNumber={medic.cqc_registration_number ?? null}
-        />
 
         {/* Payslip History */}
         <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
