@@ -8,18 +8,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 **Current focus:** Phase 2 - Mobile Core
 
 ## Current Position
-Phase: 7.5 of 8 (Territory Auto-Assignment)
-Plan: 3 of 5 in current phase
+Phase: 7 of 8 (Certification Tracking - Gap Closure Wave 1)
+Plan: 6 of 9 in current phase
 Status: In progress
-Last activity: 2026-02-17 — Completed 07.5-03-PLAN.md (Drag-Drop Assignment Panel)
-Progress: [█████████████████░] 96% (81/84 plans across Phases 1-7.5)
+Last activity: 2026-02-17 — Completed 07-06-PLAN.md (Real Org Name in Certification Emails)
+Progress: [█████████████████░] 96% (82/85 plans across Phases 1-7.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 81
+- Total plans completed: 82
 - Average duration: 4.0 min
-- Total execution time: 5.65 hours
+- Total execution time: 5.68 hours
 
 **By Phase:**
 
@@ -36,12 +36,12 @@ Progress: [█████████████████░] 96% (81/84 pl
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
 | 06-riddor-auto-flagging | 8/8 | 50 min | 6.3 min |
 | 06.5-payments-payouts | 12/12 | 49.5 min | 4.1 min |
-| 07-certification-tracking | 4/9 | 9.3 min | 2.3 min |
+| 07-certification-tracking | 6/9 | 13.3 min | 2.2 min |
 | 07.5-territory-auto-assignment | 3/5 | 14 min | 4.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-04 (2.3 min), 07.5-01 (3 min), 07.5-02 (4 min), 07.5-03 (4 min), 07.5-04 (3 min)
-- Trend: Drag-drop territory assignment UI with @dnd-kit, optimistic TanStack Query mutations, keyboard-accessible fallback for WCAG compliance
+- Last 5 plans: 07.5-01 (3 min), 07.5-02 (4 min), 07.5-03 (4 min), 07-05 (2 min), 07-06 (2 min)
+- Trend: Gap closure wave completing email personalization and edge case fixes for certification tracking
 
 *Updated after each plan completion*
 
@@ -512,9 +512,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-17T01:12:00Z
-Stopped at: Completed 07.5-03-PLAN.md — Drag-Drop Assignment Panel (drag-drop UI with @dnd-kit, optimistic mutations, keyboard fallback for accessibility)
+Last session: 2026-02-17T01:23:23Z
+Stopped at: Completed 07-06-PLAN.md — Gap Closure: Real Org Name in Certification Emails (replaced hardcoded 'Your Organization' with organizations.name query)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6 (RIDDOR Auto-Flagging) complete (8/8 plans). Phase 6.5 (Payments & Payouts) complete (12/12 plans). Phase 7 (Certification Tracking) in progress (4/9 plans). Phase 7.5 (Territory Auto-Assignment) in progress (3/5 plans). Progress: 81/84 plans (96%)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6 (RIDDOR Auto-Flagging) complete (8/8 plans). Phase 6.5 (Payments & Payouts) complete (12/12 plans). Phase 7 (Certification Tracking) in progress (6/9 plans). Phase 7.5 (Territory Auto-Assignment) in progress (3/5 plans). Progress: 82/85 plans (96%)*
