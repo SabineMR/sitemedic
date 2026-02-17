@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 Phase: v1.1 — Phase 12 (Analytics Dashboard) — In progress
-Plan: 12-01 complete (territory analytics charts). Plans 12-03/05 pending.
+Plan: 12-03 complete (medic utilisation charts). Plans 12-01/05 pending.
 Status: In progress
-Last activity: 2026-02-17 — Completed 12-01-PLAN.md (TerritoryHeatmap, HiringTriggerCards, CoverageGapTable)
-Progress: [█████████████████████░░] 99/105 plans complete (~94%).
+Last activity: 2026-02-17 — Completed 12-03-PLAN.md (MedicUtilisationTable, OOTBookingsChart, LateArrivalHeatmap)
+Progress: [█████████████████████░░] 100/105 plans complete (~95%).
 
 ## Performance Metrics
 
@@ -555,8 +555,8 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 
 ## Session Continuity
 
-Last session: 2026-02-17T17:44:55Z
-Stopped at: Completed 12-04-PLAN.md — analytics query hooks (auto-assignment, medic utilisation, late arrivals, OOT bookings)
+Last session: 2026-02-17T17:50:07Z
+Stopped at: Completed 12-03-PLAN.md — medic utilisation charts (MedicUtilisationTable, OOTBookingsChart, LateArrivalHeatmap)
 Resume file: None
 
 ---
