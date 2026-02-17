@@ -58,7 +58,7 @@ export function exportTreatmentsCSV(treatments: TreatmentWithWorker[]) {
  *          Emergency Contact Phone, Health Notes, Consent Given, Consent Date,
  *          Certification Status, Added Date
  *
- * Certification Status: Hard-coded "Active" for now (Phase 7 will provide real data)
+ * Certification Status: Uses worker.certification_status if provided, otherwise blank
  */
 export function exportWorkersCSV(workers: Worker[]) {
   // Map workers to flat CSV rows
@@ -75,7 +75,7 @@ export function exportWorkersCSV(workers: Worker[]) {
     'Consent Date': w.consent_date
       ? format(new Date(w.consent_date), 'dd/MM/yyyy')
       : '',
-    'Certification Status': 'Active', // TODO: Phase 7 - Calculate from certifications table
+    'Certification Status': (w as any).certification_status ?? '',
     'Added Date': w.created_at
       ? format(new Date(w.created_at), 'dd/MM/yyyy HH:mm')
       : '',

@@ -17,68 +17,13 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import {
-  LayoutDashboard,
-  Stethoscope,
-  AlertTriangle,
-  Users,
-  FileText,
-  FileSignature,
-  ShieldCheck,
-  ShieldAlert,
-  LogOut,
-} from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-
-const navigation = [
-  {
-    name: 'Overview',
-    href: '/dashboard',
-    icon: LayoutDashboard,
-  },
-  {
-    name: 'Treatments',
-    href: '/treatments',
-    icon: Stethoscope,
-  },
-  {
-    name: 'Near-Misses',
-    href: '/near-misses',
-    icon: AlertTriangle,
-  },
-  {
-    name: 'Workers',
-    href: '/workers',
-    icon: Users,
-  },
-  {
-    name: 'RIDDOR',
-    href: '/riddor',
-    icon: ShieldAlert,
-  },
-  {
-    name: 'Certifications',
-    href: '/certifications',
-    icon: ShieldCheck,
-  },
-  {
-    name: 'Contracts',
-    href: '/contracts',
-    icon: FileSignature,
-  },
-  {
-    name: 'Reports',
-    href: '/reports',
-    icon: FileText,
-  },
-];
+import { DashboardNav } from '@/components/dashboard/DashboardNav';
 
 export default async function DashboardLayout({
   children,
@@ -115,18 +60,7 @@ export default async function DashboardLayout({
               <SidebarGroup>
                 <SidebarGroupLabel>Navigation</SidebarGroupLabel>
                 <SidebarGroupContent>
-                  <SidebarMenu>
-                    {navigation.map((item) => (
-                      <SidebarMenuItem key={item.name}>
-                        <SidebarMenuButton asChild>
-                          <Link href={item.href}>
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.name}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
+                  <DashboardNav />
                 </SidebarGroupContent>
               </SidebarGroup>
             </SidebarContent>

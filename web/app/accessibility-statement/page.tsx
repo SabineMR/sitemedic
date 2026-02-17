@@ -195,7 +195,7 @@ export default function AccessibilityStatement() {
 
             <div className="bg-blue-50 p-6 rounded-lg mb-4">
               <p className="text-gray-900 mb-2"><strong>Email:</strong> <a href="mailto:accessibility@sitemedic.co.uk" className="text-blue-600 hover:underline">accessibility@sitemedic.co.uk</a></p>
-              <p className="text-gray-900 mb-2"><strong>Phone:</strong> <a href="mailto:support@sitemedic.co.uk" className="text-blue-600 hover:underline">support@sitemedic.co.uk</a></p>
+              <p className="text-gray-900 mb-2"><strong>Support Email:</strong> <a href="mailto:support@sitemedic.co.uk" className="text-blue-600 hover:underline">support@sitemedic.co.uk</a></p>
               <p className="text-gray-900 mb-2"><strong>Address:</strong> [Registered Office Address]</p>
               <p className="text-gray-900"><strong>Response Time:</strong> We aim to respond within 5 business days</p>
             </div>
@@ -223,7 +223,7 @@ export default function AccessibilityStatement() {
               <div className="bg-gray-100 p-4 rounded-lg">
                 <h4 className="font-semibold text-gray-900 mb-2">Phone Support</h4>
                 <p className="text-gray-700">
-                  Call us at <a href="mailto:support@sitemedic.co.uk" className="text-blue-600 hover:underline">support@sitemedic.co.uk</a> for
+                  Email us at <a href="mailto:support@sitemedic.co.uk" className="text-blue-600 hover:underline">support@sitemedic.co.uk</a> for
                   assistance with booking, account management, or accessing information.
                 </p>
               </div>

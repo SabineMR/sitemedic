@@ -203,7 +203,7 @@ export default function RefundPolicy() {
             </p>
             <div className="bg-gray-100 p-4 rounded-lg mb-4">
               <p className="text-gray-900 mb-2"><strong>Email:</strong> <a href="mailto:refunds@sitemedic.co.uk" className="text-blue-600 hover:underline">refunds@sitemedic.co.uk</a></p>
-              <p className="text-gray-900 mb-2"><strong>Phone:</strong> <a href="mailto:support@sitemedic.co.uk" className="text-blue-600 hover:underline">support@sitemedic.co.uk</a></p>
+              <p className="text-gray-900 mb-2"><strong>Support Email:</strong> <a href="mailto:support@sitemedic.co.uk" className="text-blue-600 hover:underline">support@sitemedic.co.uk</a></p>
               <p className="text-gray-900"><strong>Online:</strong> Via your account dashboard → Support → Refund Request</p>
             </div>
 
@@ -305,7 +305,7 @@ export default function RefundPolicy() {
             <div className="bg-blue-50 p-4 rounded-lg">
               <p className="text-gray-900"><strong>Email:</strong> <a href="mailto:refunds@sitemedic.co.uk" className="text-blue-600 hover:underline">refunds@sitemedic.co.uk</a></p>
               <p className="text-gray-900"><strong>Support:</strong> <a href="mailto:support@sitemedic.co.uk" className="text-blue-600 hover:underline">support@sitemedic.co.uk</a></p>
-              <p className="text-gray-900"><strong>Phone:</strong> <a href="mailto:support@sitemedic.co.uk" className="text-blue-600 hover:underline">support@sitemedic.co.uk</a></p>
+              <p className="text-gray-900"><strong>Support Email:</strong> <a href="mailto:support@sitemedic.co.uk" className="text-blue-600 hover:underline">support@sitemedic.co.uk</a></p>
               <p className="text-gray-900"><strong>Address:</strong> [Registered Office Address]</p>
             </div>
           </section>

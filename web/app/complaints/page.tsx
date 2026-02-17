@@ -75,7 +75,7 @@ export default function ComplaintsProcedure() {
               </div>
 
               <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-2">📞 Phone</h4>
+                <h4 className="font-semibold text-gray-900 mb-2">📧 Email</h4>
                 <p className="text-gray-700 text-sm mb-2">
                   <a href="mailto:support@sitemedic.co.uk" className="text-blue-600 hover:underline">
                     support@sitemedic.co.uk
@@ -395,7 +395,7 @@ export default function ComplaintsProcedure() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Contact the Complaints Team</h2>
             <div className="bg-blue-50 p-6 rounded-lg">
               <p className="text-gray-900 mb-2"><strong>Complaints Email:</strong> <a href="mailto:complaints@sitemedic.co.uk" className="text-blue-600 hover:underline">complaints@sitemedic.co.uk</a></p>
-              <p className="text-gray-900 mb-2"><strong>Phone:</strong> <a href="mailto:support@sitemedic.co.uk" className="text-blue-600 hover:underline">support@sitemedic.co.uk</a></p>
+              <p className="text-gray-900 mb-2"><strong>Support Email:</strong> <a href="mailto:support@sitemedic.co.uk" className="text-blue-600 hover:underline">support@sitemedic.co.uk</a></p>
               <p className="text-gray-900 mb-2"><strong>Hours:</strong> Monday-Friday, 9am-5pm GMT</p>
               <p className="text-gray-900 mb-2"><strong>Postal Address:</strong></p>
               <p className="text-gray-700 ml-4">
