@@ -20,6 +20,7 @@ export interface BookingWithRelations {
   site_name: string;
   site_address: string;
   site_postcode: string;
+  what3words_address: string | null;
   site_contact_name: string | null;
   site_contact_phone: string | null;
   shift_date: string;
