@@ -193,6 +193,12 @@ Plans:
 
 **Plans:** 4 plans
 
+Plans:
+- [ ] 13-01-PLAN.md — Skeleton loaders for treatments, workers, organizations, and command center (Wave 1)
+- [ ] 13-02-PLAN.md — Geofence schema fix + interactive Leaflet map picker (Wave 1)
+- [ ] 13-03-PLAN.md — Geofence exit alert: haversine distance check on every ping (Wave 2)
+- [ ] 13-04-PLAN.md — RIDDOR auto-save, audit trail, and photo gallery (Wave 2)
+
 ---
 
 ### Phase 14: Compliance, Exports & Medic Portal ✅ COMPLETE
