@@ -118,6 +118,8 @@ function ConfirmationContent() {
           is_recurring: bookingDetail.booking.is_recurring || false,
           recurrence_pattern: bookingDetail.booking.recurrence_pattern || null,
           recurring_weeks: 0,
+          specialNotes: bookingDetail.booking.special_notes || null,
+          what3wordsAddress: bookingDetail.booking.what3words_address || null,
         };
 
         // Calculate recurring weeks if recurring booking

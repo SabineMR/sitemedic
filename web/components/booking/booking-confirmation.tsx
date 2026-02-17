@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle2, Calendar, Clock, MapPin, User, Mail, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { RecurringSummary } from './recurring-summary';
+import { What3WordsDisplay } from './what3words-display';
 
 interface BookingConfirmationProps {
   booking: {
@@ -22,6 +23,8 @@ interface BookingConfirmationProps {
     medicName: string;
     medicRating: number;
     clientEmail: string;
+    specialNotes?: string | null;
+    what3wordsAddress?: string | null;
     pricing: {
       baseRate: number;
       shiftHours: number;
@@ -95,6 +98,28 @@ export function BookingConfirmation({
               <p className="text-slate-600">{booking.siteAddress}</p>
             </div>
           </div>
+
+          {/* What3Words Location */}
+          {booking.what3wordsAddress && (
+            <div className="flex items-start gap-3">
+              <MapPin className="h-5 w-5 text-slate-500 mt-0.5" />
+              <div>
+                <p className="font-medium text-slate-900">What3Words Location</p>
+                <What3WordsDisplay address={booking.what3wordsAddress} />
+              </div>
+            </div>
+          )}
+
+          {/* Special Notes */}
+          {booking.specialNotes && (
+            <div className="flex items-start gap-3">
+              <FileText className="h-5 w-5 text-slate-500 mt-0.5" />
+              <div>
+                <p className="font-medium text-slate-900">Special Notes</p>
+                <p className="text-slate-600 whitespace-pre-wrap">{booking.specialNotes}</p>
+              </div>
+            </div>
+          )}
 
           {/* Assigned Medic */}
           <div className="flex items-start gap-3">
