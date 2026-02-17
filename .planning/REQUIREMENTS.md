@@ -78,12 +78,12 @@ Requirements for MVP launch. Each maps to roadmap phases.
 
 ### RIDDOR Reporting
 
-- [ ] **RIDD-01**: App auto-flags treatment when it matches RIDDOR-reportable criteria (Section 8.2)
-- [ ] **RIDD-02**: Medic can confirm or override RIDDOR flag with reason
-- [ ] **RIDD-03**: RIDDOR-flagged incident shows deadline countdown (10 days for specified injuries, 15 days for over-7-day)
-- [ ] **RIDD-04**: App generates pre-filled HSE F2508 form PDF from treatment log data
-- [ ] **RIDD-05**: Dashboard shows RIDDOR deadline countdown for site manager
-- [ ] **RIDD-06**: RIDDOR report tracks status: Draft / Submitted / Confirmed
+- [x] **RIDD-01**: App auto-flags treatment when it matches RIDDOR-reportable criteria (Section 8.2)
+- [x] **RIDD-02**: Medic can confirm or override RIDDOR flag with reason
+- [x] **RIDD-03**: RIDDOR-flagged incident shows deadline countdown (10 days for specified injuries, 15 days for over-7-day)
+- [x] **RIDD-04**: App generates pre-filled HSE F2508 form PDF from treatment log data
+- [x] **RIDD-05**: Dashboard shows RIDDOR deadline countdown for site manager
+- [x] **RIDD-06**: RIDDOR report tracks status: Draft / Submitted / Confirmed
 
 ### Photo Handling
 
@@ -129,7 +129,7 @@ Requirements for MVP launch. Each maps to roadmap phases.
 ### Email Notifications
 
 - [x] **NOTIF-01**: Site manager receives email when weekly PDF report is ready
-- [ ] **NOTIF-02**: Site manager receives email when RIDDOR deadline approaches (3 days before)
+- [x] **NOTIF-02**: Site manager receives email when RIDDOR deadline approaches (3 days before)
 - [ ] **NOTIF-03**: Site manager receives email when worker certification expires
 - [ ] **NOTIF-04**: Email notifications use professional template with company branding
 
@@ -302,13 +302,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PDF-06 | Phase 5 | Complete |
 | PDF-07 | Phase 5 | Complete |
 | NOTIF-01 | Phase 5 | Complete |
-| RIDD-01 | Phase 6 | Pending |
-| RIDD-02 | Phase 6 | Pending |
-| RIDD-03 | Phase 6 | Pending |
-| RIDD-04 | Phase 6 | Pending |
-| RIDD-05 | Phase 6 | Pending |
-| RIDD-06 | Phase 6 | Pending |
-| NOTIF-02 | Phase 6 | Pending |
+| RIDD-01 | Phase 6 | Complete |
+| RIDD-02 | Phase 6 | Complete |
+| RIDD-03 | Phase 6 | Complete |
+| RIDD-04 | Phase 6 | Complete |
+| RIDD-05 | Phase 6 | Complete |
+| RIDD-06 | Phase 6 | Complete |
+| NOTIF-02 | Phase 6 | Complete |
 | CERT-01 | Phase 7 | Pending |
 | CERT-02 | Phase 7 | Pending |
 | CERT-03 | Phase 7 | Pending |
