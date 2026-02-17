@@ -214,9 +214,6 @@ export function useUpgradeToNet30() {
 
       if (error) throw error;
 
-      // Log the upgrade reason (could be stored in audit log in production)
-      console.log(`Client ${upgrade.clientId} upgraded to Net 30. Reason: ${upgrade.reason}`);
-
       return data;
     },
 
@@ -287,9 +284,6 @@ export function useDowngradeToPrePay() {
         .single();
 
       if (error) throw error;
-
-      // Log the downgrade reason
-      console.log(`Client ${downgrade.clientId} downgraded to prepay. Reason: ${downgrade.reason}`);
 
       return data;
     },

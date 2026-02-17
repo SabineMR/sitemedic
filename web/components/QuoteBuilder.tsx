@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Script from 'next/script';
 import { What3WordsInput } from '@/components/ui/what3words-input';
 import { coordinatesToWhat3Words } from '@/lib/utils/what3words';
@@ -10,9 +11,13 @@ interface QuoteBuilderProps {
 }
 
 export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
   const [addressAutoFilled, setAddressAutoFilled] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [quoteRef, setQuoteRef] = useState<string | null>(null);
   const addressInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
@@ -228,6 +233,35 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
   };
 
   const prevStep = () => setStep(step - 1);
+
+  const submitQuote = async () => {
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      const response = await fetch('/api/quotes/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        setSubmitError(data.error || 'Something went wrong. Please try again.');
+      } else {
+        setQuoteRef(data.quoteRef);
+        setStep(4);
+      }
+    } catch {
+      setSubmitError('Network error. Please check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBookNow = () => {
+    sessionStorage.setItem('quoteData', JSON.stringify(formData));
+    onClose();
+    router.push('/book');
+  };
 
   return (
     <>

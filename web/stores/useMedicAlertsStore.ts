@@ -127,7 +127,6 @@ export const useMedicAlertsStore = create<MedicAlertsState>((set, get) => ({
       }
 
       set({ alerts: data || [], isLoading: false });
-      console.log(`[AlertsStore] Fetched ${data?.length || 0} active alerts`);
     } catch (error) {
       console.error('[AlertsStore] Unexpected error:', error);
       set({ isLoading: false });
@@ -140,11 +139,8 @@ export const useMedicAlertsStore = create<MedicAlertsState>((set, get) => ({
   subscribe: () => {
     const existingChannel = get().channel;
     if (existingChannel) {
-      console.log('[AlertsStore] Already subscribed to alerts');
       return;
     }
-
-    console.log('[AlertsStore] Subscribing to real-time alerts...');
 
     const channel = supabase
       .channel('medic-alerts')
@@ -156,8 +152,6 @@ export const useMedicAlertsStore = create<MedicAlertsState>((set, get) => ({
           table: 'medic_alerts',
         },
         (payload) => {
-          console.log('[AlertsStore] New alert received:', payload.new);
-
           // Fetch full alert data from view (includes medic name, site name)
           supabase
             .from('active_medic_alerts')
@@ -191,8 +185,6 @@ export const useMedicAlertsStore = create<MedicAlertsState>((set, get) => ({
           table: 'medic_alerts',
         },
         (payload) => {
-          console.log('[AlertsStore] Alert updated:', payload.new);
-
           // Remove from active alerts if dismissed or resolved
           if (payload.new.is_dismissed || payload.new.is_resolved) {
             set((state) => ({
@@ -202,7 +194,6 @@ export const useMedicAlertsStore = create<MedicAlertsState>((set, get) => ({
         }
       )
       .subscribe((status) => {
-        console.log('[AlertsStore] Subscription status:', status);
         set({ isConnected: status === 'SUBSCRIBED' });
       });
 
@@ -218,7 +209,6 @@ export const useMedicAlertsStore = create<MedicAlertsState>((set, get) => ({
   unsubscribe: () => {
     const channel = get().channel;
     if (channel) {
-      console.log('[AlertsStore] Unsubscribing from alerts...');
       supabase.removeChannel(channel);
       set({ channel: null, isConnected: false });
     }
@@ -247,8 +237,6 @@ export const useMedicAlertsStore = create<MedicAlertsState>((set, get) => ({
       set((state) => ({
         alerts: state.alerts.filter((a) => a.id !== alertId),
       }));
-
-      console.log('[AlertsStore] Alert dismissed:', alertId);
     } catch (error) {
       console.error('[AlertsStore] Unexpected error:', error);
     }

@@ -42,8 +42,6 @@ export async function POST(request: NextRequest) {
     const payload: ResendWebhookPayload = await request.json();
     const { type, data } = payload;
 
-    console.log(`📬 Received Resend webhook: ${type} for email ${data.email_id}`);
-
     // Extract contractId from tags
     const contractIdTag = data.tags?.find((t) => t.name === 'contractId');
     if (!contractIdTag) {
@@ -55,7 +53,6 @@ export async function POST(request: NextRequest) {
     }
 
     const contractId = contractIdTag.value;
-    console.log(`📋 Contract ID: ${contractId}`);
 
     // Create Supabase service role client for webhook handler
     // (webhooks don't have user auth, need service role)
@@ -72,8 +69,6 @@ export async function POST(request: NextRequest) {
 
     // Handle email.opened event - update contract status to 'viewed'
     if (type === 'email.opened') {
-      console.log(`👀 Email opened for contract ${contractId}`);
-
       // Only update to 'viewed' if currently 'sent'
       // Don't regress from 'signed' or other later statuses
       const { data: contract } = await supabase
@@ -93,13 +88,7 @@ export async function POST(request: NextRequest) {
 
         if (updateError) {
           console.error('❌ Error updating contract status:', updateError);
-        } else {
-          console.log(`✅ Contract ${contractId} status updated to 'viewed'`);
         }
-      } else {
-        console.log(
-          `⏭️  Skipping status update - current status: ${contract?.status || 'unknown'}`
-        );
       }
     }
 
@@ -115,8 +104,6 @@ export async function POST(request: NextRequest) {
     if (eventError) {
       console.error('❌ Error logging contract event:', eventError);
       // Don't fail the webhook - Resend expects 200 OK
-    } else {
-      console.log(`✅ Logged event ${type} for contract ${contractId}`);
     }
 
     // Always return 200 OK to acknowledge receipt

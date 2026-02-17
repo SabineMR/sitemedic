@@ -176,9 +176,6 @@ export async function POST(request: Request) {
           throw new Error(`Failed to update timesheet: ${updateError.message}`);
         }
 
-        console.log(
-          `✅ Payout processed: Timesheet ${timesheet.id}, Transfer ${transfer.id}, Amount £${timesheet.payout_amount}`
-        );
         successCount++;
       } catch (error: any) {
         console.error(
