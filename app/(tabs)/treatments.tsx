@@ -71,6 +71,7 @@ export default function TreatmentsScreen() {
           }
           return {
             ...treatment,
+            id: treatment.id,
             workerName,
           } as TreatmentWithWorker;
         })

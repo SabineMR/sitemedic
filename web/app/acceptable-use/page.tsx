@@ -315,7 +315,7 @@ export default function AcceptableUsePolicy() {
             <div className="bg-blue-50 p-4 rounded-lg">
               <p className="text-gray-900"><strong>Email:</strong> <a href="mailto:legal@sitemedic.co.uk" className="text-blue-600 hover:underline">legal@sitemedic.co.uk</a></p>
               <p className="text-gray-900"><strong>Support:</strong> <a href="mailto:support@sitemedic.co.uk" className="text-blue-600 hover:underline">support@sitemedic.co.uk</a></p>
-              <p className="text-gray-900"><strong>Phone:</strong> <a href="tel:+44XXXXXXXXXX" className="text-blue-600 hover:underline">+44 (0) XXXX XXXXXX</a></p>
+              <p className="text-gray-900"><strong>Phone:</strong> <a href="mailto:support@sitemedic.co.uk" className="text-blue-600 hover:underline">support@sitemedic.co.uk</a></p>
             </div>
 
             <div className="bg-yellow-50 border-l-4 border-yellow-600 p-4 mt-4">
