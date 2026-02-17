@@ -18,9 +18,10 @@ v1.1 closes gaps identified in the post-v1.0 codebase audit. The focus is on sur
 
 ---
 
-### Phase 08: Lead Capture & Data Persistence
+### Phase 08: Lead Capture & Data Persistence ✅ COMPLETE
 **Goal:** Persist contact form and quote builder submissions to the database so no lead is lost and admins can follow up.
 **Priority:** CRITICAL
+**Completed:** 2026-02-17
 
 **Problem:** Contact form sends email only (no DB write). Quote Builder saves to `sessionStorage` — data is lost after session. Zero lead tracking or CRM capability.
 
@@ -31,18 +32,18 @@ v1.1 closes gaps identified in the post-v1.0 codebase audit. The focus is on sur
 - Quote-to-booking shortcut: admin can convert a quote to a booking pre-filled with quote data
 
 **Success Criteria:**
-1. Contact form submission is visible in admin panel within 60 seconds
-2. Quote submission survives browser close and is retrievable by admin
-3. Admin can mark leads as `new`, `contacted`, `converted`, `closed`
-4. Quote data pre-fills the booking form when admin clicks "Convert to Booking"
+1. Contact form submission is visible in admin panel within 60 seconds ✅
+2. Quote submission survives browser close and is retrievable by admin ✅
+3. Admin can mark leads as `new`, `contacted`, `converted`, `closed` ✅
+4. Quote data pre-fills the booking form when admin clicks "Convert to Booking" ✅
 
 **Plans:** 4 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Database migration: contact_submissions + quote_submissions tables with RLS
-- [ ] 08-02-PLAN.md — API route updates: DB-first persistence for contact and quote routes
-- [ ] 08-03-PLAN.md — Admin submissions page with contact/quote tabs and inline status management
-- [ ] 08-04-PLAN.md — Quote-to-booking pre-fill via URL search params on new booking form
+- [x] 08-01-PLAN.md — Database migration: contact_submissions + quote_submissions tables with RLS
+- [x] 08-02-PLAN.md — API route updates: DB-first persistence for contact and quote routes
+- [x] 08-03-PLAN.md — Admin submissions page with contact/quote tabs and inline status management
+- [x] 08-04-PLAN.md — Quote-to-booking pre-fill via URL search params on new booking form
 
 ---
 

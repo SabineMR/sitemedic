@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 08 (Lead Capture & Data Persistence) — in progress
-Plan: 08-03 complete (3/4). Wave 2 done (08-02 + 08-03). Wave 3 next: 08-04
-Status: In progress — 08-03 executed
-Last activity: 2026-02-17 — Completed 08-03-PLAN.md (Admin submissions CRM page, TanStack Query hooks)
-Progress: [███░░░░░░░░░░░░░░░░░] 75% (3/4 plans executed in Phase 08)
+Phase: v1.1 — Phase 08 (Lead Capture & Data Persistence) — ✅ COMPLETE
+Plan: 08-04 complete (4/4). All waves done. Phase verified 13/13 must-haves.
+Status: Complete — ready for Phase 09 (Booking Data Completeness)
+Last activity: 2026-02-17 — Completed 08-04-PLAN.md (useSearchParams pre-fill, Suspense boundary)
+Progress: [████████████████████] 100% (4/4 plans executed in Phase 08)
 
 ## Performance Metrics
 
@@ -531,8 +531,8 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 
 ## Session Continuity
 
-Last session: 2026-02-17T16:59:00Z
-Stopped at: Completed 08-03-PLAN.md — Admin submissions CRM page, TanStack Query hooks, sidebar nav.
+Last session: 2026-02-17T17:08:00Z
+Stopped at: Completed Phase 08 — Lead Capture & Data Persistence (4/4 plans, 13/13 must-haves verified).
 Resume file: None
 
 ---
