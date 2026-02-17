@@ -272,6 +272,51 @@ export default function RIDDORDetailPage() {
           </CardContent>
         </Card>
 
+        {/* Draft Review — editable fields for draft incidents */}
+        {incident.status === 'draft' && (
+          <Card className="md:col-span-2 border-amber-300/50">
+            <CardHeader>
+              <CardTitle>Draft Review</CardTitle>
+              <CardDescription>
+                Edit category and override reason before submitting. Changes auto-save every 30 seconds.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label htmlFor="draft-category" className="block text-sm font-medium text-muted-foreground mb-1">
+                  RIDDOR Category
+                </label>
+                <select
+                  id="draft-category"
+                  value={draftCategory}
+                  onChange={(e) => setDraftCategory(e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="">Select category...</option>
+                  <option value="over_7_day_incapacitation">Over 7 Day Incapacitation</option>
+                  <option value="specified_injury">Specified Injury</option>
+                  <option value="dangerous_occurrence">Dangerous Occurrence</option>
+                  <option value="occupational_disease">Occupational Disease</option>
+                  <option value="gas_incident">Gas Incident</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="draft-override-reason" className="block text-sm font-medium text-muted-foreground mb-1">
+                  Override Reason
+                </label>
+                <textarea
+                  id="draft-override-reason"
+                  value={draftOverrideReason}
+                  onChange={(e) => setDraftOverrideReason(e.target.value)}
+                  rows={4}
+                  placeholder="Explain why this incident requires RIDDOR reporting or why the auto-flagged category should be changed..."
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-y"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Treatment Information */}
         <Card className="md:col-span-2">
           <CardHeader>
