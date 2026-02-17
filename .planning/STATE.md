@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.1 complete — all 8 phases shipped (08 → 15)
 
 ## Current Position
-Phase: v1.1 — Phase 15 (Code Quality & Housekeeping) — ✅ COMPLETE
-Plan: 15-03 complete (3/3). All waves done. Phase verified 16/16 must-haves.
-Status: v1.1 milestone complete — ready for audit or new milestone
-Last activity: 2026-02-17 — Completed Phase 15: console sweep, schedule board mock data removal, manual medic assignment UI + email trigger
-Progress: [████████████████████] 100% (3/3 plans executed in Phase 15)
+Phase: v1.1 — Phase 13 (UX Polish) — In progress
+Plan: 13-01 complete (1/4 in Phase 13). Phase 15 (Code Quality) previously completed.
+Status: In progress — 3 plans remaining in Phase 13 (UX Polish)
+Last activity: 2026-02-17 — Completed 13-01-PLAN.md (skeleton loaders for treatments, workers, organizations, command center)
+Progress: [█░░░] 25% (1/4 plans executed in Phase 13)
 
 ## Performance Metrics
 
@@ -578,8 +578,8 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 
 ## Session Continuity
 
-Last session: 2026-02-17T19:22:34Z
-Stopped at: Completed 15-03-PLAN.md — Phase 15 complete. Manual medic assignment via match endpoint with email notification chain, Assign Medic Manually dialog in BookingDetailPanel.
+Last session: 2026-02-17T19:31:45Z
+Stopped at: Completed 13-01-PLAN.md — skeleton loaders for 4 pages (treatments, workers, organizations, command center).
 Resume file: None
 
 ---
