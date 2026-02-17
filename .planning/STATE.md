@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 11 (Org Settings) — COMPLETE
-Plan: 11-03 complete. All 3 plans in Phase 11 complete (11-01, 11-02, 11-03).
+Phase: v1.1 — Phase 12 (Analytics Dashboard) — COMPLETE
+Plan: 12-05 complete. All 5 plans in Phase 12 complete (12-04, 12-01, 12-02, 12-03, 12-05).
 Status: Phase complete
-Last activity: 2026-02-17 — Completed 11-03-PLAN.md (consumer wiring — base_rate, urgency_premiums, geofence_default_radius, admin_email all read from org_settings)
-Progress: [█████████████████████████] 106/106 plans complete (100%).
+Last activity: 2026-02-17 — Completed 12-05-PLAN.md (wired territory, assignments, utilisation tabs into analytics page — 7 tabs total)
+Progress: [█████████████████████████] 111/111 plans complete (100%).
 
 ## Performance Metrics
 
@@ -560,8 +560,8 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 
 ## Session Continuity
 
-Last session: 2026-02-17T18:02:15Z
-Stopped at: Completed 11-03-PLAN.md — wired base_rate, urgency_premiums, geofence_default_radius, admin_email from org_settings into all 7 consumer files
+Last session: 2026-02-17T20:00:00Z
+Stopped at: Completed 12-05-PLAN.md — analytics page now has 7 tabs (territory, assignments, utilisation added). All 5 phase 12 plans complete.
 Resume file: None
 
 ---

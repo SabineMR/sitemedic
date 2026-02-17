@@ -135,9 +135,10 @@ Plans:
 
 ---
 
-### Phase 12: Analytics Dashboard
+### Phase 12: Analytics Dashboard ✅ COMPLETE
 **Goal:** Visualise the operational metrics that have been computed in the background since Phase 07.5 but never surfaced to admins.
 **Priority:** MEDIUM
+**Completed:** 2026-02-17
 
 **Problem:** `lib/territory/metrics.ts`, `lib/territory/hiring-triggers.ts`, `lib/territory/coverage-gaps.ts`, and auto-assignment success tracking all produce data that is never shown anywhere. Admins are flying blind on capacity, coverage, and medic utilisation.
 
@@ -158,11 +159,11 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 12-04-PLAN.md — Analytics data API: TanStack Query hooks for all chart data sources (Wave 1)
-- [ ] 12-01-PLAN.md — Territory analytics components: heatmap, hiring trigger cards, coverage gap table (Wave 2)
-- [ ] 12-02-PLAN.md — Assignment analytics components: success rate chart, failure breakdown (Wave 2)
-- [ ] 12-03-PLAN.md — Medic utilisation components: sortable table, OOT bookings, late arrival heatmap (Wave 2)
-- [ ] 12-05-PLAN.md — Wire all 3 new tabs into analytics page in single pass (Wave 3)
+- [x] 12-04-PLAN.md — Analytics data API: TanStack Query hooks for all chart data sources (Wave 1)
+- [x] 12-01-PLAN.md — Territory analytics components: heatmap, hiring trigger cards, coverage gap table (Wave 2)
+- [x] 12-02-PLAN.md — Assignment analytics components: success rate chart, failure breakdown (Wave 2)
+- [x] 12-03-PLAN.md — Medic utilisation components: sortable table, OOT bookings, late arrival heatmap (Wave 2)
+- [x] 12-05-PLAN.md — Wire all 3 new tabs into analytics page in single pass (Wave 3)
 
 ---
 

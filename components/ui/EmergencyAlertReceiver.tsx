@@ -33,23 +33,6 @@ let Audio: any = null;
 try { Notifications = require('expo-notifications'); } catch (_) {}
 try { Audio = require('expo-av').Audio; } catch (_) {}
 
-// Configure foreground notification behaviour only when the module is available
-if (Notifications) {
-  Notifications.setNotificationHandler({
-    handleNotification: async (notification: any) => {
-      const isEmergency = notification.request.content.data?.type === 'emergency';
-      return {
-        shouldShowAlert: true,
-        shouldPlaySound: isEmergency,
-        shouldSetBadge: true,
-        priority: isEmergency
-          ? Notifications.AndroidNotificationPriority.MAX
-          : Notifications.AndroidNotificationPriority.DEFAULT,
-      };
-    },
-  });
-}
-
 interface AlertData {
   alertId: string;
   medicName: string;
@@ -80,9 +63,25 @@ export default function EmergencyAlertReceiver() {
     return () => pulse.stop();
   }, [activeAlert, pulseAnim]);
 
-  // Listen for incoming notifications (only when expo-notifications is available)
+  // Configure handler and listen for notifications
+  // setNotificationHandler MUST be called inside useEffect — calling it at module
+  // load time throws before React Native is fully initialized in native builds.
   useEffect(() => {
     if (!Notifications) return;
+
+    Notifications.setNotificationHandler({
+      handleNotification: async (notification: any) => {
+        const isEmergency = notification.request.content.data?.type === 'emergency';
+        return {
+          shouldShowAlert: true,
+          shouldPlaySound: isEmergency,
+          shouldSetBadge: true,
+          priority: isEmergency
+            ? Notifications.AndroidNotificationPriority.MAX
+            : Notifications.AndroidNotificationPriority.DEFAULT,
+        };
+      },
+    });
 
     const foregroundSub = Notifications.addNotificationReceivedListener((notification: any) => {
       const data = notification.request.content.data;

@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Construction Site Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - Paramedic staffing company using SiteMedic platform
-\*\*Last Updated\*\*: 2026-02-17 (Phase 09: Booking data completeness — What3Words display, admin booking detail panel, recurring chain view)
+\*\*Last Updated\*\*: 2026-02-17 (Phase 12: Analytics Dashboard — territory heatmap, hiring trigger cards, auto-assignment charts, medic utilisation table)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
