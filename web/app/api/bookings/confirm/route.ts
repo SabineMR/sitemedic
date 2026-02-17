@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
               auto_triggered: true,
               triggered_by: 'booking_confirmation',
             },
-            actor_id: user.id,
+            actor_id: null, // System-triggered action; no user in scope
             actor_ip: request.headers.get('x-forwarded-for') || 'unknown',
           });
 

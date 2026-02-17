@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
       replyTo: body.email,
       subject: `New Enquiry: ${body.enquiryType} — ${body.company} (${fullName})`,
       html: emailHtml,
-    }).catch(err => console.error('Email send failed (non-blocking):', err));
+    }).catch((err: unknown) => console.error('Email send failed (non-blocking):', err));
 
     return NextResponse.json({ success: true });
   } catch (error) {

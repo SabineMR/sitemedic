@@ -9,12 +9,14 @@ import { Clock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { fetchPendingTimesheets } from '@/lib/queries/admin/timesheets';
 import { TimesheetBatchApproval } from '@/components/admin/timesheet-batch-approval';
+import { getCurrentOrgId } from '@/lib/organizations/org-resolver';
 
 export const dynamic = 'force-dynamic';
 
 export default async function TimesheetsPage() {
   const supabase = await createClient();
-  const initialTimesheets = await fetchPendingTimesheets(supabase);
+  const orgId = await getCurrentOrgId() ?? '';
+  const initialTimesheets = await fetchPendingTimesheets(supabase, orgId);
 
   return (
     <div className="p-8 space-y-6">
