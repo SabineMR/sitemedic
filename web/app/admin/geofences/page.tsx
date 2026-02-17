@@ -4,23 +4,38 @@
  * Configure geofence boundaries for sites. When a medic checks in or out,
  * the geofence-check edge function validates they are within the configured radius.
  *
- * DB table: geofences (id, org_id, site_name, lat, lng, radius_metres)
+ * DB table: geofences (id, org_id, site_name, center_latitude, center_longitude, radius_meters, booking_id, notes)
+ * Migration 119 added site_name column and made booking_id nullable for org-level geofences.
  */
 
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
 import { useOrg } from '@/contexts/org-context';
 import { MapPin, Plus, Trash2, Save, Edit2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const GeofenceMapPicker = dynamic(
+  () => import('@/components/admin/GeofenceMapPicker'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[300px] bg-gray-900 rounded-xl animate-pulse flex items-center justify-center">
+        <span className="text-gray-500 text-sm">Loading map...</span>
+      </div>
+    ),
+  }
+);
 
 interface Geofence {
   id: string;
-  site_name: string;
-  lat: number;
-  lng: number;
-  radius_metres: number;
+  site_name: string | null;
+  center_latitude: number;
+  center_longitude: number;
+  radius_meters: number;
   created_at: string;
 }
 
@@ -32,11 +47,16 @@ export default function GeofencesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [defaultRadius, setDefaultRadius] = useState(200);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    site_name: string;
+    center_latitude: number | null;
+    center_longitude: number | null;
+    radius_meters: string;
+  }>({
     site_name: '',
-    lat: '',
-    lng: '',
-    radius_metres: String(200),
+    center_latitude: null,
+    center_longitude: null,
+    radius_meters: String(200),
   });
 
   // Fetch geofence_default_radius from org_settings
@@ -49,7 +69,7 @@ export default function GeofencesPage() {
         .single();
       if (data?.geofence_default_radius) {
         setDefaultRadius(Number(data.geofence_default_radius));
-        setForm((prev) => ({ ...prev, radius_metres: String(data.geofence_default_radius) }));
+        setForm((prev) => ({ ...prev, radius_meters: String(data.geofence_default_radius) }));
       }
     }
     loadDefaultRadius();
@@ -62,7 +82,7 @@ export default function GeofencesPage() {
       .from('geofences')
       .select('*')
       .eq('org_id', orgId)
-      .order('site_name');
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching geofences:', error);
@@ -77,17 +97,22 @@ export default function GeofencesPage() {
   }, [orgId]);
 
   function resetForm() {
-    setForm({ site_name: '', lat: '', lng: '', radius_metres: String(defaultRadius) });
+    setForm({
+      site_name: '',
+      center_latitude: null,
+      center_longitude: null,
+      radius_meters: String(defaultRadius),
+    });
     setEditingId(null);
     setShowForm(false);
   }
 
   function startEdit(g: Geofence) {
     setForm({
-      site_name: g.site_name,
-      lat: String(g.lat),
-      lng: String(g.lng),
-      radius_metres: String(g.radius_metres),
+      site_name: g.site_name ?? '',
+      center_latitude: g.center_latitude,
+      center_longitude: g.center_longitude,
+      radius_meters: String(g.radius_meters),
     });
     setEditingId(g.id);
     setShowForm(true);
@@ -95,11 +120,15 @@ export default function GeofencesPage() {
 
   async function handleSave() {
     if (!orgId) return;
-    const lat = parseFloat(form.lat);
-    const lng = parseFloat(form.lng);
-    const radius = parseInt(form.radius_metres, 10);
 
-    if (!form.site_name || isNaN(lat) || isNaN(lng) || isNaN(radius)) {
+    if (form.center_latitude === null || form.center_longitude === null) {
+      toast.error('Please click the map to place the geofence centre');
+      return;
+    }
+
+    const radius = parseInt(form.radius_meters, 10);
+
+    if (!form.site_name || isNaN(radius)) {
       toast.error('Please fill in all fields with valid values');
       return;
     }
@@ -110,7 +139,12 @@ export default function GeofencesPage() {
     if (editingId) {
       const { error } = await supabase
         .from('geofences')
-        .update({ site_name: form.site_name, lat, lng, radius_metres: radius })
+        .update({
+          site_name: form.site_name,
+          center_latitude: form.center_latitude,
+          center_longitude: form.center_longitude,
+          radius_meters: radius,
+        })
         .eq('id', editingId);
 
       if (error) {
@@ -124,9 +158,9 @@ export default function GeofencesPage() {
       const { error } = await supabase.from('geofences').insert({
         org_id: orgId,
         site_name: form.site_name,
-        lat,
-        lng,
-        radius_metres: radius,
+        center_latitude: form.center_latitude,
+        center_longitude: form.center_longitude,
+        radius_meters: radius,
       });
 
       if (error) {
@@ -182,37 +216,20 @@ export default function GeofencesPage() {
                 className="w-full px-3 py-2 bg-gray-900/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
-            <div>
-              <label className="text-gray-400 text-sm font-medium block mb-1">Latitude</label>
-              <input
-                type="number"
-                step="0.000001"
-                value={form.lat}
-                onChange={(e) => setForm((p) => ({ ...p, lat: e.target.value }))}
-                placeholder="e.g. 53.4808"
-                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-gray-400 text-sm font-medium block mb-1">Longitude</label>
-              <input
-                type="number"
-                step="0.000001"
-                value={form.lng}
-                onChange={(e) => setForm((p) => ({ ...p, lng: e.target.value }))}
-                placeholder="e.g. -2.2426"
-                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-gray-400 text-sm font-medium block mb-1">Radius (metres)</label>
-              <input
-                type="number"
-                min={50}
-                max={5000}
-                value={form.radius_metres}
-                onChange={(e) => setForm((p) => ({ ...p, radius_metres: e.target.value }))}
-                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            <div className="md:col-span-2">
+              <label className="text-gray-400 text-sm font-medium block mb-1">Location &amp; Radius</label>
+              <GeofenceMapPicker
+                lat={form.center_latitude}
+                lng={form.center_longitude}
+                radiusMeters={parseInt(form.radius_meters, 10) || 200}
+                onChange={(lat, lng, radius) =>
+                  setForm((p) => ({
+                    ...p,
+                    center_latitude: lat,
+                    center_longitude: lng,
+                    radius_meters: String(radius),
+                  }))
+                }
               />
             </div>
           </div>
@@ -237,8 +254,11 @@ export default function GeofencesPage() {
 
       {/* Geofence List */}
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <div className="space-y-3">
+          <Skeleton className="h-16 w-full rounded-xl" />
+          <Skeleton className="h-16 w-full rounded-xl" />
+          <Skeleton className="h-16 w-full rounded-xl" />
+          <Skeleton className="h-16 w-full rounded-xl" />
         </div>
       ) : geofences.length === 0 ? (
         <div className="text-center py-16 bg-gray-800/30 rounded-2xl border border-gray-700/50">
@@ -255,9 +275,9 @@ export default function GeofencesPage() {
                   <MapPin className="w-5 h-5 text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-white font-medium">{g.site_name}</p>
+                  <p className="text-white font-medium">{g.site_name ?? '(Unnamed)'}</p>
                   <p className="text-gray-400 text-xs">
-                    {g.lat.toFixed(6)}, {g.lng.toFixed(6)} · {g.radius_metres}m radius
+                    {g.center_latitude.toFixed(6)}, {g.center_longitude.toFixed(6)} &middot; {g.radius_meters}m radius
                   </p>
                 </div>
               </div>
