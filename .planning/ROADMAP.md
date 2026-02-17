@@ -218,6 +218,13 @@ Plans:
 
 **Plans:** 5 plans
 
+Plans:
+- [ ] 14-01-PLAN.md — Payslip PDF download: use stored pdf_url first, edge function fallback
+- [ ] 14-02-PLAN.md — Export buttons: RIDDOR PDF, timesheets CSV, bookings CSV, invoices CSV
+- [ ] 14-03-PLAN.md — Medic profile: certification expiry banners with renewal links
+- [ ] 14-04-PLAN.md — Medic profile: IR35 status display with assessment date and CEST PDF
+- [ ] 14-05-PLAN.md — Contract detail: fix PDF downloads, readable timeline, milestone tracker
+
 ---
 
 ### Phase 15: Code Quality & Housekeeping
