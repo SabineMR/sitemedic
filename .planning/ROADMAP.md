@@ -397,11 +397,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 07.5-01-PLAN.md -- Territory assignment system with UK postcode sectors
-- [ ] 07.5-02-PLAN.md -- Auto-assignment algorithm with ranking logic
-- [ ] 07.5-03-PLAN.md -- Out-of-territory coverage logic (travel bonus vs room/board vs deny)
-- [ ] 07.5-04-PLAN.md -- Coverage gap detection and hiring trigger alerts
-- [ ] 07.5-05-PLAN.md -- Visual coverage map with admin drag-drop reassignment
+- [ ] 07.5-01-PLAN.md -- Territory metrics aggregation (pg_cron daily job) and hiring trigger / coverage gap business logic
+- [ ] 07.5-02-PLAN.md -- Enhanced auto-assignment algorithm with calendar check, cert validation, and adjusted scoring weights
+- [ ] 07.5-03-PLAN.md -- Admin drag-drop medic-to-territory assignment panel with dnd-kit and API route
+- [ ] 07.5-04-PLAN.md -- Coverage gap detection alerts and hiring trigger recommendations UI
+- [ ] 07.5-05-PLAN.md -- Enhanced coverage map with territory detail panel and full page integration
 
 ## Progress
 
@@ -454,3 +454,4 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Phase 6.5 gap closure v2: 2026-02-16 -- 1 gap closure plan (06.5-11) addressing final 2 gaps: payslip_reference schema mismatch and late payment cron vault auth pattern*
 *Phase 6 gap closure: 2026-02-16 -- 2 gap closure plans (06-07, 06-08) addressing 4 verification gaps: auto-detection trigger (PRIMARY: wires riddor-detector into data pipeline via pg_net database trigger) and hardcoded org_id replacement with auth context*
 *Phase 6.5 gap closure v3: 2026-02-16 -- 1 gap closure plan (06.5-12) fixing Resend email regression in late payment reminders (reverted in commit d807b2d)*
+*Phase 7.5 planned: 2026-02-16 -- 5 plans in 3 waves (2 parallel Wave 1: metrics+auto-assignment, 2 parallel Wave 2: drag-drop+alerts, 1 integration Wave 3: map+detail+page). Builds on existing Phase 1.5 postcode seeding, Phase 5.5 territory map/queries, and Phase 6.5 out-of-territory cost logic.*
