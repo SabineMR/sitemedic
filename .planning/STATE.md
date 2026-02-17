@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v1.0 complete — planning next milestone
+**Current focus:** v1.1 complete — all 8 phases shipped (08 → 15)
 
 ## Current Position
-Phase: v1.1 — Phase 15 (Code Quality & Housekeeping) — COMPLETE
-Plan: 15-03 complete (3/3). Phase 15 fully done.
-Status: Phase 15 complete — all 3 plans executed
-Last activity: 2026-02-17 — Completed 15-03: manual medic assignment via match endpoint + dialog in BookingDetailPanel
-Progress: [███] 100% (3/3 plans executed in Phase 15)
+Phase: v1.1 — Phase 15 (Code Quality & Housekeeping) — ✅ COMPLETE
+Plan: 15-03 complete (3/3). All waves done. Phase verified 16/16 must-haves.
+Status: v1.1 milestone complete — ready for audit or new milestone
+Last activity: 2026-02-17 — Completed Phase 15: console sweep, schedule board mock data removal, manual medic assignment UI + email trigger
+Progress: [████████████████████] 100% (3/3 plans executed in Phase 15)
 
 ## Performance Metrics
 

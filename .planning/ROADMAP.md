@@ -236,9 +236,10 @@ Plans:
 
 ---
 
-### Phase 15: Code Quality & Housekeeping
+### Phase 15: Code Quality & Housekeeping ✅ COMPLETE
 **Goal:** Remove production console statements, add admin UI for manual booking matching, and fix schedule board fallback mode.
 **Priority:** LOW
+**Completed:** 2026-02-17
 
 **Problem:** 133 `console.log/warn/error` statements remain in production app code. `/api/bookings/match` has no admin UI for manual override. The schedule board's conflict checking is incomplete in fallback mode (mock data left active).
 
@@ -250,17 +251,17 @@ Plans:
 - Schedule board: complete conflict checking in non-mock mode (two bookings same medic same time)
 
 **Success Criteria:**
-1. Zero `console.log` statements in production build output
-2. Admin can manually assign a specific medic to an unmatched booking
-3. Schedule board shows "No bookings scheduled" empty state when data is empty (not mock shifts)
-4. Schedule board detects and flags double-booking conflicts in production data
+1. Zero `console.log` statements in production build output ✅
+2. Admin can manually assign a specific medic to an unmatched booking ✅
+3. Schedule board shows "No bookings scheduled" empty state when data is empty (not mock shifts) ✅
+4. Schedule board detects and flags double-booking conflicts in production data ✅
 
 **Plans:** 3 plans
 
 Plans:
-- [ ] 15-01-PLAN.md — Console sweep: remove 3 console.warn from API routes (Wave 1)
-- [ ] 15-02-PLAN.md — Schedule board: remove mock data fallback, add proper error/empty states (Wave 1)
-- [ ] 15-03-PLAN.md — Manual medic assignment: extend match endpoint + booking detail panel dialog (Wave 2)
+- [x] 15-01-PLAN.md — Console sweep: remove 3 console.warn from API routes (Wave 1)
+- [x] 15-02-PLAN.md — Schedule board: remove mock data fallback, add proper error/empty states (Wave 1)
+- [x] 15-03-PLAN.md — Manual medic assignment: extend match endpoint + booking detail panel dialog (Wave 2)
 
 ---
 
