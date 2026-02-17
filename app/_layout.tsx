@@ -35,10 +35,11 @@ export default function RootLayout() {
 
   // Initialize WatermelonDB and BLE beacon service on mount
   useEffect(() => {
-    console.log('[RootLayout] Initializing database...');
+    console.log('[RootLayout] Starting database init...');
+    const t0 = Date.now();
     initDatabase()
       .then((db) => {
-        console.log('[RootLayout] Database initialized successfully');
+        console.log(`[RootLayout] Database initialized in ${Date.now() - t0}ms`);
         setDatabase(db);
 
         // Initialize BLE beacon service after DB is ready.
@@ -56,7 +57,7 @@ export default function RootLayout() {
         });
       })
       .catch((err) => {
-        console.error('[RootLayout] Database initialization failed:', err);
+        console.error(`[RootLayout] Database init FAILED after ${Date.now() - t0}ms:`, err);
         setError(err.message || String(err));
       });
   }, []);
@@ -75,7 +76,12 @@ export default function RootLayout() {
 
   // Don't render app until database is initialized
   if (!database) {
-    return <View style={{ flex: 1, backgroundColor: '#FFFFFF' }} />;
+    return (
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 4, borderColor: '#16a34a', borderTopColor: 'transparent' }} />
+        <Text style={{ marginTop: 16, color: '#6b7280', fontSize: 14 }}>Starting SiteMedic…</Text>
+      </View>
+    );
   }
 
   return (
