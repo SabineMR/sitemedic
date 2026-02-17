@@ -5365,16 +5365,86 @@ The system supports four primary user roles:
 #### Route Protection
 - Organization admins trying to access `/platform` → Redirected to `/admin`
 - Platform admins trying to access `/admin` → Redirected to `/platform`
-- Enforced via `useRequirePlatformAdmin()` and `useIsPlatformAdmin()` hooks
+- Enforced via `useIsPlatformAdmin()` hook in both layouts
+- **Implementation Details** (Fixed 2026-02-16):
+  - **Loading State Check**: Both layouts now check `useOrg()` `loading` state BEFORE checking role
+    - While `loading === true`: Shows loading spinner (prevents premature page rendering)
+    - After `loading === false`: Checks `isPlatformAdmin` and redirects if needed
+    - This prevents runtime error: "Organization context is still loading"
+  - **Why This Matters**: `useIsPlatformAdmin()` returns `false` during loading, which would cause:
+    - Admin layout to render children → children call `useRequireOrg()` → error thrown
+    - Platform layout to show "Access Denied" prematurely
+  - **Loading Screens**:
+    - Admin layout: Blue-themed loading spinner with "Loading..." message
+    - Platform layout: Purple-themed loading spinner with "Loading..." message
+  - **Redirect Screens** (shown AFTER loading completes):
+    - Admin layout for platform admins: "Redirecting to Platform Admin..."
+    - Platform layout for org admins: "Access Denied" + redirect message
+  - **Files Modified**:
+    - `web/app/admin/layout.tsx`: Added `useOrg()` import and loading check
+    - `web/app/platform/layout.tsx`: Added `useOrg()` import and loading check
+
+#### Platform Admin Database Configuration (Added 2026-02-16)
+
+**Critical Requirement**: Platform admins MUST be properly configured in the database before they can access `/platform` routes.
+
+**Database Setup**:
+1. **Profile Table** (`profiles`):
+   - Set `role = 'platform_admin'` for the user
+   - Set `org_id = NULL` (platform admins don't belong to a single org)
+   - **Note**: Migration 106 made `org_id` nullable and added a check constraint to enforce data integrity
+
+2. **JWT Metadata** (`auth.users.raw_app_meta_data`):
+   - Set `role = 'platform_admin'`
+   - Completely remove `org_id` key (not just set to null)
+   - Remove `org_slug` (not needed for platform admins)
+
+**Why This Is Required**:
+- `useIsPlatformAdmin()` checks `user.app_metadata.role === 'platform_admin'` from the JWT
+- If the role is missing or incorrect, the hook returns `false`
+- This causes incorrect redirects and "not assigned to an organization" errors
+- Users MUST log out and log back in after role changes to get an updated JWT
+
+**Initial Setup Migrations**:
+- `105_set_platform_admin_user.sql` - Sets `sabineresoagli@gmail.com` as the initial platform admin
+- `106_fix_platform_admin_org_id.sql` - Makes `org_id` nullable, adds check constraint, removes org_id from JWT
+  - Ensures platform admins can have NULL org_id (unlike other roles)
+  - Adds constraint: `platform_admin` MUST have NULL org_id, other roles MUST have non-NULL org_id
+- `107_platform_admin_core_tables_rls.sql` - **CRITICAL FIX** - Adds platform admin RLS policies for core tables (Added 2026-02-16)
+  - **Problem**: Migration 102 added platform admin policies for business tables but missed core tables (profiles, workers, treatments, near_misses, safety_checks)
+  - **Symptom**: Login error "Database error querying schema" because platform admins couldn't read the `profiles` table
+  - **Root Cause**: RLS policy `USING (org_id = (auth.jwt() -> 'app_metadata' ->> 'org_id')::uuid)` fails for platform admins with NULL org_id
+  - **Solution**: Added dedicated platform admin policies using `is_platform_admin()` for:
+    - `profiles` - Allows platform admins to view/manage all user profiles across orgs
+    - `workers` - Cross-org worker management access
+    - `treatments` - Cross-org treatment record access
+    - `near_misses` - Cross-org safety incident access
+    - `safety_checks` - Cross-org safety compliance access
+  - **Impact**: Platform admins can now successfully log in and access all core data tables
+
+**Error Handling**: `web/app/admin/error.tsx`
+- Catches "not assigned to an organization" errors
+- Redirects platform admins to `/platform` if they somehow reach `/admin`
+- Serves as a safety net for data integrity issues
+
+**Common Issue**: Org admins without `org_id`
+- If a user has `role = 'org_admin'` but `org_id = NULL`, they'll get the "not assigned to an organization" error
+- Solution: Either set them as `platform_admin` OR assign them a valid `org_id`
 
 #### Implementation Files
 - **Context**: `web/contexts/org-context.tsx` (exports role hooks)
 - **Migrations**:
-  - `031_add_platform_admin_role.sql` (adds role enum values)
-  - `032_platform_admin_rls_policies.sql` (cross-org RLS policies)
+  - `100_add_platform_admin_role.sql` (adds role enum values)
+  - `101_migrate_to_platform_admin.sql` (migration helper functions)
+  - `102_platform_admin_rls_policies.sql` (cross-org RLS policies for business tables)
+  - `105_set_platform_admin_user.sql` (sets initial platform admin: sabineresoagli@gmail.com)
+  - `106_fix_platform_admin_org_id.sql` (makes org_id nullable for platform admins, adds check constraint)
+  - `107_platform_admin_core_tables_rls.sql` (cross-org RLS policies for core tables - fixes login error)
 - **Routes**:
   - `web/app/admin/` (organization admin UI)
   - `web/app/platform/` (platform admin UI)
+- **Error Handling**:
+  - `web/app/admin/error.tsx` (catches org assignment errors and redirects)
 
 ---
 

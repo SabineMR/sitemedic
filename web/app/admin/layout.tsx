@@ -12,7 +12,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ReactNode, useEffect } from 'react';
-import { useIsPlatformAdmin } from '@/contexts/org-context';
+import { useIsPlatformAdmin, useOrg } from '@/contexts/org-context';
 import {
   LayoutDashboard,
   MapPin,
@@ -43,14 +43,39 @@ interface NavItem {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { loading } = useOrg();
   const isPlatformAdmin = useIsPlatformAdmin();
 
-  // Redirect platform admins to /platform
+  // Redirect platform admins to /platform (only after loading completes)
   useEffect(() => {
-    if (isPlatformAdmin) {
+    if (!loading && isPlatformAdmin) {
       router.push('/platform');
     }
-  }, [isPlatformAdmin, router]);
+  }, [loading, isPlatformAdmin, router]);
+
+  // Show loading screen while org context is initializing
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg font-medium">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render admin UI for platform admins (show loading while redirecting)
+  if (isPlatformAdmin) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg font-medium">Redirecting to Platform Admin...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Navigation items
   const navItems: NavItem[] = [

@@ -22,7 +22,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { QueryProvider } from '@/components/providers/query-provider';
-import { useRequirePlatformAdmin } from '@/contexts/org-context';
+import { useIsPlatformAdmin, useOrg } from '@/contexts/org-context';
 
 interface PlatformLayoutProps {
   children: ReactNode;
@@ -39,23 +39,38 @@ interface NavItem {
 export default function PlatformLayout({ children }: PlatformLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { loading } = useOrg();
+  const isPlatformAdmin = useIsPlatformAdmin();
 
-  // Require platform admin role - throws error if not authorized
-  try {
-    useRequirePlatformAdmin();
-  } catch (error) {
-    // Redirect to /admin if not a platform admin
-    useEffect(() => {
+  // Redirect non-platform admins to /admin (only after loading completes)
+  useEffect(() => {
+    if (!loading && !isPlatformAdmin) {
       router.push('/admin');
-    }, [router]);
+    }
+  }, [loading, isPlatformAdmin, router]);
 
+  // Show loading screen while org context is initializing
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-900 via-purple-900 to-indigo-900">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg font-medium">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render platform UI for non-platform admins (show access denied while redirecting)
+  if (!isPlatformAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-900 via-purple-900 to-indigo-900">
         <div className="text-center">
           <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white mb-2">Access Denied</h1>
           <p className="text-gray-400 mb-4">Platform admin access required</p>
-          <p className="text-sm text-gray-500">Redirecting to organization admin...</p>
+          <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mt-4"></div>
+          <p className="text-sm text-gray-500 mt-2">Redirecting to organization admin...</p>
         </div>
       </div>
     );

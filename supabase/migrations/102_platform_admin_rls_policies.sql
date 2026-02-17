@@ -435,4 +435,6 @@ END $$;
 -- SUMMARY
 -- =============================================================================
 
-COMMENT ON MIGRATION IS 'Added platform_admin RLS policies for cross-org access. Platform admins can now view/manage all data across organizations while org admins remain scoped to their own org.';
+-- Migration complete: Added platform_admin RLS policies for cross-org access.
+-- Platform admins can now view/manage all data across organizations while
+-- org admins remain scoped to their own org.
