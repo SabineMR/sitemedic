@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Construction Site Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - Paramedic staffing company using SiteMedic platform
-\*\*Last Updated\*\*: 2026-02-17 (Emergency SOS Alert System — one-tap push + SMS emergency alerts for medics)
+\*\*Last Updated\*\*: 2026-02-17 (Experience-based payout tiers + HMRC mileage reimbursement for medics)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -12,6 +12,41 @@
 SiteMedic is a comprehensive platform combining **mobile medic software** (offline-first treatment logging, RIDDOR compliance) with **business operations infrastructure** (booking portal, payment processing, territory management). The platform enables construction companies to book medics online while ensuring automatic compliance documentation and reliable medic payouts.
 
 **Business Model**: Software bundled with medic staffing service (no separate software charge). Revenue from medic bookings with a configurable platform/medic split (default 60% platform / 40% medic, overridable per employee). Weekly medic payouts via UK Faster Payments, Net 30 invoicing for established corporate clients. Referral bookings (jobs recommended by a third party who cannot take them) trigger a 10% referral payout (configurable) deducted from the platform's share — medic payout is unaffected.
+
+---
+
+## Recent Updates — Experience Tiers + Mileage Reimbursement (2026-02-17)
+
+### Experience-Based Payout Tiers ✅
+
+Each medic is now assigned an experience tier (Junior / Senior / Lead) that determines their payout percentage of booking revenue. Changing the tier in the admin dashboard automatically updates the medic's `medic_payout_percent` and `platform_fee_percent` via a database trigger. The tier can be changed at any time without affecting historical payslips (each payslip snapshots the % used at the time).
+
+| Tier | Medic Payout | Platform Share |
+|------|-------------|----------------|
+| Junior | 35% | 65% |
+| Senior | 42% | 58% |
+| Lead / Specialist | 50% | 50% |
+
+| File | Change |
+|------|--------|
+| `supabase/migrations/116_experience_tiers_and_mileage.sql` | **New** — Adds `experience_level TEXT` column to `medics` (`junior \| senior \| lead`, default `junior`). DB trigger `trg_payout_from_experience_level` auto-syncs `medic_payout_percent` and `platform_fee_percent` when tier changes. Adds `mileage_miles`, `mileage_rate_pence`, `mileage_reimbursement` columns to `timesheets`. |
+| `web/lib/medics/experience.ts` | **New** — `EXPERIENCE_TIERS` constant, `EXPERIENCE_TIER_LIST`, `ExperienceLevel` type, `calculateMileageReimbursement()`, `calculateTotalMedicPayout()` (shift % + mileage). HMRC rate constant `HMRC_MILEAGE_RATE_PENCE = 45`. |
+| `web/lib/booking/types.ts` | **Modified** — Added `ExperienceLevel` type (`'junior' \| 'senior' \| 'lead'`). |
+| `web/lib/payouts/calculator.ts` | **Modified** — Replaced hardcoded 71.4% split with per-medic `medic_payout_percent`. `calculatePayout()` now accepts `medicPayoutPercent` and `mileageMiles` params. `PayoutCalculation` interface now includes `shiftPayout`, `mileageReimbursement`, `totalPayout`. `validatePayout()` updated to include mileage in expected amount. |
+| `web/components/medics/compensation-settings.tsx` | **New** — Admin client component. 3-button tier selector (Junior/Senior/Lead) with live payout preview (example 8-hr shift + 12 miles). Shows shift payout, mileage payout, and total. PATCH `/api/medics/[id]/compensation` on save. |
+| `web/app/api/medics/[id]/compensation/route.ts` | **New** — PATCH endpoint to update `experience_level`. DB trigger handles the % recalculation. Returns updated tier + percentages. |
+| `web/app/admin/medics/[id]/onboarding/page.tsx` | **Modified** — Added "Compensation & Mileage" card between Stripe Setup and Payslip History. Renders `<CompensationSettings />`. |
+
+### Mileage Reimbursement ✅
+
+Every shift now includes a mileage reimbursement payment on top of the medic's shift payout. Distance is auto-calculated from the medic's home postcode to the job site using the existing `travel_time_cache` (Google Maps Distance Matrix API). Reimbursement uses the HMRC approved rate (45p/mile). This is an additional payment — it does not reduce the platform's revenue share.
+
+**Key rules:**
+- Rate: 45p/mile (HMRC Approved Mileage Allowance Payment — tax-free for the medic)
+- Applies to: every shift (not just out-of-area)
+- Source: `travel_time_cache.distance_miles` (already cached by Google Maps)
+- Stored on timesheet: `mileage_miles`, `mileage_rate_pence` (snapshot), `mileage_reimbursement`
+- Added to `payout_amount` — separate from the booking revenue split
 
 ---
 

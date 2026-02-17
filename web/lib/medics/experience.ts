@@ -68,46 +68,56 @@ export function getExperienceTier(level: ExperienceLevel): ExperienceTier {
 }
 
 /**
- * Calculate mileage reimbursement for a given distance
- * @param miles - Distance driven in miles
+ * Calculate mileage reimbursement for a given distance.
+ *
+ * IMPORTANT: pass the ROUND-TRIP distance (one-way × 2).
+ * The travel_time_cache stores one-way miles from Google Maps —
+ * callers must double it before passing here for day shifts.
+ *
+ * @param roundTripMiles - Total miles driven there AND back
  * @param ratePence - Pence per mile (default: HMRC 45p)
  * @returns Reimbursement amount in GBP
  */
 export function calculateMileageReimbursement(
-  miles: number,
+  roundTripMiles: number,
   ratePence: number = HMRC_MILEAGE_RATE_PENCE
 ): number {
-  if (!miles || miles <= 0) return 0;
-  return parseFloat(((miles * ratePence) / 100).toFixed(2));
+  if (!roundTripMiles || roundTripMiles <= 0) return 0;
+  return parseFloat(((roundTripMiles * ratePence) / 100).toFixed(2));
 }
 
 /**
  * Calculate total medic payout: shift % payout + mileage reimbursement
+ *
  * @param bookingTotal - Total booking revenue in GBP (inc. VAT)
  * @param medicPayoutPercent - Medic's payout % (35 | 42 | 50)
- * @param mileageMiles - Distance driven to the job site (null = no mileage)
+ * @param oneWayMiles - One-way distance from travel_time_cache (we double it for round trip)
  * @param mileageRatePence - Pence per mile (default: HMRC 45p)
  */
 export function calculateTotalMedicPayout(params: {
   bookingTotal: number;
   medicPayoutPercent: number;
-  mileageMiles?: number | null;
+  oneWayMiles?: number | null;   // One-way from Google Maps cache — doubled internally
   mileageRatePence?: number;
 }): {
-  shiftPayout: number;       // % of booking total
-  mileageReimbursement: number; // Distance reimbursement
-  totalPayout: number;       // shiftPayout + mileageReimbursement
+  shiftPayout: number;          // % of booking total
+  mileageReimbursement: number; // Round-trip distance reimbursement
+  roundTripMiles: number;       // Total miles paid (one-way × 2)
+  totalPayout: number;          // shiftPayout + mileageReimbursement
 } {
   const {
     bookingTotal,
     medicPayoutPercent,
-    mileageMiles,
+    oneWayMiles,
     mileageRatePence = HMRC_MILEAGE_RATE_PENCE,
   } = params;
 
+  // Round trip = one-way × 2 (medic drives to site and back home)
+  const roundTripMiles = (oneWayMiles ?? 0) * 2;
+
   const shiftPayout = parseFloat(((bookingTotal * medicPayoutPercent) / 100).toFixed(2));
-  const mileageReimbursement = calculateMileageReimbursement(mileageMiles ?? 0, mileageRatePence);
+  const mileageReimbursement = calculateMileageReimbursement(roundTripMiles, mileageRatePence);
   const totalPayout = parseFloat((shiftPayout + mileageReimbursement).toFixed(2));
 
-  return { shiftPayout, mileageReimbursement, totalPayout };
+  return { shiftPayout, mileageReimbursement, roundTripMiles, totalPayout };
 }
