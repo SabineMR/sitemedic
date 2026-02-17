@@ -301,17 +301,19 @@ Plans:
   7. RIDDOR report tracks status (Draft / Submitted / Confirmed)
   8. Override patterns track for algorithm tuning (if 80% overridden, review logic)
 
-**Plans**: 6 plans
+**Plans**: 8 plans
 
 **Database Schema**: ✅ **COMPLETED** - Migration `018_riddor_incidents.sql` added with full table structure, RLS policies, and indexes
 
 Plans:
-- [ ] 06-01-PLAN.md -- Database schema ✅ (migration 018 added) and RIDDOR detection Edge Function with confidence scoring (pending)
-- [ ] 06-02-PLAN.md -- Mobile medic override UI workflow with reason capture
-- [ ] 06-03-PLAN.md -- HSE F2508 PDF generation with form field mapping
-- [ ] 06-04-PLAN.md -- Web dashboard RIDDOR pages with deadline countdown
-- [ ] 06-05-PLAN.md -- Deadline tracking cron job and email notifications
-- [ ] 06-06-PLAN.md -- Override pattern analytics dashboard for algorithm tuning
+- [x] 06-01-PLAN.md -- Database schema ✅ (migration 018 added) and RIDDOR detection Edge Function with confidence scoring
+- [x] 06-02-PLAN.md -- Mobile medic override UI workflow with reason capture
+- [x] 06-03-PLAN.md -- HSE F2508 PDF generation with form field mapping
+- [x] 06-04-PLAN.md -- Web dashboard RIDDOR pages with deadline countdown
+- [x] 06-05-PLAN.md -- Deadline tracking cron job and email notifications
+- [x] 06-06-PLAN.md -- Override pattern analytics dashboard for algorithm tuning
+- [ ] 06-07-PLAN.md -- [GAP CLOSURE] Database trigger to auto-invoke RIDDOR detection on treatment INSERT/UPDATE
+- [ ] 06-08-PLAN.md -- [GAP CLOSURE] Replace hardcoded org_id with auth context in RIDDOR dashboard pages
 
 ### Phase 6.5: Payment Processing & Payouts (INSERTED)
 **Goal**: Full payment processing operational with client charging (card + Net 30), automated weekly medic payouts via UK Faster Payments, IR35 compliance, and out-of-territory cost management.
@@ -416,7 +418,7 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 | 4.6. Customer Onboarding & Contract Management | 7/7 | Complete | 2026-02-16 |
 | 5. PDF Generation | 4/4 | Complete | 2026-02-16 |
 | 5.5. Admin Operations Dashboards | 6/6 | Complete | 2026-02-16 |
-| 6. RIDDOR Auto-Flagging | 0/6 | In Progress (DB schema done) | - |
+| 6. RIDDOR Auto-Flagging | 6/8 | Gap closure in progress | - |
 | 6.5. Payment Processing & Payouts | 10/11 | Gap closure in progress | - |
 | 7. Certification Tracking | 0/TBD | Not started | - |
 | 7.5. Territory Management & Auto-Assignment | 0/5 | Not started | - |
@@ -449,3 +451,4 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Phase 6 progress: 2026-02-16 -- Database schema completed (migration 018_riddor_incidents.sql added with riddor_incidents table, RLS policies, performance indexes, and complete audit trail for auto-detection, medic override, deadline management, and F2508 PDF storage)*
 *Phase 6.5 gap closure: 2026-02-16 -- 5 gap closure plans (06.5-06 through 06.5-10) addressing 5 critical gaps and 3 partial implementations (platform fee fix, email integration, payslip PDF, Stripe webhook, out-of-territory wiring)*
 *Phase 6.5 gap closure v2: 2026-02-16 -- 1 gap closure plan (06.5-11) addressing final 2 gaps: payslip_reference schema mismatch and late payment cron vault auth pattern*
+*Phase 6 gap closure: 2026-02-16 -- 2 gap closure plans (06-07, 06-08) addressing 4 verification gaps: auto-detection trigger (PRIMARY: wires riddor-detector into data pipeline via pg_net database trigger) and hardcoded org_id replacement with auth context*
