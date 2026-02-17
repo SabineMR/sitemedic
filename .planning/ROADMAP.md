@@ -375,8 +375,8 @@ Plans:
 - [x] 07-02-PLAN.md -- Certification expiry checker Edge Function with progressive email reminders and daily pg_cron
 - [x] 07-03-PLAN.md -- Certifications dashboard page with expiry table, status badges, and compliance score integration
 - [x] 07-04-PLAN.md -- Certification validation API (expired worker blocking) and worker table cert status update
-- [ ] 07-05-PLAN.md -- [GAP CLOSURE] Wire certification validation into mobile treatment forms (enforcement at point of use)
-- [ ] 07-06-PLAN.md -- [GAP CLOSURE] Replace hardcoded org name with real org query in certification expiry emails
+- [x] 07-05-PLAN.md -- [GAP CLOSURE] Wire certification validation into mobile treatment forms (enforcement at point of use)
+- [x] 07-06-PLAN.md -- [GAP CLOSURE] Replace hardcoded org name with real org query in certification expiry emails
 
 ### Phase 7.5: Territory Management & Auto-Assignment (INSERTED)
 **Goal**: UK-wide territory system operational with postcode-based coverage, intelligent auto-assignment algorithm, coverage gap detection, and hiring recommendations to scale medic roster.
@@ -425,7 +425,7 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 | 5.5. Admin Operations Dashboards | 6/6 | Complete | 2026-02-16 |
 | 6. RIDDOR Auto-Flagging | 8/8 | Complete | 2026-02-16 |
 | 6.5. Payment Processing & Payouts | 12/12 | Complete | 2026-02-16 |
-| 7. Certification Tracking | 4/6 | Gap closure | - |
+| 7. Certification Tracking | 6/6 | Complete | 2026-02-17 |
 | 7.5. Territory Management & Auto-Assignment | 5/5 | Complete | 2026-02-16 |
 
 ---
