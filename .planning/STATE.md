@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v1.1 — Phase 13 verified complete. Phases 08–15 all shipped.
+**Current focus:** v1.1 — Phase 16 (Critical Bug Fixes) verified complete. Phases 08–16 all shipped.
 
 ## Current Position
-Phase: 16-critical-bug-fixes
+Phase: 16-critical-bug-fixes — VERIFIED ✅
 Plan: 2 of 2 complete
-Status: Phase 16 complete
-Last activity: 2026-02-17 — Completed 16-02-PLAN.md (RIDDOR Draft Review card with category select + override reason textarea)
-Progress: [█████████] v1.1 complete + Phase 16 complete (2/2 plans done)
+Status: Phase 16 VERIFIED (5/5 must-haves) — ready for Phase 17 or milestone re-audit
+Last activity: 2026-02-17 — Phase 16 verified: payslip fix, RIDDOR draft inputs, console.warn removed
+Progress: [█████████] v1.1 phases 08–16 complete
 
 ## Performance Metrics
 

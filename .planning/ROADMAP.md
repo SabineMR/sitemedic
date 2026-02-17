@@ -287,8 +287,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 16-01-PLAN.md — Payslip medic_id fix + console.warn removal in stores (Wave 1)
-- [ ] 16-02-PLAN.md — RIDDOR detail draft edit inputs: category select + override_reason textarea (Wave 1)
+- [x] 16-01-PLAN.md — Payslip medic_id fix + console.warn removal in stores (Wave 1)
+- [x] 16-02-PLAN.md — RIDDOR detail draft edit inputs: category select + override_reason textarea (Wave 1)
 
 ---
 
