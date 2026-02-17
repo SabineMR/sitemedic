@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 11 (Organisation Settings) — ✅ COMPLETE
-Plan: 11-03 complete (3/3). All waves done. Phase verified 10/10 must-haves. Human approved.
-Status: Complete — ready for Phase 12 (Analytics Dashboard)
-Last activity: 2026-02-17 — Completed Phase 11: org_settings migration, admin UI, wired 7 consumer files
-Progress: [████████████████████] 100% (3/3 plans executed in Phase 11)
+Phase: v1.1 — Phase 10 (Real-Time Operations Polish) — In Progress
+Plan: 10-03 complete. Wave 1 executing (10-01 done, 10-03 done, 10-04 done).
+Status: Phase 10 wave 1 complete — payment retry UI, medic context map, alert bulk dismiss all done
+Last activity: 2026-02-17 — Completed 10-03-PLAN.md (payment retry UI with retry button, support mailto, booking reference)
+Progress: [████████████████████] Phase 10 wave 1 100% (10-01, 10-03, 10-04 done)
 
 ## Performance Metrics
 
@@ -40,8 +40,8 @@ Progress: [████████████████████] 100% (3
 | 07.5-territory-auto-assignment | 5/5 | 19 min | 3.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 09-03 (2 min), 11-01 (?), 11-02 (?), 10-04 (7 min)
-- Trend: Phase 10 wave 1 executing (10-01, 10-03, 10-04 in parallel) — AlertPanel note inputs + bulk dismiss complete (10-04 done)
+- Last 5 plans: 09-03 (2 min), 10-04 (7 min), 10-01 (?), 10-03 (42 min)
+- Trend: Phase 10 wave 1 complete — payment retry UI, medic context map, alert bulk dismiss all shipped
 
 *Updated after each plan completion*
 
@@ -558,10 +558,16 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 - D-10-01-003: subscribe() made async to await context fetch before Realtime channel opens — ensures medicContext Map is populated before any ping arrives
 - D-10-01-004: Context-at-subscribe pattern — single joined query at channel open time, O(1) Map lookup per ping — avoids N+1 anti-pattern
 
+**From Plan 10-03:**
+- D-10-03-001: Retry button uses type=submit inside existing <form> — no new handler, handleSubmit naturally reuses same PaymentIntent via Elements context
+- D-10-03-002: paymentFailed is separate from error string — allows recovery panel to be conditionally shown/hidden independently of error message
+- D-10-03-003: NEXT_PUBLIC_SUPPORT_EMAIL env var with hardcoded fallback — mailto always functional even without .env.local setup
+- D-10-03-004: setError(null) + setPaymentFailed(false) at top of handleSubmit — clears previous failure state before each retry attempt
+
 ## Session Continuity
 
-Last session: 2026-02-17T20:00:00Z
-Stopped at: Completed 12-05-PLAN.md — analytics page now has 7 tabs (territory, assignments, utilisation added). All 5 phase 12 plans complete.
+Last session: 2026-02-17T18:15:49Z
+Stopped at: Completed 10-03-PLAN.md — payment retry UI with retry button, booking reference, support mailto all shipped. Build passing.
 Resume file: None
 
 ---
