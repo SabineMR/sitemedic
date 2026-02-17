@@ -10,11 +10,27 @@
  * - Debouncing (max 1 update per second per medic to prevent map jitter)
  * - Automatic cleanup of stale locations
  * - Connection status tracking
+ * - medicContext Map: populated once at subscribe time with joined medic+booking data
+ *   (medic_name, site_name, shift_start_time, shift_end_time) — no N+1 queries
  */
 
 import { create } from 'zustand';
 import { supabase } from '@/lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+
+/**
+ * Per-medic context fetched once at subscribe time from a joined bookings+medics query.
+ * Merged into each location ping so map markers can display rich context without
+ * issuing per-ping database queries (N+1 anti-pattern avoided).
+ */
+interface MedicContextEntry {
+  medic_name: string;
+  booking_id: string;
+  site_name: string;
+  shift_start_time: string;  // "07:00:00" from PostgreSQL TIME
+  shift_end_time: string;    // "15:00:00"
+  medic_phone: string | null;
+}
 
 export interface MedicLocation {
   medic_id: string;
@@ -30,11 +46,14 @@ export interface MedicLocation {
   status: 'on_site' | 'traveling' | 'break' | 'issue' | 'offline';
   issue_type?: 'late_arrival' | 'battery_low' | 'connection_lost' | 'not_moving';
   last_event?: string; // Last shift event (e.g., "arrived_on_site")
+  shift_start_time?: string; // "07:00:00" from context — for map marker display
+  shift_end_time?: string;   // "15:00:00" from context — for map marker display
 }
 
 interface MedicLocationsState {
   // State
   locations: Map<string, MedicLocation>; // Key: medic_id
+  medicContext: Map<string, MedicContextEntry>; // Key: medic_id — populated once at subscribe time
   isConnected: boolean;
   lastUpdate: Date | null;
   subscriptionChannel: RealtimeChannel | null;
@@ -43,7 +62,7 @@ interface MedicLocationsState {
   updateLocation: (medicId: string, location: Partial<MedicLocation>) => void;
   removeLocation: (medicId: string) => void;
   setConnected: (connected: boolean) => void;
-  subscribe: () => void;
+  subscribe: () => Promise<void>;
   unsubscribe: () => void;
   getActiveMedics: () => MedicLocation[];
   getMedicById: (medicId: string) => MedicLocation | undefined;
@@ -55,6 +74,7 @@ const DEBOUNCE_MS = 1000; // 1 second
 
 export const useMedicLocationsStore = create<MedicLocationsState>((set, get) => ({
   locations: new Map(),
+  medicContext: new Map(),
   isConnected: false,
   lastUpdate: null,
   subscriptionChannel: null,
@@ -117,16 +137,62 @@ export const useMedicLocationsStore = create<MedicLocationsState>((set, get) => 
   },
 
   /**
-   * Subscribe to real-time updates
+   * Subscribe to real-time updates.
+   *
+   * STRATEGY: Fetch medic+booking context ONCE before opening the Realtime channel.
+   * Each incoming ping is enriched from the in-memory medicContext Map — no per-ping
+   * database queries (N+1 avoided). Context includes medic_name, site_name, and shift
+   * times for both 'confirmed' and 'in_progress' bookings so medics whose shifts have
+   * not yet started (still 'confirmed') are not silently dropped.
    */
-  subscribe: () => {
+  subscribe: async () => {
     // Unsubscribe from existing channel if any
     const existingChannel = get().subscriptionChannel;
     if (existingChannel) {
       supabase.removeChannel(existingChannel);
     }
 
-    // Create new channel for location pings
+    // --- STEP 1: Fetch medic + booking context (single joined query, no N+1) ---
+    const today = new Date().toISOString().split('T')[0];
+
+    const { data: bookings, error: contextError } = await supabase
+      .from('bookings')
+      .select(`
+        id,
+        site_name,
+        shift_start_time,
+        shift_end_time,
+        medic_id,
+        medics!inner (
+          first_name,
+          last_name,
+          phone
+        )
+      `)
+      .in('status', ['confirmed', 'in_progress'])
+      .eq('shift_date', today);
+
+    if (contextError) {
+      console.error('[Realtime] Failed to fetch medic context:', contextError.message);
+    }
+
+    // Build medicContext Map: medic_id → MedicContextEntry
+    const medicContext = new Map<string, MedicContextEntry>();
+    (bookings ?? []).forEach((b: any) => {
+      if (b.medic_id && b.medics) {
+        medicContext.set(b.medic_id, {
+          medic_name: `${b.medics.first_name} ${b.medics.last_name}`,
+          booking_id: b.id,
+          site_name: b.site_name,
+          shift_start_time: b.shift_start_time,
+          shift_end_time: b.shift_end_time,
+          medic_phone: b.medics.phone,
+        });
+      }
+    });
+    set({ medicContext });
+
+    // --- STEP 2: Open Realtime channel and merge context on each ping ---
     const channel = supabase
       .channel('medic-locations')
       .on(
@@ -141,7 +207,9 @@ export const useMedicLocationsStore = create<MedicLocationsState>((set, get) => 
         (payload) => {
           const ping = payload.new as any;
 
-          // Update location in store
+          // Merge per-medic context (fetched once above) into location update
+          const context = get().medicContext.get(ping.medic_id);
+
           get().updateLocation(ping.medic_id, {
             medic_id: ping.medic_id,
             latitude: ping.latitude,
@@ -150,7 +218,11 @@ export const useMedicLocationsStore = create<MedicLocationsState>((set, get) => 
             battery_level: ping.battery_level,
             connection_type: ping.connection_type,
             recorded_at: ping.recorded_at,
-            // TODO: Fetch medic name and booking details from joined query
+            medic_name: context?.medic_name ?? 'Unknown Medic',
+            booking_id: context?.booking_id ?? ping.booking_id,
+            site_name: context?.site_name ?? 'Unknown Site',
+            shift_start_time: context?.shift_start_time,
+            shift_end_time: context?.shift_end_time,
           });
         }
       )

@@ -21,7 +21,8 @@ function CheckoutForm({ bookingId, total }: { bookingId: string; total: number }
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [paymentFailed, setPaymentFailed] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,8 +31,9 @@ function CheckoutForm({ bookingId, total }: { bookingId: string; total: number }
       return;
     }
 
+    setError(null);
+    setPaymentFailed(false);
     setLoading(true);
-    setError('');
 
     try {
       const { error: submitError } = await stripe.confirmPayment({
@@ -43,11 +45,13 @@ function CheckoutForm({ bookingId, total }: { bookingId: string; total: number }
 
       if (submitError) {
         setError(submitError.message || 'Payment failed');
+        setPaymentFailed(true);
         setLoading(false);
       }
       // If successful, user will be redirected to return_url
     } catch (err) {
       setError('An unexpected error occurred');
+      setPaymentFailed(true);
       setLoading(false);
     }
   };
@@ -68,6 +72,33 @@ function CheckoutForm({ bookingId, total }: { bookingId: string; total: number }
       {error && (
         <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded-md text-sm">
           {error}
+        </div>
+      )}
+
+      {paymentFailed && (
+        <div className="space-y-4 rounded-lg border border-red-200 bg-red-50 p-4">
+          <div className="text-sm text-gray-700">
+            <p className="font-medium">Reference: {bookingId}</p>
+            <p className="mt-1 text-gray-500">Please quote this reference if contacting support.</p>
+          </div>
+
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button
+              type="submit"
+              variant="outline"
+              disabled={loading}
+              className="flex-1"
+            >
+              {loading ? 'Retrying...' : 'Try Again'}
+            </Button>
+
+            <a
+              href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? 'support@sitemedic.co.uk'}?subject=${encodeURIComponent(`Payment Issue - Ref ${bookingId}`)}`}
+              className="flex-1 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Contact Support
+            </a>
+          </div>
         </div>
       )}
 
