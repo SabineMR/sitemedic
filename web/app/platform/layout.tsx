@@ -11,7 +11,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import {
   LayoutDashboard,
   Building2,
@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { QueryProvider } from '@/components/providers/query-provider';
 import { useIsPlatformAdmin, useOrg } from '@/contexts/org-context';
+import { createClient } from '@/lib/supabase/client';
 
 interface PlatformLayoutProps {
   children: ReactNode;
@@ -41,6 +42,23 @@ export default function PlatformLayout({ children }: PlatformLayoutProps) {
   const router = useRouter();
   const { loading } = useOrg();
   const isPlatformAdmin = useIsPlatformAdmin();
+  const [userEmail, setUserEmail] = useState<string>('');
+  const [userName, setUserName] = useState<string>('Platform Admin');
+
+  useEffect(() => {
+    async function fetchUser() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserEmail(user.email ?? '');
+        const name = user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'Platform Admin';
+        setUserName(name.charAt(0).toUpperCase() + name.slice(1));
+      }
+    }
+    if (!loading && isPlatformAdmin) {
+      fetchUser();
+    }
+  }, [loading, isPlatformAdmin]);
 
   // Redirect non-platform admins to /admin (only after loading completes)
   useEffect(() => {
@@ -185,11 +203,13 @@ export default function PlatformLayout({ children }: PlatformLayoutProps) {
           <div className="p-4 border-t border-purple-700/50">
             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-purple-700/50 backdrop-blur-sm hover:bg-purple-700/70 transition-all duration-200 cursor-pointer group">
               <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 group-hover:scale-110">
-                <span className="text-white text-sm font-bold">PA</span>
+                <span className="text-white text-sm font-bold">
+                  {userName.slice(0, 2).toUpperCase()}
+                </span>
               </div>
-              <div className="flex-1">
-                <p className="text-white text-sm font-medium">Platform Admin</p>
-                <p className="text-purple-300 text-xs">Super User</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-sm font-medium truncate">{userName}</p>
+                <p className="text-purple-300 text-xs truncate">{userEmail}</p>
               </div>
             </div>
           </div>

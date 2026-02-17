@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Construction Site Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - Paramedic staffing company using SiteMedic platform
-**Last Updated**: 2026-02-16 (Critical gap fixes — broken nav, missing pages, stub buttons, hardcoded data)
+**Last Updated**: 2026-02-16 (Marketing UI/UX overhaul — header, homepage, pricing, footer)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -12,6 +12,50 @@
 SiteMedic is a comprehensive platform combining **mobile medic software** (offline-first treatment logging, RIDDOR compliance) with **business operations infrastructure** (booking portal, payment processing, territory management). The platform enables construction companies to book medics online while ensuring automatic compliance documentation and reliable medic payouts.
 
 **Business Model**: Software bundled with medic staffing service (no separate software charge). Revenue from medic bookings with 40% platform markup (medic £30/hr → client £42/hr → platform £12/hr). Weekly medic payouts via UK Faster Payments, Net 30 invoicing for established corporate clients.
+
+---
+
+## Recent Updates - Marketing UI/UX Overhaul (2026-02-16)
+
+### Site Header — `components/marketing/site-header.tsx` ✅
+- Full brand name "Apex Safety Group" + "Powered by SiteMedic" sub-label shown in nav
+- Blue square icon block as brand mark; `group-hover` turns to blue-700
+- Scroll shadow — header gets `shadow-md` after 8px scroll via `useEffect` listener
+- **Services** nav link added pointing to `/#services` anchor on homepage
+- Sign in link added beside Book Now for logged-out users
+- Mobile sheet fully redesigned: brand block header, nav links with hover fill, stacked auth CTAs at bottom
+
+### Homepage Polish — `app/(marketing)/page.tsx` ✅
+- Hero: blue-to-white gradient + faint dot-grid pattern (replaces flat white)
+- Hero CTAs: `rounded-xl`, `active:scale-95`, blue-shadow hover
+- **Stats bar**: blue strip after hero with 3 proof numbers (9× revenue, 0 missed RIDDOR, 1 invoice)
+- Service layers section: `id="services"` anchor added for nav link
+- Service card prices: coloured pill-badges instead of plain text
+- How It Works: horizontal connector line on desktop between numbered steps
+- Why ASG: proper Lucide icons with coloured icon backgrounds per card
+- Compliance grid: 2/3/5-col responsive breakpoints, blue-tinted hover
+- CTA section: dot-grid pattern background, `rounded-xl` buttons
+
+### Pricing Table — `components/marketing/pricing-table.tsx` ✅
+- "Base Package" badge on main card header
+- Feature list expanded from 4 → 7 items
+- Volume discount cards: `rounded-xl`, better typography
+- **Clinical add-on packages section**: new 2×2 grid below base price showing all 4 service layers with per-worker pricing, coloured headers, and market rate comparison callouts
+
+### Pricing Page FAQ — `app/(marketing)/pricing/page.tsx` ✅
+- 2-column grid layout (was single column)
+- 6 questions (was 4) — added clinical add-on specific Q&As
+- Card hover: white background for contrast
+
+### Site Footer — `components/marketing/site-footer.tsx` ✅
+- Expanded from 3 → 4 columns: Brand | Services | Company | Legal & Compliance
+- Services column links to `/#services` anchor per clinical layer
+- Compliance badge row: 7 dark-chip badges (HCPC, RIDDOR, CDM, UK GDPR, HSE, COSHH, HASAWA)
+- Dynamic copyright year via `new Date().getFullYear()`
+- "Platform by SiteMedic" attribution in bottom bar
+
+### Quote Button — `components/marketing/quote-button.tsx` ✅
+- Updated to `rounded-xl` + `active:scale-95` + `shadow-sm` matching new design language
 
 ---
 
