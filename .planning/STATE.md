@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 Phase: v1.1 — Phase 13 (UX Polish) — In progress
-Plan: 13-02 complete (2/4 in Phase 13). 2 plans remaining.
-Status: In progress — 2 plans remaining in Phase 13 (UX Polish)
-Last activity: 2026-02-17 — Completed 13-02-PLAN.md: geofence schema fix + interactive Leaflet map picker
-Progress: [██░░] 50% (2/4 plans executed in Phase 13)
+Plan: 13-03 complete (3/4 in Phase 13). 1 plan remaining.
+Status: In progress — 1 plan remaining in Phase 13 (UX Polish)
+Last activity: 2026-02-17 — Completed 13-03-PLAN.md: geofence exit alerts via haversine + create_medic_alert RPC
+Progress: [███░] 75% (3/4 plans executed in Phase 13)
 
 ## Performance Metrics
 
@@ -581,10 +581,15 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 - D-10-05-003: Show Send Message mailto instead of disabled Call/SMS buttons when medicPhone is null — always provides a contact action for the admin
 - D-10-05-004: Escalation styling overrides severity-based styling — red urgency signal takes precedence at 15-minute threshold
 
+**From Plan 13-03:**
+- D-13-03-001: useGeofenceExitMonitor uses createClient() browser client (not module singleton) — aligns with command-center pattern, correct auth context in browser components
+- D-13-03-002: onPingReceived registered inside loadGeofences().then() — guarantees Map populated before first ping is evaluated
+- D-13-03-003: Per-ping callback pattern (setOnPingReceived) decouples store from alert business logic — extensible for future per-ping side effects
+
 ## Session Continuity
 
-Last session: 2026-02-17T19:38:37Z
-Stopped at: Completed 13-02-PLAN.md — geofence schema migration 119 + GeofenceMapPicker with click-to-place + fixed page column names.
+Last session: 2026-02-17T19:48:17Z
+Stopped at: Completed 13-03-PLAN.md — geofence exit alerts, haversine distance check, create_medic_alert RPC integration.
 Resume file: None
 
 ---
