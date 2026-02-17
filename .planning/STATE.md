@@ -8,16 +8,16 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 **Current focus:** Phase 2 - Mobile Core
 
 ## Current Position
-Phase: 6 of 7 (RIDDOR Auto-Flagging)
-Plan: 8 of 8 in current phase
+Phase: 6.5 of 7 (Payment Processing & Payouts)
+Plan: 12 of 12 in current phase
 Status: Phase complete
-Last activity: 2026-02-16 — Completed 06-08-PLAN.md (Gap Closure - RIDDOR Dashboard Auth Integration)
-Progress: [████████████████░░] 88% (73/83 plans across Phases 1-7)
+Last activity: 2026-02-17 — Completed 06.5-12-PLAN.md (Gap Closure - Late Payment Email Reminders)
+Progress: [████████████████░░] 89% (74/83 plans across Phases 1-7)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 73
+- Total plans completed: 74
 - Average duration: 4.3 min
 - Total execution time: 5.3 hours
 
@@ -35,11 +35,11 @@ Progress: [████████████████░░] 88% (73/83 pl
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
 | 06-riddor-auto-flagging | 8/8 | 50 min | 6.3 min |
-| 06.5-payments-payouts | 11/11 | 46 min | 4.2 min |
+| 06.5-payments-payouts | 12/12 | 49.5 min | 4.1 min |
 
 **Recent Trend:**
-- Last 5 plans: 06-06 (7 min), 06.5-10 (3 min), 06.5-11 (2 min), 06-07 (1 min), 06-08 (2 min)
-- Trend: RIDDOR Phase 6 complete - All dashboard pages now use authenticated org context instead of hardcoded demo UUIDs
+- Last 5 plans: 06.5-10 (3 min), 06.5-11 (2 min), 06-07 (1 min), 06-08 (2 min), 06.5-12 (3.5 min)
+- Trend: All phases COMPLETE - Phase 6.5 gap closure complete: Late payment reminders now send emails via Resend with graceful error handling
 
 *Updated after each plan completion*
 
@@ -419,6 +419,9 @@ Recent decisions affecting current work:
 - D-06.5-11-002: pg_net HTTP POST for Edge Function invocation from trigger (non-blocking async call, doesn't delay transaction commit)
 - D-06.5-11-003: Unschedule and recreate late payment cron instead of ALTER (pg_cron doesn't support ALTER, clean slate approach ensures consistency)
 
+**From Plan 06.5-12:**
+- D-06.5-12-001: Email failures do not block invoice status updates (invoice state changes are critical business logic, email is notification enhancement)
+
 **From Plan 06-03:**
 - D-06-03-001: Use @react-pdf/renderer instead of pdf-lib with fillable PDF template (HSE F2508 not reliably available; matches Phase 5 pattern)
 - D-06-03-002: Store PDFs in {incident_id}/F2508-{timestamp}.pdf format for multiple versions per incident
@@ -468,9 +471,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-17T00:30:00Z
-Stopped at: Completed 06-08-PLAN.md — Gap Closure - RIDDOR Dashboard Auth Integration (Replaced hardcoded demo org_id with dynamic auth context in both RIDDOR pages)
+Last session: 2026-02-17T00:31:00Z
+Stopped at: Completed 06.5-12-PLAN.md — Gap Closure - Late Payment Email Reminders (Restored Resend email integration with HTML templates and graceful error handling)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6 (RIDDOR Auto-Flagging) complete (8/8 plans). Phase 6.5 (Payments & Payouts) complete (11/11 plans). Progress: 73/83 plans (88%)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6 (RIDDOR Auto-Flagging) complete (8/8 plans). Phase 6.5 (Payments & Payouts) complete (12/12 plans). Progress: 74/83 plans (89%)*
