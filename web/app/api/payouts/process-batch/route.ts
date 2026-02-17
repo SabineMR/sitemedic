@@ -107,9 +107,14 @@ export async function POST(request: Request) {
       }
 
       // Validate payout amount matches expected calculation
-      if (booking && !validatePayout(timesheet, booking)) {
+      if (booking && !validatePayout(
+        Number(timesheet.payout_amount),
+        Number(booking.total),
+        Number(medic?.medic_payout_percent ?? 40),
+        timesheet.mileage_miles ?? null
+      )) {
         validationErrors.push(
-          `Timesheet ${timesheet.id}: Payout amount £${timesheet.payout_amount} does not match expected 60% of booking total £${booking.total}`
+          `Timesheet ${timesheet.id}: Payout amount £${timesheet.payout_amount} does not match expected calculation for booking total £${booking.total}`
         );
       }
     }

@@ -10,6 +10,12 @@ export async function POST(req: NextRequest) {
     // Multi-tenant: Get current user's org_id
     const orgId = await requireOrgId();
 
+    // Get current user for authorization checks
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await req.json();
     const {
       medicId,

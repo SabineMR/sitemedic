@@ -142,7 +142,7 @@ export async function GET(request: Request) {
 
       // Calculate platform fee
       const calculation = calculatePayout(booking.total);
-      totalPayouts += calculation.medicPayout;
+      totalPayouts += calculation.shiftPayout;
       totalPlatformFees += calculation.platformFee;
       totalRevenue += booking.total;
     }
