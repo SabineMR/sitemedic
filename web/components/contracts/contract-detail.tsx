@@ -5,6 +5,7 @@ import { ContractWithRelations } from '@/lib/contracts/types';
 import { formatContractNumber } from '@/lib/contracts/utils';
 import { ContractStatusBadge } from './contract-status-badge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Send,
@@ -20,9 +21,54 @@ import {
   PenTool,
 } from 'lucide-react';
 import Image from 'next/image';
+import { createClient } from '@/lib/supabase/client';
 
 interface ContractDetailProps {
   contract: ContractWithRelations;
+}
+
+/**
+ * Format a contract event into a human-readable description.
+ * Replaces raw JSON.stringify(event_data) rendering with proper messages.
+ */
+function formatEventDescription(
+  eventType: string,
+  eventData: Record<string, unknown>
+): string {
+  switch (eventType) {
+    case 'status_change': {
+      const from = String(eventData.from || '').replace(/_/g, ' ');
+      const to = String(eventData.to || '').replace(/_/g, ' ');
+      const reason = eventData.reason ? ` — ${eventData.reason}` : '';
+      return `Status changed from ${from} to ${to}${reason}`;
+    }
+    case 'email_sent':
+      return `Email sent to ${eventData.to || 'client'}`;
+    case 'email_opened':
+      return 'Client opened the email';
+    case 'email_clicked':
+      return 'Client clicked the contract link';
+    case 'signature_captured':
+      return `Signed by ${eventData.signedByName || 'Client'}`;
+    case 'payment_captured': {
+      const amount =
+        typeof eventData.amount === 'number'
+          ? new Intl.NumberFormat('en-GB', {
+              style: 'currency',
+              currency: 'GBP',
+            }).format(eventData.amount / 100)
+          : '';
+      return `Payment received${amount ? ': ' + amount : ''}`;
+    }
+    case 'version_created':
+      return 'New version created';
+    case 'amendment_created':
+      return 'Amendment created';
+    case 'terminated':
+      return 'Contract terminated';
+    default:
+      return eventType.replace(/_/g, ' ');
+  }
 }
 
 /**
@@ -34,6 +80,9 @@ interface ContractDetailProps {
  */
 export function ContractDetail({ contract }: ContractDetailProps) {
   const [copySuccess, setCopySuccess] = React.useState(false);
+  const [downloadingVersion, setDownloadingVersion] = React.useState<
+    number | null
+  >(null);
 
   // Format GBP currency
   const formatGBP = (amount: number) => {
@@ -88,6 +137,30 @@ export function ContractDetail({ contract }: ContractDetailProps) {
     }
   };
 
+  /**
+   * Generate a signed URL (7 days / 604800 seconds) for a contract PDF
+   * stored in Supabase Storage, then open it in a new tab.
+   * Replaces dead /api/contracts/[id]/pdf route references.
+   */
+  async function handleDownloadPDF(storagePath: string, version: number) {
+    setDownloadingVersion(version);
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.storage
+        .from('contracts')
+        .createSignedUrl(storagePath, 604800); // 7 days per D-05-02-001
+      if (error || !data?.signedUrl) {
+        console.error('Failed to generate download URL:', error);
+        setDownloadingVersion(null);
+        return;
+      }
+      window.open(data.signedUrl, '_blank');
+    } catch (err) {
+      console.error('Download error:', err);
+    }
+    setDownloadingVersion(null);
+  }
+
   // Get event icon
   const getEventIcon = (eventType: string) => {
     const icons: Record<string, React.ReactNode> = {
@@ -104,10 +177,47 @@ export function ContractDetail({ contract }: ContractDetailProps) {
   // Generate contract number
   const contractNumber = formatContractNumber(contract.id, contract.created_at);
 
-  // Get PDF download URL (from current version)
-  const pdfUrl = contract.currentVersion?.storage_path
-    ? `/api/contracts/${contract.id}/pdf`
-    : null;
+  // Payment milestone tracker — amounts are in pence, divide by 100 for display
+  const milestones = [
+    ...(contract.upfront_amount > 0
+      ? [
+          {
+            label: 'Upfront Payment',
+            description: 'Due before service',
+            amount: contract.upfront_amount,
+            paid: !!contract.upfront_paid_at,
+            paidAt: contract.upfront_paid_at,
+          },
+        ]
+      : []),
+    ...(contract.completion_amount > 0
+      ? [
+          {
+            label: 'Completion Payment',
+            description: 'Due on completion',
+            amount: contract.completion_amount,
+            paid: !!contract.completion_paid_at,
+            paidAt: contract.completion_paid_at,
+          },
+        ]
+      : []),
+    ...(contract.net30_amount > 0
+      ? [
+          {
+            label: 'Net 30 Payment',
+            description: 'Due 30 days after completion',
+            amount: contract.net30_amount,
+            paid: !!contract.net30_paid_at,
+            paidAt: contract.net30_paid_at,
+          },
+        ]
+      : []),
+  ];
+  const paidCount = milestones.filter((m) => m.paid).length;
+  const progressPercent =
+    milestones.length > 0
+      ? Math.round((paidCount / milestones.length) * 100)
+      : 0;
 
   return (
     <div className="grid gap-6 lg:grid-cols-3">
@@ -219,94 +329,88 @@ export function ContractDetail({ contract }: ContractDetailProps) {
           </CardContent>
         </Card>
 
-        {/* Payment Schedule */}
+        {/* Payment Schedule — visual milestone tracker */}
         <Card>
           <CardHeader>
             <CardTitle>Payment Schedule</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {contract.upfront_amount > 0 && (
-                <div className="flex items-center justify-between border-b pb-3">
-                  <div>
-                    <div className="font-medium">Upfront Payment</div>
-                    <div className="text-sm text-muted-foreground">
-                      Due before service
-                    </div>
+            {milestones.length > 0 && (
+              <>
+                {/* Progress bar */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between text-sm mb-1">
+                    <span className="text-muted-foreground">
+                      Payment Progress
+                    </span>
+                    <span className="font-medium">
+                      {paidCount}/{milestones.length} paid ({progressPercent}%)
+                    </span>
                   </div>
-                  <div className="text-right">
-                    <div className="font-bold">
-                      {formatGBP(contract.upfront_amount)}
-                    </div>
-                    {contract.upfront_paid_at ? (
-                      <div className="text-sm text-green-600 flex items-center gap-1">
-                        <CheckCircle className="h-3 w-3" />
-                        Paid
-                      </div>
-                    ) : (
-                      <div className="text-sm text-amber-600 flex items-center gap-1">
-                        <XCircle className="h-3 w-3" />
-                        Unpaid
-                      </div>
-                    )}
+                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-green-500 transition-all"
+                      style={{ width: `${progressPercent}%` }}
+                    />
                   </div>
                 </div>
-              )}
 
-              {contract.completion_amount > 0 && (
-                <div className="flex items-center justify-between border-b pb-3">
-                  <div>
-                    <div className="font-medium">Completion Payment</div>
-                    <div className="text-sm text-muted-foreground">
-                      Due on completion
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold">
-                      {formatGBP(contract.completion_amount)}
-                    </div>
-                    {contract.completion_paid_at ? (
-                      <div className="text-sm text-green-600 flex items-center gap-1">
-                        <CheckCircle className="h-3 w-3" />
-                        Paid
+                {/* Milestone steps */}
+                <div className="space-y-3">
+                  {milestones.map((milestone, index) => (
+                    <div
+                      key={milestone.label}
+                      className="flex items-center justify-between border-b pb-3 last:border-0"
+                    >
+                      <div className="flex items-center gap-3">
+                        {/* Step number */}
+                        <div
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                            milestone.paid
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-muted text-muted-foreground'
+                          }`}
+                        >
+                          {index + 1}
+                        </div>
+                        <div>
+                          <div className="font-medium">{milestone.label}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {milestone.description}
+                          </div>
+                          {milestone.paid && milestone.paidAt && (
+                            <div className="text-xs text-green-600 mt-0.5">
+                              Paid {formatDateTime(milestone.paidAt)}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      <div className="text-sm text-amber-600 flex items-center gap-1">
-                        <XCircle className="h-3 w-3" />
-                        Unpaid
+                      <div className="text-right">
+                        <div className="font-bold">
+                          {formatGBP(milestone.amount)}
+                        </div>
+                        {milestone.paid ? (
+                          <div className="text-sm text-green-600 flex items-center gap-1 justify-end">
+                            <CheckCircle className="h-3 w-3" />
+                            Paid
+                          </div>
+                        ) : (
+                          <div className="text-sm text-amber-600 flex items-center gap-1 justify-end">
+                            <XCircle className="h-3 w-3" />
+                            Unpaid
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              )}
-
-              {contract.net30_amount > 0 && (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium">Net 30 Payment</div>
-                    <div className="text-sm text-muted-foreground">
-                      Due 30 days after completion
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold">
-                      {formatGBP(contract.net30_amount)}
-                    </div>
-                    {contract.net30_paid_at ? (
-                      <div className="text-sm text-green-600 flex items-center gap-1">
-                        <CheckCircle className="h-3 w-3" />
-                        Paid
-                      </div>
-                    ) : (
-                      <div className="text-sm text-amber-600 flex items-center gap-1">
-                        <XCircle className="h-3 w-3" />
-                        Unpaid
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+              </>
+            )}
+            {milestones.length === 0 && (
+              <div className="text-sm text-muted-foreground text-center py-4">
+                No payment schedule defined
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -324,12 +428,23 @@ export function ContractDetail({ contract }: ContractDetailProps) {
                 </Button>
               )}
 
-              {pdfUrl && (
-                <Button variant="outline" asChild>
-                  <a href={pdfUrl} download>
-                    <Download className="mr-2 h-4 w-4" />
-                    Download PDF
-                  </a>
+              {contract.currentVersion?.storage_path && (
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    handleDownloadPDF(
+                      contract.currentVersion!.storage_path,
+                      contract.currentVersion!.version
+                    )
+                  }
+                  disabled={
+                    downloadingVersion === contract.currentVersion.version
+                  }
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  {downloadingVersion === contract.currentVersion.version
+                    ? 'Loading...'
+                    : 'Download PDF'}
                 </Button>
               )}
 
@@ -378,9 +493,15 @@ export function ContractDetail({ contract }: ContractDetailProps) {
                       <div className="text-xs text-muted-foreground">
                         {formatDateTime(event.created_at)}
                       </div>
-                      {event.event_data && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {JSON.stringify(event.event_data)}
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {formatEventDescription(
+                          event.event_type,
+                          (event.event_data || {}) as Record<string, unknown>
+                        )}
+                      </div>
+                      {event.actor_id && (
+                        <div className="text-xs text-muted-foreground mt-0.5 italic">
+                          by Admin
                         </div>
                       )}
                     </div>
@@ -403,40 +524,63 @@ export function ContractDetail({ contract }: ContractDetailProps) {
           <CardContent>
             {contract.versions && contract.versions.length > 0 ? (
               <div className="space-y-3">
-                {contract.versions.map((version) => (
-                  <div key={version.id} className="border-b pb-3 last:border-0">
-                    <div className="flex items-center justify-between">
-                      <div className="font-medium">Version {version.version}</div>
-                      {version.signed_at && (
-                        <div className="text-xs text-green-600 flex items-center gap-1">
-                          <CheckCircle className="h-3 w-3" />
-                          Signed
+                {contract.versions.map((version) => {
+                  // Derive version status from signed_at (ContractVersion has no status field)
+                  const versionStatus = version.signed_at ? 'signed' : 'draft';
+                  return (
+                    <div key={version.id} className="border-b pb-3 last:border-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <div className="font-medium">
+                            Version {version.version}
+                          </div>
+                          <Badge
+                            variant={
+                              versionStatus === 'signed'
+                                ? 'default'
+                                : 'secondary'
+                            }
+                          >
+                            {versionStatus}
+                          </Badge>
+                        </div>
+                        {version.signed_at && (
+                          <div className="text-xs text-green-600 flex items-center gap-1 shrink-0">
+                            <CheckCircle className="h-3 w-3" />
+                            Signed
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {formatDateTime(version.generated_at)}
+                      </div>
+                      {version.changes && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {version.changes}
                         </div>
                       )}
+                      {version.storage_path && (
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 mt-1"
+                          onClick={() =>
+                            handleDownloadPDF(
+                              version.storage_path,
+                              version.version
+                            )
+                          }
+                          disabled={downloadingVersion === version.version}
+                        >
+                          <Download className="mr-1 h-3 w-3" />
+                          {downloadingVersion === version.version
+                            ? 'Loading...'
+                            : 'Download'}
+                        </Button>
+                      )}
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {formatDateTime(version.generated_at)}
-                    </div>
-                    {version.changes && (
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {version.changes}
-                      </div>
-                    )}
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="h-auto p-0 mt-1"
-                      asChild
-                    >
-                      <a
-                        href={`/api/contracts/${contract.id}/pdf?version=${version.version}`}
-                        download
-                      >
-                        Download
-                      </a>
-                    </Button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-sm text-muted-foreground text-center py-4">
