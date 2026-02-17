@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 14 (Compliance, Exports & Medic Portal) — In Progress
-Plan: 14-04 complete. All Wave 2 plans executing (14-01, 14-02, 14-03, 14-04, 14-05 done).
-Status: Phase 14 plan 04 done — IR35 section enhanced with employment status banner, assessment date, CEST PDF download link
-Last activity: 2026-02-17 — Completed 14-04-PLAN.md (colored employment status banner, Last assessed date, Download CEST PDF button)
-Progress: [████████████████████] Phase 14: 14-01, 14-02, 14-03, 14-04, 14-05 complete
+Phase: v1.1 — Phase 14 (Compliance, Exports & Medic Portal) — ✅ COMPLETE
+Plan: 14-05 complete (5/5). All waves done. Phase verified 5/5 must-haves.
+Status: Complete — ready for Phase 15 (Code Quality & Housekeeping)
+Last activity: 2026-02-17 — Completed Phase 14: payslip download fix, 4 export buttons, cert expiry banners, IR35 display, contract detail fixes
+Progress: [████████████████████] 100% (5/5 plans executed in Phase 14)
 
 ## Performance Metrics
 

@@ -195,9 +195,10 @@ Plans:
 
 ---
 
-### Phase 14: Compliance, Exports & Medic Portal
+### Phase 14: Compliance, Exports & Medic Portal ✅ COMPLETE
 **Goal:** Enable data export across all key record types, show certification expiry alerts in the UI, display IR35 results, surface contract version history, and allow payslip PDF download.
 **Priority:** MEDIUM/LOW
+**Completed:** 2026-02-17
 
 **Problem:** Multiple backend systems produce data that users cannot extract or act on: certifications expire silently in the UI despite a backend cron, IR35 assessments have a form and API but show no results, contracts have an amendment trail that is invisible, and payslips can only be viewed (not downloaded).
 
@@ -212,20 +213,20 @@ Plans:
 - Contract detail: milestone payment tracker showing completion status per milestone
 
 **Success Criteria:**
-1. Medic downloads their December 2025 payslip as a PDF in 2 clicks
-2. Admin exports all RIDDOR incidents for Q1 2026 as a formatted PDF
-3. Medic profile shows yellow banner "CSCS expires in 18 days — Renew now"
-4. IR35 section shows "Self-employed — last assessed 2026-01-15"
-5. Contract detail shows 3 versions: v1 (draft), v2 (amended), v3 (signed)
+1. Medic downloads their December 2025 payslip as a PDF in 2 clicks ✅
+2. Admin exports all RIDDOR incidents for Q1 2026 as a formatted PDF ✅
+3. Medic profile shows yellow banner "CSCS expires in 18 days — Renew now" ✅
+4. IR35 section shows "Self-employed — last assessed 2026-01-15" ✅
+5. Contract detail shows 3 versions: v1 (draft), v2 (amended), v3 (signed) ✅
 
 **Plans:** 5 plans
 
 Plans:
-- [ ] 14-01-PLAN.md — Payslip PDF download: use stored pdf_url first, edge function fallback
-- [ ] 14-02-PLAN.md — Export buttons: RIDDOR PDF, timesheets CSV, bookings CSV, invoices CSV
-- [ ] 14-03-PLAN.md — Medic profile: certification expiry banners with renewal links
-- [ ] 14-04-PLAN.md — Medic profile: IR35 status display with assessment date and CEST PDF
-- [ ] 14-05-PLAN.md — Contract detail: fix PDF downloads, readable timeline, milestone tracker
+- [x] 14-01-PLAN.md — Payslip PDF download: use stored pdf_url first, edge function fallback
+- [x] 14-02-PLAN.md — Export buttons: RIDDOR PDF, timesheets CSV, bookings CSV, invoices CSV
+- [x] 14-03-PLAN.md — Medic profile: certification expiry banners with renewal links
+- [x] 14-04-PLAN.md — Medic profile: IR35 status display with assessment date and CEST PDF
+- [x] 14-05-PLAN.md — Contract detail: fix PDF downloads, readable timeline, milestone tracker
 
 ---
 
