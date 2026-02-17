@@ -303,10 +303,8 @@ export function TimesheetBatchApproval({ initialData }: TimesheetBatchApprovalPr
 
   // Batch approve handler
   const handleBatchApprove = async () => {
-    const timesheetIds = selectedTimesheets.map((t) => t.id);
-
     await batchApproveMutation.mutateAsync({
-      timesheetIds,
+      timesheets: selectedTimesheets,
       adminUserId,
     });
 

@@ -17,7 +17,7 @@ import { Tabs } from 'expo-router';
 import { useSync } from '../../src/contexts/SyncContext';
 import { useIsTablet } from '../../hooks/useIsTablet';
 import TabletSidebar from '../../components/ui/TabletSidebar';
-import SOSButton from '../../components/ui/SOSButton';
+
 
 function SyncStatusIndicator() {
   const { state } = useSync();
@@ -124,8 +124,6 @@ export default function TabsLayout() {
         }}
       />
     </Tabs>
-    {/* Floating SOS button — overlays every tab screen */}
-    <SOSButton />
     </View>
   );
 }

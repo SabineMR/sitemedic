@@ -26,6 +26,7 @@ import { initDatabase } from '../src/lib/watermelon';
 import { beaconService } from '../services/BeaconService';
 import { emergencyAlertService } from '../services/EmergencyAlertService';
 import EmergencyAlertReceiver from '../components/ui/EmergencyAlertReceiver';
+import SOSButton from '../components/ui/SOSButton';
 
 export default function RootLayout() {
   const [database, setDatabase] = useState<any>(null);
@@ -150,6 +151,8 @@ export default function RootLayout() {
                   }}
                 />
               </Stack>
+              {/* Floating SOS button — rendered after Stack so it's above all screens */}
+              <SOSButton />
             </BottomSheetModalProvider>
           </SyncProvider>
         </AuthProvider>

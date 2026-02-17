@@ -195,6 +195,9 @@ export function useAllTimesheets(initialData?: TimesheetWithDetails[]) {
  *
  * Performance target: 20 timesheets in <5 seconds
  * Pattern: PostgreSQL bulk upsert (NOT N individual updates)
+ *
+ * After approval, fires mileage router for each unique (medic, date) pair
+ * — fire-and-forget so mileage errors never roll back the approval.
  */
 export function useBatchApproveTimesheets() {
   const queryClient = useQueryClient();
@@ -203,12 +206,14 @@ export function useBatchApproveTimesheets() {
 
   return useMutation({
     mutationFn: async ({
-      timesheetIds,
+      timesheets,
       adminUserId,
     }: {
-      timesheetIds: string[];
+      timesheets: TimesheetWithDetails[];
       adminUserId: string;
     }) => {
+      const timesheetIds = timesheets.map((t) => t.id);
+
       // Validate batch size (optimal: 500-1000 per Research)
       if (timesheetIds.length > 1000) {
         throw new Error('Batch size too large. Approve in chunks of 1000.');
@@ -241,7 +246,9 @@ export function useBatchApproveTimesheets() {
     },
 
     // Optimistic update: instantly show as approved
-    onMutate: async ({ timesheetIds }) => {
+    onMutate: async ({ timesheets }) => {
+      const timesheetIds = timesheets.map((t) => t.id);
+
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['timesheets', 'pending', orgId] });
       await queryClient.cancelQueries({ queryKey: ['timesheets', 'all', orgId] });
@@ -260,8 +267,8 @@ export function useBatchApproveTimesheets() {
 
       // Optimistically update cache
       const now = new Date().toISOString();
-      const updateTimesheets = (timesheets: TimesheetWithDetails[] | undefined) =>
-        timesheets?.map((t) =>
+      const updateTimesheets = (ts: TimesheetWithDetails[] | undefined) =>
+        ts?.map((t) =>
           timesheetIds.includes(t.id)
             ? {
                 ...t,
@@ -293,11 +300,30 @@ export function useBatchApproveTimesheets() {
       toast.error('Failed to approve timesheets. Changes rolled back.');
     },
 
-    // Success notification
-    onSuccess: (data) => {
+    // Success: notify + trigger mileage router for each unique (medic, date)
+    onSuccess: (data, { timesheets }) => {
       toast.success(
         `${data.count} timesheet${data.count === 1 ? '' : 's'} approved for payout`
       );
+
+      // Deduplicate by (medic_id, shift_date) — one mileage call covers all bookings
+      // for a medic on a given day, so avoid duplicate route calculations.
+      const seen = new Set<string>();
+      for (const t of timesheets) {
+        const date = t.booking.shift_date;
+        const key = `${t.medic_id}:${date}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        // Fire-and-forget: mileage errors must not affect approval UX
+        fetch('/api/payouts/mileage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ medicId: t.medic_id, date }),
+        }).catch((err) =>
+          console.error(`[mileage trigger] medic=${t.medic_id} date=${date}`, err)
+        );
+      }
     },
 
     // Refetch to ensure consistency

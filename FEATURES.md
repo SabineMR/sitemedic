@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Construction Site Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - Paramedic staffing company using SiteMedic platform
-\*\*Last Updated\*\*: 2026-02-17 (Experience-based payout tiers + HMRC mileage reimbursement for medics)
+\*\*Last Updated\*\*: 2026-02-17 (Experience tiers + mileage reimbursement; mileage auto-triggered on timesheet approval; migration numbering fixed)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
