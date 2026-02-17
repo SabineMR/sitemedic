@@ -14,9 +14,10 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
 import { useOrg } from '@/contexts/org-context';
-import { MapPin, Plus, Trash2, Save, Edit2 } from 'lucide-react';
+import { MapPin, Plus, Trash2, Save, Edit2, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useGeofenceCoverage } from '@/lib/queries/admin/geofences';
 
 const GeofenceMapPicker = dynamic(
   () => import('@/components/admin/GeofenceMapPicker'),
@@ -37,6 +38,58 @@ interface Geofence {
   center_longitude: number;
   radius_meters: number;
   created_at: string;
+}
+
+function GeofenceCoverageCard() {
+  const { data, isLoading } = useGeofenceCoverage();
+
+  if (isLoading) {
+    return <Skeleton className="h-20 w-full rounded-2xl" />;
+  }
+
+  let label: string;
+  if (!data || data.total === 0) {
+    label = 'No active bookings to cover';
+  } else if (data.covered === 0) {
+    label = `0 of ${data.total} active sites covered (0%)`;
+  } else {
+    label = `${data.covered} of ${data.total} active sites covered (${data.percentage}%)`;
+  }
+
+  const isFullCoverage = data && data.total > 0 && data.covered === data.total;
+  const isPartialCoverage = data && data.total > 0 && data.covered > 0 && data.covered < data.total;
+
+  return (
+    <div className={`flex items-center gap-4 px-6 py-4 rounded-2xl border ${
+      isFullCoverage
+        ? 'bg-green-900/20 border-green-700/50'
+        : isPartialCoverage
+          ? 'bg-blue-900/20 border-blue-700/50'
+          : 'bg-gray-800/50 border-gray-700/50'
+    }`}>
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+        isFullCoverage
+          ? 'bg-green-900/50'
+          : isPartialCoverage
+            ? 'bg-blue-900/50'
+            : 'bg-gray-900/50'
+      }`}>
+        <Shield className={`w-5 h-5 ${
+          isFullCoverage
+            ? 'text-green-400'
+            : isPartialCoverage
+              ? 'text-blue-400'
+              : 'text-gray-400'
+        }`} />
+      </div>
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          Geofence Coverage
+        </p>
+        <p className="text-white font-medium">{label}</p>
+      </div>
+    </div>
+  );
 }
 
 export default function GeofencesPage() {
@@ -200,6 +253,8 @@ export default function GeofencesPage() {
           Add Geofence
         </button>
       </div>
+
+      <GeofenceCoverageCard />
 
       {/* Add / Edit Form */}
       {showForm && (
