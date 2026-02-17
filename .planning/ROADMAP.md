@@ -311,7 +311,7 @@ Plans:
 **Plans:** 1 plan
 
 Plans:
-- [ ] 17-01-PLAN.md — Geofence coverage stat: TanStack Query hook + stat card on geofences page
+- [x] 17-01-PLAN.md — Geofence coverage stat: TanStack Query hook + stat card on geofences page
 
 ---
 
