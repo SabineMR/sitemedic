@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 Phase: v1.1 — Phase 13 (UX Polish) — In progress
-Plan: 13-01 complete (1/4 in Phase 13). Phase 15 (Code Quality) previously completed.
-Status: In progress — 3 plans remaining in Phase 13 (UX Polish)
-Last activity: 2026-02-17 — Completed 13-01-PLAN.md (skeleton loaders for treatments, workers, organizations, command center)
-Progress: [█░░░] 25% (1/4 plans executed in Phase 13)
+Plan: 13-02 complete (2/4 in Phase 13). 2 plans remaining.
+Status: In progress — 2 plans remaining in Phase 13 (UX Polish)
+Last activity: 2026-02-17 — Completed 13-02-PLAN.md: geofence schema fix + interactive Leaflet map picker
+Progress: [██░░] 50% (2/4 plans executed in Phase 13)
 
 ## Performance Metrics
 
@@ -487,6 +487,11 @@ Recent decisions affecting current work:
 - D-12-05-002: metrics period header rendered conditionally — new tabs work even when legacy metrics view fails to load
 - D-12-05-003: Tab bar uses flex-wrap to handle 7 tabs without horizontal overflow
 
+**From Plan 13-02:**
+- D-13-02-001: booking_id made nullable in geofences table — org-level geofences are not tied to a specific booking
+- D-13-02-002: GeofenceMapPicker uses dynamic(..., { ssr: false }) per D-05.5-04-003 — Leaflet requires browser APIs, crashes during SSR
+- D-13-02-003: leaflet/dist/leaflet.css imported inside GeofenceMapPicker.tsx (not page file) to co-locate map styling with component
+
 **From Plan 12-04:**
 - D-12-04-001: Query auto_schedule_logs directly with eq('org_id', orgId) — table has own org_id column, no two-step via bookings
 - D-12-04-002: OOT filter uses .gt('out_of_territory_cost', 0) — not travel_bonus (column does not exist on bookings)
@@ -578,8 +583,8 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 
 ## Session Continuity
 
-Last session: 2026-02-17T19:31:45Z
-Stopped at: Completed 13-01-PLAN.md — skeleton loaders for 4 pages (treatments, workers, organizations, command center).
+Last session: 2026-02-17T19:38:37Z
+Stopped at: Completed 13-02-PLAN.md — geofence schema migration 119 + GeofenceMapPicker with click-to-place + fixed page column names.
 Resume file: None
 
 ---
