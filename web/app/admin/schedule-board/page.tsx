@@ -160,31 +160,8 @@ export default function ScheduleBoardPage() {
         </div>
       </div>
 
-      {/* Mock Data Info Banner */}
-      {error && error.includes('mock data') && (
-        <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500 rounded-lg text-yellow-400">
-          <div className="flex items-start gap-3">
-            <span className="text-2xl">⚠️</span>
-            <div className="flex-1">
-              <div className="font-medium">Using Mock Data (Development Mode)</div>
-              <div className="text-sm mt-1 text-yellow-300">
-                Supabase isn't running. You're seeing sample data for UI testing.
-              </div>
-              <div className="text-xs mt-2 bg-yellow-500/20 p-2 rounded">
-                <strong>To use real data:</strong>
-                <ol className="list-decimal list-inside mt-1 space-y-1">
-                  <li>Start Docker Desktop</li>
-                  <li>Run: <code className="bg-black/30 px-1 rounded">supabase start</code></li>
-                  <li>Refresh this page</li>
-                </ol>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Error State (non-mock errors) */}
-      {error && !error.includes('mock data') && (
+      {/* Error State */}
+      {error && (
         <div className="mb-6 p-4 bg-red-500/10 border border-red-500 rounded-lg text-red-400">
           <div className="font-medium">Error loading schedule</div>
           <div className="text-sm mt-1">{error}</div>
@@ -205,8 +182,17 @@ export default function ScheduleBoardPage() {
         </div>
       )}
 
+      {/* Empty State */}
+      {!isLoading && !error && medics.length === 0 && (
+        <div className="text-center text-gray-400 py-12">
+          <div className="text-4xl mb-3">📋</div>
+          <div className="text-lg font-medium text-white mb-1">No bookings scheduled</div>
+          <div className="text-sm">No medics or bookings found for this week. Try navigating to a different week.</div>
+        </div>
+      )}
+
       {/* Schedule Grid */}
-      {!isLoading && !error && <ScheduleGrid />}
+      {!isLoading && !error && medics.length > 0 && <ScheduleGrid />}
 
       {/* Instructions (for first-time users) */}
       {!isLoading && medics.length > 0 && unassignedCount > 0 && (
