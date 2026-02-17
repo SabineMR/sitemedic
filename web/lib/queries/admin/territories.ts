@@ -512,7 +512,7 @@ export async function fetchTerritoriesWithMetrics(supabase: SupabaseClient, orgI
  * IMPORTANT: Now uses org context to filter territories.
  *
  * Features:
- * - 60-second polling for real-time updates
+ * - 5-minute polling for real-time updates (per Success Criteria #9)
  * - Initial data support for server-side rendering
  */
 export function useTerritories(initialData?: TerritoryWithMetrics[]) {
@@ -522,8 +522,8 @@ export function useTerritories(initialData?: TerritoryWithMetrics[]) {
   return useQuery({
     queryKey: ['admin', 'territories', 'with-metrics', orgId], // Include orgId in cache key
     queryFn: () => fetchTerritoriesWithMetrics(supabase, orgId),
-    refetchInterval: 60000, // 60 seconds
-    staleTime: 30000, // Consider data fresh for 30s
+    refetchInterval: 300000, // 5 minutes (300 seconds)
+    staleTime: 60000, // Consider data fresh for 1 min
     initialData,
   });
 }

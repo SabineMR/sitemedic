@@ -7,14 +7,19 @@
 
 'use client';
 
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useTerritories } from '@/lib/queries/admin/territories';
 import TerritoryList from '@/components/admin/territory-list';
-import { Map, Users, UserCheck, UserX, TrendingUp, Briefcase } from 'lucide-react';
+import { Map, Users, UserCheck, UserX, TrendingUp, Briefcase, AlertTriangle } from 'lucide-react';
 import { aggregateTerritoryMetrics } from '@/lib/territory/metrics';
 import { detectHiringTriggers } from '@/lib/territory/hiring-triggers';
+import { detectCoverageGaps } from '@/lib/territory/coverage-gaps';
 import CoverageAlerts from './coverage-alerts';
 import HiringPanel from './hiring-panel';
+import AssignmentPanel from './assignment-panel';
+import TerritoryDetail from './territory-detail';
+import type { TerritoryWithMetrics } from '@/lib/queries/admin/territories';
 
 // Dynamic import for map component to avoid SSR issues with Leaflet
 const TerritoryMap = dynamic(() => import('@/components/admin/territory-map'), {
@@ -27,7 +32,9 @@ const TerritoryMap = dynamic(() => import('@/components/admin/territory-map'), {
 });
 
 export default function TerritoriesPage() {
-  const { data: territories = [], isLoading, error } = useTerritories();
+  const { data: territories = [], isLoading, error, refetch } = useTerritories();
+  const [activeTab, setActiveTab] = useState<'coverage' | 'assignment'>('coverage');
+  const [selectedTerritory, setSelectedTerritory] = useState<TerritoryWithMetrics | null>(null);
 
   // Calculate summary statistics
   const stats = aggregateTerritoryMetrics(territories);
@@ -35,6 +42,10 @@ export default function TerritoriesPage() {
   // Count active hiring triggers
   const hiringTriggers = detectHiringTriggers(territories);
   const activeHiringAlerts = hiringTriggers.filter(t => t.severity === 'critical').length;
+
+  // Count coverage gaps
+  const coverageGaps = detectCoverageGaps(territories);
+  const activeCoverageAlerts = coverageGaps.filter(g => g.severity === 'critical').length;
 
   if (error) {
     return (
@@ -56,10 +67,10 @@ export default function TerritoriesPage() {
           <div className="p-2 bg-blue-600 rounded-lg">
             <Map className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white">Territory Coverage</h1>
+          <h1 className="text-3xl font-bold text-white">Territory Management</h1>
         </div>
         <p className="text-gray-400">
-          Monitor utilization and coverage gaps across UK territories
+          Monitor utilization, assign medics, and manage coverage gaps across UK territories
         </p>
       </div>
 
@@ -103,49 +114,102 @@ export default function TerritoriesPage() {
               <div className="text-2xl font-bold text-white">{stats.avg_utilization}%</div>
             </div>
 
-            {/* Active Hiring Alerts */}
+            {/* Active Alerts */}
             <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-1">
-                <Briefcase className="h-4 w-4 text-orange-400" />
-                <span className="text-sm text-gray-400">Hiring Alerts</span>
+                <AlertTriangle className="h-4 w-4 text-red-400" />
+                <span className="text-sm text-gray-400">Active Alerts</span>
               </div>
-              <div className="text-2xl font-bold text-white">{activeHiringAlerts}</div>
+              <div className="text-2xl font-bold text-white">{activeCoverageAlerts + activeHiringAlerts}</div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Coverage Gap Alerts */}
-      <CoverageAlerts territories={territories} />
-
-      {/* Hiring Recommendations */}
-      <HiringPanel territories={territories} />
-
-      {/* Map */}
-      <div className="px-8 pt-6 flex-shrink-0" style={{ height: '60vh' }}>
-        {isLoading ? (
-          <div className="h-full w-full bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-xl flex items-center justify-center">
-            <div className="text-gray-400">Loading territories...</div>
-          </div>
-        ) : territories.length > 0 ? (
-          <TerritoryMap territories={territories} />
-        ) : (
-          <div className="h-full w-full bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-xl flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-gray-400">No territories found.</p>
-              <p className="text-sm text-gray-500 mt-2">
-                Territories will appear here once they are configured.
-              </p>
-            </div>
-          </div>
-        )}
+      {/* Tab Navigation */}
+      <div className="px-8 pt-6">
+        <div className="flex gap-4 border-b border-gray-700/50">
+          <button
+            onClick={() => setActiveTab('coverage')}
+            className={`
+              px-4 py-2 font-medium transition-colors relative
+              ${activeTab === 'coverage'
+                ? 'text-white border-b-2 border-blue-500'
+                : 'text-gray-400 hover:text-white'
+              }
+            `}
+          >
+            Coverage Map
+          </button>
+          <button
+            onClick={() => setActiveTab('assignment')}
+            className={`
+              px-4 py-2 font-medium transition-colors relative
+              ${activeTab === 'assignment'
+                ? 'text-white border-b-2 border-blue-500'
+                : 'text-gray-400 hover:text-white'
+              }
+            `}
+          >
+            Assignment Manager
+          </button>
+        </div>
       </div>
 
-      {/* Territory List */}
-      <div className="px-8 py-6 flex-1 overflow-auto">
-        <h2 className="text-xl font-semibold text-white mb-4">All Territories</h2>
-        <TerritoryList territories={territories} />
-      </div>
+      {/* Tab Content */}
+      {activeTab === 'coverage' ? (
+        <div className="flex-1 overflow-auto">
+          {/* Coverage Gap Alerts */}
+          <CoverageAlerts territories={territories} />
+
+          {/* Hiring Recommendations */}
+          <HiringPanel territories={territories} />
+
+          {/* Map */}
+          <div className="px-8 pt-6 flex-shrink-0" style={{ height: '50vh' }}>
+            {isLoading ? (
+              <div className="h-full w-full bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-xl flex items-center justify-center">
+                <div className="text-gray-400">Loading territories...</div>
+              </div>
+            ) : territories.length > 0 ? (
+              <TerritoryMap
+                territories={territories}
+                onTerritoryClick={setSelectedTerritory}
+                selectedTerritoryId={selectedTerritory?.id}
+                onRefreshClick={() => refetch()}
+              />
+            ) : (
+              <div className="h-full w-full bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-xl flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-gray-400">No territories found.</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Territories will appear here once they are configured.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Territory List */}
+          <div className="px-8 py-6">
+            <h2 className="text-xl font-semibold text-white mb-4">All Territories</h2>
+            <TerritoryList
+              territories={territories}
+              onRowClick={setSelectedTerritory}
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 overflow-auto p-8">
+          <AssignmentPanel />
+        </div>
+      )}
+
+      {/* Territory Detail Panel */}
+      <TerritoryDetail
+        territory={selectedTerritory}
+        onClose={() => setSelectedTerritory(null)}
+      />
     </div>
   );
 }

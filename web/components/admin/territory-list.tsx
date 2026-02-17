@@ -13,12 +13,13 @@ import { AlertTriangle, ArrowUpDown } from 'lucide-react';
 
 interface Props {
   territories: TerritoryWithMetrics[];
+  onRowClick?: (territory: TerritoryWithMetrics) => void;
 }
 
 type SortField = 'postcode' | 'region' | 'utilization' | 'rejection_rate';
 type SortDirection = 'asc' | 'desc';
 
-export default function TerritoryList({ territories }: Props) {
+export default function TerritoryList({ territories, onRowClick }: Props) {
   const [sortField, setSortField] = useState<SortField>('utilization');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
@@ -141,9 +142,11 @@ export default function TerritoryList({ territories }: Props) {
               return (
                 <tr
                   key={territory.id}
+                  id={`territory-${territory.id}`}
+                  onClick={() => onRowClick?.(territory)}
                   className={`hover:bg-gray-700/30 transition-colors ${
                     hasCoverageGap ? 'border-l-4 border-l-red-500' : ''
-                  }`}
+                  } ${onRowClick ? 'cursor-pointer' : ''}`}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
