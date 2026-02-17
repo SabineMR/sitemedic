@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 08 (Lead Capture & Data Persistence) — ready to execute
-Plan: 4 plans created, verified, ready for execution
-Status: Plans verified — ready for /gsd:execute-phase 08
-Last activity: 2026-02-17 — Phase 08 planned and verified (4 plans, 3 waves)
-Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (0/4 plans executed in Phase 08)
+Phase: v1.1 — Phase 08 (Lead Capture & Data Persistence) — in progress
+Plan: 08-01 complete (1/4). Next: 08-02 and 08-03 (wave 2, parallel)
+Status: In progress — 08-01 executed
+Last activity: 2026-02-17 — Completed 08-01-PLAN.md (DB migration, RLS policies)
+Progress: [█░░░░░░░░░░░░░░░░░░░] 25% (1/4 plans executed in Phase 08)
 
 ## Performance Metrics
 
@@ -470,6 +470,13 @@ Recent decisions affecting current work:
 
 **From Plan 02-07:**
 
+**From Plan 08-01:**
+- D-08-01-001: No INSERT policy for org users — service role (server-only) handles all public form inserts to lead tables
+- D-08-01-002: No DELETE policy for org users — lead submissions are permanent records; only platform admins can delete
+- D-08-01-003: special_requirements stored as TEXT[] not JSONB — simple string list needs no JSON structure
+- D-08-01-004: converted_booking_id uses ON DELETE SET NULL — lead record preserved if booking later deleted
+- D-08-01-005: ASG_ORG_ID env var for org routing of public form submissions (no user auth context on public routes)
+
 **From Plan 07-05:**
 - D-07-05-001: Use EXPO_PUBLIC_WEB_APP_URL env var for mobile-to-web API calls (enables dev/prod environment switching)
 - D-07-05-002: Look up medic by user_id to get medics.id before calling validation API (medics.id != auth.users.id, API expects medics table primary key)
@@ -519,8 +526,8 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 
 ## Session Continuity
 
-Last session: 2026-02-17T05:30:00Z
-Stopped at: All gap fixes applied and committed — quote builder, booking received email, worker health records, contact form. Env vars documented.
+Last session: 2026-02-17T16:44:32Z
+Stopped at: Completed 08-01-PLAN.md — DB migration 115_lead_capture_tables.sql and env example updated.
 Resume file: None
 
 ---
