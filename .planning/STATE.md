@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 Phase: v1.1 — Phase 14 (Compliance, Exports & Medic Portal) — In Progress
-Plan: 14-03 complete. Wave 1 executing.
-Status: Phase 14 plan 03 done — certification expiry banners on medic profile shipped
-Last activity: 2026-02-17 — Completed 14-03-PLAN.md (red/yellow cert expiry banners with renewal links on medic profile page)
-Progress: [████████████████████] Phase 14 plan 03 complete (14-03 done)
+Plan: 14-01 complete. Wave 1 executing.
+Status: Phase 14 plan 01 done — payslip download optimised with stored pdf_url fast path
+Last activity: 2026-02-17 — Completed 14-01-PLAN.md (payslip download: stored pdf_url instant open, edge function fallback for older records, payslip reference display)
+Progress: [████████████████████] Phase 14 plan 01 complete (14-01, 14-03 done)
 
 ## Performance Metrics
 
@@ -571,8 +571,8 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 
 ## Session Continuity
 
-Last session: 2026-02-17T18:21:38Z
-Stopped at: Completed 14-03-PLAN.md — certification expiry banners on medic profile page shipped. TypeScript clean.
+Last session: 2026-02-17T18:22:33Z
+Stopped at: Completed 14-01-PLAN.md — payslip download optimised with stored pdf_url fast path and edge function fallback.
 Resume file: None
 
 ---
