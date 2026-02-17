@@ -9,16 +9,16 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 Phase: 7 of 7 (Certification Tracking)
-Plan: 3 of 9 in current phase
+Plan: 4 of 9 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 07-03-PLAN.md (Certification Dashboard & Compliance Integration)
-Progress: [█████████████████░] 93% (77/83 plans across Phases 1-7)
+Last activity: 2026-02-17 — Completed 07-04-PLAN.md (Certification Validation API & Worker Table Update)
+Progress: [█████████████████░] 94% (78/83 plans across Phases 1-7)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 77
-- Average duration: 4.1 min
+- Total plans completed: 78
+- Average duration: 4.0 min
 - Total execution time: 5.4 hours
 
 **By Phase:**
@@ -36,11 +36,11 @@ Progress: [█████████████████░] 93% (77/83 pl
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
 | 06-riddor-auto-flagging | 8/8 | 50 min | 6.3 min |
 | 06.5-payments-payouts | 12/12 | 49.5 min | 4.1 min |
-| 07-certification-tracking | 3/9 | 7 min | 2.3 min |
+| 07-certification-tracking | 4/9 | 9.3 min | 2.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 06-08 (2 min), 06.5-12 (3.5 min), 07-01 (2 min), 07-02 (2 min), 07-03 (3 min)
-- Trend: Certification tracking UI complete - Dashboard shows expiring certs with tabbed view (30/60/90 days), compliance score integrated with real expired cert count, sidebar navigation added
+- Last 5 plans: 06.5-12 (3.5 min), 07-01 (2 min), 07-02 (2 min), 07-03 (3 min), 07-04 (2.3 min)
+- Trend: Certification validation API enforces expired cert blocking; workers vs medics distinction clarified in UI (construction workers don't have cert tracking, medics do)
 
 *Updated after each plan completion*
 
@@ -430,6 +430,9 @@ Recent decisions affecting current work:
 - D-07-01-004: RPC functions return formatted data (expiry_date_formatted, renewal_url, days_remaining) to reduce client-side processing
 - D-07-01-005: All 3 RPC functions marked as STABLE not VOLATILE (enables PostgreSQL query plan caching and optimization)
 
+**From Plan 07-04:**
+- D-07-04-001: Workers vs medics certification distinction clarified in UI (workers table shows construction site workers who receive treatment, medics table stores medical professionals with certifications; Phase 7 cert tracking applies to medics, not workers; workers cert status column kept as N/A placeholder with comprehensive comment for future feature guidance)
+
 **From Plan 06-03:**
 - D-06-03-001: Use @react-pdf/renderer instead of pdf-lib with fillable PDF template (HSE F2508 not reliably available; matches Phase 5 pattern)
 - D-06-03-002: Store PDFs in {incident_id}/F2508-{timestamp}.pdf format for multiple versions per incident
@@ -479,8 +482,8 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T18:44:15Z
-Stopped at: Completed 07-03-PLAN.md — Certification Dashboard & Compliance Integration (Dashboard with tabbed expiry view, compliance score integrated with real expired cert count)
+Last session: 2026-02-17T00:49:27Z
+Stopped at: Completed 07-04-PLAN.md — Certification Validation API & Worker Table Update (API enforces expired cert blocking at 403 level, workers vs medics distinction clarified)
 Resume file: None
 
 ---
