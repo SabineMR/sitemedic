@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useMedicLocationsStore } from '@/stores/useMedicLocationsStore';
 import { useMedicAlertsStore } from '@/stores/useMedicAlertsStore';
 import MedicTimeline from '@/components/admin/MedicTimeline';
@@ -20,8 +21,31 @@ import { createClient } from '@/lib/supabase/client';
 const MedicTrackingMap = dynamic(() => import('@/components/admin/MedicTrackingMap'), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-screen bg-gray-900">
-      <div className="text-white text-xl">Loading command center...</div>
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Header skeleton */}
+      <div className="bg-gray-800 border-b border-gray-700 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-64 bg-gray-700" />
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-28 bg-gray-700" />
+            <Skeleton className="h-10 w-28 bg-gray-700" />
+            <Skeleton className="h-10 w-28 bg-gray-700" />
+          </div>
+        </div>
+      </div>
+
+      {/* Body: left alert panel + right map area */}
+      <div className="flex h-[calc(100vh-80px)]">
+        {/* Left panel: alert skeletons */}
+        <div className="w-96 border-r border-gray-700 p-4 space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 bg-gray-800 rounded-lg" />
+          ))}
+        </div>
+
+        {/* Right: map area */}
+        <div className="flex-1 bg-gray-800 animate-pulse" />
+      </div>
     </div>
   ),
 });

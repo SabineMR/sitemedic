@@ -16,6 +16,22 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   MapPin,
@@ -28,9 +44,12 @@ import {
   XCircle,
   DollarSign,
   Building2,
+  UserPlus,
 } from 'lucide-react';
 import CurrencyWithTooltip from '@/components/CurrencyWithTooltip';
 import type { BookingWithRelations } from '@/lib/queries/admin/bookings';
+import { useAvailableMedics } from '@/lib/queries/admin/bookings';
+import { useQueryClient } from '@tanstack/react-query';
 import { CheckCircle, Activity } from 'lucide-react';
 import { What3WordsDisplay } from '@/components/booking/what3words-display';
 import { createClient } from '@/lib/supabase/client';
@@ -92,6 +111,18 @@ export function BookingDetailPanel({
   }>>([]);
   const [chainLoading, setChainLoading] = useState(false);
 
+  // Assign Medic Manually state
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [selectedMedicId, setSelectedMedicId] = useState('');
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [assignError, setAssignError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  // Fetch available medics for the booking's shift date
+  const { data: availableMedics = [] } = useAvailableMedics(
+    booking?.shift_date || ''
+  );
+
   useEffect(() => {
     if (!open || !booking?.is_recurring) {
       setRecurringChain([]);
@@ -121,6 +152,33 @@ export function BookingDetailPanel({
 
     fetchChain();
   }, [open, booking?.id, booking?.is_recurring, booking?.parent_booking_id]);
+
+  const handleAssignMedic = async () => {
+    if (!booking || !selectedMedicId) return;
+    setIsAssigning(true);
+    setAssignError(null);
+    try {
+      const response = await fetch('/api/bookings/match', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId: booking.id,
+          overrideMedicId: selectedMedicId,
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to assign medic');
+      }
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      setAssignDialogOpen(false);
+      setSelectedMedicId('');
+    } catch (err) {
+      setAssignError(err instanceof Error ? err.message : 'Failed to assign medic');
+    } finally {
+      setIsAssigning(false);
+    }
+  };
 
   if (!booking) return null;
 
@@ -255,6 +313,24 @@ export function BookingDetailPanel({
             {booking.match_score != null && (
               <div className="text-sm text-gray-400 pl-6">
                 Match score: {booking.match_score}
+              </div>
+            )}
+
+            {(!booking.medics || booking.requires_manual_approval) && (
+              <div className="mt-3 pt-3 border-t border-gray-700/30">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setAssignDialogOpen(true);
+                    setAssignError(null);
+                    setSelectedMedicId('');
+                  }}
+                  className="w-full bg-blue-600/10 border-blue-500/30 text-blue-400 hover:bg-blue-600/20 hover:text-blue-300"
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Assign Medic Manually
+                </Button>
               </div>
             )}
           </div>
@@ -502,6 +578,72 @@ export function BookingDetailPanel({
             </p>
           </div>
         )}
+
+        {/* ── Assign Medic Dialog ────────────────────────────────── */}
+        <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
+          <DialogContent className="bg-gray-800 border-gray-700">
+            <DialogHeader>
+              <DialogTitle className="text-white">Assign Medic Manually</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Select a medic to assign to this booking. This will trigger a confirmation email to the client and medic.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <label className="text-sm text-gray-300 mb-2 block">
+                  Available Medics ({availableMedics.length})
+                </label>
+                <Select value={selectedMedicId} onValueChange={setSelectedMedicId}>
+                  <SelectTrigger className="bg-gray-900/50 border-gray-700/50 text-white">
+                    <SelectValue placeholder="Select a medic..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700">
+                    {availableMedics.map((medic) => (
+                      <SelectItem
+                        key={medic.id}
+                        value={medic.id}
+                        className="text-white hover:bg-gray-700"
+                      >
+                        {medic.first_name} {medic.last_name}
+                        {medic.star_rating > 0 && (
+                          <span className="ml-2 text-yellow-400 text-xs">
+                            {medic.star_rating.toFixed(1)} stars
+                          </span>
+                        )}
+                      </SelectItem>
+                    ))}
+                    {availableMedics.length === 0 && (
+                      <div className="px-2 py-3 text-sm text-gray-500 text-center">
+                        No available medics for this date
+                      </div>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              {assignError && (
+                <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded p-2">
+                  {assignError}
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setAssignDialogOpen(false)}
+                className="border-gray-700 text-gray-300 hover:bg-gray-700"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAssignMedic}
+                disabled={!selectedMedicId || isAssigning}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {isAssigning ? 'Assigning...' : 'Assign Medic'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </SheetContent>
     </Sheet>
   );

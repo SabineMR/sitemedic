@@ -10,6 +10,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Building2, Users, Calendar, TrendingUp, Plus, Search } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Organization {
   id: string;
@@ -71,8 +72,47 @@ export default function PlatformOrganizationsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-white text-lg">Loading organizations...</div>
+      <div className="p-8">
+        {/* Header skeleton */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <Skeleton className="h-9 w-48 mb-2" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-11 w-36 rounded-xl" />
+        </div>
+
+        {/* Search bar skeleton */}
+        <Skeleton className="h-12 w-full mb-6 rounded-xl" />
+
+        {/* Organization cards skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="bg-purple-800/30 border border-purple-700/50 rounded-2xl p-6 space-y-4"
+            >
+              {/* Card header: icon + name + slug */}
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-12 h-12 rounded-xl" />
+                <div>
+                  <Skeleton className="h-5 w-40 mb-1" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              </div>
+
+              {/* Metrics: 3-col grid */}
+              <div className="grid grid-cols-3 gap-4">
+                <Skeleton className="h-10 rounded" />
+                <Skeleton className="h-10 rounded" />
+                <Skeleton className="h-10 rounded" />
+              </div>
+
+              {/* Footer */}
+              <Skeleton className="h-3 w-48" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
