@@ -65,7 +65,12 @@ Plans:
 3. Recurring booking chain shows all N instances with per-instance status
 4. Refund amount visible in admin view when applicable
 
-**Plans:** 4 plans
+**Plans:** 3 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — What3WordsDisplay component + API fix + confirmation page data surfacing
+- [ ] 09-02-PLAN.md — BookingWithRelations type fix + admin booking detail Sheet panel
+- [ ] 09-03-PLAN.md — Wire View Details button + What3Words integration + recurring chain view
 
 ---
 
