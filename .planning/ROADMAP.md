@@ -75,9 +75,10 @@ Plans:
 
 ---
 
-### Phase 10: Real-Time Operations Polish
+### Phase 10: Real-Time Operations Polish ✅ COMPLETE
 **Goal:** Make the command centre actually usable in a live shift: admins know who each dot on the map is, can act on every alert, and users can recover from payment failures without calling support.
 **Priority:** HIGH
+**Completed:** 2026-02-17
 
 **Problem:** Three critical operational gaps — (1) medic location pings have no names or booking context (TODO in code), (2) payment failures have no recovery UI leaving users stuck, (3) the alert system defines 9 alert types but none are actionable with escalation, notes, or suggested actions.
 
@@ -100,11 +101,11 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 10-01-PLAN.md — Resolve location store TODO: medicContext Map with joined medic+booking query
-- [ ] 10-02-PLAN.md — Map marker popup: add shift time display to Leaflet Popup
-- [ ] 10-03-PLAN.md — Payment retry: retry button, reference number, support mailto
-- [ ] 10-04-PLAN.md — Alert notes end-to-end + bulk dismiss for non-critical alerts
-- [ ] 10-05-PLAN.md — Alert escalation timer, suggested actions, contact fallback
+- [x] 10-01-PLAN.md — Resolve location store TODO: medicContext Map with joined medic+booking query
+- [x] 10-02-PLAN.md — Map marker popup: add shift time display to Leaflet Popup
+- [x] 10-03-PLAN.md — Payment retry: retry button, reference number, support mailto
+- [x] 10-04-PLAN.md — Alert notes end-to-end + bulk dismiss for non-critical alerts
+- [x] 10-05-PLAN.md — Alert escalation timer, suggested actions, contact fallback
 
 ---
 

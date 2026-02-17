@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 14 (Compliance, Exports & Medic Portal) — In Progress
-Plan: 14-02 complete. Wave 1 executing (14-01 done, 14-03 done, 14-05 done, 14-02 done).
-Status: Phase 14 plan 02 done — export buttons wired into RIDDOR (PDF), timesheets (CSV), bookings (CSV), revenue (CSV)
-Last activity: 2026-02-17 — Completed 14-02-PLAN.md (exportRIDDORIncidentsPDF, exportTimesheetsCSV, exportBookingsCSV, exportInvoicesCSV + 4 export buttons)
-Progress: [████████████████████] Phase 14: 14-01, 14-02, 14-03, 14-05 complete
+Phase: v1.1 — Phase 10 (Real-Time Operations Polish) — COMPLETE ✅
+Plan: All 5 plans complete (10-01, 10-02, 10-03, 10-04, 10-05)
+Status: Phase 10 verified 7/7 must-haves — ready for Phase 11
+Last activity: 2026-02-17 — Completed Phase 10 (medicContext store, map popup shift times, payment retry UI, alert notes + bulk dismiss, alert escalation + suggested actions)
+Progress: [████████████████████] Phase 10: 5/5 plans complete, verified ✓
 
 ## Performance Metrics
 
