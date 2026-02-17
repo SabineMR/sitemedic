@@ -18,13 +18,13 @@ export default function PricingTable() {
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
           <div className="flex-1">
             <div className="inline-block px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold mb-3">
-              Base Package
+              Base Package — Any Event or Site
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
               ASG Medics Pro
             </h2>
             <p className="text-slate-500 mb-6 text-sm">
-              HCPC-registered paramedic on site + full SiteMedic compliance platform
+              HCPC-registered paramedic on site or at your event + full SiteMedic compliance platform
             </p>
             <ul className="space-y-2.5">
               {[
@@ -86,7 +86,7 @@ export default function PricingTable() {
         <div className="text-center mb-7">
           <h3 className="text-xl font-bold text-slate-900 mb-2">Clinical add-on packages</h3>
           <p className="text-slate-500 text-sm max-w-lg mx-auto">
-            Add to any medic booking. All results logged automatically in the SiteMedic platform. All done on site — no mobile van, no off-site clinic, no lost worker hours.
+            Add to any medic booking for construction sites and corporate worksites. All results logged automatically in the SiteMedic platform — no mobile van, no off-site clinic.
           </p>
         </div>
 
@@ -99,7 +99,7 @@ export default function PricingTable() {
                 <Ear className="w-4 h-4 text-white" />
               </div>
               <div>
-                <div className="text-[10px] text-blue-200 font-semibold uppercase tracking-wide">Legally Mandatory</div>
+                <div className="text-[10px] text-blue-200 font-semibold uppercase tracking-wide">Construction &amp; Industrial</div>
                 <div className="text-white font-bold text-sm">Health Surveillance</div>
               </div>
             </div>
@@ -133,7 +133,7 @@ export default function PricingTable() {
                 <FlaskConical className="w-4 h-4 text-white" />
               </div>
               <div>
-                <div className="text-[10px] text-orange-100 font-semibold uppercase tracking-wide">Contractually Required</div>
+                <div className="text-[10px] text-orange-100 font-semibold uppercase tracking-wide">Construction &amp; Corporate</div>
                 <div className="text-white font-bold text-sm">Drug &amp; Alcohol Testing</div>
               </div>
             </div>
@@ -231,7 +231,7 @@ export default function PricingTable() {
         </div>
 
         <p className="text-center text-xs text-slate-400 mt-5">
-          All prices shown +VAT. Get a custom quote that bundles all services for your specific site.
+          All prices shown +VAT. Occupational health add-ons are applicable to construction, industrial, and corporate sites. Get a custom quote for your specific event or worksite.
         </p>
       </div>
 

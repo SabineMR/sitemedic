@@ -5,20 +5,26 @@ import Link from 'next/link';
 import { CheckCircle2, Mail, MapPin, Clock } from 'lucide-react';
 
 const SITE_SIZES = [
-  'Under 10 workers',
-  '10–50 workers',
-  '50–200 workers',
-  '200–500 workers',
-  '500+ workers',
-  'Multiple sites',
+  'Under 50 people',
+  '50–200 people',
+  '200–500 people',
+  '500–2,000 people',
+  '2,000+ people',
+  'Multiple sites / events',
 ];
 
 const ENQUIRY_TYPES = [
-  'Book a site medic',
+  'Book a medic for an event',
+  'TV / Film production medical',
+  'Motorsport event cover',
+  'Music festival / concert cover',
+  'Sporting event cover',
+  'Construction / industrial site',
   'Health surveillance programme',
   'Drug & alcohol testing',
-  'Fitness-to-work assessments',
-  'Mental health & wellbeing',
+  'Corporate / private event',
+  'Education / youth event',
+  'Outdoor adventure event',
   'Custom / multi-site contract',
   'General enquiry',
 ];
@@ -169,7 +175,7 @@ export function ContactForm() {
                   required
                   value={form.company}
                   onChange={handleChange}
-                  placeholder="Acme Construction Ltd"
+                  placeholder="Acme Productions Ltd"
                   className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
               </div>
@@ -186,7 +192,7 @@ export function ContactForm() {
                     required
                     value={form.email}
                     onChange={handleChange}
-                    placeholder="jane@acmeconstruction.co.uk"
+                    placeholder="jane@acmeproductions.co.uk"
                     className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   />
                 </div>
@@ -209,7 +215,7 @@ export function ContactForm() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                    Typical site workforce size
+                    Typical event / site size
                   </label>
                   <select
                     name="siteSize"
@@ -252,7 +258,7 @@ export function ContactForm() {
                   rows={5}
                   value={form.message}
                   onChange={handleChange}
-                  placeholder="Describe your site, how often you need a medic, any specific compliance requirements…"
+                  placeholder="Describe your event or site — type, dates, location, attendance numbers, and any specific compliance requirements…"
                   className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
                 />
               </div>
@@ -347,8 +353,8 @@ export function ContactForm() {
               {[
                 'We review your enquiry and match you to the right medic profile',
                 'You receive a tailored quote within 24 hours',
-                'We confirm site date, access details, and set up your SiteMedic dashboard',
-                'Medic attends site — compliance records logged from day one',
+                'We confirm event/site date, access details, and set up your SiteMedic dashboard',
+                'Medic deployed — compliance records logged from the moment they arrive',
               ].map((step, i) => (
                 <li key={i} className="flex items-start gap-3 text-sm text-slate-600">
                   <span className="w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">

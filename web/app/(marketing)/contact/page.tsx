@@ -1,8 +1,8 @@
 /**
  * Contact Apex Safety Group
  *
- * Enquiry form for construction companies looking to book a site medic
- * or discuss a custom occupational health contract.
+ * Enquiry form for clients across all sectors looking to book a medic
+ * or discuss a custom contract for events, productions, or worksites.
  *
  * Route: /contact
  */
@@ -14,7 +14,7 @@ import { ContactForm } from './contact-form';
 export const metadata: Metadata = {
   title: 'Contact Us — Apex Safety Group',
   description:
-    'Get in touch with Apex Safety Group to book a site medic, discuss a health surveillance programme, or request a custom occupational health contract for your UK construction site.',
+    'Get in touch with Apex Safety Group to book an HCPC-registered paramedic for your event, film production, motorsport event, construction site, festival or sporting competition across England & Wales.',
 };
 
 export default function ContactPage() {
@@ -31,8 +31,8 @@ export default function ContactPage() {
             Talk to the ASG team
           </h1>
           <p className="text-slate-300 text-lg max-w-2xl mx-auto leading-relaxed">
-            Whether you need a medic on site next week or want to discuss a long-term occupational
-            health contract, we&apos;ll get back to you within one business day.
+            Whether you need a medic on site next week, cover for a one-day event, or want to discuss
+            a long-term contract, we&apos;ll get back to you within one business day.
           </p>
         </div>
       </section>
@@ -47,8 +47,7 @@ export default function ContactPage() {
             Prefer to read about us first?
           </h2>
           <p className="text-slate-600 mb-6 text-sm">
-            Find out how ASG works, what services we provide, and why construction companies
-            choose us over traditional OH providers.
+            Find out how ASG works, what services we provide across all industries, and why event organisers, production companies and worksites choose us over standard first-aid agencies.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link

@@ -18,7 +18,7 @@ export default function SiteFooter() {
               </div>
             </div>
             <p className="text-sm text-slate-400 mb-4 leading-relaxed">
-              HCPC-registered paramedics with full occupational health services — on site, for UK construction.
+              HCPC-registered paramedics for events, productions, motorsport, construction and more — across England &amp; Wales.
             </p>
             <p className="text-xs text-slate-600 leading-relaxed">
               Apex Safety Group Ltd<br />
@@ -26,33 +26,38 @@ export default function SiteFooter() {
             </p>
           </div>
 
-          {/* Services */}
+          {/* Industries */}
           <div>
-            <h4 className="text-white font-semibold mb-4 text-sm">Services</h4>
+            <h4 className="text-white font-semibold mb-4 text-sm">Industries</h4>
             <ul className="space-y-2.5 text-sm">
               <li>
-                <Link href="/#services" className="hover:text-white transition">
-                  Health Surveillance
+                <Link href="/services#tv-film" className="hover:text-white transition">
+                  TV &amp; Film Productions
                 </Link>
               </li>
               <li>
-                <Link href="/#services" className="hover:text-white transition">
-                  Drug &amp; Alcohol Testing
+                <Link href="/services#motorsport" className="hover:text-white transition">
+                  Motorsport &amp; Extreme Sports
                 </Link>
               </li>
               <li>
-                <Link href="/#services" className="hover:text-white transition">
-                  Fitness-to-Work Assessments
+                <Link href="/services#festivals" className="hover:text-white transition">
+                  Music Festivals &amp; Concerts
                 </Link>
               </li>
               <li>
-                <Link href="/#services" className="hover:text-white transition">
-                  Mental Health &amp; Wellbeing
+                <Link href="/services#sporting-events" className="hover:text-white transition">
+                  Sporting Events
                 </Link>
               </li>
               <li>
-                <Link href="/pricing" className="hover:text-white transition">
-                  Pricing
+                <Link href="/services#construction" className="hover:text-white transition">
+                  Construction &amp; Industrial
+                </Link>
+              </li>
+              <li>
+                <Link href="/services" className="hover:text-white transition">
+                  All Industries →
                 </Link>
               </li>
             </ul>
@@ -67,6 +72,9 @@ export default function SiteFooter() {
               </li>
               <li>
                 <Link href="/about" className="hover:text-white transition">About ASG</Link>
+              </li>
+              <li>
+                <Link href="/pricing" className="hover:text-white transition">Pricing</Link>
               </li>
               <li>
                 <Link href="/contact" className="hover:text-white transition">Contact Us</Link>
@@ -112,11 +120,13 @@ export default function SiteFooter() {
           <div className="flex flex-wrap gap-2 mb-6">
             {[
               'HCPC-Registered',
+              'Purple Guide',
+              'Motorsport UK',
               'RIDDOR 2013',
               'CDM 2015',
               'UK GDPR',
               'HSE Audit-Ready',
-              'COSHH',
+              'FA Governance',
               'HASAWA 1974',
             ].map((badge) => (
               <span

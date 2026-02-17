@@ -10,13 +10,13 @@ export default function Hero() {
         </div>
 
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 mb-6 leading-tight">
-          Professional paramedics
+          Professional medics for
           <br />
-          <span className="text-blue-600">with built-in compliance</span>
+          <span className="text-blue-600">every event &amp; worksite</span>
         </h1>
 
         <p className="text-lg sm:text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-          Book qualified paramedics for your construction site. We handle the care and generate RIDDOR-ready reports automatically.
+          Film sets, festivals, motorsport circuits, construction sites, sporting events and more — HCPC-registered paramedics deployed with full compliance records automatically generated.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -30,30 +30,14 @@ export default function Hero() {
         </div>
 
         <div className="mt-12 flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-sm text-slate-500">
-          <span className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            HCPC-Registered
-          </span>
-          <span className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            RIDDOR 2013
-          </span>
-          <span className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            CDM 2015
-          </span>
-          <span className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            UK GDPR
-          </span>
+          {['HCPC-Registered', 'Purple Guide', 'RIDDOR 2013', 'UK GDPR'].map((badge) => (
+            <span key={badge} className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              {badge}
+            </span>
+          ))}
         </div>
       </div>
     </section>

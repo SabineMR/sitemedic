@@ -23,7 +23,7 @@ export default function Pricing() {
             Simple, honest pricing
           </h1>
           <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Professional paramedics with built-in compliance. One daily rate, everything included.
+            HCPC-registered paramedics for any event or worksite, with built-in compliance. One daily rate, everything included.
           </p>
         </div>
       </section>
@@ -57,7 +57,7 @@ export default function Pricing() {
               },
               {
                 q: "Can we add clinical services to an existing booking?",
-                a: "Yes. Health surveillance, drug & alcohol testing, and fitness-to-work assessments can be added to any medic booking. We&apos;ll scope the right package for your site.",
+                a: "Yes. Health surveillance, drug & alcohol testing, and fitness-to-work assessments can be added to any medic booking for construction or industrial sites. We&apos;ll scope the right package for your specific requirements.",
               },
               {
                 q: "Are clinical add-on prices per visit or per worker?",
@@ -80,7 +80,7 @@ export default function Pricing() {
             Ready to get started?
           </h2>
           <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-            Book a medic for your construction site today.
+            Book a medic for your event, production, or worksite today.
           </p>
           <Link
             href="/book"

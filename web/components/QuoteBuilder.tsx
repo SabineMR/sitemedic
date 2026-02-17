@@ -306,37 +306,14 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">
-                  Tell us about your construction site
+                  Tell us about your event or site
                 </h3>
 
                 <div className="space-y-5">
-                  {/* Worker count for calculating recommended paramedics */}
+                  {/* Event/site type */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Maximum workers on site at one time?
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.workerCount}
-                      onChange={(e) => updateField('workerCount', e.target.value)}
-                      placeholder="e.g., 50"
-                      min="1"
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-xs text-blue-900 font-medium mb-1">
-                        💡 Important: Enter peak concurrent workers, not total headcount
-                      </p>
-                      <p className="text-xs text-blue-700">
-                        Example: If you have 50 workers on day shift and 30 on night shift, enter <strong>50</strong> (the highest number at any one time). This ensures adequate paramedic coverage during peak hours.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Project type for risk assessment */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      What type of construction work? *
+                      What type of event or site? *
                     </label>
                     <select
                       value={formData.projectType}
@@ -344,12 +321,43 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
                       className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       required
                     >
-                      <option value="">Select project type...</option>
-                      <option value="standard">Standard Construction (residential, commercial)</option>
-                      <option value="high-risk">High-Risk (demolition, confined space, height work)</option>
-                      <option value="heavy-civil">Heavy Civil Engineering (bridges, tunnels, infrastructure)</option>
-                      <option value="refurbishment">Refurbishment & Fit-Out</option>
+                      <option value="">Select type...</option>
+                      <option value="tv-film">TV / Film / Commercial Production</option>
+                      <option value="motorsport">Motorsport / Track Day / Extreme Sports</option>
+                      <option value="festival">Music Festival / Concert / Outdoor Gig</option>
+                      <option value="sporting">Sporting Event (marathon, rugby, football, boxing)</option>
+                      <option value="fair-show">Fair / Agricultural Show / Public Event</option>
+                      <option value="corporate">Corporate Event / Team Building / Retreat</option>
+                      <option value="private">Private Event (wedding, party, gala)</option>
+                      <option value="standard">Construction / Industrial Site</option>
+                      <option value="high-risk">High-Risk Site (demolition, confined space, height work)</option>
+                      <option value="education">Education / Youth Event (school, university, scouts)</option>
+                      <option value="adventure">Outdoor Adventure / Endurance Event</option>
+                      <option value="other">Other</option>
                     </select>
+                  </div>
+
+                  {/* Attendee / worker count */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Maximum people at your event or site at one time?
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.workerCount}
+                      onChange={(e) => updateField('workerCount', e.target.value)}
+                      placeholder="e.g., 500"
+                      min="1"
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-xs text-blue-900 font-medium mb-1">
+                        💡 Enter peak concurrent attendance, not total headcount
+                      </p>
+                      <p className="text-xs text-blue-700">
+                        For events, enter the maximum number on site at any one time. This is used to calculate the recommended number of paramedics.
+                      </p>
+                    </div>
                   </div>
 
                   {/* Recommended paramedics based on calculations */}
@@ -361,19 +369,19 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
                         </svg>
                         <div className="flex-1">
                           <p className="text-sm font-bold text-green-900">
-                            ✓ HSE Guidance Recommendation: {calculateRecommendedMedics()} paramedic{calculateRecommendedMedics() > 1 ? 's' : ''}
+                            ✓ Recommended: {calculateRecommendedMedics()} paramedic{calculateRecommendedMedics() > 1 ? 's' : ''}
                           </p>
                           <p className="text-xs text-green-800 mt-1">
-                            Based on {formData.workerCount} peak concurrent workers on a {formData.projectType.replace('-', ' ')} site
+                            Based on {formData.workerCount} peak people at a {formData.projectType.replace('-', ' ')} event/site
                           </p>
                           <p className="text-xs text-green-700 mt-2 font-medium">
-                            {formData.projectType === 'high-risk'
-                              ? `📋 HSE Guidance: High-risk sites typically need 1 first aider per ${process.env.NEXT_PUBLIC_HIGH_RISK_RATIO || '50'} workers`
-                              : `📋 HSE Guidance: Low-risk sites typically need 1 first aider per ${process.env.NEXT_PUBLIC_LOW_RISK_RATIO || '100'} workers`}
+                            {formData.projectType === 'high-risk' || formData.projectType === 'motorsport' || formData.projectType === 'festival' || formData.projectType === 'adventure'
+                              ? `📋 High-risk environments typically need 1 HCPC paramedic per ${process.env.NEXT_PUBLIC_HIGH_RISK_RATIO || '50'} people`
+                              : `📋 Standard events/sites typically need 1 HCPC paramedic per ${process.env.NEXT_PUBLIC_LOW_RISK_RATIO || '100'} people`}
                           </p>
                           <div className="mt-2 pt-2 border-t border-green-300">
                             <p className="text-xs text-green-800">
-                              <strong>Note:</strong> UK law (Health and Safety First-Aid Regulations 1981, CDM 2015) requires "adequate first-aid provisions" based on risk assessment. The ratios above are HSE guidance, not legal mandates. We recommend paramedic coverage as best practice.
+                              <strong>Note:</strong> Recommended ratios vary by event type and governing body (Purple Guide, Motorsport UK, FA etc.). We&apos;ll advise on the right cover for your specific requirements.
                             </p>
                           </div>
                         </div>
@@ -399,21 +407,21 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
                     </select>
                   </div>
 
-                  {/* Project phase */}
+                  {/* Event/site phase */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Project phase
+                      Coverage type
                     </label>
                     <select
                       value={formData.projectPhase}
                       onChange={(e) => updateField('projectPhase', e.target.value)}
                       className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
-                      <option value="">Select phase...</option>
-                      <option value="pre-construction">Pre-Construction (planning, groundworks)</option>
-                      <option value="construction">Active Construction</option>
-                      <option value="fit-out">Fit-Out & Finishing</option>
-                      <option value="completion">Near Completion</option>
+                      <option value="">Select type...</option>
+                      <option value="single-day">Single-day event</option>
+                      <option value="multi-day">Multi-day event or production</option>
+                      <option value="ongoing">Ongoing / rolling site cover</option>
+                      <option value="recurring">Regular recurring bookings</option>
                     </select>
                   </div>
 
@@ -436,16 +444,24 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
                           <h5 className="font-semibold mb-2 text-sm">What do these mean?</h5>
                           <dl className="space-y-2 text-xs">
                             <div>
-                              <dt className="font-medium text-white">Confined Space Work</dt>
-                              <dd className="text-slate-300">Work in tanks, vessels, silos, or enclosed spaces. Paramedic needs specialized confined space rescue training.</dd>
+                              <dt className="font-medium text-white">Remote / Difficult Access</dt>
+                              <dd className="text-slate-300">Event or site with limited road access or far from NHS services. Paramedic carries extended equipment and can provide definitive pre-hospital treatment.</dd>
                             </div>
                             <div>
                               <dt className="font-medium text-white">Working at Height (&gt;3m)</dt>
-                              <dd className="text-slate-300">Scaffolding, roofing, or elevated work platforms. Paramedic should understand fall injuries and rescue procedures.</dd>
+                              <dd className="text-slate-300">Scaffolding, roofing, elevated structures, or stunt work. Paramedic should understand fall injuries and rescue procedures.</dd>
                             </div>
                             <div>
-                              <dt className="font-medium text-white">Heavy Machinery Operation</dt>
-                              <dd className="text-slate-300">Cranes, excavators, or large plant equipment. Paramedic needs experience with crush injuries and extrication.</dd>
+                              <dt className="font-medium text-white">Motorsport / Vehicle Extraction</dt>
+                              <dd className="text-slate-300">Circuit or off-road motorsport events. Paramedic needs circuit trauma experience and vehicle extrication capability.</dd>
+                            </div>
+                            <div>
+                              <dt className="font-medium text-white">Crowd Medicine / Mass Casualty</dt>
+                              <dd className="text-slate-300">Large festivals or events where multiple simultaneous casualties are possible. Triage-trained paramedic required.</dd>
+                            </div>
+                            <div>
+                              <dt className="font-medium text-white">DBS-Checked Medic</dt>
+                              <dd className="text-slate-300">Events involving under-18s (school sports, youth events, Duke of Edinburgh). All our medics can be DBS-checked on request.</dd>
                             </div>
                             <div>
                               <dt className="font-medium text-white">CSCS Card Site</dt>
@@ -453,7 +469,7 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
                             </div>
                             <div>
                               <dt className="font-medium text-white">Trauma Specialist</dt>
-                              <dd className="text-slate-300">High-risk environment requiring advanced trauma care experience (e.g., major injuries, multiple casualties).</dd>
+                              <dd className="text-slate-300">High-consequence environment requiring advanced trauma care experience (motorsport, stunts, extreme sports).</dd>
                             </div>
                           </dl>
                           <p className="mt-2 text-slate-300 italic text-xs">
@@ -465,10 +481,12 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
 
                     <div className="space-y-2">
                       {[
-                        { value: 'confined-space', label: 'Confined Space Work' },
+                        { value: 'remote-access', label: 'Remote / Difficult Access Location' },
                         { value: 'height', label: 'Working at Height (>3m)' },
-                        { value: 'heavy-machinery', label: 'Heavy Machinery Operation' },
-                        { value: 'cscs-required', label: 'CSCS Card Site' },
+                        { value: 'motorsport-extraction', label: 'Motorsport / Vehicle Extraction' },
+                        { value: 'crowd-medicine', label: 'Crowd Medicine / Mass Casualty' },
+                        { value: 'dbs-required', label: 'DBS-Checked Medic Required' },
+                        { value: 'cscs-required', label: 'CSCS Card Site (construction)' },
                         { value: 'trauma-specialist', label: 'Trauma Specialist Required' },
                       ].map((req) => (
                         <label key={req.value} className="flex items-center gap-2 cursor-pointer">
@@ -491,10 +509,10 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
                     </div>
                   </div>
 
-                  {/* Site address with Google Places autocomplete */}
+                  {/* Venue/site address with Google Places autocomplete */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Site address * {googleMapsLoaded && <span className="text-green-600 text-xs">(autocomplete enabled)</span>}
+                      Venue / site address * {googleMapsLoaded && <span className="text-green-600 text-xs">(autocomplete enabled)</span>}
                     </label>
                     <input
                       ref={addressInputRef}
@@ -508,7 +526,7 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
                           updateField('coordinates', '');
                         }
                       }}
-                      placeholder="Start typing address in England or Wales..."
+                      placeholder="Start typing venue or site address in England or Wales..."
                       className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
                         !isValidLocation() && (formData.siteAddress || formData.coordinates)
                           ? 'border-red-300 focus:border-red-500'
@@ -520,7 +538,7 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
                     <p className="text-xs text-slate-500 mt-1">
                       {googleMapsLoaded
                         ? 'Start typing to see address suggestions (England & Wales only). Coordinates auto-fill on selection.'
-                        : 'Enter the full construction site address for accurate paramedic dispatch'}
+                        : 'Enter the full venue or site address for accurate paramedic dispatch'}
                     </p>
                   </div>
 
@@ -590,7 +608,7 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
                         💡 Why what3words?
                       </p>
                       <p className="text-xs text-blue-700">
-                        what3words divides the world into 3m x 3m squares and gives each one a unique 3-word address. This is much easier to communicate over phone or radio than GPS coordinates, and ensures paramedics can find the exact location on your construction site.
+                        what3words divides the world into 3m x 3m squares and gives each one a unique 3-word address. This is much easier to communicate over phone or radio than GPS coordinates, and ensures paramedics can find the exact location at your event or site — especially useful for large festivals, remote locations, or unmarked fields.
                       </p>
                     </div>
                   </div>
@@ -621,7 +639,7 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
                           onChange={(e) => updateField('durationKnown', e.target.value)}
                           className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
                         />
-                        <span className="text-sm text-slate-700">Estimated duration (common for construction)</span>
+                        <span className="text-sm text-slate-700">Estimated duration (common for long-term sites)</span>
                       </label>
                     </div>
                   </div>
@@ -647,7 +665,7 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
                         <option value="ongoing">Ongoing (with weekly renewal)</option>
                       </select>
                       <p className="text-xs text-slate-500 mt-1">
-                        We understand construction timelines can be uncertain. We'll work with you on flexible arrangements.
+                        We understand event and project timelines can be uncertain. We&apos;ll work with you on flexible arrangements.
                       </p>
                     </div>
                   )}
@@ -702,14 +720,14 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
 
                 {/* Project summary */}
                 <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
-                  <h4 className="text-sm font-semibold text-slate-900 mb-3">Project Details</h4>
+                  <h4 className="text-sm font-semibold text-slate-900 mb-3">Event / Site Details</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-slate-600">Workers on site:</span>
+                      <span className="text-slate-600">People at peak:</span>
                       <span className="font-medium text-slate-900">{formData.workerCount || 'Not specified'}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-600">Project type:</span>
+                      <span className="text-slate-600">Event / site type:</span>
                       <span className="font-medium text-slate-900 capitalize">{formData.projectType.replace('-', ' ')}</span>
                     </div>
                     <div className="flex justify-between">

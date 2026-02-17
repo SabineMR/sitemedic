@@ -1,17 +1,51 @@
 # SiteMedic Features
 
-**Project**: SiteMedic - UK Construction Site Medic Staffing Platform with Bundled Software + Service
-**Business**: Apex Safety Group (ASG) - Paramedic staffing company using SiteMedic platform
-\*\*Last Updated\*\*: 2026-02-17 (Phase 12: Analytics Dashboard — territory heatmap, hiring trigger cards, auto-assignment charts, medic utilisation table)
+**Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
+**Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
+**Last Updated**: 2026-02-17 (Website rework: multi-vertical positioning across TV/film, motorsport, festivals, sporting events, construction and more)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
 
 ## Overview
 
-SiteMedic is a comprehensive platform combining **mobile medic software** (offline-first treatment logging, RIDDOR compliance) with **business operations infrastructure** (booking portal, payment processing, territory management). The platform enables construction companies to book medics online while ensuring automatic compliance documentation and reliable medic payouts.
+SiteMedic is a comprehensive platform combining **mobile medic software** (offline-first treatment logging, RIDDOR compliance) with **business operations infrastructure** (booking portal, payment processing, territory management). The platform enables clients across 10+ industries to book HCPC-registered paramedics online while ensuring automatic compliance documentation and reliable medic payouts.
+
+**Industries served** (as of 2026-02-17 website rework):
+- Core verticals: TV & Film Productions, Motorsport & Extreme Sports, Construction & Industrial, Music Festivals & Concerts, Sporting Events, Fairs/Shows/Public Events
+- High-value add-ons: Corporate Events, Private Events (weddings/parties/galas), Education & Youth (DBS-checked), Outdoor Adventure & Endurance
 
 **Business Model**: Software bundled with medic staffing service (no separate software charge). Revenue from medic bookings with a configurable platform/medic split (default 60% platform / 40% medic, overridable per employee). Weekly medic payouts via UK Faster Payments, Net 30 invoicing for established corporate clients. Referral bookings (jobs recommended by a third party who cannot take them) trigger a 10% referral payout (configurable) deducted from the platform's share — medic payout is unaffected.
+
+---
+
+## Recent Updates — Website Multi-Vertical Rework (2026-02-17)
+
+### Apex Website: Multi-Vertical Positioning ✅
+
+The public-facing Apex Safety Group marketing website has been completely reworked from a construction-only positioning to a broad multi-vertical positioning covering 10+ industries.
+
+**Files changed (pass 1 — pages & layout components):**
+- `web/app/(marketing)/page.tsx` — Complete rewrite. New sections: multi-vertical hero (new headline/copy/badge row), 10-sector verticals grid (6 core + 4 add-ons), updated problem section (first-aid vs HCPC comparison), 3 service pillars (Event Medical, Occupational Health, Motorsport & Production), updated comparison table (Basic First Aid vs Nurse vs HCPC Paramedic), refreshed compliance grid (added Purple Guide, Motorsport UK, FA Governance, ISO 45001), updated CTA.
+- `web/app/(marketing)/services/page.tsx` — Complete rewrite. Replaced 4-layer construction OH services with 10 individual vertical cards (TV/Film, Motorsport, Construction, Festivals, Sporting Events, Fairs, Corporate, Private Events, Education, Outdoor Adventure). Each card: description, services list, compliance framework, starting price, book CTA. Added sticky jump-link nav bar.
+- `web/app/(marketing)/about/page.tsx` — Significant update. Expanded founding story from construction-only to all sectors. Added 10-industry grid. Updated mission statement, stats (10+ industries), and values copy.
+- `web/components/marketing/site-footer.tsx` — Updated brand description and Services column (now shows industry verticals: TV/Film, Motorsport, Festivals, Sporting Events, Construction). Added FA Governance and Motorsport UK compliance badges.
+- `web/components/marketing/hero.tsx` — Updated headline and copy from construction-specific to multi-vertical. Updated compliance badge row (HCPC, Purple Guide, RIDDOR, UK GDPR).
+
+**Files changed (pass 2 — remaining components & forms):**
+- `web/app/layout.tsx` — Updated root metadata title ("Professional Paramedics for Events, Productions & Worksites") and description (multi-vertical).
+- `web/components/marketing/trust-signals.tsx` — Expanded from 5 to 8 compliance badges. Added Purple Guide, Motorsport UK, FA Governance. Updated grid layout.
+- `web/app/(marketing)/pricing/page.tsx` — Updated hero subtitle, FAQ text, and CTA copy from construction-only to multi-vertical.
+- `web/components/marketing/pricing-table.tsx` — Updated base package label ("Any Event or Site"), add-on section description, and OH add-on badge labels (Health Surveillance: "Construction & Industrial", D&A: "Construction & Corporate").
+- `web/app/(marketing)/contact/page.tsx` — Updated metadata description and all copy to be multi-vertical.
+- `web/app/(marketing)/contact/contact-form.tsx` — Updated: SITE_SIZES (workers → people/attendees), ENQUIRY_TYPES (13 options covering all verticals), form labels ("site workforce size" → "event / site size"), message placeholder, company placeholder, and what-happens-next step copy.
+- `web/components/QuoteBuilder.tsx` — Major update to Step 1: new event type dropdown (12 options covering all verticals), updated worker count label ("maximum people at event/site"), updated recommendation engine copy (Purple Guide / HSE), updated special requirements (7 options: remote access, height, motorsport extraction, crowd medicine, DBS-checked, CSCS, trauma specialist), updated address labels ("venue / site address"), updated what3words description. Step 2: updated summary labels ("Project Details" → "Event / Site Details", "Workers on site" → "People at peak", "Project type" → "Event / site type").
+
+**Compliance frameworks added to website:**
+- Purple Guide (Event Industry Forum) — festivals & concerts
+- Motorsport UK / MSA — circuit medical
+- FA Governance — football events
+- ISO 45001 — occupational safety standard
 
 ---
 

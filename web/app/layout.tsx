@@ -6,8 +6,8 @@ import { OrgProvider } from '@/contexts/org-context';
 import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
-  title: 'Apex Safety Group - Professional Paramedics for UK Construction Sites',
-  description: 'Book qualified paramedics for your construction site. Apex Safety Group provides expert care with built-in compliance technology powered by SiteMedic—RIDDOR reports generated automatically.',
+  title: 'Apex Safety Group - Professional Paramedics for Events, Productions & Worksites',
+  description: 'Book HCPC-registered paramedics for film sets, music festivals, motorsport events, construction sites, sporting events and more. Apex Safety Group — compliance records generated automatically via SiteMedic.',
 };
 
 export default function RootLayout({

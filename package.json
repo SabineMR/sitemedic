@@ -9,7 +9,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "patch-package"
   },
   "repository": {
     "type": "git",
@@ -65,6 +66,7 @@
     "@babel/core": "^7.29.0",
     "@morrowdigital/watermelondb-expo-plugin": "^2.3.3",
     "@types/react": "~19.1.0",
+    "patch-package": "^8.0.1",
     "sharp": "^0.34.5",
     "typescript": "^5.9.3"
   }
