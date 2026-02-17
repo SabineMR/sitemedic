@@ -58,7 +58,7 @@ export function getUrgencyPremium(shiftDate: Date): {
  */
 export function calculateBookingPrice(params: {
   shiftHours: number;
-  baseRate?: number;                  // Default GBP 42/hr
+  baseRate?: number;                  // Fallback default; callers should pass org_settings.base_rate
   urgencyPremiumPercent?: number;
   travelSurcharge?: number;
   // Per-medic split overrides (falls back to env defaults)

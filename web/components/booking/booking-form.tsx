@@ -14,6 +14,7 @@ import { ShiftConfig } from './shift-config';
 import { PricingBreakdown } from './pricing-breakdown';
 import { BookingFormData, PricingBreakdown as PricingData } from '@/lib/booking/types';
 import { calculateBookingPrice, getUrgencyPremium } from '@/lib/booking/pricing';
+import { createClient } from '@/lib/supabase/client';
 
 interface QuoteData {
   location?: string;
@@ -29,6 +30,23 @@ interface BookingFormProps {
 
 export function BookingForm({ prefillData }: BookingFormProps = {}) {
   const router = useRouter();
+
+  // Base rate from org_settings (fallback: 42)
+  const [baseRate, setBaseRate] = useState<number>(42);
+
+  useEffect(() => {
+    async function loadBaseRate() {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('org_settings')
+        .select('base_rate')
+        .single();
+      if (data?.base_rate) {
+        setBaseRate(Number(data.base_rate));
+      }
+    }
+    loadBaseRate();
+  }, []);
 
   // Initialize form state
   const [formData, setFormData] = useState<BookingFormData>({
@@ -81,7 +99,7 @@ export function BookingForm({ prefillData }: BookingFormProps = {}) {
       const urgency = getUrgencyPremium(formData.shiftDate);
       const calculatedPricing = calculateBookingPrice({
         shiftHours: formData.shiftHours,
-        baseRate: 42, // Default GBP 42/hr
+        baseRate, // Fetched from org_settings; fallback default 42
         urgencyPremiumPercent: urgency.percent,
         travelSurcharge: 0, // Will be calculated after medic assignment in Plan 03
       });
@@ -89,7 +107,7 @@ export function BookingForm({ prefillData }: BookingFormProps = {}) {
     } else {
       setPricing(null);
     }
-  }, [formData.shiftDate, formData.shiftHours]);
+  }, [formData.shiftDate, formData.shiftHours, baseRate]);
 
   // Check if all required fields are filled
   const isFormValid = (): boolean => {
