@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { calculateOutOfTerritoryCost } from '@/lib/bookings/out-of-territory';
+import { requireOrgId } from '@/lib/organizations/org-resolver';
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
 
@@ -15,15 +16,8 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // Authenticate user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Multi-tenant: Get current user's org_id
+    const orgId = await requireOrgId();
 
     const body: CalculateCostRequest = await req.json();
     const { medicId, sitePostcode, shiftHours, baseRate } = body;
@@ -37,10 +31,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Fetch medic home postcode
+    // IMPORTANT: Filter by org_id to prevent cross-org access
     const { data: medic, error: medicError } = await supabase
       .from('medics')
       .select('home_postcode')
       .eq('id', medicId)
+      .eq('org_id', orgId)
       .single();
 
     if (medicError || !medic?.home_postcode) {

@@ -1,20 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { validateIR35Status } from '@/lib/medics/ir35-validator';
+import { requireOrgId } from '@/lib/organizations/org-resolver';
 
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // Authenticate user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Multi-tenant: Get current user's org_id
+    const orgId = await requireOrgId();
 
     const body = await req.json();
     const {
@@ -28,10 +22,12 @@ export async function POST(req: NextRequest) {
     } = body;
 
     // Validate user is the medic or admin
+    // IMPORTANT: Filter by org_id to prevent cross-org access
     const { data: medic, error: medicError } = await supabase
       .from('medics')
       .select('user_id, email, first_name, last_name, stripe_account_id, stripe_onboarding_url')
       .eq('id', medicId)
+      .eq('org_id', orgId)
       .single();
 
     if (medicError || !medic) {
@@ -70,6 +66,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Update medics table
+    // IMPORTANT: Filter by org_id for safety
     const { error: updateError } = await supabase
       .from('medics')
       .update({
@@ -81,7 +78,8 @@ export async function POST(req: NextRequest) {
         cest_pdf_url,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', medicId);
+      .eq('id', medicId)
+      .eq('org_id', orgId);
 
     if (updateError) {
       console.error('Error updating medic IR35 status:', updateError);
@@ -116,13 +114,15 @@ export async function POST(req: NextRequest) {
       stripeOnboardingUrl = stripeData.onboarding_url;
 
       // Update medic with Stripe account details
+      // IMPORTANT: Filter by org_id for safety
       await supabase
         .from('medics')
         .update({
           stripe_account_id: stripeData.account_id,
           stripe_onboarding_url: stripeData.onboarding_url,
         })
-        .eq('id', medicId);
+        .eq('id', medicId)
+        .eq('org_id', orgId);
     }
 
     // Log IR35 assessment completion

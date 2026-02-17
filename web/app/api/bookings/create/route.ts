@@ -11,6 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireOrgId } from '@/lib/organizations/org-resolver';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,6 +53,9 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const body: BookingRequest = await request.json();
 
+    // Multi-tenant: Get current user's org_id
+    const orgId = await requireOrgId();
+
     // Validate required fields
     if (!body.clientId || !body.shiftDate || !body.shiftHours || body.shiftHours < 8) {
       return NextResponse.json(
@@ -61,10 +65,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch client to check payment terms and credit limit
+    // IMPORTANT: Filter by org_id to prevent cross-org access
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .select('payment_terms, credit_limit, outstanding_balance, stripe_customer_id')
       .eq('id', body.clientId)
+      .eq('org_id', orgId)
       .single();
 
     if (clientError || !client) {
@@ -110,9 +116,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Create booking with status='confirmed' (Net 30 doesn't require payment upfront)
+    // IMPORTANT: Set org_id to ensure booking belongs to current org
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
       .insert({
+        org_id: orgId,
         client_id: body.clientId,
         status: 'confirmed',
         shift_date: body.shiftDate,

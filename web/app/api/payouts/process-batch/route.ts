@@ -13,31 +13,14 @@ import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { validatePayout } from '@/lib/payouts/calculator';
 import { stripe } from '@/lib/stripe/server';
+import { requireOrgId } from '@/lib/organizations/org-resolver';
 
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
 
-    // Verify user is admin
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.role !== 'admin') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
-    }
+    // Multi-tenant: Get current user's org_id
+    const orgId = await requireOrgId();
 
     // Parse request body
     const body = await request.json();
@@ -51,6 +34,7 @@ export async function POST(request: Request) {
     }
 
     // Fetch timesheets with medic and booking relations
+    // CRITICAL: Filter by org_id to prevent cross-org payout processing
     const { data: timesheets, error: queryError } = await supabase
       .from('timesheets')
       .select(
@@ -60,22 +44,26 @@ export async function POST(request: Request) {
         booking_id,
         payout_amount,
         payout_status,
-        medics (
+        org_id,
+        medics!inner (
           id,
           first_name,
           last_name,
           stripe_account_id,
-          stripe_onboarding_complete
+          stripe_onboarding_complete,
+          org_id
         ),
-        bookings (
+        bookings!inner (
           id,
           total,
           site_name,
-          shift_date
+          shift_date,
+          org_id
         )
       `
       )
-      .in('id', timesheetIds);
+      .in('id', timesheetIds)
+      .eq('org_id', orgId);
 
     if (queryError) {
       console.error('Error fetching timesheets:', queryError);

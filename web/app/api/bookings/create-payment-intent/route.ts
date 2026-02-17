@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { stripe } from '@/lib/stripe/server';
+import { requireOrgId } from '@/lib/organizations/org-resolver';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,6 +58,9 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const body: BookingRequest = await request.json();
 
+    // Multi-tenant: Get current user's org_id
+    const orgId = await requireOrgId();
+
     // Validate required fields
     if (!body.clientId || !body.shiftDate || !body.shiftHours || body.shiftHours < 8) {
       return NextResponse.json(
@@ -83,9 +87,11 @@ export async function POST(request: NextRequest) {
     }
 
     // STEP 1: Create booking with status='pending' (payment hasn't happened yet)
+    // IMPORTANT: Set org_id to ensure booking belongs to current org
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
       .insert({
+        org_id: orgId,
         client_id: body.clientId,
         status: 'pending', // CRITICAL: Not 'confirmed' until payment succeeds
         shift_date: body.shiftDate,
@@ -126,10 +132,12 @@ export async function POST(request: NextRequest) {
     }
 
     // STEP 2: Fetch client to get/create Stripe customer
+    // IMPORTANT: Filter by org_id to prevent cross-org access
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .select('stripe_customer_id, contact_email, company_name')
       .eq('id', body.clientId)
+      .eq('org_id', orgId)
       .single();
 
     if (clientError || !client) {
@@ -154,10 +162,12 @@ export async function POST(request: NextRequest) {
       stripeCustomerId = customer.id;
 
       // Update client with Stripe customer ID
+      // IMPORTANT: Filter by org_id for safety
       await supabase
         .from('clients')
         .update({ stripe_customer_id: stripeCustomerId })
-        .eq('id', body.clientId);
+        .eq('id', body.clientId)
+        .eq('org_id', orgId);
     }
 
     // STEP 3: Create Stripe Payment Intent

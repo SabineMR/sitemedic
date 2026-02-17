@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireOrgId } from '@/lib/organizations/org-resolver';
 
 interface GenerateInvoiceRequest {
   clientId: string;
@@ -11,26 +12,8 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // Authenticate user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { data: profile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
-    }
+    // Multi-tenant: Get current user's org_id
+    const orgId = await requireOrgId();
 
     const body: GenerateInvoiceRequest = await req.json();
     const { clientId, bookingIds, invoiceDate } = body;
@@ -44,10 +27,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Fetch client details
+    // CRITICAL: Filter by org_id to prevent cross-org invoicing
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .select('*')
       .eq('id', clientId)
+      .eq('org_id', orgId)
       .single();
 
     if (clientError || !client) {
@@ -55,10 +40,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Fetch bookings
+    // CRITICAL: Filter by org_id to prevent cross-org booking inclusion
     const { data: bookings, error: bookingsError } = await supabase
       .from('bookings')
       .select('*')
-      .in('id', bookingIds);
+      .in('id', bookingIds)
+      .eq('org_id', orgId);
 
     if (bookingsError || !bookings || bookings.length === 0) {
       return NextResponse.json({ error: 'Bookings not found' }, { status: 404 });
@@ -66,6 +53,14 @@ export async function POST(req: NextRequest) {
 
     // Validate bookings
     for (const booking of bookings) {
+      // Double-check org_id matches (RLS should enforce this, but validate explicitly)
+      if (booking.org_id !== orgId) {
+        return NextResponse.json(
+          { error: `Security violation: Booking ${booking.id} belongs to different organization` },
+          { status: 403 }
+        );
+      }
+
       if (booking.client_id !== clientId) {
         return NextResponse.json(
           { error: `Booking ${booking.id} does not belong to client ${clientId}` },
@@ -82,10 +77,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if any bookings already invoiced
+    // IMPORTANT: Filter by org_id for consistency
     const { data: existingLineItems } = await supabase
       .from('invoice_line_items')
       .select('booking_id')
-      .in('booking_id', bookingIds);
+      .in('booking_id', bookingIds)
+      .eq('org_id', orgId);
 
     if (existingLineItems && existingLineItems.length > 0) {
       const alreadyInvoiced = existingLineItems.map((item) => item.booking_id);
@@ -122,9 +119,11 @@ export async function POST(req: NextRequest) {
     dueDate.setDate(dueDate.getDate() + 30); // Net 30
 
     // Insert invoice record
+    // CRITICAL: Set org_id to ensure invoice belongs to current org
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
       .insert({
+        org_id: orgId,
         invoice_number: invoiceNumber,
         client_id: clientId,
         subtotal: Number(subtotal.toFixed(2)),
@@ -144,7 +143,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Insert line items
+    // CRITICAL: Set org_id on all line items
     const lineItems = bookings.map((booking) => ({
+      org_id: orgId,
       invoice_id: invoice.id,
       booking_id: booking.id,
       description: `Medic service - ${booking.site_name} on ${new Date(booking.shift_date).toLocaleDateString('en-GB')}`,
@@ -159,8 +160,8 @@ export async function POST(req: NextRequest) {
 
     if (lineItemsError) {
       console.error('Error creating line items:', lineItemsError);
-      // Rollback invoice
-      await supabase.from('invoices').delete().eq('id', invoice.id);
+      // Rollback invoice (with org_id filter for safety)
+      await supabase.from('invoices').delete().eq('id', invoice.id).eq('org_id', orgId);
       return NextResponse.json({ error: 'Failed to create invoice line items' }, { status: 500 });
     }
 

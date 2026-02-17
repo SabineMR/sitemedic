@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import type { PaymentTerms } from '@/lib/contracts/types';
 import crypto from 'crypto';
+import { requireOrgId } from '@/lib/organizations/org-resolver';
 
 // ============================================================================
 // Request Body Interface
@@ -33,14 +34,8 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // Verify authentication
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Multi-tenant: Get current user's org_id
+    const orgId = await requireOrgId();
 
     // Parse request body
     const body: CreateContractRequest = await request.json();
@@ -75,6 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch booking with client data to verify it exists
+    // IMPORTANT: Filter by org_id to prevent cross-org contract creation
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
       .select(
@@ -84,6 +80,7 @@ export async function POST(request: NextRequest) {
       `
       )
       .eq('id', bookingId)
+      .eq('org_id', orgId)
       .single();
 
     if (bookingError || !booking) {
@@ -94,10 +91,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if booking already has a contract (not terminated)
+    // IMPORTANT: Filter by org_id for consistency
     const { data: existingContract } = await supabase
       .from('contracts')
       .select('id')
       .eq('booking_id', bookingId)
+      .eq('org_id', orgId)
       .neq('status', 'terminated')
       .maybeSingle();
 
@@ -126,9 +125,11 @@ export async function POST(request: NextRequest) {
     const shareableToken = crypto.randomUUID();
 
     // Insert contract record
+    // CRITICAL: Set org_id to ensure contract belongs to current org
     const { data: contract, error: contractError } = await supabase
       .from('contracts')
       .insert({
+        org_id: orgId,
         booking_id: bookingId,
         client_id: booking.client_id,
         template_id: templateId,
@@ -155,9 +156,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert initial contract version record
+    // CRITICAL: Set org_id on contract version
     const { data: version, error: versionError } = await supabase
       .from('contract_versions')
       .insert({
+        org_id: orgId,
         contract_id: contract.id,
         version: 1,
         storage_path: `contracts/${contract.id}/v1.pdf`,
@@ -170,7 +173,8 @@ export async function POST(request: NextRequest) {
     if (versionError || !version) {
       console.error('Error creating contract version:', versionError);
       // Rollback contract if version creation fails
-      await supabase.from('contracts').delete().eq('id', contract.id);
+      // IMPORTANT: Filter by org_id for safety
+      await supabase.from('contracts').delete().eq('id', contract.id).eq('org_id', orgId);
       return NextResponse.json(
         { error: 'Failed to create contract version' },
         { status: 500 }
@@ -178,10 +182,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Update contract with current_version_id
+    // IMPORTANT: Filter by org_id for safety
     const { error: updateError } = await supabase
       .from('contracts')
       .update({ current_version_id: version.id })
-      .eq('id', contract.id);
+      .eq('id', contract.id)
+      .eq('org_id', orgId);
 
     if (updateError) {
       console.error('Error updating contract version:', updateError);

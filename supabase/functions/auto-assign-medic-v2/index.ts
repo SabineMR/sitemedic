@@ -26,6 +26,7 @@ interface AutoAssignRequest {
 
 interface Booking {
   id: string;
+  org_id: string; // CRITICAL: Track which org this booking belongs to
   site_postcode: string;
   shift_date: string;
   shift_start_time: string;
@@ -101,7 +102,7 @@ serve(async (req: Request) => {
 
     if (candidates.length === 0) {
       // No candidates - log failure and require manual approval
-      await logAutoScheduleFailure(booking_id, 'No available medics found');
+      await logAutoScheduleFailure(booking_id, booking.org_id, 'No available medics found');
       await updateBookingNoMatch(booking_id);
       return new Response(
         JSON.stringify({
@@ -130,7 +131,7 @@ serve(async (req: Request) => {
     const requiresManualApproval = confidenceScore < 50; // Confidence threshold
 
     // Step 5: Log auto-schedule decision
-    await logAutoScheduleDecision(booking_id, topCandidate.medic.id, topCandidate.score, rankedCandidates, !requiresManualApproval);
+    await logAutoScheduleDecision(booking_id, booking.org_id, topCandidate.medic.id, topCandidate.score, rankedCandidates, !requiresManualApproval);
 
     // Step 6: Auto-assign top candidate or flag for manual review
     if (!requiresManualApproval) {
@@ -185,11 +186,12 @@ serve(async (req: Request) => {
 
 /**
  * Step 1: Fetch booking details
+ * CRITICAL: Include org_id to ensure we only assign medics from the same organization
  */
 async function fetchBooking(bookingId: string): Promise<Booking | null> {
   const { data, error } = await supabase
     .from('bookings')
-    .select('id, site_postcode, shift_date, shift_start_time, shift_end_time, shift_hours, confined_space_required, trauma_specialist_required, client_id')
+    .select('id, org_id, site_postcode, shift_date, shift_start_time, shift_end_time, shift_hours, confined_space_required, trauma_specialist_required, client_id')
     .eq('id', bookingId)
     .single();
 
@@ -198,12 +200,15 @@ async function fetchBooking(bookingId: string): Promise<Booking | null> {
     return null;
   }
 
+  console.log(`🏢 Booking org_id: ${data.org_id}`);
   return data;
 }
 
 /**
  * Step 2: Find candidate medics with ENHANCED filtering
+ * CRITICAL SECURITY FIX: Only fetch medics from the same organization as the booking
  * Filters:
+ * 0. SAME ORGANIZATION (org_id match) - CRITICAL FOR MULTI-TENANT ISOLATION
  * 1. Available for work (available_for_work = true, unavailable_until check)
  * 2. Required certifications (confined space, trauma specialist)
  * 3. NOT double-booked (no overlapping shifts on same date)
@@ -212,10 +217,12 @@ async function fetchBooking(bookingId: string): Promise<Booking | null> {
  * 6. Google Calendar conflict check (future enhancement)
  */
 async function findCandidateMedics(booking: Booking, skipOvertimeCheck: boolean): Promise<Medic[]> {
-  // Fetch all potentially available medics
+  // Fetch medics from SAME ORGANIZATION ONLY - CRITICAL SECURITY FIX
+  console.log(`🔍 Fetching medics for org_id: ${booking.org_id}`);
   const { data: allMedics, error: medicError } = await supabase
     .from('medics')
-    .select('id, first_name, last_name, home_postcode, has_confined_space_cert, has_trauma_cert, star_rating, riddor_compliance_rate, available_for_work, unavailable_until');
+    .select('id, first_name, last_name, home_postcode, has_confined_space_cert, has_trauma_cert, star_rating, riddor_compliance_rate, available_for_work, unavailable_until')
+    .eq('org_id', booking.org_id); // CRITICAL: Filter by org_id
 
   if (medicError || !allMedics) {
     console.error('Error fetching medics:', medicError);
@@ -245,9 +252,11 @@ async function findCandidateMedics(booking: Booking, skipOvertimeCheck: boolean)
   }
 
   // FILTER 3: Not double-booked (overlapping shifts on same date)
+  // IMPORTANT: Only check conflicts within the same org
   const { data: conflicts, error: conflictError } = await supabase
     .from('bookings')
     .select('medic_id')
+    .eq('org_id', booking.org_id) // IMPORTANT: Filter by org_id
     .eq('shift_date', booking.shift_date)
     .in('status', ['confirmed', 'in_progress'])
     .not('medic_id', 'is', null);
@@ -259,9 +268,11 @@ async function findCandidateMedics(booking: Booking, skipOvertimeCheck: boolean)
   }
 
   // FILTER 4: Check medic availability calendar (medic_availability table)
+  // IMPORTANT: Only check availability for medics in this org
   const { data: unavailableDates, error: availError } = await supabase
     .from('medic_availability')
     .select('medic_id')
+    .eq('org_id', booking.org_id) // IMPORTANT: Filter by org_id
     .eq('date', booking.shift_date)
     .eq('is_available', false)
     .eq('status', 'approved');
@@ -434,9 +445,11 @@ async function updateBookingNoMatch(bookingId: string): Promise<void> {
 
 /**
  * Log auto-schedule decision to auto_schedule_logs table (audit trail)
+ * CRITICAL: Include org_id to track which org this auto-assignment is for
  */
 async function logAutoScheduleDecision(
   bookingId: string,
+  orgId: string,
   assignedMedicId: string,
   topScore: AutoMatchScore,
   allCandidates: Array<{ medic: Medic; score: AutoMatchScore }>,
@@ -451,6 +464,7 @@ async function logAutoScheduleDecision(
   const { error } = await supabase
     .from('auto_schedule_logs')
     .insert({
+      org_id: orgId, // CRITICAL: Track which org this log belongs to
       booking_id: bookingId,
       assigned_medic_id: assignedMedicId,
       confidence_score: topScore.total_score,
@@ -473,14 +487,17 @@ async function logAutoScheduleDecision(
 
 /**
  * Log auto-schedule failure (no candidates found)
+ * CRITICAL: Include org_id to track which org this failure is for
  */
 async function logAutoScheduleFailure(
   bookingId: string,
+  orgId: string,
   reason: string
 ): Promise<void> {
   const { error } = await supabase
     .from('auto_schedule_logs')
     .insert({
+      org_id: orgId, // CRITICAL: Track which org this log belongs to
       booking_id: bookingId,
       assigned_medic_id: null,
       confidence_score: 0,

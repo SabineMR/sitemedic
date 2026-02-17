@@ -10,6 +10,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { useRequireOrg } from '@/contexts/org-context';
 
 // Types
 export interface BookingWithRelations {
@@ -79,7 +80,8 @@ export interface AvailableMedic {
 }
 
 // Server-side: Fetch bookings with client and medic joins
-export async function fetchBookings(supabase: SupabaseClient): Promise<BookingWithRelations[]> {
+// IMPORTANT: Now accepts orgId parameter for org-scoped filtering
+export async function fetchBookings(supabase: SupabaseClient, orgId: string): Promise<BookingWithRelations[]> {
   // Filter out old cancelled bookings for performance (>30 days old)
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -98,6 +100,7 @@ export async function fetchBookings(supabase: SupabaseClient): Promise<BookingWi
       )
     `
     )
+    .eq('org_id', orgId) // CRITICAL: Filter by org_id
     .or(`status.neq.cancelled,cancelled_at.gte.${thirtyDaysAgo.toISOString()}`)
     .order('shift_date', { ascending: false })
     .order('created_at', { ascending: false });
@@ -107,13 +110,16 @@ export async function fetchBookings(supabase: SupabaseClient): Promise<BookingWi
 }
 
 // Server-side: Fetch available medics for reassignment
+// IMPORTANT: Now accepts orgId parameter to only show org's medics
 export async function fetchAvailableMedics(
   supabase: SupabaseClient,
+  orgId: string,
   shiftDate: string
 ): Promise<AvailableMedic[]> {
   const { data, error } = await supabase
     .from('medics')
     .select('id, first_name, last_name, email, phone, has_confined_space_cert, has_trauma_cert, star_rating, available_for_work')
+    .eq('org_id', orgId) // CRITICAL: Filter by org_id
     .eq('available_for_work', true)
     .order('star_rating', { ascending: false });
 
@@ -122,12 +128,14 @@ export async function fetchAvailableMedics(
 }
 
 // Client-side: useBookings hook with 60-second polling
+// IMPORTANT: Now uses org context to filter bookings
 export function useBookings(initialData?: BookingWithRelations[]) {
   const supabase = createClient();
+  const orgId = useRequireOrg(); // Get current user's org_id
 
   return useQuery({
-    queryKey: ['admin-bookings'],
-    queryFn: () => fetchBookings(supabase),
+    queryKey: ['admin-bookings', orgId], // Include orgId in cache key
+    queryFn: () => fetchBookings(supabase, orgId),
     initialData,
     refetchInterval: 60_000, // 60 seconds polling
   });

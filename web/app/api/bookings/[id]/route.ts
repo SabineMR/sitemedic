@@ -5,6 +5,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { requireOrgId } from '@/lib/organizations/org-resolver';
 
 export async function GET(
   request: Request,
@@ -22,7 +23,11 @@ export async function GET(
 
     const supabase = await createClient();
 
+    // Multi-tenant: Get current user's org_id
+    const orgId = await requireOrgId();
+
     // Query bookings table with joins (same pattern as booking-confirmation email route)
+    // IMPORTANT: Filter by org_id to prevent cross-org access
     const { data: booking, error } = await supabase
       .from('bookings')
       .select(`
@@ -42,6 +47,7 @@ export async function GET(
         )
       `)
       .eq('id', bookingId)
+      .eq('org_id', orgId)
       .single();
 
     if (error || !booking) {

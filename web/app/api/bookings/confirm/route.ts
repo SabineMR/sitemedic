@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/server';
 import { canConfirmBooking, getPaymentMilestones } from '@/lib/contracts/payment-enforcement';
 import { stripe } from '@/lib/stripe/server';
 import type { Contract } from '@/lib/contracts/types';
+import { requireOrgId } from '@/lib/organizations/org-resolver';
 
 // ============================================================================
 // Request Body Interface
@@ -28,14 +29,8 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // Verify authentication
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Multi-tenant: Get current user's org_id
+    const orgId = await requireOrgId();
 
     // Parse request body
     const body: ConfirmBookingRequest = await request.json();
@@ -49,10 +44,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch booking
+    // IMPORTANT: Filter by org_id to prevent cross-org access
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
       .select('*')
       .eq('id', bookingId)
+      .eq('org_id', orgId)
       .single();
 
     if (bookingError || !booking) {
@@ -75,6 +72,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if contract exists for this booking
+    // IMPORTANT: Filter by org_id to prevent cross-org access
     const { data: contract, error: contractError } = await supabase
       .from('contracts')
       .select(
@@ -89,6 +87,7 @@ export async function POST(request: NextRequest) {
       `
       )
       .eq('booking_id', bookingId)
+      .eq('org_id', orgId)
       .neq('status', 'terminated')
       .maybeSingle();
 
@@ -115,13 +114,15 @@ export async function POST(request: NextRequest) {
 
     // Confirm the booking
     const now = new Date().toISOString();
+    // IMPORTANT: Filter by org_id for safety
     const { error: updateError } = await supabase
       .from('bookings')
       .update({
         status: 'confirmed',
         confirmed_at: now,
       })
-      .eq('id', bookingId);
+      .eq('id', bookingId)
+      .eq('org_id', orgId);
 
     if (updateError) {
       console.error('Error updating booking:', updateError);
@@ -188,13 +189,16 @@ export async function POST(request: NextRequest) {
             paymentUpdate.stripe_payment_intent_id = stripePaymentIntentId;
           }
 
+          // IMPORTANT: Filter by org_id for safety
           await supabase
             .from('contracts')
             .update(paymentUpdate)
-            .eq('id', contract.id);
+            .eq('id', contract.id)
+            .eq('org_id', orgId);
 
           // Log contract event
           await supabase.from('contract_events').insert({
+            org_id: orgId,
             contract_id: contract.id,
             event_type: 'payment_captured',
             event_data: {
@@ -219,10 +223,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch updated booking for response
+    // IMPORTANT: Filter by org_id for consistency
     const { data: updatedBooking } = await supabase
       .from('bookings')
       .select('*')
       .eq('id', bookingId)
+      .eq('org_id', orgId)
       .single();
 
     // Return success response
