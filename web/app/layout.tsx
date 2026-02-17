@@ -3,6 +3,7 @@ import './globals.css';
 import CookieConsent from '@/components/CookieConsent';
 import SkipToContent from '@/components/SkipToContent';
 import { OrgProvider } from '@/contexts/org-context';
+import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
   title: 'Apex Safety Group - Professional Paramedics for UK Construction Sites',
@@ -21,6 +22,7 @@ export default function RootLayout({
           <SkipToContent />
           {children}
           <CookieConsent />
+          <Toaster richColors position="top-right" />
         </OrgProvider>
       </body>
     </html>

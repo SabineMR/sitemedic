@@ -41,6 +41,23 @@ The previous homepage was a generic "book a paramedic for compliance" page. The 
 
 ---
 
+### High-Priority Gap Fixes — Applied 2026-02-16
+
+| Fix | File(s) Changed |
+|-----|-----------------|
+| **Call/SMS buttons in Command Center were stubs** | `web/app/admin/command-center/page.tsx` — fetches medic phone from `medics` table on click, uses `tel:` / `sms:` URIs; buttons disabled with tooltip when no phone on record |
+| **Medic Timeline PDF export showed `alert()`** | `web/components/admin/MedicTimeline.tsx` — replaced with jsPDF implementation: medic name, booking ID, event table with anomaly highlighting, auto-saves `timeline-{name}-{id}.pdf` |
+| **Invoice email never sent after generation** | `web/app/api/invoices/generate/route.ts` — added Resend email after PDF generation with invoice details table, PDF download link; non-fatal on failure |
+| **Medic star ratings hardcoded at 4.8** | `web/app/api/bookings/match/route.ts` — queries `medics.star_rating` from DB after getting `assignedMedicId`; defaults to `0` if not set |
+| **No toast notification library** | Installed `sonner`; added `<Toaster richColors position="top-right" />` to root layout |
+| **"Copy signing link" gave no feedback** | `web/components/contracts/contracts-table.tsx` — `toast.success('Signing link copied to clipboard')` |
+| **Timesheet approve/reject gave no feedback** | `web/lib/queries/admin/timesheets.ts` — `toast.success` on batch approve/reject, `toast.error` on rollback |
+| **Schedule Grid drag-drop gave no feedback** | `web/components/admin/schedule/ScheduleGrid.tsx` — `showSuccessToast` / `showErrorToast` now use `sonner` |
+| **Timesheet approval used hardcoded admin ID** | `web/components/admin/timesheet-batch-approval.tsx` — replaced `'admin-user-id'` with live `auth.getUser()` call via `useEffect` |
+| **Schedule Board badge count commented out** | `web/app/admin/layout.tsx` — Schedule Board badge now shows same `pendingBookings` count as Bookings badge |
+
+---
+
 ### Critical Gap Fixes — Applied 2026-02-16
 
 The following critical bugs were fixed in this session:

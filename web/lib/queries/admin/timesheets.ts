@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { useRequireOrg } from '@/contexts/org-context';
+import { toast } from 'sonner';
 
 // =============================================================================
 // TYPES
@@ -289,13 +290,14 @@ export function useBatchApproveTimesheets() {
       if (context?.previousAll) {
         queryClient.setQueryData(['timesheets', 'all', orgId], context.previousAll);
       }
-      // TODO: Add toast notification when toast library is set up
+      toast.error('Failed to approve timesheets. Changes rolled back.');
     },
 
     // Success notification
     onSuccess: (data) => {
-      console.log(`Successfully approved ${data.count} timesheet${data.count === 1 ? '' : 's'} for payout`);
-      // TODO: Add toast notification when toast library is set up
+      toast.success(
+        `${data.count} timesheet${data.count === 1 ? '' : 's'} approved for payout`
+      );
     },
 
     // Refetch to ensure consistency
@@ -408,13 +410,14 @@ export function useBatchRejectTimesheets() {
       if (context?.previousAll) {
         queryClient.setQueryData(['timesheets', 'all', orgId], context.previousAll);
       }
-      // TODO: Add toast notification when toast library is set up
+      toast.error('Failed to reject timesheets. Changes rolled back.');
     },
 
     // Success notification
     onSuccess: (data) => {
-      console.log(`Rejected ${data.count} timesheet${data.count === 1 ? '' : 's'}`);
-      // TODO: Add toast notification when toast library is set up
+      toast.success(
+        `${data.count} timesheet${data.count === 1 ? '' : 's'} rejected`
+      );
     },
 
     // Refetch to ensure consistency

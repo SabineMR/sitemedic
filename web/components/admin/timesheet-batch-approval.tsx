@@ -7,7 +7,8 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import {
   useReactTable,
   getCoreRowModel,
@@ -123,6 +124,13 @@ export function TimesheetBatchApproval({ initialData }: TimesheetBatchApprovalPr
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [adminUserId, setAdminUserId] = useState<string>('');
+
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data }) => {
+      if (data.user) setAdminUserId(data.user.id);
+    });
+  }, []);
 
   const batchApproveMutation = useBatchApproveTimesheets();
   const batchRejectMutation = useBatchRejectTimesheets();
@@ -296,7 +304,6 @@ export function TimesheetBatchApproval({ initialData }: TimesheetBatchApprovalPr
   // Batch approve handler
   const handleBatchApprove = async () => {
     const timesheetIds = selectedTimesheets.map((t) => t.id);
-    const adminUserId = 'admin-user-id'; // TODO: Get from auth context
 
     await batchApproveMutation.mutateAsync({
       timesheetIds,
@@ -314,7 +321,6 @@ export function TimesheetBatchApproval({ initialData }: TimesheetBatchApprovalPr
     }
 
     const timesheetIds = selectedTimesheets.map((t) => t.id);
-    const adminUserId = 'admin-user-id'; // TODO: Get from auth context
 
     await batchRejectMutation.mutateAsync({
       timesheetIds,

@@ -36,6 +36,7 @@ import {
 import { MoreHorizontal, ExternalLink, Copy, Ban, Send } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
 
 interface ContractsTableProps {
   contracts: ContractWithRelations[];
@@ -242,7 +243,7 @@ export function ContractsTable({ contracts, stats }: ContractsTableProps) {
                 <DropdownMenuItem
                   onClick={() => {
                     navigator.clipboard.writeText(shareableUrl);
-                    // TODO: Add toast notification
+                    toast.success('Signing link copied to clipboard');
                   }}
                 >
                   <Copy className="mr-2 h-4 w-4" />

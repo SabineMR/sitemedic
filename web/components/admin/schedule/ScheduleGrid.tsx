@@ -30,6 +30,7 @@ import { UnassignedRow } from './UnassignedRow';
 import { BookingCard } from './BookingCard';
 import { ConflictModal } from './ConflictModal';
 import type { Booking } from '@/types/schedule';
+import { toast } from 'sonner';
 
 export function ScheduleGrid() {
   const {
@@ -188,20 +189,10 @@ export function ScheduleGrid() {
   );
 }
 
-/**
- * Show success toast notification
- * TODO: Replace with your toast library (e.g., react-hot-toast, sonner)
- */
 function showSuccessToast(message: string) {
-  console.log('[Toast] Success:', message);
-  // Implement toast notification here
+  toast.success(message);
 }
 
-/**
- * Show error toast notification
- * TODO: Replace with your toast library
- */
 function showErrorToast(message: string) {
-  console.error('[Toast] Error:', message);
-  // Implement toast notification here
+  toast.error(message);
 }

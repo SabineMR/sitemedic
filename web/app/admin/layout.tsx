@@ -144,7 +144,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: 'Schedule Board',
       href: '/admin/schedule-board',
       icon: <ClipboardList className="w-5 h-5" />,
-      // badge: unassignedBookingsCount, // TODO: Fetch from store
+      badge: pendingBookings,
       badgeColor: 'yellow',
     },
     {
