@@ -13,7 +13,8 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useComplianceData, calculateComplianceStatus, ComplianceData } from '@/lib/queries/compliance';
+import { useComplianceData } from '@/lib/queries/compliance-hooks';
+import { calculateComplianceStatus, ComplianceData } from '@/lib/queries/compliance';
 import { CheckCircle2, XCircle, AlertTriangle, Clock } from 'lucide-react';
 
 interface ComplianceScoreProps {

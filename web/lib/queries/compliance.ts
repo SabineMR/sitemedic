@@ -1,14 +1,10 @@
 /**
- * Compliance data queries and weekly stats hooks
+ * Compliance data queries - Server/Client compatible
  *
- * Server-side data fetching for initial page load, client-side hooks for 60-second polling.
- * Compliance score evaluates: daily checks, overdue follow-ups, expired certs, RIDDOR deadlines.
+ * Pure data fetching functions that work on both server and client.
+ * For client-side hooks with polling, see compliance-hooks.ts
  */
 
-'use client';
-
-import { useQuery } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 // Types
@@ -146,28 +142,4 @@ export function calculateComplianceStatus(data: ComplianceData): ComplianceStatu
 
   // GREEN: All clear
   return 'green';
-}
-
-// Client-side: useComplianceData hook with 60-second polling
-export function useComplianceData(initialData?: ComplianceData) {
-  const supabase = createClient();
-
-  return useQuery({
-    queryKey: ['compliance-data'],
-    queryFn: () => fetchComplianceData(supabase),
-    initialData,
-    refetchInterval: 60_000, // 60 seconds
-  });
-}
-
-// Client-side: useWeeklyStats hook with 60-second polling
-export function useWeeklyStats(initialData?: WeeklyStats) {
-  const supabase = createClient();
-
-  return useQuery({
-    queryKey: ['weekly-stats'],
-    queryFn: () => fetchWeeklyStats(supabase),
-    initialData,
-    refetchInterval: 60_000, // 60 seconds
-  });
 }

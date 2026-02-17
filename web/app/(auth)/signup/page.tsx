@@ -64,9 +64,10 @@ export default function SignupPage() {
       // Show success message
       setSuccess(true);
 
-      // Redirect to login after 2 seconds
+      // Redirect to dashboard after 2 seconds
       setTimeout(() => {
-        router.push('/login');
+        router.push('/dashboard');
+        router.refresh();
       }, 2000);
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');

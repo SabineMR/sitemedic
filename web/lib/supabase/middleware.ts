@@ -44,7 +44,9 @@ export async function updateSession(request: NextRequest) {
 
   // Define public routes (no auth required)
   const publicRoutes = [
+    '/',
     '/login',
+    '/signup',
     '/pricing',
     '/terms-and-conditions',
     '/privacy-policy',
@@ -75,6 +77,27 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);
+  }
+
+  // Multi-tenant architecture: Check if authenticated user has org_id
+  // Users without org_id should be redirected to org setup (future feature)
+  if (user && !isPublicRoute) {
+    const orgId = user.app_metadata?.org_id;
+
+    // Allow access to setup pages even without org_id
+    const isSetupRoute = request.nextUrl.pathname.startsWith('/setup/');
+
+    if (!orgId && !isSetupRoute) {
+      console.warn(
+        `User ${user.id} authenticated but has no org_id - redirecting to org setup`
+      );
+
+      // For now, just log the warning and allow access
+      // TODO: Uncomment when /setup/organization page is implemented
+      // const url = request.nextUrl.clone();
+      // url.pathname = '/setup/organization';
+      // return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

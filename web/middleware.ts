@@ -20,8 +20,10 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - api/ routes (API routes)
-     * - Public marketing pages (/, /pricing, /terms-and-conditions, etc.)
+     * - Public marketing pages (homepage, /pricing, /terms-and-conditions, etc.)
+     *
+     * Note: Public routes are also defined in lib/supabase/middleware.ts
      */
-    '/((?!_next/static|_next/image|favicon.ico|api/|pricing|terms-and-conditions|privacy-policy|refund-policy|cookie-policy|complaints|accessibility-statement|acceptable-use|$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api/|pricing|terms-and-conditions|privacy-policy|refund-policy|cookie-policy|complaints|accessibility-statement|acceptable-use)(?!$).*)',
   ],
 };

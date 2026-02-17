@@ -2,7 +2,7 @@
  * Dashboard Overview page
  *
  * Displays traffic-light compliance score and weekly summary statistics.
- * Data fetched server-side on initial load, then polls every 60 seconds client-side.
+ * Data fetched on mount, then polls every 60 seconds client-side.
  *
  * DASH-01: Traffic-light compliance indicator
  * DASH-02: Compliance score breakdown (daily check, follow-ups, certs, RIDDOR)
@@ -10,20 +10,45 @@
  * DASH-09: 60-second polling for near-real-time updates
  */
 
-import { createClient } from '@/lib/supabase/server';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { ComplianceScore } from '@/components/dashboard/compliance-score';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { fetchComplianceData, fetchWeeklyStats } from '@/lib/queries/compliance';
+import type { ComplianceData, WeeklyStats } from '@/lib/queries/compliance';
 import { Stethoscope, AlertTriangle, Users, ClipboardCheck } from 'lucide-react';
 
-export default async function DashboardOverviewPage() {
-  const supabase = await createClient();
+export default function DashboardOverviewPage() {
+  const [complianceData, setComplianceData] = useState<ComplianceData | null>(null);
+  const [weeklyStats, setWeeklyStats] = useState<WeeklyStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch initial data server-side (avoids loading state on first render)
-  const [complianceData, weeklyStats] = await Promise.all([
-    fetchComplianceData(supabase),
-    fetchWeeklyStats(supabase),
-  ]);
+  useEffect(() => {
+    async function loadData() {
+      const supabase = createClient();
+      const [compliance, stats] = await Promise.all([
+        fetchComplianceData(supabase),
+        fetchWeeklyStats(supabase),
+      ]);
+      setComplianceData(compliance);
+      setWeeklyStats(stats);
+      setLoading(false);
+    }
+    loadData();
+  }, []);
+
+  if (loading || !complianceData || !weeklyStats) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard Overview</h1>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

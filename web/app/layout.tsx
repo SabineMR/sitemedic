@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import CookieConsent from '@/components/CookieConsent';
 import SkipToContent from '@/components/SkipToContent';
+import { OrgProvider } from '@/contexts/org-context';
 
 export const metadata: Metadata = {
   title: 'Apex Safety Group - Professional Paramedics for UK Construction Sites',
@@ -16,9 +17,11 @@ export default function RootLayout({
   return (
     <html lang="en-GB">
       <body className="antialiased">
-        <SkipToContent />
-        {children}
-        <CookieConsent />
+        <OrgProvider>
+          <SkipToContent />
+          {children}
+          <CookieConsent />
+        </OrgProvider>
       </body>
     </html>
   );
