@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 Phase: v1.1 — Phase 14 (Compliance, Exports & Medic Portal) — In Progress
-Plan: 14-01 complete. Wave 1 executing.
-Status: Phase 14 plan 01 done — payslip download optimised with stored pdf_url fast path
-Last activity: 2026-02-17 — Completed 14-01-PLAN.md (payslip download: stored pdf_url instant open, edge function fallback for older records, payslip reference display)
-Progress: [████████████████████] Phase 14 plan 01 complete (14-01, 14-03 done)
+Plan: 14-05 complete. Wave 1 executing.
+Status: Phase 14 plan 05 done — contract detail: signed URL PDF downloads, readable timeline, version badges, milestone tracker
+Last activity: 2026-02-17 — Completed 14-05-PLAN.md (PDF downloads via Supabase signed URLs, formatEventDescription helper, version status badges, payment milestone progress bar)
+Progress: [████████████████████] Phase 14 plans 01, 03, 05 complete
 
 ## Performance Metrics
 
