@@ -47,6 +47,7 @@ export async function updateSession(request: NextRequest) {
     '/',
     '/login',
     '/signup',
+    '/auth',    // Magic link callback (must be public - user is not authenticated yet when clicking link)
     '/pricing',
     '/terms-and-conditions',
     '/privacy-policy',
@@ -72,10 +73,24 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users from /login to dashboard
-  if (user && request.nextUrl.pathname === '/login') {
+  // Redirect authenticated users away from auth pages
+  if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
     const url = request.nextUrl.clone();
-    url.pathname = '/';
+    // Redirect to role-appropriate dashboard
+    const role = user.app_metadata?.role;
+    switch (role) {
+      case 'platform_admin':
+        url.pathname = '/platform';
+        break;
+      case 'org_admin':
+        url.pathname = '/admin';
+        break;
+      case 'medic':
+        url.pathname = '/medic';
+        break;
+      default:
+        url.pathname = '/dashboard';
+    }
     return NextResponse.redirect(url);
   }
 

@@ -1,57 +1,45 @@
 /**
- * Signup page for Site Manager Dashboard
+ * Signup page for SiteMedic
  *
- * Email/password registration using Supabase.
+ * Magic link (passwordless) registration using Supabase.
+ * Users enter their name and email, receive a magic link, and
+ * are automatically signed in on first click.
  */
 
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Mail, CheckCircle2 } from 'lucide-react';
 
 export default function SignupPage() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    // Validate passwords match
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
-      return;
-    }
-
-    // Validate password strength
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      setLoading(false);
-      return;
-    }
-
     try {
       const supabase = createClient();
-      const { error: signUpError } = await supabase.auth.signUp({
+
+      // Send magic link — if user doesn't exist, Supabase creates them
+      // The full_name is stored in user metadata for profile creation on first login
+      const { error: signUpError } = await supabase.auth.signInWithOtp({
         email,
-        password,
         options: {
           data: {
             full_name: fullName,
           },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
@@ -61,44 +49,78 @@ export default function SignupPage() {
         return;
       }
 
-      // Show success message
-      setSuccess(true);
-
-      // Redirect to dashboard after 2 seconds
-      setTimeout(() => {
-        router.push('/dashboard');
-        router.refresh();
-      }, 2000);
+      setEmailSent(true);
+      setLoading(false);
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
       setLoading(false);
     }
   };
 
-  if (success) {
+  const handleResendLink = () => {
+    setEmailSent(false);
+    setError(null);
+  };
+
+  // Email sent confirmation state
+  if (emailSent) {
     return (
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Success!</CardTitle>
-          <CardDescription>Your account has been created</CardDescription>
+          <div className="flex justify-center mb-4">
+            <div className="rounded-full bg-green-100 p-3">
+              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            </div>
+          </div>
+          <CardTitle className="text-2xl font-bold text-center">Check your email</CardTitle>
+          <CardDescription className="text-center">
+            We've sent your login link to
+          </CardDescription>
+          <p className="text-center font-medium text-foreground">{email}</p>
         </CardHeader>
-        <CardContent>
-          <div className="text-sm text-muted-foreground space-y-2">
-            <p>✓ Account created successfully</p>
-            <p>Redirecting to login page...</p>
+        <CardContent className="space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+            <div className="flex items-start gap-2">
+              <Mail className="h-5 w-5 text-blue-600 mt-0.5" />
+              <div className="text-sm text-blue-900">
+                <p className="font-medium mb-1">Click the link in the email to create your account</p>
+                <p className="text-blue-700">The link expires in 60 minutes for security.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground text-center">
+              Didn't receive the email? Check your spam folder.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleResendLink}
+            >
+              Send another link
+            </Button>
+          </div>
+
+          <div className="text-center text-sm">
+            <Link href="/login" className="text-primary hover:underline font-medium">
+              ← Back to login
+            </Link>
           </div>
         </CardContent>
       </Card>
     );
   }
 
+  // Signup form
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
-        <CardDescription>Site Manager Dashboard</CardDescription>
+        <CardDescription>SiteMedic — Construction Site Medic Platform</CardDescription>
         <p className="text-sm text-muted-foreground">
-          Sign up to access your compliance dashboard
+          Enter your details to receive a secure login link
         </p>
       </CardHeader>
       <CardContent>
@@ -110,11 +132,12 @@ export default function SignupPage() {
             <Input
               id="fullName"
               type="text"
-              placeholder="John Doe"
+              placeholder="Jane Smith"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
               disabled={loading}
+              autoFocus
             />
           </div>
 
@@ -125,41 +148,9 @@ export default function SignupPage() {
             <Input
               id="email"
               type="email"
-              placeholder="manager@example.com"
+              placeholder="jane@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={loading}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
-              Password
-            </label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loading}
-              minLength={6}
-            />
-            <p className="text-xs text-muted-foreground">
-              Must be at least 6 characters
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="confirmPassword" className="text-sm font-medium">
-              Confirm Password
-            </label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
               required
               disabled={loading}
             />
@@ -172,8 +163,15 @@ export default function SignupPage() {
           )}
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Creating account...' : 'Create Account'}
+            {loading ? 'Sending link...' : 'Send magic link'}
           </Button>
+
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+            <p className="text-xs text-muted-foreground text-center">
+              <Mail className="inline h-3 w-3 mr-1" />
+              No password needed — we'll email you a secure sign-in link
+            </p>
+          </div>
 
           <div className="text-center text-sm">
             <span className="text-muted-foreground">Already have an account? </span>

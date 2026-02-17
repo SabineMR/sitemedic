@@ -25,35 +25,40 @@ interface Organization {
 export default function PlatformOrganizationsPage() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     async function fetchOrganizations() {
-      const supabase = createClient();
+      try {
+        const supabase = createClient();
 
-      // Fetch all organizations (platform admin can see all via RLS)
-      const { data: orgs, error } = await supabase
-        .from('organizations')
-        .select('*')
-        .order('created_at', { ascending: false });
+        // Fetch all organizations with metrics using RPC function
+        const { data: orgs, error: orgsError } = await supabase.rpc('get_platform_organizations');
 
-      if (error) {
-        console.error('Error fetching organizations:', error);
+        if (orgsError) throw orgsError;
+
+        if (orgs && orgs.length > 0) {
+          const orgsWithMetrics = orgs.map((org: any) => ({
+            id: org.id,
+            name: org.name,
+            slug: org.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), // Generate slug from name
+            created_at: org.created_at,
+            user_count: Number(org.user_count) || 0,
+            booking_count: Number(org.booking_count) || 0,
+            revenue: Number(org.revenue) || 0,
+          }));
+
+          setOrganizations(orgsWithMetrics);
+        } else {
+          setOrganizations([]);
+        }
+      } catch (err) {
+        console.error('Error fetching organizations:', err);
+        setError('Failed to load organizations');
+      } finally {
         setLoading(false);
-        return;
       }
-
-      // TODO: Add aggregate queries to get user count, booking count, revenue per org
-      // For now, using mock data
-      const orgsWithMetrics = orgs?.map((org) => ({
-        ...org,
-        user_count: Math.floor(Math.random() * 100) + 10,
-        booking_count: Math.floor(Math.random() * 500) + 50,
-        revenue: Math.floor(Math.random() * 50000) + 5000,
-      })) || [];
-
-      setOrganizations(orgsWithMetrics);
-      setLoading(false);
     }
 
     fetchOrganizations();
@@ -68,6 +73,16 @@ export default function PlatformOrganizationsPage() {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-white text-lg">Loading organizations...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-900/30 border border-red-700/50 rounded-2xl p-6">
+          <p className="text-red-300">{error}</p>
+        </div>
       </div>
     );
   }

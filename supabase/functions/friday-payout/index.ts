@@ -12,6 +12,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { stripe } from '../_shared/stripe.ts';
+import { sendPayoutFailureEmail } from '../_shared/email-templates.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -360,9 +361,33 @@ serve(async (req) => {
       globalFailedCount += failedCount;
       globalTotalAmountTransferred += totalAmountTransferred;
 
-      // TODO: Send org-specific admin notification email if there are failures
-      if (failedCount > 0) {
-        console.warn(`⚠️ ${org.name}: ${failedCount} payouts failed - admin notification needed`);
+      // Send org-specific admin notification email if there are failures
+      if (failedCount > 0 && errors.length > 0) {
+        console.warn(`⚠️ ${org.name}: ${failedCount} payouts failed - sending admin notification`);
+
+        // Get org admin email (fallback to generic admin email if not found)
+        try {
+          const { data: orgAdmins } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('org_id', org.id)
+            .eq('role', 'org_admin')
+            .limit(1)
+            .single();
+
+          const adminEmail = orgAdmins?.email || 'admin@sitemedic.co.uk';
+
+          // Format failures for email
+          const failures = errors.map((err: any) => ({
+            medicName: err.medic,
+            amount: 0, // Amount not tracked in errors, could enhance later
+            error: err.error,
+          }));
+
+          await sendPayoutFailureEmail(adminEmail, org.name, failures);
+        } catch (emailError) {
+          console.error(`Failed to send payout failure email for ${org.name}:`, emailError);
+        }
       }
     }
 

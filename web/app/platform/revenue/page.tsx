@@ -35,77 +35,58 @@ export default function PlatformRevenuePage() {
   });
   const [orgRevenues, setOrgRevenues] = useState<OrgRevenue[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState<'week' | 'month' | 'year'>('month');
 
   useEffect(() => {
     async function fetchRevenueData() {
-      const supabase = createClient();
+      try {
+        const supabase = createClient();
 
-      // TODO: Implement real revenue queries
-      // For now, using mock data
+        // Fetch revenue breakdown by organization
+        const { data: revenueData, error: revenueError } = await supabase.rpc('get_org_revenue_breakdown');
 
-      // Calculate date range based on timeframe
-      const now = new Date();
-      const startDate = new Date();
+        if (revenueError) throw revenueError;
 
-      switch (timeframe) {
-        case 'week':
-          startDate.setDate(now.getDate() - 7);
-          break;
-        case 'month':
-          startDate.setMonth(now.getMonth() - 1);
-          break;
-        case 'year':
-          startDate.setFullYear(now.getFullYear() - 1);
-          break;
+        if (revenueData && revenueData.length > 0) {
+          // Calculate aggregated metrics
+          const totalRev = revenueData.reduce((sum, org) => sum + Number(org.revenue), 0);
+          const totalBookings = revenueData.reduce((sum, org) => sum + Number(org.booking_count), 0);
+          const platformFeeRate = 0.10; // 10% platform fee
+
+          setMetrics({
+            totalRevenue: totalRev,
+            platformFees: totalRev * platformFeeRate,
+            totalBookings: totalBookings,
+            avgBookingValue: totalBookings > 0 ? Math.round(totalRev / totalBookings) : 0,
+          });
+
+          // Map org revenue data
+          setOrgRevenues(
+            revenueData.map((org) => ({
+              org_id: org.org_id,
+              org_name: org.org_name,
+              revenue: Number(org.revenue),
+              platform_fees: Number(org.revenue) * platformFeeRate,
+              booking_count: Number(org.booking_count),
+            }))
+          );
+        } else {
+          // No data available
+          setMetrics({
+            totalRevenue: 0,
+            platformFees: 0,
+            totalBookings: 0,
+            avgBookingValue: 0,
+          });
+          setOrgRevenues([]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch revenue data:', err);
+        setError('Failed to load revenue data');
+      } finally {
+        setLoading(false);
       }
-
-      // Mock aggregated revenue data
-      // TODO: Replace with real queries:
-      // 1. SUM(total) from bookings for totalRevenue
-      // 2. SUM(platform_fee) from bookings for platformFees
-      // 3. COUNT(*) from bookings for totalBookings
-      // 4. GROUP BY org_id for per-org breakdown
-
-      setMetrics({
-        totalRevenue: 458900,
-        platformFees: 45890, // 10% of total
-        totalBookings: 1247,
-        avgBookingValue: 368,
-      });
-
-      setOrgRevenues([
-        {
-          org_id: '1',
-          org_name: 'Allied Services Group',
-          revenue: 185000,
-          platform_fees: 18500,
-          booking_count: 502,
-        },
-        {
-          org_id: '2',
-          org_name: 'ABC Medical Services',
-          revenue: 142000,
-          platform_fees: 14200,
-          booking_count: 385,
-        },
-        {
-          org_id: '3',
-          org_name: 'Healthcare Solutions Ltd',
-          revenue: 98500,
-          platform_fees: 9850,
-          booking_count: 267,
-        },
-        {
-          org_id: '4',
-          org_name: 'MediCare Partners',
-          revenue: 33400,
-          platform_fees: 3340,
-          booking_count: 93,
-        },
-      ]);
-
-      setLoading(false);
     }
 
     fetchRevenueData();
@@ -115,6 +96,16 @@ export default function PlatformRevenuePage() {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-white text-lg">Loading revenue data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-900/30 border border-red-700/50 rounded-2xl p-6">
+          <p className="text-red-300">{error}</p>
+        </div>
       </div>
     );
   }

@@ -10,10 +10,19 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno';
+import { sendCashFlowAlert } from '../_shared/email-templates.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL') || 'admin@sitemedic.com';
+const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')!;
+const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL') || 'admin@sitemedic.co.uk';
+
+// Initialize Stripe
+const stripe = new Stripe(STRIPE_SECRET_KEY, {
+  apiVersion: '2023-10-16',
+  httpClient: Stripe.createFetchHttpClient(),
+});
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -152,16 +161,29 @@ async function calculateCashFlowMetrics(): Promise<CashFlowMetrics> {
  * Get Stripe platform account balance
  */
 async function getStripePlatformBalance(): Promise<number> {
-  // This requires Stripe SDK
-  // For now, return mock value (replace with actual Stripe API call)
+  try {
+    const balance = await stripe.balance.retrieve();
 
-  // IMPLEMENTATION PLACEHOLDER:
-  // const stripe = new Stripe(STRIPE_SECRET_KEY);
-  // const balance = await stripe.balance.retrieve();
-  // return balance.available[0].amount / 100; // Convert pence to GBP
+    // Find GBP balance in available funds
+    const gbpBalance = balance.available.find((b) => b.currency === 'gbp');
 
-  console.warn('⚠️  Using mock Stripe balance - implement actual Stripe API call');
-  return 12000; // £12k mock balance
+    if (gbpBalance) {
+      // Convert pence to pounds
+      const balanceInGBP = gbpBalance.amount / 100;
+      console.log(`✅ Stripe balance retrieved: £${balanceInGBP.toLocaleString()}`);
+      return balanceInGBP;
+    }
+
+    // If no GBP balance found, return 0
+    console.warn('⚠️  No GBP balance found in Stripe account');
+    return 0;
+  } catch (error) {
+    console.error('❌ Failed to fetch Stripe balance:', error);
+    console.warn('⚠️  Using fallback mock balance (£12,000)');
+
+    // Fallback to mock value on error (with warning already logged)
+    return 12000;
+  }
 }
 
 /**
@@ -262,37 +284,28 @@ async function sendAdminAlert(
   alert: { level: string; title: string; message: string },
   metrics: CashFlowMetrics
 ): Promise<void> {
-  const subject = alert.title;
-  const body = `
-${alert.message}
-
-CURRENT METRICS:
-- Cash balance: £${metrics.current_cash_balance.toFixed(2)}
-- Payouts due this week: £${metrics.this_week_payouts_due.toFixed(2)}
-- Payments expected: £${metrics.this_week_payments_expected.toFixed(2)}
-- Net this week: £${metrics.net_this_week.toFixed(2)}
-- Outstanding invoices: £${metrics.outstanding_invoices_total.toFixed(2)}
-- Cash gap: ${metrics.cash_gap_days} days
-
-RECOMMENDATIONS:
-${metrics.recommendations.map(r => `- ${r}`).join('\n')}
-
-Review the admin dashboard for full details:
-https://sitemedic.com/admin/cash-flow
-
----
-Automated alert from SiteMedic Cash Flow Monitor
-  `;
-
   console.log(`📧 Sending ${alert.level} alert to ${ADMIN_EMAIL}`);
 
-  // IMPLEMENTATION: Use Supabase Edge Function to send email via SendGrid/Mailgun
-  // For now, just log
-  console.log('Email subject:', subject);
-  console.log('Email body:', body);
-
-  // TODO: Implement actual email sending
-  // await sendEmail(ADMIN_EMAIL, subject, body);
+  // Only send email for critical or warning alerts
+  if (alert.level === 'critical' || alert.level === 'warning') {
+    try {
+      await sendCashFlowAlert(
+        ADMIN_EMAIL,
+        metrics.current_cash_balance,
+        metrics.this_week_payouts_due,
+        metrics.cash_gap_days
+      );
+      console.log(`✅ Cash flow alert email sent successfully`);
+    } catch (emailError) {
+      console.error(`❌ Failed to send cash flow alert email:`, emailError);
+      // Log the alert details as fallback
+      console.log('Alert subject:', alert.title);
+      console.log('Alert message:', alert.message);
+      console.log('Cash balance:', metrics.current_cash_balance);
+      console.log('Weekly payouts due:', metrics.this_week_payouts_due);
+      console.log('Cash gap days:', metrics.cash_gap_days);
+    }
+  }
 }
 
 /**

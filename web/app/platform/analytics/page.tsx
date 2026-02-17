@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from 'react';
 import { TrendingUp, TrendingDown, Users, Calendar, Activity, Shield } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 interface AnalyticsData {
   growth: {
@@ -25,31 +26,71 @@ interface AnalyticsData {
 }
 
 export default function PlatformAnalyticsPage() {
-  const [analytics, setAnalytics] = useState<AnalyticsData>({
-    growth: {
-      orgs: { current: 12, change: 8.3 },
-      users: { current: 458, change: 12.5 },
-      bookings: { current: 1247, change: 18.2 },
-      revenue: { current: 458900, change: 15.7 },
-    },
-    platformHealth: {
-      uptime: 99.98,
-      avgResponseTime: 145,
-      errorRate: 0.02,
-    },
-  });
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // TODO: Fetch real analytics data
-    // For now using mock data
-    setLoading(false);
+    async function fetchAnalytics() {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.rpc('get_platform_metrics');
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          const row = data[0];
+          // Note: Change percentages would require historical data comparison
+          // For now showing current values with 0% change
+          setAnalytics({
+            growth: {
+              orgs: { current: Number(row.total_organizations) || 0, change: 0 },
+              users: { current: Number(row.total_users) || 0, change: 0 },
+              bookings: { current: Number(row.active_bookings) || 0, change: 0 },
+              revenue: { current: Number(row.total_revenue) || 0, change: 0 },
+            },
+            platformHealth: {
+              uptime: 99.98, // Placeholder - would need monitoring integration
+              avgResponseTime: 145, // Placeholder
+              errorRate: 0.02, // Placeholder
+            },
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch analytics:', err);
+        setError('Failed to load analytics');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchAnalytics();
   }, []);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-white text-lg">Loading analytics...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-900/30 border border-red-700/50 rounded-2xl p-6">
+          <p className="text-red-300">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!analytics) {
+    return (
+      <div className="p-8">
+        <div className="bg-purple-800/30 border border-purple-700/50 rounded-2xl p-6">
+          <p className="text-purple-300">No analytics data available</p>
+        </div>
       </div>
     );
   }
