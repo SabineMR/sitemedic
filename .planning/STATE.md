@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 Phase: v1.1 — Phase 15 (Code Quality & Housekeeping) — In progress
-Plan: 15-01 complete (1/3). Wave 1 done.
-Status: In progress — 15-01 console sweep complete, ready for 15-02
-Last activity: 2026-02-17 — Completed 15-01: removed all console.warn/console.log from web/app/**, 135 console.error retained
-Progress: [█░░] 33% (1/3 plans executed in Phase 15)
+Plan: 15-02 complete (2/3). Wave 1 in progress.
+Status: In progress — 15-02 mock data removal complete, ready for 15-03
+Last activity: 2026-02-17 — Completed 15-02: removed generateMockScheduleData (~150 lines), proper error/empty states added to schedule board
+Progress: [██░] 67% (2/3 plans executed in Phase 15)
 
 ## Performance Metrics
 
