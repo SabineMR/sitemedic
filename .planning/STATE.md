@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 10 (Real-Time Ops Polish) — In progress
-Plan: 10-01 complete (medicContext Map). 10-04 also complete.
+Phase: v1.1 — Phase 12 (Analytics Dashboard) — In progress
+Plan: 12-04 complete (analytics query hooks). Plans 12-01/02/03/05 pending.
 Status: In progress
-Last activity: 2026-02-17 — Completed 10-01-PLAN.md (medicContext Map + joined query in useMedicLocationsStore, no N+1)
-Progress: [████████████████████░░░] 96/104 plans complete (~92%).
+Last activity: 2026-02-17 — Completed 12-04-PLAN.md (TanStack Query hooks: auto-assignment, medic utilisation, late arrivals, OOT)
+Progress: [█████████████████████░░] 97/105 plans complete (~92%).
 
 ## Performance Metrics
 
@@ -481,6 +481,13 @@ Recent decisions affecting current work:
 - D-10-04-003: Empty note string passed as undefined to store — keeps DB free of empty strings in dismissal_notes/resolution_notes
 - D-10-04-004: Opening dismiss note panel closes resolve note panel and vice versa — prevents confusing double-open state
 
+**From Plan 12-04:**
+- D-12-04-001: Query auto_schedule_logs directly with eq('org_id', orgId) — table has own org_id column, no two-step via bookings
+- D-12-04-002: OOT filter uses .gt('out_of_territory_cost', 0) — not travel_bonus (column does not exist on bookings)
+- D-12-04-003: LateArrivalSummary worst_day/worst_medic return 'N/A' string (not null) when no data — prevents null handling in charts
+- D-12-04-004: OOT percentage uses head:true count query for total bookings — avoids loading all booking rows to count them
+- D-12-04-005: Analytics hooks use staleTime 60s / refetchInterval 300s — matches territories.ts pattern for slower-changing operational data
+
 **From Plan 09-02:**
 - D-09-02-001: Inline formatWhat3Words in BookingDetailPanel instead of importing from what3words.ts — avoids API client initialisation at module load time in a client component
 - D-09-02-002: Refund section hidden when refund_amount === 0 (DB default) — showing GBP 0.00 is confusing for admins reviewing cancelled bookings
@@ -548,8 +555,8 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 
 ## Session Continuity
 
-Last session: 2026-02-17T17:41:18Z
-Stopped at: Completed 10-01-PLAN.md — medicContext Map + joined query in useMedicLocationsStore
+Last session: 2026-02-17T17:44:55Z
+Stopped at: Completed 12-04-PLAN.md — analytics query hooks (auto-assignment, medic utilisation, late arrivals, OOT bookings)
 Resume file: None
 
 ---
