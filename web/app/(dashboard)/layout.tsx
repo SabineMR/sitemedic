@@ -31,6 +31,7 @@ import {
   FileText,
   FileSignature,
   ShieldCheck,
+  ShieldAlert,
   LogOut,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -39,7 +40,7 @@ import { Button } from '@/components/ui/button';
 const navigation = [
   {
     name: 'Overview',
-    href: '/',
+    href: '/dashboard',
     icon: LayoutDashboard,
   },
   {
@@ -56,6 +57,11 @@ const navigation = [
     name: 'Workers',
     href: '/workers',
     icon: Users,
+  },
+  {
+    name: 'RIDDOR',
+    href: '/riddor',
+    icon: ShieldAlert,
   },
   {
     name: 'Certifications',

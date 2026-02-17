@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Construction Site Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - Paramedic staffing company using SiteMedic platform
-**Last Updated**: 2026-02-16 (Magic link auth + gap resolution)
+**Last Updated**: 2026-02-16 (Critical gap fixes — broken nav, missing pages, stub buttons, hardcoded data)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -12,6 +12,96 @@
 SiteMedic is a comprehensive platform combining **mobile medic software** (offline-first treatment logging, RIDDOR compliance) with **business operations infrastructure** (booking portal, payment processing, territory management). The platform enables construction companies to book medics online while ensuring automatic compliance documentation and reliable medic payouts.
 
 **Business Model**: Software bundled with medic staffing service (no separate software charge). Revenue from medic bookings with 40% platform markup (medic £30/hr → client £42/hr → platform £12/hr). Weekly medic payouts via UK Faster Payments, Net 30 invoicing for established corporate clients.
+
+---
+
+## Recent Updates - Homepage Redesign & Codebase Gap Analysis (2026-02-16)
+
+### Homepage Redesign — Apex Safety Group (ASG) ✅
+**`web/app/(marketing)/page.tsx` fully rewritten to represent ASG's full occupational health offering.**
+
+The previous homepage was a generic "book a paramedic for compliance" page. The new homepage presents Apex Safety Group as a full construction occupational health consolidator, powered by SiteMedic.
+
+**New homepage sections:**
+1. **Hero** — "One medic. Every compliance need. One invoice." + powered-by SiteMedic badge + 6 UK compliance trust badges (HCPC, RIDDOR, CDM, HASAWA 1974, COSHH, UK GDPR)
+2. **Problem Section** (dark) — 4 cards showing the fragmented status quo (mobile OH vans, off-site clinics, D&A call-outs, scattered records)
+3. **SiteMedic Platform Section** — 2-col layout explaining what the platform does and why it matters for compliance, with a feature list panel
+4. **4 Service Layers** — Full cards for each clinical layer with pricing, saving context, and colour-coded by layer:
+   - Layer 1: Health Surveillance (legally mandatory) — audiometry, spirometry, HAVS, skin checks
+   - Layer 2: Drug & Alcohol Testing (contractually required) — random, pre-induction, for-cause
+   - Layer 3: Fitness-to-Work Assessments (role-specific) — plant operators, height/confined space
+   - Layer 4: Mental Health & Wellbeing (growing requirement) — check-ins, pulse score, ISO 45003
+5. **The Numbers** — Before/after comparison for 80-worker 12-month London site (£20,100 → £16,013 with consolidated services)
+6. **Why ASG is the Best** — 6 cards covering HCPC grade, on-site delivery, SiteMedic digital-first, automated compliance, UK law focus, single invoice
+7. **4-Step How It Works** — Book → Medic on site → Auto-logged → Always compliant
+8. **10-Badge Compliance Grid** — HCPC, RIDDOR, CDM, UK GDPR, HSE, COSHH, Control of Noise, HASAWA, ISO 45003, SEQOHS
+9. **Final CTA** — Blue section with England & Wales geographic scope, dual CTAs (Book / View Pricing)
+
+**UK-only scope explicitly stated** throughout copy.
+
+---
+
+### Critical Gap Fixes — Applied 2026-02-16
+
+The following critical bugs were fixed in this session:
+
+| Fix | File(s) Changed |
+|-----|-----------------|
+| **"Overview" nav link went to marketing homepage** (was `href: "/"`) | `web/app/(dashboard)/layout.tsx` — changed to `/dashboard` |
+| **RIDDOR pages invisible to site managers** — 3 RIDDOR routes existed but were never in the sidebar | `web/app/(dashboard)/layout.tsx` — added RIDDOR nav item with `ShieldAlert` icon |
+| **Admin Settings page 404** — sidebar linked to `/admin/settings` which didn't exist | Created `web/app/admin/settings/page.tsx` (org profile, notifications, contact, billing, security) |
+| **Admin "New Booking" quick action 404** | Created `web/app/admin/bookings/new/page.tsx` (full form → `/api/bookings/create`) |
+| **Admin "Add Medic" quick action 404** | Created `web/app/admin/medics/new/page.tsx` (full form → Supabase `medics` insert) |
+| **Admin "Send Notification" quick action 404** | Created `web/app/admin/notifications/page.tsx` (reads `medic_alerts`, mark-resolved) |
+| **"Send to Client" contract button was console.log only** | `web/components/contracts/contracts-table.tsx` — wired to existing `SendContractDialog` component |
+| **"Terminate Contract" button was console.log only** | `web/components/contracts/contracts-table.tsx` — added `AlertDialog` confirmation + Supabase status update |
+| **Admin sidebar badges hardcoded as mock data** (2 and 3) | `web/app/admin/layout.tsx` — fetches real counts from `medic_alerts` and `bookings` tables |
+| **Admin sidebar showed hardcoded "Admin User" / "admin@sitemedic.co.uk"** | `web/app/admin/layout.tsx` — pulls name and email from Supabase `auth.getUser()` |
+
+---
+
+### Codebase Gap Analysis — Identified 2026-02-16
+
+The following gaps were identified between the current codebase and the full ASG business model. These are **not yet built** and represent the next development priorities.
+
+#### Critical Code Gaps (missing features with zero backend support)
+
+| # | Gap | Impact |
+|---|-----|--------|
+| 1 | **`/medic` route missing** | Auth redirects `medic` role to `/medic` — that page doesn't exist. Medics get a 404 after login. **Login is broken for the medic role.** |
+| 2 | **No health surveillance data model** | `database.types.ts` has no types for audiometry results, spirometry readings, HAVS scores, or skin check outcomes. Layer 1 has zero backend support. |
+| 3 | **No drug & alcohol test schema** | No `drug_tests` table, no D&A test result types, no random selection logic, no chain-of-custody records, no D&A policy document storage. |
+| 4 | **No fitness-to-work types** | No certificate types, no OH physician partner model, no remote sign-off workflow, no Group 2 medical standards model. |
+| 5 | **No mental health/wellbeing module** | No wellbeing check-in types, no `wellbeing_pulse` score per site, no anonymised trend aggregation. |
+| 6 | **Per-worker billing doesn't exist** | `lib/booking/pricing.ts` is purely per-day medic billing. No per-worker surveillance billing logic for £35–65/worker/test. |
+| 7 | **No service package management** | No `compliance_packages` table, no bundle pricing, no record of which packages a client has purchased. |
+| 8 | **No OH physician partner model** | No `partners` or `physicians` table, no remote sign-off workflow for Layer 3 fitness-to-work certificates. |
+
+#### UX/UI Gaps (pages/flows that should exist but don't)
+
+| # | Gap | Notes |
+|---|-----|-------|
+| 1 | **No `/services` page** | No dedicated page explaining the 4 service layers, per-worker pricing, or what each test involves |
+| 2 | **No About/Meet the Team page** | Medic credentials and clinical credibility invisible on public site — critical for B2B procurement trust |
+| 3 | **Nav only has Home + Pricing** | Missing: Services, About, Contact |
+| 4 | **No Contact/Enquiry page** | No way to ask a question or request a callback without committing to Book Now or Get Quote |
+| 5 | **No worker self-service portal** | Workers can't view their own health surveillance history, test results, or certificates (GDPR transparency obligation) |
+| 6 | **No client onboarding wizard** | No step-by-step setup guide for new site managers after contract signing |
+| 7 | **No testimonials or case studies** | Zero social proof on any marketing page |
+| 8 | **No ROI calculator** | QuoteBuilder calculates medic days only — no tool showing OH consolidation savings |
+| 9 | **Pricing page doesn't include clinical add-ons** | `£350/day` medic is the only option shown — per-worker surveillance/D&A/fitness pricing invisible |
+| 10 | **No compliance dashboard for surveillance due dates** | Site managers can see RIDDOR and treatments but can't see who is overdue for annual audiometry or expiring fitness certs |
+| 11 | **No `/medic` dashboard** | The medic role has no usable interface in the web app |
+
+#### Customer/Business Logic Gaps
+
+| # | Gap | Notes |
+|---|-----|-------|
+| 1 | **Revenue model incomplete** | Platform only captures medic-day revenue. Clinical layer revenue (per-worker surveillance, D&A packages, fitness assessments) has zero support. |
+| 2 | **No recurring health surveillance reminders per worker** | `certifications` table tracks medic certs but no system to remind a site manager that Worker #47 is due annual audiometry |
+| 3 | **No consolidation pitch in product UX** | The "replace 4 providers with 1 invoice" value prop is only on the homepage — invisible inside the product |
+| 4 | **Quote builder doesn't model full ASG offering** | Asks worker count to size medic booking only — should also estimate surveillance package costs |
+| 5 | **Admin revenue view excludes clinical add-on revenue** | `/admin/revenue` shows booking revenue only — clinical service revenue would be invisible to the ASG ops team |
 
 ---
 

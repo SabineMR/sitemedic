@@ -11,8 +11,9 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useIsPlatformAdmin, useOrg } from '@/contexts/org-context';
+import { createClient } from '@/lib/supabase/client';
 import {
   LayoutDashboard,
   MapPin,
@@ -43,8 +44,44 @@ interface NavItem {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { loading } = useOrg();
+  const { loading, org } = useOrg();
   const isPlatformAdmin = useIsPlatformAdmin();
+  const [userEmail, setUserEmail] = useState<string>('');
+  const [userName, setUserName] = useState<string>('Admin');
+  const [activeAlerts, setActiveAlerts] = useState<number | null>(null);
+  const [pendingBookings, setPendingBookings] = useState<number | null>(null);
+
+  useEffect(() => {
+    async function fetchSidebarData() {
+      const supabase = createClient();
+
+      const [{ data: { user } }, alertsResult, bookingsResult] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase
+          .from('medic_alerts')
+          .select('id', { count: 'exact', head: true })
+          .eq('org_id', org?.id ?? '')
+          .is('resolved_at', null),
+        supabase
+          .from('bookings')
+          .select('id', { count: 'exact', head: true })
+          .eq('org_id', org?.id ?? '')
+          .eq('status', 'pending'),
+      ]);
+
+      if (user) {
+        setUserEmail(user.email ?? '');
+        const name = user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'Admin';
+        setUserName(name.charAt(0).toUpperCase() + name.slice(1));
+      }
+      setActiveAlerts(alertsResult.count ?? 0);
+      setPendingBookings(bookingsResult.count ?? 0);
+    }
+
+    if (!loading && org?.id) {
+      fetchSidebarData();
+    }
+  }, [loading, org?.id]);
 
   // Redirect platform admins to /platform (only after loading completes)
   useEffect(() => {
@@ -88,7 +125,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: 'Command Center',
       href: '/admin/command-center',
       icon: <MapPin className="w-5 h-5" />,
-      badge: 2, // Active issues count (mock data)
+      badge: activeAlerts,
       badgeColor: 'red',
     },
     {
@@ -100,7 +137,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: 'Bookings',
       href: '/admin/bookings',
       icon: <Calendar className="w-5 h-5" />,
-      badge: 3, // Pending bookings (mock data)
+      badge: pendingBookings,
       badgeColor: 'yellow',
     },
     {
@@ -217,11 +254,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <div className="p-4 border-t border-gray-700/50">
           <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-700/50 backdrop-blur-sm hover:bg-gray-700/70 transition-all duration-200 cursor-pointer group">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 group-hover:scale-110">
-              <span className="text-white text-sm font-bold">SA</span>
+              <span className="text-white text-sm font-bold">
+                {userName.slice(0, 2).toUpperCase()}
+              </span>
             </div>
-            <div className="flex-1">
-              <p className="text-white text-sm font-medium">Admin User</p>
-              <p className="text-gray-400 text-xs">admin@sitemedic.co.uk</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-sm font-medium truncate">{userName}</p>
+              <p className="text-gray-400 text-xs truncate">{userEmail}</p>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ContractWithRelations, ContractStatus } from '@/lib/contracts/types';
 import { STATUS_LABELS } from '@/lib/contracts/workflow';
 import { ContractStatusBadge } from './contract-status-badge';
+import { SendContractDialog } from './send-contract-dialog';
 import { DataTable } from '@/components/dashboard/data-table';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
@@ -22,8 +23,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { MoreHorizontal, ExternalLink, Copy, Ban, Send } from 'lucide-react';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
 
 interface ContractsTableProps {
   contracts: ContractWithRelations[];
@@ -41,10 +53,31 @@ export function ContractsTable({ contracts, stats }: ContractsTableProps) {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = React.useState<string>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [terminatingId, setTerminatingId] = React.useState<string | null>(null);
+  const [contractList, setContractList] = React.useState(contracts);
+
+  React.useEffect(() => {
+    setContractList(contracts);
+  }, [contracts]);
+
+  async function confirmTerminate(contractId: string) {
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('contracts')
+      .update({ status: 'terminated', terminated_at: new Date().toISOString() })
+      .eq('id', contractId);
+
+    if (!error) {
+      setContractList((prev) =>
+        prev.map((c) => (c.id === contractId ? { ...c, status: 'terminated' as ContractStatus } : c))
+      );
+    }
+    setTerminatingId(null);
+  }
 
   // Filter contracts
   const filteredContracts = React.useMemo(() => {
-    let filtered = contracts;
+    let filtered = contractList;
 
     // Status filter
     if (statusFilter !== 'all') {
@@ -64,7 +97,7 @@ export function ContractsTable({ contracts, stats }: ContractsTableProps) {
     }
 
     return filtered;
-  }, [contracts, statusFilter, searchQuery]);
+  }, [contractList, statusFilter, searchQuery]);
 
   // Format GBP currency
   const formatGBP = (amount: number) => {
@@ -179,16 +212,31 @@ export function ContractsTable({ contracts, stats }: ContractsTableProps) {
                 <ExternalLink className="mr-2 h-4 w-4" />
                 View Details
               </DropdownMenuItem>
-              {contract.status === 'draft' && (
-                <DropdownMenuItem
-                  onClick={() => {
-                    // TODO: Implement send contract logic
-                    console.log('Send contract:', contract.id);
+              {contract.status === 'draft' && contract.client && (
+                <SendContractDialog
+                  contract={{
+                    ...contract,
+                    client: {
+                      id: contract.client.id,
+                      company_name: contract.client.name ?? '',
+                      contact_name: contract.client.name ?? '',
+                      contact_email: contract.client.email ?? '',
+                    },
                   }}
-                >
-                  <Send className="mr-2 h-4 w-4" />
-                  Send to Client
-                </DropdownMenuItem>
+                  onSent={() =>
+                    setContractList((prev) =>
+                      prev.map((c) =>
+                        c.id === contract.id ? { ...c, status: 'sent' as ContractStatus } : c
+                      )
+                    )
+                  }
+                  trigger={
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <Send className="mr-2 h-4 w-4" />
+                      Send to Client
+                    </DropdownMenuItem>
+                  }
+                />
               )}
               {shareableUrl && (
                 <DropdownMenuItem
@@ -203,9 +251,9 @@ export function ContractsTable({ contracts, stats }: ContractsTableProps) {
               )}
               {!['terminated', 'fulfilled'].includes(contract.status) && (
                 <DropdownMenuItem
-                  onClick={() => {
-                    // TODO: Implement terminate logic
-                    console.log('Terminate contract:', contract.id);
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    setTerminatingId(contract.id);
                   }}
                   className="text-red-600"
                 >
@@ -290,6 +338,28 @@ export function ContractsTable({ contracts, stats }: ContractsTableProps) {
         data={filteredContracts}
         globalFilterPlaceholder="Search contracts..."
       />
+
+      {/* Terminate confirmation dialog */}
+      <AlertDialog open={!!terminatingId} onOpenChange={() => setTerminatingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Terminate Contract</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will immediately terminate the contract. This action cannot be undone.
+              The client will no longer have access to the signing portal.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => terminatingId && confirmTerminate(terminatingId)}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Terminate Contract
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

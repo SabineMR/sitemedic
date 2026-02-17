@@ -130,11 +130,18 @@ export async function POST(request: Request) {
       }
     }
 
+    // Fetch real star_rating from medics table
+    const { data: medicRecord } = await supabase
+      .from('medics')
+      .select('star_rating')
+      .eq('id', assignedMedicId)
+      .single();
+
     // Return ranked matches (top candidate who was assigned)
     const topMatch: MatchCandidate = {
       medic_id: assignedMedicId,
       medic_name: edgeFunctionResult.medic_name || 'Assigned Medic',
-      star_rating: 4.8, // TODO: Get from database
+      star_rating: medicRecord?.star_rating ?? 0,
       availability: 'Available',
       match_score: edgeFunctionResult.confidence_score || 0,
       match_reasons: matchReasons.length > 0 ? matchReasons : ['Auto-assigned by algorithm'],

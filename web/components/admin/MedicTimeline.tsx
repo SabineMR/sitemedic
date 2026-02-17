@@ -81,12 +81,100 @@ export default function MedicTimeline({ medicId, bookingId, medicName }: Props) 
   };
 
   /**
-   * Export timeline to PDF
+   * Export timeline to PDF using jsPDF
    */
-  const handleExportPDF = () => {
-    // TODO: Implement PDF export
-    console.log('Exporting timeline to PDF...');
-    alert('PDF export coming soon!');
+  const handleExportPDF = async () => {
+    const { jsPDF } = await import('jspdf');
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 15;
+    let y = 20;
+
+    // Title
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Shift Timeline Audit Report', margin, y);
+    y += 8;
+
+    // Subtitle
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100);
+    doc.text(`Medic: ${medicName}`, margin, y);
+    y += 5;
+    doc.text(`Booking ID: ${bookingId}`, margin, y);
+    y += 5;
+    doc.text(`Generated: ${new Date().toLocaleString('en-GB')}`, margin, y);
+    y += 5;
+    doc.text(`Total events: ${events.length}`, margin, y);
+    y += 10;
+
+    // Divider
+    doc.setDrawColor(200);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 6;
+
+    // Column headers
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0);
+    doc.text('Time', margin, y);
+    doc.text('Event', margin + 30, y);
+    doc.text('Source', margin + 95, y);
+    doc.text('GPS Accuracy', margin + 120, y);
+    y += 5;
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 4;
+
+    // Events
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+
+    for (const event of events) {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+
+      const display = getEventDisplay(event.event_type);
+      const time = formatTime(event.event_timestamp);
+      const source = event.source.replace(/_/g, ' ');
+      const accuracy = event.accuracy_meters != null ? `±${event.accuracy_meters.toFixed(1)}m` : '—';
+
+      // Highlight anomalies
+      const isAnomaly = ['battery_died', 'connection_lost', 'late_arrival', 'early_departure'].includes(
+        event.event_type
+      );
+      if (isAnomaly) {
+        doc.setFillColor(254, 226, 226);
+        doc.rect(margin - 2, y - 3, pageWidth - margin * 2 + 4, 7, 'F');
+      }
+
+      doc.setTextColor(isAnomaly ? 180 : 0, 0, 0);
+      doc.text(time, margin, y);
+      doc.text(display.label, margin + 30, y);
+      doc.text(source, margin + 95, y);
+      doc.text(accuracy, margin + 120, y);
+      y += 7;
+
+      // Notes
+      if (event.notes) {
+        doc.setTextColor(100);
+        doc.setFontSize(8);
+        doc.text(`  Note: ${event.notes}`, margin + 4, y);
+        doc.setFontSize(9);
+        y += 5;
+      }
+    }
+
+    // Footer
+    y = doc.internal.pageSize.getHeight() - 12;
+    doc.setTextColor(150);
+    doc.setFontSize(8);
+    doc.text('SiteMedic — Confidential audit trail', margin, y);
+
+    doc.save(`timeline-${medicName.replace(/\s+/g, '-')}-${bookingId.slice(0, 8)}.pdf`);
   };
 
   /**

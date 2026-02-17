@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireOrgId } from '@/lib/organizations/org-resolver';
+import { resend } from '@/lib/email/resend';
 
 interface GenerateInvoiceRequest {
   clientId: string;
@@ -174,7 +175,60 @@ export async function POST(req: NextRequest) {
       console.error('Error generating PDF:', pdfError);
     }
 
-    // TODO: Send invoice email to client via Resend
+    // Send invoice email to client via Resend
+    const invoiceDateFormatted = new Date(invoice.invoice_date).toLocaleDateString('en-GB', {
+      day: 'numeric', month: 'long', year: 'numeric',
+    });
+    const dueDateFormatted = new Date(invoice.due_date).toLocaleDateString('en-GB', {
+      day: 'numeric', month: 'long', year: 'numeric',
+    });
+    const totalFormatted = new Intl.NumberFormat('en-GB', {
+      style: 'currency', currency: 'GBP',
+    }).format(invoice.total);
+
+    const emailResult = await resend.emails.send({
+      from: 'invoices@sitemedic.co.uk',
+      to: client.email,
+      subject: `Invoice ${invoice.invoice_number} from SiteMedic — ${totalFormatted}`,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#111">
+          <div style="background:#1e40af;padding:24px 32px;border-radius:8px 8px 0 0">
+            <h1 style="color:#fff;margin:0;font-size:22px">SiteMedic Invoice</h1>
+          </div>
+          <div style="border:1px solid #e5e7eb;border-top:none;padding:32px;border-radius:0 0 8px 8px">
+            <p style="margin-top:0">Dear ${client.name},</p>
+            <p>Please find your invoice details below.</p>
+            <table style="width:100%;border-collapse:collapse;margin:20px 0">
+              <tr style="background:#f9fafb">
+                <td style="padding:10px 12px;border:1px solid #e5e7eb;font-weight:bold">Invoice Number</td>
+                <td style="padding:10px 12px;border:1px solid #e5e7eb">${invoice.invoice_number}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 12px;border:1px solid #e5e7eb;font-weight:bold">Invoice Date</td>
+                <td style="padding:10px 12px;border:1px solid #e5e7eb">${invoiceDateFormatted}</td>
+              </tr>
+              <tr style="background:#f9fafb">
+                <td style="padding:10px 12px;border:1px solid #e5e7eb;font-weight:bold">Payment Due</td>
+                <td style="padding:10px 12px;border:1px solid #e5e7eb">${dueDateFormatted}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 12px;border:1px solid #e5e7eb;font-weight:bold">Total Due</td>
+                <td style="padding:10px 12px;border:1px solid #e5e7eb;font-size:18px;color:#1e40af;font-weight:bold">${totalFormatted}</td>
+              </tr>
+            </table>
+            ${pdfData?.pdf_url ? `<p><a href="${pdfData.pdf_url}" style="background:#1e40af;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Download PDF Invoice</a></p>` : ''}
+            <p style="color:#6b7280;font-size:13px;margin-top:24px">
+              For payment queries, please contact <a href="mailto:accounts@sitemedic.co.uk">accounts@sitemedic.co.uk</a>
+            </p>
+          </div>
+        </div>
+      `,
+    });
+
+    if (emailResult.error) {
+      console.error('Invoice email failed:', emailResult.error);
+      // Non-fatal — invoice is still created
+    }
 
     return NextResponse.json({
       invoice,

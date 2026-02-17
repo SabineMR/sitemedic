@@ -14,6 +14,7 @@ import { useMedicAlertsStore } from '@/stores/useMedicAlertsStore';
 import MedicTimeline from '@/components/admin/MedicTimeline';
 import AlertPanel from '@/components/admin/AlertPanel';
 import AlertToast from '@/components/admin/AlertToast';
+import { createClient } from '@/lib/supabase/client';
 
 // Import map component dynamically (client-side only - Leaflet doesn't work with SSR)
 const MedicTrackingMap = dynamic(() => import('@/components/admin/MedicTrackingMap'), {
@@ -45,6 +46,7 @@ export default function CommandCenter() {
   const [selectedMedic, setSelectedMedic] = useState<MedicLocation | null>(null);
   const [filterMode, setFilterMode] = useState<'all' | 'issues'>('all');
   const [showAlerts, setShowAlerts] = useState(true);
+  const [medicPhone, setMedicPhone] = useState<string | null>(null);
 
   // Real-time medic locations from Zustand store
   const subscribe = useMedicLocationsStore((state) => state.subscribe);
@@ -72,18 +74,29 @@ export default function CommandCenter() {
   }, [subscribe, unsubscribe]);
 
   /**
-   * Handle medic marker click
+   * Handle medic marker click — also fetches phone number from medics table
    */
-  const handleMedicClick = (medic: MedicLocation) => {
+  const handleMedicClick = async (medic: MedicLocation) => {
     setSelectedMedic(medic);
+    setMedicPhone(null);
+
+    const supabase = createClient();
+    const { data } = await supabase
+      .from('medics')
+      .select('phone')
+      .eq('id', medic.medic_id)
+      .single();
+
+    setMedicPhone(data?.phone ?? null);
   };
 
   /**
-   * Contact medic (call/SMS)
+   * Contact medic via call or SMS using device native handler
    */
-  const handleContactMedic = (medicId: string, method: 'call' | 'sms') => {
-    console.log(`Contacting medic ${medicId} via ${method}`);
-    // TODO: Implement actual contact functionality
+  const handleContactMedic = (method: 'call' | 'sms') => {
+    if (!medicPhone) return;
+    const uri = method === 'call' ? `tel:${medicPhone}` : `sms:${medicPhone}`;
+    window.location.href = uri;
   };
 
   /**
@@ -280,18 +293,25 @@ export default function CommandCenter() {
               {/* Contact Buttons */}
               <div className="flex gap-2 mb-6">
                 <button
-                  onClick={() => handleContactMedic(selectedMedic.medic_id, 'call')}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition"
+                  onClick={() => handleContactMedic('call')}
+                  disabled={!medicPhone}
+                  className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition"
+                  title={medicPhone ? `Call ${medicPhone}` : 'No phone number on record'}
                 >
                   📞 Call
                 </button>
                 <button
-                  onClick={() => handleContactMedic(selectedMedic.medic_id, 'sms')}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition"
+                  onClick={() => handleContactMedic('sms')}
+                  disabled={!medicPhone}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition"
+                  title={medicPhone ? `SMS ${medicPhone}` : 'No phone number on record'}
                 >
                   💬 SMS
                 </button>
               </div>
+              {medicPhone && (
+                <p className="text-xs text-gray-500 -mt-4 mb-4 text-center">{medicPhone}</p>
+              )}
 
               {/* Real-time Timeline */}
               <MedicTimeline
