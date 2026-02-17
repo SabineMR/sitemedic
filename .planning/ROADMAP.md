@@ -16,11 +16,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1.5: Business Operations Foundation** (INSERTED) - Database schema for bookings, territories, clients, payments; Stripe Connect; Google Maps API; UK postcodes
 - [x] **Phase 2: Mobile Core** - Treatment logger, worker profiles, near-miss, daily checks (local-only)
 - [x] **Phase 3: Sync Engine** - Mobile-to-backend data flow with photo upload
-- [x] **Phase 4: Web Dashboard** - Manager reporting UI with compliance scoring
-- [x] **Phase 4.5: Marketing Website & Booking Portal** (INSERTED) - Public marketing site, client self-service booking portal with Stripe payments, auto-matching
+- [ ] **Phase 4: Web Dashboard** - Manager reporting UI with compliance scoring
+- [ ] **Phase 4.5: Marketing Website & Booking Portal** (INSERTED) - Public marketing site, client self-service booking portal with Stripe payments, auto-matching
 - [ ] **Phase 4.6: Customer Onboarding & Contract Management** (INSERTED) - Service agreement generation, document portal, flexible payment terms, digital signatures
-- [x] **Phase 5: PDF Generation** - Weekly safety reports for HSE audits
-- [x] **Phase 5.5: Admin Operations Dashboards** (INSERTED) - Admin dashboard for bookings, medics, territories, revenue, timesheets, client management
+- [ ] **Phase 5: PDF Generation** - Weekly safety reports for HSE audits
+- [ ] **Phase 5.5: Admin Operations Dashboards** (INSERTED) - Admin dashboard for bookings, medics, territories, revenue, timesheets, client management
 - [ ] **Phase 6: RIDDOR Auto-Flagging** - Smart compliance detection with deadline tracking
 - [ ] **Phase 6.5: Payment Processing & Payouts** (INSERTED) - Client payment processing, weekly medic payouts via UK Faster Payments, IR35 compliance, invoice generation
 - [ ] **Phase 7: Certification Tracking** - Expiry monitoring with progressive alerts
@@ -163,12 +163,12 @@ Plans:
 **Plans**: 6 plans
 
 Plans:
-- [x] 04-01-PLAN.md -- Dashboard scaffold with auth, Supabase SSR utilities, and responsive layout shell
-- [x] 04-02-PLAN.md -- Overview page with traffic-light compliance score and weekly summary stats
-- [x] 04-03-PLAN.md -- Treatment log with filtering/sorting, detail view with photos, and reusable DataTable
-- [x] 04-04-PLAN.md -- Near-miss log and worker registry pages with search and filters
-- [x] 04-05-PLAN.md -- Data export (CSV and PDF) and responsive polish
-- [x] 04-06-PLAN.md -- Integration verification checkpoint
+- [ ] 04-01-PLAN.md -- Dashboard scaffold with auth, Supabase SSR utilities, and responsive layout shell
+- [ ] 04-02-PLAN.md -- Overview page with traffic-light compliance score and weekly summary stats
+- [ ] 04-03-PLAN.md -- Treatment log with filtering/sorting, detail view with photos, and reusable DataTable
+- [ ] 04-04-PLAN.md -- Near-miss log and worker registry pages with search and filters
+- [ ] 04-05-PLAN.md -- Data export (CSV and PDF) and responsive polish
+- [ ] 04-06-PLAN.md -- Integration verification checkpoint
 
 ### Phase 4.5: Marketing Website & Booking Portal (INSERTED)
 **Goal**: Public-facing marketing website and client self-service booking portal operational with Stripe payment processing and auto-matching to medics.
@@ -189,15 +189,13 @@ Plans:
   9. New clients must prepay via card (Stripe Payment Intent with 3D Secure)
   10. Recurring bookings can be created (same medic, weekly schedule)
 
-**Plans**: 5 plans
+**Plans**: 4 plans
 
 Plans:
-- [x] 04.5-01-PLAN.md -- Marketing website with Next.js SSG (homepage, pricing, trust signals)
-- [x] 04.5-02-PLAN.md -- Booking portal calendar and site location input
-- [x] 04.5-03-PLAN.md -- Stripe payment integration (prepay vs Net 30 logic)
-- [x] 04.5-04-PLAN.md -- Auto-matching UI and booking confirmation flow
-- [x] 04.5-05-PLAN.md -- [GAP CLOSURE] Real booking data in confirmation page (replaced mock)
-- [ ] 04.5-05-PLAN.md -- [GAP CLOSURE] Fix confirmation page mock data with real Supabase queries
+- [ ] 04.5-01-PLAN.md -- Marketing website with Next.js SSG (homepage, pricing, trust signals)
+- [ ] 04.5-02-PLAN.md -- Booking portal calendar and site location input
+- [ ] 04.5-03-PLAN.md -- Stripe payment integration (prepay vs Net 30 logic)
+- [ ] 04.5-04-PLAN.md -- Auto-matching UI and booking confirmation flow
 
 ### Phase 4.6: Customer Onboarding & Contract Management (INSERTED)
 **Goal**: Automated service agreement generation with business info auto-filled, document portal for phone sales, flexible payment terms (half upfront, remainder after completion), and digital signature collection.
@@ -220,16 +218,14 @@ Plans:
   11. Admin can manage agreement templates (edit clauses, add custom terms, version control)
   12. Booking cannot be confirmed until agreement is signed (configurable per client)
 
-**Plans**: 7 plans
+**Plans**: 5 plans
 
 Plans:
-- [x] 04.6-01-PLAN.md -- Database schema, TypeScript types, state machine, and payment schedule logic
-- [x] 04.6-02-PLAN.md -- Contract PDF generation Edge Function with auto-fill from booking data
-- [x] 04.6-03-PLAN.md -- Signature pad component and client-facing signing page
-- [x] 04.6-04-PLAN.md -- Admin contract creation UI with payment terms selector
-- [x] 04.6-05-PLAN.md -- Contract sending via Resend email with webhook tracking
-- [x] 04.6-06-PLAN.md -- Admin contract dashboard, detail view, and template management
-- [x] 04.6-07-PLAN.md -- Payment milestone enforcement and booking confirmation gate
+- [ ] 04.6-01-PLAN.md -- Service agreement template engine with auto-fill logic
+- [ ] 04.6-02-PLAN.md -- Document portal for sending and tracking agreements
+- [ ] 04.6-03-PLAN.md -- Digital signature capture (native signing with signature pad)
+- [ ] 04.6-04-PLAN.md -- Flexible payment terms and payment schedule engine
+- [ ] 04.6-05-PLAN.md -- Admin document management and template versioning
 
 ### Phase 5: PDF Generation
 **Goal**: Weekly safety reports auto-generate every Friday and on-demand with professional formatting ready for HSE audits, principal contractors, and insurers.
@@ -250,10 +246,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [x] 05-01-PLAN.md -- Edge Function with @react-pdf/renderer document components and data queries
-- [x] 05-02-PLAN.md -- Storage bucket, PDF upload, Resend email delivery, and signed URLs
-- [x] 05-03-PLAN.md -- pg_cron Friday scheduling and dashboard reports page with on-demand generation
-- [x] 05-04-PLAN.md -- Integration verification checkpoint
+- [ ] 05-01-PLAN.md -- Edge Function with @react-pdf/renderer document components and data queries
+- [ ] 05-02-PLAN.md -- Storage bucket, PDF upload, Resend email delivery, and signed URLs
+- [ ] 05-03-PLAN.md -- pg_cron Friday scheduling and dashboard reports page with on-demand generation
+- [ ] 05-04-PLAN.md -- Integration verification checkpoint
 
 ### Phase 5.5: Admin Operations Dashboards (INSERTED)
 **Goal**: Admin dashboard operational with booking management, medic roster, territory coverage map, revenue tracking, timesheet approval, and client management capabilities.
@@ -277,12 +273,12 @@ Plans:
 **Plans**: 6 plans
 
 Plans:
-- [x] 05.5-01-PLAN.md -- Booking approval workflow with bulk operations and medic reassignment
-- [x] 05.5-02-PLAN.md -- Medic roster with utilization bars, territory assignments, and availability toggle
-- [x] 05.5-03-PLAN.md -- Timesheet batch approval for Friday payout workflow with bulk upsert
-- [x] 05.5-04-PLAN.md -- Territory coverage map with color-coded utilization and gap alerts
-- [x] 05.5-05-PLAN.md -- Revenue dashboard with Recharts charts and cash flow warning
-- [x] 05.5-06-PLAN.md -- Client management with Net 30 upgrade and admin overview real data
+- [ ] 05.5-01-PLAN.md -- Bookings management tab with approval workflow
+- [ ] 05.5-02-PLAN.md -- Medic management tab with roster and utilization
+- [ ] 05.5-03-PLAN.md -- Territory coverage map with visual representation
+- [ ] 05.5-04-PLAN.md -- Revenue dashboard with cash flow projections
+- [ ] 05.5-05-PLAN.md -- Timesheet approval workflow for batch Friday payouts
+- [ ] 05.5-06-PLAN.md -- Client management with payment terms and history
 
 ### Phase 6: RIDDOR Auto-Flagging
 **Goal**: App automatically detects RIDDOR-reportable incidents with deadline countdown, medic override capability, and pre-filled HSE F2508 form generation.
@@ -301,26 +297,17 @@ Plans:
   7. RIDDOR report tracks status (Draft / Submitted / Confirmed)
   8. Override patterns track for algorithm tuning (if 80% overridden, review logic)
 
-**Plans**: 8 plans
-
-**Database Schema**: ✅ **COMPLETED** - Migration `018_riddor_incidents.sql` added with full table structure, RLS policies, and indexes
+**Plans**: TBD
 
 Plans:
-- [x] 06-01-PLAN.md -- Database schema (migration 018 added) and RIDDOR detection Edge Function with confidence scoring
-- [x] 06-02-PLAN.md -- Mobile medic override UI workflow with reason capture
-- [x] 06-03-PLAN.md -- HSE F2508 PDF generation with form field mapping
-- [x] 06-04-PLAN.md -- Web dashboard RIDDOR pages with deadline countdown
-- [x] 06-05-PLAN.md -- Deadline tracking cron job and email notifications
-- [x] 06-06-PLAN.md -- Override pattern analytics dashboard for algorithm tuning
-- [x] 06-07-PLAN.md -- [GAP CLOSURE] Database trigger to auto-invoke RIDDOR detection on treatment INSERT/UPDATE
-- [x] 06-08-PLAN.md -- [GAP CLOSURE] Replace hardcoded org_id with auth context in RIDDOR dashboard pages
+- [ ] TBD during planning
 
 ### Phase 6.5: Payment Processing & Payouts (INSERTED)
 **Goal**: Full payment processing operational with client charging (card + Net 30), automated weekly medic payouts via UK Faster Payments, IR35 compliance, and out-of-territory cost management.
 
 **Depends on**: Phase 1.5, Phase 5.5
 
-**Requirements**: Stripe payment processing (card, 3D Secure, Payment Intents), Weekly medic payouts (automated Friday job via UK Faster Payments), Platform fee calculation (28.6% platform fee, medic GBP30/hr, client GBP42/hr), Invoice generation (PDF with VAT 20%, Net 30 terms), Late payment handling (auto-reminders at 7/14/21 days, statutory fees), IR35 compliance (self-employed contractors, Stripe Express accounts, UTR collection), Timesheet workflow (medic logs -> manager approves -> admin batch-approves -> Friday payout), Out-of-territory cost management (travel bonus vs room/board vs deny booking)
+**Requirements**: Stripe payment processing (card, 3D Secure, Payment Intents), Weekly medic payouts (automated Friday job via UK Faster Payments), Platform fee calculation (40% markup transparent to clients), Invoice generation (PDF with VAT 20%, Net 30 terms), Late payment handling (auto-reminders at 7/14/21 days, statutory fees), IR35 compliance (self-employed contractors, Stripe Express accounts, UTR collection), Timesheet workflow (medic logs -> manager approves -> admin batch-approves -> Friday payout), Out-of-territory cost management (travel bonus vs room/board vs deny booking)
 
 **Success Criteria** (what must be TRUE):
   1. Client payment processing works (card charge via Stripe Payment Intent with 3D Secure)
@@ -336,21 +323,14 @@ Plans:
   11. Admin sees cost breakdown and can approve/deny out-of-territory booking
   12. System denies booking if out-of-territory cost >50% of shift cost (admin can override)
 
-**Plans**: 12 plans
+**Plans**: 5 plans
 
 Plans:
-- [x] 06.5-01-PLAN.md -- Client payment processing with Stripe (card, 3D Secure)
-- [x] 06.5-02-PLAN.md -- Friday payout automation with UK Faster Payments
-- [x] 06.5-03-PLAN.md -- Invoice generation with VAT and late payment handling
-- [x] 06.5-04-PLAN.md -- IR35 compliance and medic onboarding flow
-- [x] 06.5-05-PLAN.md -- Out-of-territory cost management (travel bonus vs room/board)
-- [x] 06.5-06-PLAN.md -- [GAP CLOSURE] Fix platform fee calculation (71.4/28.6) and renumber migrations
-- [x] 06.5-07-PLAN.md -- [GAP CLOSURE] Wire Resend email for late payment reminders and schedule pg_cron jobs
-- [x] 06.5-08-PLAN.md -- [GAP CLOSURE] Create payslip PDF generation Edge Function
-- [x] 06.5-09-PLAN.md -- [GAP CLOSURE] Add Stripe onboarding webhook and GB bank validation
-- [x] 06.5-10-PLAN.md -- [GAP CLOSURE] Wire out-of-territory approval into booking workflow
-- [x] 06.5-11-PLAN.md -- [GAP CLOSURE] Fix payslip_reference schema and late payment cron vault auth
-- [x] 06.5-12-PLAN.md -- [GAP CLOSURE] Re-add Resend email integration for late payment reminders (regression fix)
+- [ ] 06.5-01-PLAN.md -- Client payment processing with Stripe (card, 3D Secure)
+- [ ] 06.5-02-PLAN.md -- Friday payout automation with UK Faster Payments
+- [ ] 06.5-03-PLAN.md -- Invoice generation with VAT and late payment handling
+- [ ] 06.5-04-PLAN.md -- IR35 compliance and medic onboarding flow
+- [ ] 06.5-05-PLAN.md -- Out-of-territory cost management (travel bonus vs room/board)
 
 ### Phase 7: Certification Tracking
 **Goal**: System tracks UK certifications with progressive expiry alerts, prevents expired workers from logging incidents, and surfaces compliance status to managers.
@@ -369,13 +349,10 @@ Plans:
   7. Email notifications use professional template with company branding
   8. Server-side scheduled jobs check expiry daily (not device-local notifications)
 
-**Plans**: 4 plans
+**Plans**: TBD
 
 Plans:
-- [ ] 07-01-PLAN.md -- Database infrastructure (GIN index, certification_reminders table, RPC functions) and TypeScript types
-- [ ] 07-02-PLAN.md -- Certification expiry checker Edge Function with progressive email reminders and daily pg_cron
-- [ ] 07-03-PLAN.md -- Certifications dashboard page with expiry table, status badges, and compliance score integration
-- [ ] 07-04-PLAN.md -- Certification validation API (expired worker blocking) and worker table cert status update
+- [ ] TBD during planning
 
 ### Phase 7.5: Territory Management & Auto-Assignment (INSERTED)
 **Goal**: UK-wide territory system operational with postcode-based coverage, intelligent auto-assignment algorithm, coverage gap detection, and hiring recommendations to scale medic roster.
@@ -400,11 +377,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 07.5-01-PLAN.md -- Territory metrics aggregation (pg_cron daily job) and hiring trigger / coverage gap business logic
-- [ ] 07.5-02-PLAN.md -- Enhanced auto-assignment algorithm with calendar check, cert validation, and adjusted scoring weights
-- [ ] 07.5-03-PLAN.md -- Admin drag-drop medic-to-territory assignment panel with dnd-kit and API route
-- [ ] 07.5-04-PLAN.md -- Coverage gap detection alerts and hiring trigger recommendations UI
-- [ ] 07.5-05-PLAN.md -- Enhanced coverage map with territory detail panel and full page integration
+- [ ] 07.5-01-PLAN.md -- Territory assignment system with UK postcode sectors
+- [ ] 07.5-02-PLAN.md -- Auto-assignment algorithm with ranking logic
+- [ ] 07.5-03-PLAN.md -- Out-of-territory coverage logic (travel bonus vs room/board vs deny)
+- [ ] 07.5-04-PLAN.md -- Coverage gap detection and hiring trigger alerts
+- [ ] 07.5-05-PLAN.md -- Visual coverage map with admin drag-drop reassignment
 
 ## Progress
 
@@ -418,13 +395,13 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 | 2. Mobile Core | 10/10 | Complete | 2026-02-15 |
 | 3. Sync Engine | 7/7 | Complete | 2026-02-16 |
 | 4. Web Dashboard | 6/6 | Complete | 2026-02-16 |
-| 4.5. Marketing Website & Booking Portal | 5/5 | Complete | 2026-02-16 |
-| 4.6. Customer Onboarding & Contract Management | 7/7 | Complete | 2026-02-16 |
+| 4.5. Marketing Website & Booking Portal | 0/4 | Not started | - |
+| 4.6. Customer Onboarding & Contract Management | 0/5 | Not started | - |
 | 5. PDF Generation | 4/4 | Complete | 2026-02-16 |
-| 5.5. Admin Operations Dashboards | 6/6 | Complete | 2026-02-16 |
-| 6. RIDDOR Auto-Flagging | 8/8 | Complete | 2026-02-16 |
-| 6.5. Payment Processing & Payouts | 12/12 | Complete | 2026-02-16 |
-| 7. Certification Tracking | 0/4 | Planned | - |
+| 5.5. Admin Operations Dashboards | 0/6 | Not started | - |
+| 6. RIDDOR Auto-Flagging | 0/TBD | Not started | - |
+| 6.5. Payment Processing & Payouts | 0/5 | Not started | - |
+| 7. Certification Tracking | 0/TBD | Not started | - |
 | 7.5. Territory Management & Auto-Assignment | 0/5 | Not started | - |
 
 ---
@@ -434,7 +411,7 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Coverage: 83/83 v1 requirements mapped*
 *Business operations phases added: 2026-02-15 -- 5 decimal phases (1.5, 4.5, 5.5, 6.5, 7.5) with 24 plans total for multi-medic scaling (booking portal, payments, territory management)*
 *Phase 1.5 planned: 2026-02-15 -- 4 plans in 1 wave (all parallel, DB schema and Google Maps API already exist from prior session)*
-*Phase 4.6 added: 2026-02-15 -- Customer onboarding & contract management with service agreement generation, document portal for phone sales, flexible payment terms (half upfront + remainder after completion/Net 30), digital signatures, and payment schedule enforcement (7 plans)*
+*Phase 4.6 added: 2026-02-15 -- Customer onboarding & contract management with service agreement generation, document portal for phone sales, flexible payment terms (half upfront + remainder after completion/Net 30), digital signatures, and payment schedule enforcement (5 plans)*
 *Phase 2 planned: 2026-02-15 -- 8 plans in 3 waves (2 parallel foundation, 4 parallel features, 2 integration)*
 *Phase 2 gap closure: 2026-02-15 -- 2 gap closure plans (02-09, 02-10) addressing 3 verification gaps (auto-save timing, template presets, offline import paths)*
 *Phase 2 complete: 2026-02-15 -- 10/10 plans executed, verification passed (10/10 must-haves), goal achieved (offline mobile core with gloves-on usability)*
@@ -442,21 +419,3 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Phase 3 progress: 2026-02-15 -- 4/5 plans complete (03-01 through 03-04 executed, 03-05 remaining for full phase completion)*
 *Phase 3 gap closure: 2026-02-15 -- 2 gap closure plans (03-06, 03-07) addressing 2 verification gaps (battery constraints for background sync, client-generated UUID idempotency keys for duplicate prevention)*
 *Phase 3 complete: 2026-02-16 -- 7/7 plans executed (initial 5 + 2 gap closure), verification passed (10/10 must-haves), goal achieved (automatic background sync with battery-friendly constraints and duplicate prevention)*
-*Phase 4 planned: 2026-02-16 -- 6 plans in 3 waves (2 parallel Wave 1: scaffold+overview, 2 parallel Wave 2: treatment+near-miss, 2 sequential Wave 3: export+verification)*
-*Phase 4 complete: 2026-02-16 -- 6/6 plans executed, verification passed (9/9 must-haves), goal achieved (site manager dashboard with treatment log, near-miss reports, worker registry, compliance scoring, and CSV/PDF export)*
-*Phase 4.5 planned: 2026-02-16 -- 4 plans in 4 waves (Wave 1: marketing SSG, Wave 2: booking form, Wave 3: payment integration, Wave 4: auto-matching & email)*
-*Phase 4.5 complete: 2026-02-16 -- 5/5 plans executed (4 initial + 1 gap closure), verification passed (10/10 must-haves on re-verification), goal achieved (marketing website with <2s load time, client booking portal with Stripe payment processing, auto-matching with transparency, email confirmations with calendar invites, real booking data in confirmation)*
-*Phase 4.5 gap closure: 2026-02-16 -- 1 gap closure plan (04.5-05) fixing confirmation page mock data, re-verification passed (10/10 must-haves, was 9/10)*
-*Phase 5.5 planned: 2026-02-16 -- 6 plans in 2 waves (3 parallel Wave 1: bookings/medics/timesheets, 3 parallel Wave 2: territories/revenue/clients)*
-*Phase 5.5 complete: 2026-02-16 -- 6/6 plans executed, verification passed (10/10 must-haves), goal achieved (admin dashboard operational with booking management, medic roster, territory coverage map, revenue tracking, timesheet approval, client management)*
-*Phase 4.6 planned: 2026-02-16 -- 7 plans in 4 waves (2 parallel foundation: schema+PDF, 2 parallel UI: signing+admin creation, 2 parallel delivery: email+dashboard, 1 enforcement: payments+booking gate)*
-*Phase 4.6 complete: 2026-02-16 -- 7/7 plans executed, verification passed (12/12 must-haves), goal achieved (automated service agreement generation with auto-filled booking data, document portal for phone sales, flexible payment terms with milestone enforcement, digital signature collection with audit trail)*
-*Phase 6 planned: 2026-02-16 -- 6 plans in 3 waves (2 parallel Wave 1: detection+mobile, 2 parallel Wave 2: F2508+dashboard, 2 sequential Wave 3: notifications+analytics)*
-*Phase 6 progress: 2026-02-16 -- Database schema completed (migration 018_riddor_incidents.sql added with riddor_incidents table, RLS policies, performance indexes, and complete audit trail for auto-detection, medic override, deadline management, and F2508 PDF storage)*
-*Phase 6.5 gap closure: 2026-02-16 -- 5 gap closure plans (06.5-06 through 06.5-10) addressing 5 critical gaps and 3 partial implementations (platform fee fix, email integration, payslip PDF, Stripe webhook, out-of-territory wiring)*
-*Phase 6.5 gap closure v2: 2026-02-16 -- 1 gap closure plan (06.5-11) addressing final 2 gaps: payslip_reference schema mismatch and late payment cron vault auth pattern*
-*Phase 6 gap closure: 2026-02-16 -- 2 gap closure plans (06-07, 06-08) addressing 4 verification gaps: auto-detection trigger (PRIMARY: wires riddor-detector into data pipeline via pg_net database trigger) and hardcoded org_id replacement with auth context*
-*Phase 6.5 gap closure v3: 2026-02-16 -- 1 gap closure plan (06.5-12) fixing Resend email regression in late payment reminders (reverted in commit d807b2d)*
-*Phase 7.5 planned: 2026-02-16 -- 5 plans in 3 waves (2 parallel Wave 1: metrics+auto-assignment, 2 parallel Wave 2: drag-drop+alerts, 1 integration Wave 3: map+detail+page). Builds on existing Phase 1.5 postcode seeding, Phase 5.5 territory map/queries, and Phase 6.5 out-of-territory cost logic.*
-*Phase 7 planned: 2026-02-16 -- 4 plans in 3 waves (Wave 1: schema+types foundation, Wave 2 parallel: backend email/cron + frontend dashboard, Wave 3: validation enforcement + worker table integration)*
-*Phase 6 complete: 2026-02-16 -- 8/8 plans executed (6 initial + 2 gap closure), re-verification passed (8/8 must-haves, was 4/8), goal achieved (RIDDOR auto-detection with database trigger completing data pipeline, medic override UI, F2508 PDF generation, dashboard with deadline countdown, email notifications, override analytics, auth context integration)*
