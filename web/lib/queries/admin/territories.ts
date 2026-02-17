@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { useRequireOrg } from '@/contexts/org-context';
@@ -45,6 +45,17 @@ export interface TerritoryWithMetrics {
   // Map coordinates (approximate centroid for postcode area)
   lat: number;
   lng: number;
+}
+
+export interface AssignMedicParams {
+  territory_id: string;
+  medic_id: string;
+  role: 'primary' | 'secondary';
+}
+
+export interface UnassignMedicParams {
+  territory_id: string;
+  role: 'primary' | 'secondary';
 }
 
 export interface CoverageGapAlert {
@@ -510,6 +521,163 @@ export function useTerritories(initialData?: TerritoryWithMetrics[]) {
     refetchInterval: 60000, // 60 seconds
     staleTime: 30000, // Consider data fresh for 30s
     initialData,
+  });
+}
+
+/**
+ * Mutation hook to assign medic to territory (primary or secondary role).
+ *
+ * Features:
+ * - Optimistic updates for instant UI feedback
+ * - Automatic rollback on error
+ * - Invalidates both territory and medic queries on success
+ */
+export function useAssignMedicToTerritory() {
+  const queryClient = useQueryClient();
+  const orgId = useRequireOrg();
+
+  return useMutation({
+    mutationFn: async (params: AssignMedicParams) => {
+      const response = await fetch('/api/admin/territories/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to assign medic');
+      }
+
+      return response.json();
+    },
+    onMutate: async (params) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['admin', 'territories', 'with-metrics', orgId] });
+
+      // Snapshot previous value
+      const previousTerritories = queryClient.getQueryData<TerritoryWithMetrics[]>(['admin', 'territories', 'with-metrics', orgId]);
+
+      // Fetch medic name from medics cache to avoid fetching
+      const medicsData = queryClient.getQueryData<any[]>(['admin', 'medics', 'with-metrics', orgId]);
+      const medic = medicsData?.find((m: any) => m.id === params.medic_id);
+      const medicName = medic ? `${medic.first_name} ${medic.last_name}` : null;
+
+      // Optimistically update
+      if (previousTerritories) {
+        queryClient.setQueryData<TerritoryWithMetrics[]>(
+          ['admin', 'territories', 'with-metrics', orgId],
+          previousTerritories.map(territory =>
+            territory.id === params.territory_id
+              ? {
+                  ...territory,
+                  ...(params.role === 'primary'
+                    ? {
+                        primary_medic_id: params.medic_id,
+                        primary_medic_name: medicName,
+                      }
+                    : {
+                        secondary_medic_id: params.medic_id,
+                        secondary_medic_name: medicName,
+                      }),
+                }
+              : territory
+          )
+        );
+      }
+
+      return { previousTerritories };
+    },
+    onError: (err, params, context) => {
+      // Rollback on error
+      if (context?.previousTerritories) {
+        queryClient.setQueryData(['admin', 'territories', 'with-metrics', orgId], context.previousTerritories);
+      }
+      console.error('Error assigning medic to territory:', err);
+    },
+    onSuccess: () => {
+      // Refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ['admin', 'territories', 'with-metrics', orgId] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'medics', 'with-metrics', orgId] });
+    },
+  });
+}
+
+/**
+ * Mutation hook to unassign medic from territory (remove primary or secondary).
+ *
+ * Features:
+ * - Optimistic updates for instant UI feedback
+ * - Automatic rollback on error
+ * - Invalidates both territory and medic queries on success
+ */
+export function useUnassignMedic() {
+  const queryClient = useQueryClient();
+  const orgId = useRequireOrg();
+
+  return useMutation({
+    mutationFn: async (params: UnassignMedicParams) => {
+      const response = await fetch('/api/admin/territories/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          territory_id: params.territory_id,
+          medic_id: null,
+          role: params.role,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to unassign medic');
+      }
+
+      return response.json();
+    },
+    onMutate: async (params) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['admin', 'territories', 'with-metrics', orgId] });
+
+      // Snapshot previous value
+      const previousTerritories = queryClient.getQueryData<TerritoryWithMetrics[]>(['admin', 'territories', 'with-metrics', orgId]);
+
+      // Optimistically update
+      if (previousTerritories) {
+        queryClient.setQueryData<TerritoryWithMetrics[]>(
+          ['admin', 'territories', 'with-metrics', orgId],
+          previousTerritories.map(territory =>
+            territory.id === params.territory_id
+              ? {
+                  ...territory,
+                  ...(params.role === 'primary'
+                    ? {
+                        primary_medic_id: null,
+                        primary_medic_name: null,
+                      }
+                    : {
+                        secondary_medic_id: null,
+                        secondary_medic_name: null,
+                      }),
+                }
+              : territory
+          )
+        );
+      }
+
+      return { previousTerritories };
+    },
+    onError: (err, params, context) => {
+      // Rollback on error
+      if (context?.previousTerritories) {
+        queryClient.setQueryData(['admin', 'territories', 'with-metrics', orgId], context.previousTerritories);
+      }
+      console.error('Error unassigning medic from territory:', err);
+    },
+    onSuccess: () => {
+      // Refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ['admin', 'territories', 'with-metrics', orgId] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'medics', 'with-metrics', orgId] });
+    },
   });
 }
 
