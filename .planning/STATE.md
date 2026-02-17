@@ -8,18 +8,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 **Current focus:** Phase 2 - Mobile Core
 
 ## Current Position
-Phase: 7.5 of 8 (Territory Auto-Assignment)
-Plan: 5 of 5 in current phase
-Status: Phase complete
-Last activity: 2026-02-16 — Completed 07.5-05-PLAN.md (Enhanced Coverage Map & Full Integration)
-Progress: [█████████████████░] 97% (83/85 plans across Phases 1-7.5)
+Phase: 7 of 8 (Certification Tracking)
+Plan: 5 of 9 in current phase
+Status: In progress
+Last activity: 2026-02-17 — Completed 07-05-PLAN.md (Mobile Certification Validation Integration)
+Progress: [█████████████████░] 97% (82/84 plans across Phases 1-7.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 83
-- Average duration: 4.1 min
-- Total execution time: 5.77 hours
+- Total plans completed: 82
+- Average duration: 4.0 min
+- Total execution time: 5.65 hours
 
 **By Phase:**
 
@@ -36,12 +36,12 @@ Progress: [█████████████████░] 97% (83/85 pl
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
 | 06-riddor-auto-flagging | 8/8 | 50 min | 6.3 min |
 | 06.5-payments-payouts | 12/12 | 49.5 min | 4.1 min |
-| 07-certification-tracking | 6/9 | 13.3 min | 2.2 min |
-| 07.5-territory-auto-assignment | 5/5 | 19 min | 3.8 min |
+| 07-certification-tracking | 5/9 | 13.8 min | 2.8 min |
+| 07.5-territory-auto-assignment | 3/5 | 14 min | 4.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 07.5-02 (4 min), 07.5-03 (4 min), 07.5-04 (3 min), 07.5-05 (5 min), 07-06 (2 min)
-- Trend: Phase 07.5 complete - territory management with interactive map, tab navigation, drag-drop assignment, and 100% auto-assignment success rate
+- Last 5 plans: 07.5-01 (3 min), 07.5-02 (4 min), 07.5-03 (4 min), 07-04 (2.3 min), 07-05 (4.5 min)
+- Trend: Mobile cert validation integration with graceful offline degradation, user_id → medics.id mapping pattern established
 
 *Updated after each plan completion*
 
@@ -470,6 +470,13 @@ Recent decisions affecting current work:
 
 **From Plan 02-07:**
 
+**From Plan 07-05:**
+- D-07-05-001: Use EXPO_PUBLIC_WEB_APP_URL env var for mobile-to-web API calls (enables dev/prod environment switching)
+- D-07-05-002: Look up medic by user_id to get medics.id before calling validation API (medics.id != auth.users.id, API expects medics table primary key)
+- D-07-05-003: Gracefully degrade when offline or no medic record (return valid: true to preserve offline-first architecture, don't block construction site workers)
+- D-07-05-004: Show red error banner in UI when validation fails (visual feedback alongside Alert for better UX)
+- D-07-05-005: Include expired cert types in Alert message (medic sees exact certs needing renewal, e.g., 'CSCS, IPAF')
+
 **From Plan 02-06:**
 - D-02-06-001: Store GPS as JSON string {latitude, longitude} in location field (schema has string type)
 - D-02-06-002: Category grid visible on screen (not bottom sheet) for speed - reduces taps from 2 to 1
@@ -512,9 +519,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-16T19:22:00Z
-Stopped at: Completed 07.5-05-PLAN.md — Enhanced Coverage Map & Full Integration (interactive map with clickable markers, detail panel with recent bookings, tab navigation, 5-minute polling, 100% auto-assignment success rate)
+Last session: 2026-02-17T01:25:45Z
+Stopped at: Completed 07-05-PLAN.md — Mobile Certification Validation Integration (treatment forms enforce cert validation, graceful offline degradation, user_id → medics.id mapping pattern)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6 (RIDDOR Auto-Flagging) complete (8/8 plans). Phase 6.5 (Payments & Payouts) complete (12/12 plans). Phase 7 (Certification Tracking) in progress (6/9 plans). Phase 7.5 (Territory Auto-Assignment) complete (5/5 plans). Progress: 83/85 plans (97%)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6 (RIDDOR Auto-Flagging) complete (8/8 plans). Phase 6.5 (Payments & Payouts) complete (12/12 plans). Phase 7 (Certification Tracking) in progress (5/9 plans). Phase 7.5 (Territory Auto-Assignment) in progress (3/5 plans). Progress: 82/84 plans (97%)*
