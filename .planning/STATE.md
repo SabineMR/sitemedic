@@ -8,17 +8,17 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 **Current focus:** Phase 2 - Mobile Core
 
 ## Current Position
-Phase: 6.5 of 7 (Payment Processing & Payouts)
-Plan: 12 of 12 in current phase
-Status: Phase complete
-Last activity: 2026-02-17 — Completed 06.5-12-PLAN.md (Gap Closure - Late Payment Email Reminders)
-Progress: [████████████████░░] 89% (74/83 plans across Phases 1-7)
+Phase: 7 of 7 (Certification Tracking)
+Plan: 1 of 9 in current phase
+Status: In progress
+Last activity: 2026-02-17 — Completed 07-01-PLAN.md (Certification Tracking Foundation)
+Progress: [████████████████░░] 90% (75/83 plans across Phases 1-7)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 74
-- Average duration: 4.3 min
+- Total plans completed: 75
+- Average duration: 4.2 min
 - Total execution time: 5.3 hours
 
 **By Phase:**
@@ -36,10 +36,11 @@ Progress: [████████████████░░] 89% (74/83 pl
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
 | 06-riddor-auto-flagging | 8/8 | 50 min | 6.3 min |
 | 06.5-payments-payouts | 12/12 | 49.5 min | 4.1 min |
+| 07-certification-tracking | 1/9 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.5-10 (3 min), 06.5-11 (2 min), 06-07 (1 min), 06-08 (2 min), 06.5-12 (3.5 min)
-- Trend: All phases COMPLETE - Phase 6.5 gap closure complete: Late payment reminders now send emails via Resend with graceful error handling
+- Last 5 plans: 06.5-11 (2 min), 06-07 (1 min), 06-08 (2 min), 06.5-12 (3.5 min), 07-01 (2 min)
+- Trend: Phase 7 started - Certification tracking foundation complete: GIN index, audit table, 3 RPC functions, TypeScript types ready for expiry checker
 
 *Updated after each plan completion*
 
@@ -421,6 +422,13 @@ Recent decisions affecting current work:
 
 **From Plan 06.5-12:**
 - D-06.5-12-001: Email failures do not block invoice status updates (invoice state changes are critical business logic, email is notification enhancement)
+
+**From Plan 07-01:**
+- D-07-01-001: Use JSONB with GIN index instead of separate certifications table (better performance for low cardinality ~5 certs per medic, flexible schema for future cert types)
+- D-07-01-002: certification_reminders audit table prevents duplicate emails and provides compliance proof (composite index on medic_id, cert_type, days_before, sent_at)
+- D-07-01-003: Progressive reminder stages 30/14/7/1 days before expiry (matches construction industry urgency vs healthcare's 90/60/30/15/7)
+- D-07-01-004: RPC functions return formatted data (expiry_date_formatted, renewal_url, days_remaining) to reduce client-side processing
+- D-07-01-005: All 3 RPC functions marked as STABLE not VOLATILE (enables PostgreSQL query plan caching and optimization)
 
 **From Plan 06-03:**
 - D-06-03-001: Use @react-pdf/renderer instead of pdf-lib with fillable PDF template (HSE F2508 not reliably available; matches Phase 5 pattern)

@@ -312,8 +312,8 @@ Plans:
 - [x] 06-04-PLAN.md -- Web dashboard RIDDOR pages with deadline countdown
 - [x] 06-05-PLAN.md -- Deadline tracking cron job and email notifications
 - [x] 06-06-PLAN.md -- Override pattern analytics dashboard for algorithm tuning
-- [ ] 06-07-PLAN.md -- [GAP CLOSURE] Database trigger to auto-invoke RIDDOR detection on treatment INSERT/UPDATE
-- [ ] 06-08-PLAN.md -- [GAP CLOSURE] Replace hardcoded org_id with auth context in RIDDOR dashboard pages
+- [x] 06-07-PLAN.md -- [GAP CLOSURE] Database trigger to auto-invoke RIDDOR detection on treatment INSERT/UPDATE
+- [x] 06-08-PLAN.md -- [GAP CLOSURE] Replace hardcoded org_id with auth context in RIDDOR dashboard pages
 
 ### Phase 6.5: Payment Processing & Payouts (INSERTED)
 **Goal**: Full payment processing operational with client charging (card + Net 30), automated weekly medic payouts via UK Faster Payments, IR35 compliance, and out-of-territory cost management.
@@ -350,7 +350,7 @@ Plans:
 - [x] 06.5-09-PLAN.md -- [GAP CLOSURE] Add Stripe onboarding webhook and GB bank validation
 - [x] 06.5-10-PLAN.md -- [GAP CLOSURE] Wire out-of-territory approval into booking workflow
 - [x] 06.5-11-PLAN.md -- [GAP CLOSURE] Fix payslip_reference schema and late payment cron vault auth
-- [ ] 06.5-12-PLAN.md -- [GAP CLOSURE] Re-add Resend email integration for late payment reminders (regression fix)
+- [x] 06.5-12-PLAN.md -- [GAP CLOSURE] Re-add Resend email integration for late payment reminders (regression fix)
 
 ### Phase 7: Certification Tracking
 **Goal**: System tracks UK certifications with progressive expiry alerts, prevents expired workers from logging incidents, and surfaces compliance status to managers.
@@ -422,8 +422,8 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 | 4.6. Customer Onboarding & Contract Management | 7/7 | Complete | 2026-02-16 |
 | 5. PDF Generation | 4/4 | Complete | 2026-02-16 |
 | 5.5. Admin Operations Dashboards | 6/6 | Complete | 2026-02-16 |
-| 6. RIDDOR Auto-Flagging | 6/8 | Gap closure in progress | - |
-| 6.5. Payment Processing & Payouts | 11/12 | Gap closure in progress | - |
+| 6. RIDDOR Auto-Flagging | 8/8 | Complete | 2026-02-16 |
+| 6.5. Payment Processing & Payouts | 12/12 | Complete | 2026-02-16 |
 | 7. Certification Tracking | 0/4 | Planned | - |
 | 7.5. Territory Management & Auto-Assignment | 0/5 | Not started | - |
 
@@ -459,3 +459,4 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Phase 6.5 gap closure v3: 2026-02-16 -- 1 gap closure plan (06.5-12) fixing Resend email regression in late payment reminders (reverted in commit d807b2d)*
 *Phase 7.5 planned: 2026-02-16 -- 5 plans in 3 waves (2 parallel Wave 1: metrics+auto-assignment, 2 parallel Wave 2: drag-drop+alerts, 1 integration Wave 3: map+detail+page). Builds on existing Phase 1.5 postcode seeding, Phase 5.5 territory map/queries, and Phase 6.5 out-of-territory cost logic.*
 *Phase 7 planned: 2026-02-16 -- 4 plans in 3 waves (Wave 1: schema+types foundation, Wave 2 parallel: backend email/cron + frontend dashboard, Wave 3: validation enforcement + worker table integration)*
+*Phase 6 complete: 2026-02-16 -- 8/8 plans executed (6 initial + 2 gap closure), re-verification passed (8/8 must-haves, was 4/8), goal achieved (RIDDOR auto-detection with database trigger completing data pipeline, medic override UI, F2508 PDF generation, dashboard with deadline countdown, email notifications, override analytics, auth context integration)*
