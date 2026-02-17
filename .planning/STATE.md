@@ -8,18 +8,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 **Current focus:** Phase 2 - Mobile Core
 
 ## Current Position
-Phase: 7 of 7 (Certification Tracking)
-Plan: 4 of 9 in current phase
+Phase: 7.5 of 8 (Territory Auto-Assignment)
+Plan: 1 of 5 in current phase
 Status: In progress
-Last activity: 2026-02-17 — Completed 07-04-PLAN.md (Certification Validation API & Worker Table Update)
-Progress: [█████████████████░] 94% (78/83 plans across Phases 1-7)
+Last activity: 2026-02-17 — Completed 07.5-01-PLAN.md (Territory Metrics Aggregation Foundation)
+Progress: [█████████████████░] 95% (79/84 plans across Phases 1-7.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 78
+- Total plans completed: 79
 - Average duration: 4.0 min
-- Total execution time: 5.4 hours
+- Total execution time: 5.5 hours
 
 **By Phase:**
 
@@ -37,10 +37,11 @@ Progress: [█████████████████░] 94% (78/83 pl
 | 06-riddor-auto-flagging | 8/8 | 50 min | 6.3 min |
 | 06.5-payments-payouts | 12/12 | 49.5 min | 4.1 min |
 | 07-certification-tracking | 4/9 | 9.3 min | 2.3 min |
+| 07.5-territory-auto-assignment | 1/5 | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.5-12 (3.5 min), 07-01 (2 min), 07-02 (2 min), 07-03 (3 min), 07-04 (2.3 min)
-- Trend: Certification validation API enforces expired cert blocking; workers vs medics distinction clarified in UI (construction workers don't have cert tracking, medics do)
+- Last 5 plans: 07-01 (2 min), 07-02 (2 min), 07-03 (3 min), 07-04 (2.3 min), 07.5-01 (3 min)
+- Trend: Territory metrics aggregation foundation with pg_cron daily jobs and TypeScript business logic for hiring triggers
 
 *Updated after each plan completion*
 
@@ -432,6 +433,13 @@ Recent decisions affecting current work:
 
 **From Plan 07-04:**
 - D-07-04-001: Workers vs medics certification distinction clarified in UI (workers table shows construction site workers who receive treatment, medics table stores medical professionals with certifications; Phase 7 cert tracking applies to medics, not workers; workers cert status column kept as N/A placeholder with comprehensive comment for future feature guidance)
+
+**From Plan 07.5-01:**
+- D-07.5-01-001: Use pg_cron for daily metrics aggregation instead of real-time queries (prevents query timeouts on 11,000+ territories; 3-24 hour staleness acceptable for operational dashboard)
+- D-07.5-01-002: Weekly hiring trigger job counts consecutive high utilization weeks (>80% for 3+ weeks indicates structural capacity shortage requiring hiring)
+- D-07.5-01-003: Require minimum 10 bookings before flagging coverage gaps (prevents false positives from low-volume territories)
+- D-07.5-01-004: Add org_id column to territory_metrics for multi-tenant isolation (all queries filtered by org_id)
+- D-07.5-01-005: Pure TypeScript functions (no database calls) for business logic (enables easy unit testing and reuse across UI components)
 
 **From Plan 06-03:**
 - D-06-03-001: Use @react-pdf/renderer instead of pdf-lib with fillable PDF template (HSE F2508 not reliably available; matches Phase 5 pattern)
