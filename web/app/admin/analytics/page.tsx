@@ -19,33 +19,17 @@
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
-import {
-  TerritoryHeatmap,
-  HiringTriggerCards,
-  CoverageGapTable,
-} from '@/components/admin/territory-analytics-charts';
-import {
-  AssignmentSuccessChart,
-  FailureBreakdownChart,
-} from '@/components/admin/assignment-analytics-charts';
-import {
-  MedicUtilisationTable,
-  OOTBookingsChart,
-  LateArrivalHeatmap,
-} from '@/components/admin/medic-utilisation-charts';
+import { TerritoryHeatmap, HiringTriggerCards, CoverageGapTable } from '@/components/admin/territory-analytics-charts';
+import { AssignmentSuccessChart, FailureBreakdownChart } from '@/components/admin/assignment-analytics-charts';
+import { MedicUtilisationTable, OOTBookingsChart, LateArrivalHeatmap } from '@/components/admin/medic-utilisation-charts';
 import { useTerritories } from '@/lib/queries/admin/territories';
-import {
-  useAutoAssignmentStats,
-  useMedicUtilisation,
-  useOutOfTerritoryBookings,
-  useLateArrivalPatterns,
-} from '@/lib/queries/admin/analytics';
+import { useAutoAssignmentStats, useMedicUtilisation, useOutOfTerritoryBookings, useLateArrivalPatterns } from '@/lib/queries/admin/analytics';
 import type { OOTSummary, LateArrivalSummary } from '@/lib/queries/admin/analytics';
 
-const TerritoryMapDynamic = dynamic(() => import('@/components/admin/territory-map'), {
-  ssr: false,
-  loading: () => <div className="h-[500px] bg-gray-800 rounded-lg animate-pulse" />,
-});
+const TerritoryMapDynamic = dynamic(
+  () => import('@/components/admin/territory-map'),
+  { ssr: false, loading: () => <div className="h-[500px] bg-gray-800 rounded-lg animate-pulse" /> }
+);
 
 interface SystemMetrics {
   period_start: string;
@@ -144,18 +128,8 @@ function UtilisationTab() {
   const { data: lateArrivals, isLoading: loadingLate } = useLateArrivalPatterns();
   const isLoading = loadingUtil || loadingOOT || loadingLate;
   if (isLoading) return <div className="h-96 bg-gray-800 rounded-lg animate-pulse" />;
-  const ootData: OOTSummary = oot ?? {
-    bookings: [],
-    total_oot_bookings: 0,
-    total_extra_cost: 0,
-    oot_percentage: 0,
-  };
-  const lateData: LateArrivalSummary = lateArrivals ?? {
-    patterns: [],
-    total_late_arrivals: 0,
-    worst_day: 'N/A',
-    worst_medic: 'N/A',
-  };
+  const ootData: OOTSummary = oot ?? { bookings: [], total_oot_bookings: 0, total_extra_cost: 0, oot_percentage: 0 };
+  const lateData: LateArrivalSummary = lateArrivals ?? { patterns: [], total_late_arrivals: 0, worst_day: 'N/A', worst_medic: 'N/A' };
   return (
     <div className="space-y-6">
       <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
@@ -185,9 +159,7 @@ export default function AnalyticsPage() {
   const [geofences, setGeofences] = useState<GeofencePerformance[]>([]);
   const [alerts, setAlerts] = useState<AlertSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<
-    'overview' | 'medics' | 'geofences' | 'alerts' | 'territory' | 'assignments' | 'utilisation'
-  >('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'medics' | 'geofences' | 'alerts' | 'territory' | 'assignments' | 'utilisation'>('overview');
 
   useEffect(() => {
     loadAnalytics();
@@ -200,23 +172,10 @@ export default function AnalyticsPage() {
       // Load all analytics views
       const [metricsRes, medicsRes, trendsRes, geofencesRes, alertsRes] = await Promise.all([
         supabase.from('location_tracking_metrics').select('*').single(),
-        supabase
-          .from('medic_location_analytics')
-          .select('*')
-          .order('reliability_score', { ascending: false }),
-        supabase
-          .from('daily_location_trends')
-          .select('*')
-          .order('date', { ascending: false })
-          .limit(30),
-        supabase
-          .from('geofence_performance')
-          .select('*')
-          .order('auto_detection_rate', { ascending: false }),
-        supabase
-          .from('alert_type_summary')
-          .select('*')
-          .order('total_count', { ascending: false }),
+        supabase.from('medic_location_analytics').select('*').order('reliability_score', { ascending: false }),
+        supabase.from('daily_location_trends').select('*').order('date', { ascending: false }).limit(30),
+        supabase.from('geofence_performance').select('*').order('auto_detection_rate', { ascending: false }),
+        supabase.from('alert_type_summary').select('*').order('total_count', { ascending: false }),
       ]);
 
       if (metricsRes.data) setMetrics(metricsRes.data);
@@ -256,8 +215,7 @@ export default function AnalyticsPage() {
   };
 
   // New tabs render independently of the legacy metrics loading state
-  const isNewTab =
-    activeTab === 'territory' || activeTab === 'assignments' || activeTab === 'utilisation';
+  const isNewTab = activeTab === 'territory' || activeTab === 'assignments' || activeTab === 'utilisation';
 
   if (loading && !isNewTab) {
     return (
@@ -289,17 +247,7 @@ export default function AnalyticsPage() {
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6 border-b border-gray-700 flex-wrap">
-        {(
-          [
-            'overview',
-            'medics',
-            'geofences',
-            'alerts',
-            'territory',
-            'assignments',
-            'utilisation',
-          ] as const
-        ).map((tab) => (
+        {(['overview', 'medics', 'geofences', 'alerts', 'territory', 'assignments', 'utilisation'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -354,25 +302,22 @@ export default function AnalyticsPage() {
           <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
             <h2 className="text-xl font-semibold mb-4">Daily Activity Trend (Last 14 Days)</h2>
             <div className="flex items-end gap-2 h-64">
-              {trends
-                .slice(0, 14)
-                .reverse()
-                .map((day) => {
-                  const maxPings = Math.max(...trends.slice(0, 14).map((t) => t.pings));
-                  const height = (day.pings / maxPings) * 100;
-                  return (
-                    <div key={day.date} className="flex-1 flex flex-col items-center">
-                      <div
-                        className="w-full bg-blue-500 rounded-t hover:bg-blue-400 transition"
-                        style={{ height: `${height}%` }}
-                        title={`${day.pings} pings, ${day.active_medics} medics`}
-                      />
-                      <div className="text-xs text-gray-500 mt-2 transform -rotate-45 origin-top-left">
-                        {formatDate(day.date)}
-                      </div>
+              {trends.slice(0, 14).reverse().map((day) => {
+                const maxPings = Math.max(...trends.slice(0, 14).map((t) => t.pings));
+                const height = (day.pings / maxPings) * 100;
+                return (
+                  <div key={day.date} className="flex-1 flex flex-col items-center">
+                    <div
+                      className="w-full bg-blue-500 rounded-t hover:bg-blue-400 transition"
+                      style={{ height: `${height}%` }}
+                      title={`${day.pings} pings, ${day.active_medics} medics`}
+                    />
+                    <div className="text-xs text-gray-500 mt-2 transform -rotate-45 origin-top-left">
+                      {formatDate(day.date)}
                     </div>
-                  );
-                })}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -432,27 +377,19 @@ export default function AnalyticsPage() {
                   <tr key={medic.medic_id} className="hover:bg-gray-700/50 transition">
                     <td className="px-6 py-4 whitespace-nowrap">{medic.medic_name}</td>
                     <td className="px-6 py-4 text-center">
-                      <span
-                        className={`text-2xl font-bold ${getScoreColor(medic.reliability_score)}`}
-                      >
+                      <span className={`text-2xl font-bold ${getScoreColor(medic.reliability_score)}`}>
                         {medic.reliability_score}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center text-gray-300">
                       {medic.total_pings.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 text-center text-gray-300">
-                      {medic.total_arrivals}
-                    </td>
+                    <td className="px-6 py-4 text-center text-gray-300">{medic.total_arrivals}</td>
                     <td className="px-6 py-4 text-center text-gray-300">
                       {medic.geofence_reliability_percentage}%
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span
-                        className={
-                          medic.critical_alerts > 0 ? 'text-red-400 font-semibold' : 'text-gray-300'
-                        }
-                      >
+                      <span className={medic.critical_alerts > 0 ? 'text-red-400 font-semibold' : 'text-gray-300'}>
                         {medic.total_alerts}
                       </span>
                     </td>
@@ -553,23 +490,23 @@ export default function AnalyticsPage() {
                           alert.alert_severity === 'critical'
                             ? 'bg-red-500'
                             : alert.alert_severity === 'high'
-                              ? 'bg-orange-500'
-                              : alert.alert_severity === 'medium'
-                                ? 'bg-yellow-500'
-                                : 'bg-blue-500'
+                            ? 'bg-orange-500'
+                            : alert.alert_severity === 'medium'
+                            ? 'bg-yellow-500'
+                            : 'bg-blue-500'
                         } text-white`}
                       >
                         {alert.alert_severity}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center text-gray-300">{alert.total_count}</td>
-                    <td className="px-6 py-4 text-center text-green-400">{alert.resolved_count}</td>
+                    <td className="px-6 py-4 text-center text-gray-300">
+                      {alert.total_count}
+                    </td>
+                    <td className="px-6 py-4 text-center text-green-400">
+                      {alert.resolved_count}
+                    </td>
                     <td className="px-6 py-4 text-center">
-                      <span
-                        className={
-                          alert.active_count > 0 ? 'text-red-400 font-semibold' : 'text-gray-400'
-                        }
-                      >
+                      <span className={alert.active_count > 0 ? 'text-red-400 font-semibold' : 'text-gray-400'}>
                         {alert.active_count}
                       </span>
                     </td>

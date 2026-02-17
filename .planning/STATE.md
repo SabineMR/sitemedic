@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 12 (Analytics Dashboard) — In progress
-Plan: 12-03 complete (medic utilisation charts). Plans 12-01/05 pending.
-Status: In progress
-Last activity: 2026-02-17 — Completed 12-03-PLAN.md (MedicUtilisationTable, OOTBookingsChart, LateArrivalHeatmap)
-Progress: [█████████████████████░░] 100/105 plans complete (~95%).
+Phase: v1.1 — Phase 12 (Analytics Dashboard) — COMPLETE
+Plan: 12-05 complete (wire analytics page tabs). All 5 plans in Phase 12 complete.
+Status: Phase complete
+Last activity: 2026-02-17 — Completed 12-05-PLAN.md (territory, assignments, utilisation tabs wired into analytics page)
+Progress: [█████████████████████████] 105/105 plans complete (100%).
 
 ## Performance Metrics
 
@@ -481,6 +481,11 @@ Recent decisions affecting current work:
 - D-10-04-003: Empty note string passed as undefined to store — keeps DB free of empty strings in dismissal_notes/resolution_notes
 - D-10-04-004: Opening dismiss note panel closes resolve note panel and vice versa — prevents confusing double-open state
 
+**From Plan 12-05:**
+- D-12-05-001: isNewTab guard bypasses legacy loading/error gates for territory/assignments/utilisation tabs — these tabs use TanStack Query independently and must not be blocked by legacy useEffect fetch
+- D-12-05-002: metrics period header rendered conditionally — new tabs work even when legacy metrics view fails to load
+- D-12-05-003: Tab bar uses flex-wrap to handle 7 tabs without horizontal overflow
+
 **From Plan 12-04:**
 - D-12-04-001: Query auto_schedule_logs directly with eq('org_id', orgId) — table has own org_id column, no two-step via bookings
 - D-12-04-002: OOT filter uses .gt('out_of_territory_cost', 0) — not travel_bonus (column does not exist on bookings)
@@ -555,8 +560,8 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 
 ## Session Continuity
 
-Last session: 2026-02-17T17:50:07Z
-Stopped at: Completed 12-03-PLAN.md — medic utilisation charts (MedicUtilisationTable, OOTBookingsChart, LateArrivalHeatmap)
+Last session: 2026-02-17T18:10:00Z
+Stopped at: Completed 12-05-PLAN.md — wired territory, assignments, utilisation tabs into analytics page
 Resume file: None
 
 ---
