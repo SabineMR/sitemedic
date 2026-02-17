@@ -39,21 +39,13 @@ import BodyDiagramPicker from '../../components/forms/BodyDiagramPicker';
 import { INJURY_TYPES } from '../../services/taxonomy/injury-types';
 import { TREATMENT_TYPES } from '../../services/taxonomy/treatment-types';
 import { OUTCOME_CATEGORIES } from '../../services/taxonomy/outcome-categories';
+import { getMechanismPresets } from '../../services/taxonomy/mechanism-presets';
+import { getVerticalOutcomeCategories, getPatientLabel } from '../../services/taxonomy/vertical-outcome-labels';
 import { useSync } from '../../src/contexts/SyncContext';
 import { photoUploadQueue } from '../../src/services/PhotoUploadQueue';
 import { supabase } from '../../src/lib/supabase';
 
-// Common mechanism presets (TREAT-04)
-const MECHANISM_PRESETS = [
-  'Struck by object',
-  'Fall from height',
-  'Manual handling',
-  'Contact with sharp edge',
-  'Slip/trip',
-  'Caught in machinery',
-  'Repetitive strain',
-  'Chemical exposure',
-];
+// Mechanism presets are loaded dynamically from the org's vertical (see fetchOrgVertical)
 
 export default function NewTreatmentScreen() {
   // Sync context
@@ -83,10 +75,41 @@ export default function NewTreatmentScreen() {
   const [riddorFlagged, setRiddorFlagged] = useState(false);
   const [certValidationError, setCertValidationError] = useState<string | null>(null);
 
-  // Initialize treatment record on mount
+  // Org vertical — drives mechanism presets, outcome labels, and section headings
+  const [orgVertical, setOrgVertical] = useState<string | null>(null);
+
+  // Initialize treatment record and org vertical on mount
   useEffect(() => {
     initializeTreatment();
+    fetchOrgVertical();
   }, []);
+
+  /**
+   * Fetch the org's primary industry vertical from org_settings.
+   * Used to adapt mechanism presets, outcome labels, and section headings.
+   * Non-blocking — if it fails we fall back to the general/construction defaults.
+   */
+  const fetchOrgVertical = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const orgId = user.app_metadata?.org_id;
+      if (!orgId) return;
+
+      const { data } = await supabase
+        .from('org_settings')
+        .select('industry_verticals')
+        .eq('org_id', orgId)
+        .single();
+
+      if (data?.industry_verticals && Array.isArray(data.industry_verticals) && data.industry_verticals.length > 0) {
+        setOrgVertical(data.industry_verticals[0] as string);
+      }
+    } catch {
+      // Non-critical — fall back to general presets
+    }
+  };
 
   const initializeTreatment = async () => {
     try {
@@ -365,10 +388,15 @@ export default function NewTreatmentScreen() {
     router.back();
   };
 
+  // Vertical-aware derived values
+  const mechanismPresets = getMechanismPresets(orgVertical);
+  const verticalOutcomes = getVerticalOutcomeCategories(OUTCOME_CATEGORIES, orgVertical);
+  const patientLabel = getPatientLabel(orgVertical);
+
   // Get selected labels for display
   const selectedInjuryLabel = INJURY_TYPES.find((it) => it.id === injuryTypeId)?.label || 'Select...';
   const selectedBodyPartLabel = bodyPartId || 'Select...';
-  const selectedOutcomeLabel = OUTCOME_CATEGORIES.find((oc) => oc.id === outcomeId)?.label || 'Select...';
+  const selectedOutcomeLabel = verticalOutcomes.find((oc) => oc.id === outcomeId)?.label || 'Select...';
 
   return (
     <View style={styles.container}>
@@ -400,13 +428,13 @@ export default function NewTreatmentScreen() {
           </View>
         )}
 
-        {/* Section 1: Worker Selection */}
+        {/* Section 1: Patient / Worker / Attendee Selection */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>1. Worker Information</Text>
+          <Text style={styles.sectionTitle}>1. {patientLabel} Information</Text>
           <WorkerSearchPicker
             onSelect={setWorkerId}
             selectedWorkerId={workerId}
-            placeholder="Search worker by name or company"
+            placeholder={`Search ${patientLabel.toLowerCase()} by name or company`}
           />
         </View>
 
@@ -435,7 +463,7 @@ export default function NewTreatmentScreen() {
           {/* Mechanism of Injury */}
           <Text style={styles.fieldLabel}>How did the injury occur?</Text>
           <View style={styles.mechanismPresetsContainer}>
-            {MECHANISM_PRESETS.map((preset) => (
+            {mechanismPresets.map((preset) => (
               <Pressable
                 key={preset}
                 style={styles.presetChip}
@@ -577,7 +605,7 @@ export default function NewTreatmentScreen() {
         visible={showOutcomePicker}
         onClose={() => setShowOutcomePicker(false)}
         title="Select Outcome"
-        items={OUTCOME_CATEGORIES.map((oc) => ({ id: oc.id, label: oc.label }))}
+        items={verticalOutcomes.map((oc) => ({ id: oc.id, label: oc.label }))}
         selectedId={outcomeId}
         onSelect={(id) => {
           setOutcomeId(id);

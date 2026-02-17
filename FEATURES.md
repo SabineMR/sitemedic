@@ -218,7 +218,7 @@ One-tap emergency alert system for construction site medics. A floating red SOS 
 | `supabase/migrations/060_emergency_alerts.sql` | **New** — Creates `emergency_contacts` table (reusable across bookings), `emergency_alerts` table (alert log with push/SMS timestamps, acknowledgment tracking), adds `push_token` and `push_token_updated_at` columns to `profiles`. Includes RLS policies for org-scoped access. |
 | `services/EmergencyAlertService.ts` | **New** — Singleton service (matches pattern of `LocationTrackingService`). Handles: permission requests, Expo push token registration (saved to `profiles.push_token`), audio recording via `expo-av` (90s max, m4a), live chunked transcription every 5s to Whisper, audio upload to Supabase Storage (`emergency-recordings` bucket), alert row insertion + Expo Push API call, alert acknowledgment. |
 | `components/ui/SOSButton.tsx` | **New** — Floating 72×72px red circle button with pulsing `Animated.loop` animation. Positioned `bottom: 100, right: 20` (above tab bar). Shows confirmation bottom sheet on press, opens `SOSModal` on confirm. |
-| `components/ui/SOSModal.tsx` | **New** — Full-screen modal for composing emergency alert. Step 1: choose voice or text. Step 2a (voice): large record button, live countdown timer, waveform animation, live transcription panel (chunks sent to Whisper). Step 2b (text): large pre-filled text input. Step 3: sending spinner → success/error states. |
+| `components/ui/SOSModal.tsx` | **Updated** — Full-screen modal for composing emergency alert. Recording now **starts automatically** when the modal opens — the "Choose Alert Type" screen is bypassed entirely. The medic goes straight to the live recording + transcription view (90s countdown, waveform animation, live Whisper transcript). Cancel (✕) button is available during recording to abort. Step 2b (text): large pre-filled text input still accessible via the choose step if needed. Step 3: sending spinner → success/error states. |
 | `components/ui/EmergencyAlertReceiver.tsx` | **New** — Recipient-side component. Registers foreground + background notification listeners. On `type: 'emergency'` notification: plays `emergency-alert.wav` in a loop, shows full-screen red modal (covers all UI). Only dismissable via "ACKNOWLEDGED" button which calls `acknowledgeAlert()`. Handles both foreground and notification-tap flows. |
 | `supabase/functions/send-emergency-sms/index.ts` | **New** — Supabase Edge Function. Two modes: (1) `action: 'transcribe'` — receives base64 audio, calls OpenAI Whisper API, returns transcript; (2) `action: 'sms_fallback'` (pg_cron) — queries unacknowledged alerts where push was sent >60s ago, sends Twilio SMS to each contact, updates `sms_sent_at`. |
 | `assets/sounds/emergency-alert.wav` | **New** — 3-second loopable pulsing 880Hz alert tone (generated, bundled in app). Used by both push notification and `expo-av` in-app playback. |
@@ -6337,6 +6337,62 @@ The system supports four primary user roles:
 **Next Review**: After Phase 7.5 UI completion
 
 ### Recent Changes (2026-02-17)
+
+#### Treatment Form — Vertical-Aware Presets & Labels (Tier 1B)
+The mobile treatment logging form now adapts to the org's industry vertical. On mount it fetches `org_settings.industry_verticals` for the current medic's org and applies vertical-specific terminology throughout the form. The DB outcome IDs are unchanged — only display labels adapt.
+
+**New files:**
+| File | Description |
+|------|-------------|
+| `services/taxonomy/mechanism-presets.ts` | Per-vertical mechanism of injury quick-pick chips. `getMechanismPresets(verticalId)` returns 8 presets tailored to the vertical (e.g. motorsport: "Vehicle collision", "Rollover", "Burns"; festivals: "Crowd crush", "Intoxication", "Heat exhaustion"). Falls back to general construction-era presets. |
+| `services/taxonomy/vertical-outcome-labels.ts` | Vertical-aware display labels for outcome IDs. `getVerticalOutcomeCategories(categories, verticalId)` rewrites "Returned to work" labels per vertical (e.g. motorsport: "Returned to race", tv_film: "Returned to set", festivals: "Returned to event / crowd"). `getPatientLabel(verticalId)` returns the correct noun for the person being treated ("Worker", "Crew member", "Driver / Competitor", "Attendee", etc.). |
+
+**Modified files:**
+| File | Change |
+|------|--------|
+| `app/treatment/new.tsx` | Added `fetchOrgVertical()` — fetches `org_settings.industry_verticals` on mount via Supabase (non-blocking, falls back to general on failure). Replaces hardcoded `MECHANISM_PRESETS` constant with `getMechanismPresets(orgVertical)`. Outcome picker now uses `getVerticalOutcomeCategories()`. Section 1 heading and search placeholder use `getPatientLabel(orgVertical)`. |
+
+**Outcome label changes by vertical:**
+| Vertical | "Same duties" label | "Light duties" label |
+|----------|--------------------|--------------------|
+| Construction | Returned to work — same duties | Returned to work — light duties |
+| TV/Film | Returned to set | Returned to set — restricted duties |
+| Motorsport | Returned to race / event | Stood down from racing — restricted |
+| Festivals | Returned to event / crowd | Attended welfare area — monitoring |
+| Sporting | Returned to play | Substituted / stood down from play |
+| Education | Returned to class / activity | Returned to supervised rest area |
+| Outdoor Adventure | Returned to activity / course | Stood down — restricted activity |
+
+#### Booking Form — Vertical-Aware Special Requirements (Tier 1A)
+The booking form's "Special Requirements" section is now fully dynamic, adapting to the type of event or site being booked. Previously only two hardcoded construction-specific checkboxes were shown (Confined Space, Trauma Specialist). Now the form shows a relevant, curated requirements list for each of the 10 industry verticals.
+
+**New files:**
+| File | Description |
+|------|-------------|
+| `web/lib/booking/vertical-requirements.ts` | Central constants file. Defines `VerticalRequirement` type, `VERTICAL_LABELS` map (human-readable names for 11 vertical IDs), and `VERTICAL_REQUIREMENTS` map (per-vertical requirements list with 4–6 items each). Requirements with a `dbField` property automatically sync to existing DB boolean columns (`confinedSpaceRequired`, `traumaSpecialistRequired`). Additional requirements are serialised into `specialNotes` on form submit. Also exports `requirementsToBooleans()` and `requirementsToNotes()` helpers. |
+
+**Modified files:**
+| File | Change |
+|------|--------|
+| `web/lib/booking/types.ts` | `BookingFormData` updated: added `eventVertical: string` (drives requirements list), `selectedRequirements: string[]` (holds selected requirement IDs). Existing `confinedSpaceRequired` / `traumaSpecialistRequired` booleans retained for DB backward compatibility. |
+| `web/components/booking/shift-config.tsx` | Replaced two hardcoded checkboxes with: (1) Event / Site Type selector (all 11 vertical options), (2) Dynamic requirements checklist — updates when vertical changes, shows 4–6 checkboxes specific to that vertical. Vertical change clears previous selections. Non-boolean requirements include an optional `description` shown as helper text. |
+| `web/components/booking/booking-form.tsx` | Now imports `useOrg()` to read `industryVerticals`. Default vertical pre-selected from: QuoteBuilder prefill → org primary vertical → empty. On "Continue to Payment", non-boolean requirements are serialised into `specialNotes` before sessionStorage. |
+
+**How overlapping requirements work:** Requirements that apply across multiple verticals (e.g. Trauma Specialist, DBS Check, Helicopter LZ, Remote Location) use the same `id` string in every vertical they appear in, ensuring consistent matching and display regardless of which vertical the user selects.
+
+**Vertical requirements at a glance:**
+| Vertical | Key requirements |
+|----------|----------------|
+| Construction | Confined space, CSCS access, Working at height, Plant machinery, Respiratory hazards |
+| TV & Film | Stunt cover, Pyrotechnics, Water access, Night shoot, Remote location |
+| Motorsport | FIA Grade required, Trackside extraction, Helicopter LZ, Race control radio |
+| Festivals | Crowd medicine (DIM MIM), Major Incident Plan, Drug & alcohol protocol, Under-18s |
+| Sporting Events | Pitchside positioning, FA governance, Doping control, Helicopter LZ |
+| Fairs & Shows | Livestock/machinery, Crowd cover, Remote field access |
+| Corporate | DBS check, Executive/VIP discreet cover, Drug & alcohol testing |
+| Private Events | DBS check, Under-18s, Heavy alcohol/licensed event |
+| Education | DBS Enhanced (Children) mandatory, SEN awareness, Paediatric FA, Safeguarding |
+| Outdoor Adventure | Wilderness FR, Remote terrain, Helicopter LZ, Water access, Night operations |
 
 #### Multi-Vertical Marketing Website Rework
 The entire public-facing website was rewritten from a construction-only position to cover 10 industry verticals:

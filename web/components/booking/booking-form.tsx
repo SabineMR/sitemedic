@@ -15,6 +15,12 @@ import { PricingBreakdown } from './pricing-breakdown';
 import { BookingFormData, PricingBreakdown as PricingData } from '@/lib/booking/types';
 import { calculateBookingPrice, getUrgencyPremium } from '@/lib/booking/pricing';
 import { createClient } from '@/lib/supabase/client';
+import { useOrg } from '@/contexts/org-context';
+import {
+  VERTICAL_REQUIREMENTS,
+  requirementsToNotes,
+  type BookingVerticalId,
+} from '@/lib/booking/vertical-requirements';
 
 interface QuoteData {
   location?: string;
@@ -22,6 +28,8 @@ interface QuoteData {
   specialRequirements?: string[];
   confinedSpaceRequired?: boolean;
   traumaSpecialistRequired?: boolean;
+  /** Vertical ID from QuoteBuilder step 1 event-type selection */
+  eventVertical?: string;
 }
 
 interface BookingFormProps {
@@ -30,6 +38,12 @@ interface BookingFormProps {
 
 export function BookingForm({ prefillData }: BookingFormProps = {}) {
   const router = useRouter();
+  const { industryVerticals } = useOrg();
+
+  // Derive a default vertical: prefill from QuoteBuilder → org primary vertical → empty
+  const defaultVertical =
+    prefillData?.eventVertical ||
+    (industryVerticals && industryVerticals.length > 0 ? industryVerticals[0] : '');
 
   // Base rate from org_settings (fallback: 42)
   const [baseRate, setBaseRate] = useState<number>(42);
@@ -59,8 +73,10 @@ export function BookingForm({ prefillData }: BookingFormProps = {}) {
     sitePostcode: '',
     siteContactName: '',
     siteContactPhone: '',
+    eventVertical: defaultVertical,
     confinedSpaceRequired: false,
     traumaSpecialistRequired: false,
+    selectedRequirements: [],
     specialNotes: '',
     isRecurring: false,
     recurrencePattern: null,
@@ -85,6 +101,7 @@ export function BookingForm({ prefillData }: BookingFormProps = {}) {
       ...prev,
       siteAddress: prefillData.siteAddress || prefillData.location || prev.siteAddress,
       specialNotes: specialNotes || prev.specialNotes,
+      eventVertical: prefillData.eventVertical || prev.eventVertical || defaultVertical,
       confinedSpaceRequired: prefillData.confinedSpaceRequired ?? prev.confinedSpaceRequired,
       traumaSpecialistRequired: prefillData.traumaSpecialistRequired ?? prev.traumaSpecialistRequired,
     }));
@@ -139,8 +156,16 @@ export function BookingForm({ prefillData }: BookingFormProps = {}) {
   const handleContinue = () => {
     if (!isFormValid()) return;
 
+    // Serialize non-boolean requirements into specialNotes
+    const vertical = (formData.eventVertical || 'general') as BookingVerticalId;
+    const requirements = VERTICAL_REQUIREMENTS[vertical] ?? VERTICAL_REQUIREMENTS.general;
+    const reqNotes = requirementsToNotes(formData.selectedRequirements ?? [], requirements);
+    const finalNotes = [reqNotes, formData.specialNotes].filter(Boolean).join('. ');
+
+    const dataToStore = { ...formData, specialNotes: finalNotes };
+
     // Store form data in sessionStorage for next step
-    sessionStorage.setItem('bookingFormData', JSON.stringify(formData));
+    sessionStorage.setItem('bookingFormData', JSON.stringify(dataToStore));
     sessionStorage.setItem('bookingPricing', JSON.stringify(pricing));
 
     // Navigate to payment page (created in Plan 03)

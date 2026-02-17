@@ -2,7 +2,8 @@
 
 /**
  * Shift Configuration Component
- * Phase 4.5: Shift times, special requirements, and recurring booking
+ * Phase 4.5 + multi-vertical update: Shift times, vertical-aware special
+ * requirements, and recurring booking.
  */
 
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { BookingFormData } from '@/lib/booking/types';
+import {
+  VERTICAL_LABELS,
+  VERTICAL_REQUIREMENTS,
+  requirementsToBooleans,
+  type BookingVerticalId,
+} from '@/lib/booking/vertical-requirements';
 
 interface ShiftConfigProps {
   formData: BookingFormData;
@@ -60,14 +67,9 @@ export function ShiftConfig({ formData, onChange }: ShiftConfigProps) {
   // Calculate shift hours
   const calculateShiftHours = (start: string, end: string): number => {
     if (!start || !end) return 0;
-
     const [startHours, startMinutes] = start.split(':').map(Number);
     const [endHours, endMinutes] = end.split(':').map(Number);
-
-    const startTotal = startHours + startMinutes / 60;
-    const endTotal = endHours + endMinutes / 60;
-
-    return endTotal - startTotal;
+    return (endHours + endMinutes / 60) - (startHours + startMinutes / 60);
   };
 
   // Update shift hours when start or end time changes
@@ -82,6 +84,37 @@ export function ShiftConfig({ formData, onChange }: ShiftConfigProps) {
       onChange(updates);
     }
   };
+
+  // --- Vertical / requirements logic ---
+
+  const currentVertical = (formData.eventVertical || 'general') as BookingVerticalId;
+  const requirements = VERTICAL_REQUIREMENTS[currentVertical] ?? VERTICAL_REQUIREMENTS.general;
+  const selected = formData.selectedRequirements ?? [];
+
+  function handleVerticalChange(verticalId: string) {
+    const newVertical = verticalId as BookingVerticalId;
+    const newReqs = VERTICAL_REQUIREMENTS[newVertical] ?? VERTICAL_REQUIREMENTS.general;
+
+    // Clear all selected requirements when vertical changes; update booleans to false
+    const booleanUpdates = requirementsToBooleans([], newReqs);
+    onChange({
+      eventVertical: verticalId,
+      selectedRequirements: [],
+      confinedSpaceRequired: false,
+      traumaSpecialistRequired: false,
+      ...booleanUpdates,
+    });
+  }
+
+  function toggleRequirement(reqId: string) {
+    const next = selected.includes(reqId)
+      ? selected.filter((id) => id !== reqId)
+      : [...selected, reqId];
+
+    // Sync any requirements that have DB boolean fields
+    const booleanUpdates = requirementsToBooleans(next, requirements);
+    onChange({ selectedRequirements: next, ...booleanUpdates });
+  }
 
   return (
     <div className="space-y-4">
@@ -140,51 +173,72 @@ export function ShiftConfig({ formData, onChange }: ShiftConfigProps) {
         </div>
       )}
 
-      {/* Special Requirements */}
-      <div className="space-y-3">
-        <p className="text-sm font-medium">Special Requirements</p>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="confinedSpace"
-            checked={formData.confinedSpaceRequired}
-            onCheckedChange={(checked) =>
-              onChange({ confinedSpaceRequired: checked === true })
-            }
-          />
-          <label
-            htmlFor="confinedSpace"
-            className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Confined space certification required
-          </label>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="traumaSpecialist"
-            checked={formData.traumaSpecialistRequired}
-            onCheckedChange={(checked) =>
-              onChange({ traumaSpecialistRequired: checked === true })
-            }
-          />
-          <label
-            htmlFor="traumaSpecialist"
-            className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Trauma specialist required
-          </label>
-        </div>
+      {/* Event / Site Type */}
+      <div>
+        <label className="text-sm font-medium">
+          Event / Site Type <span className="text-destructive">*</span>
+        </label>
+        <p className="text-xs text-muted-foreground mb-1.5">
+          Selecting your event type shows the relevant special requirements below.
+        </p>
+        <Select
+          value={formData.eventVertical || ''}
+          onValueChange={handleVerticalChange}
+        >
+          <SelectTrigger className="mt-1.5">
+            <SelectValue placeholder="Select event or site type…" />
+          </SelectTrigger>
+          <SelectContent>
+            {(Object.entries(VERTICAL_LABELS) as [BookingVerticalId, string][]).map(([id, label]) => (
+              <SelectItem key={id} value={id}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
+
+      {/* Dynamic Special Requirements */}
+      {formData.eventVertical && requirements.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-sm font-medium">Special Requirements</p>
+          <p className="text-xs text-muted-foreground -mt-1">
+            Select any that apply. These help us match the right medic profile.
+          </p>
+          <div className="space-y-2.5">
+            {requirements.map((req) => (
+              <div key={req.id} className="flex items-start space-x-2">
+                <Checkbox
+                  id={req.id}
+                  checked={selected.includes(req.id)}
+                  onCheckedChange={() => toggleRequirement(req.id)}
+                  className="mt-0.5"
+                />
+                <div>
+                  <label
+                    htmlFor={req.id}
+                    className="text-sm leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {req.label}
+                  </label>
+                  {req.description && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{req.description}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Special Notes */}
       <div>
         <label htmlFor="specialNotes" className="text-sm font-medium">
-          Special Notes (optional)
+          Additional Notes (optional)
         </label>
         <textarea
           id="specialNotes"
-          placeholder="Any additional requirements or site-specific information"
+          placeholder="Any site-specific details, access instructions, or unusual requirements not listed above…"
           value={formData.specialNotes}
           onChange={(e) => onChange({ specialNotes: e.target.value })}
           className="mt-1.5 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"

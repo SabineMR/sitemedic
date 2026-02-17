@@ -53,10 +53,11 @@ export default function SOSModal({ visible, onClose }: Props) {
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const waveAnim = useRef(new Animated.Value(0.3)).current;
 
-  // Load contacts and medic info when modal opens
+  // Load contacts and medic info when modal opens, then auto-start recording
   useEffect(() => {
     if (visible) {
       loadData();
+      startRecording();
     } else {
       resetState();
     }
@@ -406,7 +407,7 @@ export default function SOSModal({ visible, onClose }: Props) {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>🚨 EMERGENCY ALERT</Text>
-          {(step === 'choose' || step === 'text') && (
+          {(step === 'choose' || step === 'record' || step === 'text') && (
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <Text style={styles.closeButtonText}>✕</Text>
             </TouchableOpacity>

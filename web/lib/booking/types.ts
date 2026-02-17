@@ -18,9 +18,14 @@ export interface BookingFormData {
   siteContactName: string;
   siteContactPhone: string;
 
+  // Event vertical — drives dynamic requirements list on booking form
+  // Maps to BookingVerticalId from vertical-requirements.ts
+  eventVertical: string;
+
   // Special requirements
-  confinedSpaceRequired: boolean;
-  traumaSpecialistRequired: boolean;
+  confinedSpaceRequired: boolean;   // DB boolean — set automatically from selectedRequirements
+  traumaSpecialistRequired: boolean; // DB boolean — set automatically from selectedRequirements
+  selectedRequirements: string[];    // Requirement IDs from VERTICAL_REQUIREMENTS (non-boolean ones serialise to specialNotes on submit)
   specialNotes: string;
 
   // Recurring
