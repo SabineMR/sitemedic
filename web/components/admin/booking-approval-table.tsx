@@ -33,6 +33,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { OutOfTerritoryApproval } from './out-of-territory-approval';
+import { BookingDetailPanel } from './booking-detail-panel';
 import {
   Select,
   SelectContent,
@@ -114,6 +115,10 @@ export function BookingApprovalTable({ initialData }: BookingApprovalTableProps)
   // Reject dialog state
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+
+  // Detail panel state
+  const [detailPanelOpen, setDetailPanelOpen] = useState(false);
+  const [selectedDetailBooking, setSelectedDetailBooking] = useState<BookingWithRelations | null>(null);
 
   // Fetch available medics when reassign dialog opens
   const { data: availableMedics = [] } = useAvailableMedics(
@@ -440,7 +445,13 @@ export function BookingApprovalTable({ initialData }: BookingApprovalTableProps)
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
-                <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-gray-700">
+                <DropdownMenuItem
+                  onClick={() => {
+                    setSelectedDetailBooking(booking);
+                    setDetailPanelOpen(true);
+                  }}
+                  className="text-gray-300 hover:text-white hover:bg-gray-700"
+                >
                   View Details
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-gray-700" />
@@ -889,6 +900,13 @@ export function BookingApprovalTable({ initialData }: BookingApprovalTableProps)
           </div>
         </div>
       )}
+
+      {/* Booking Detail Panel */}
+      <BookingDetailPanel
+        booking={selectedDetailBooking}
+        open={detailPanelOpen}
+        onOpenChange={setDetailPanelOpen}
+      />
     </div>
   );
 }
