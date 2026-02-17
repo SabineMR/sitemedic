@@ -169,9 +169,10 @@ Plans:
 
 ---
 
-### Phase 13: UX Polish & Missing States
+### Phase 13: UX Polish & Missing States ✅ COMPLETE
 **Goal:** Add skeleton loaders to all data-heavy pages, add a visual geofence map picker, wire geofence exit alerts, and complete RIDDOR incident management.
 **Priority:** MEDIUM
+**Completed:** 2026-02-17
 
 **Problem:** Multiple pages show plain "Loading..." text with no skeletons. The geofence form requires manual lat/lng entry with no map. RIDDOR drafts have no auto-save, no audit trail, no photo gallery.
 
@@ -185,19 +186,19 @@ Plans:
 - RIDDOR detail page: photo gallery for incident evidence photos
 
 **Success Criteria:**
-1. Treatments page shows 6 skeleton rows during data fetch (no layout shift)
-2. Geofence "Add" page has a map — click to place centre, drag to resize radius
-3. Medic stepping outside geofence triggers alert in admin command centre within 60 seconds
-4. RIDDOR draft survives a page refresh (auto-save working)
-5. RIDDOR detail shows "Status changed: draft → submitted by Kai Jensen at 14:32"
+1. Treatments page shows 6 skeleton rows during data fetch (no layout shift) ✅
+2. Geofence "Add" page has a map — click to place centre, drag to resize radius ✅
+3. Medic stepping outside geofence triggers alert in admin command centre within 60 seconds ✅
+4. RIDDOR draft survives a page refresh (auto-save working) ✅
+5. RIDDOR detail shows "Status changed: draft → submitted by Kai Jensen at 14:32" ✅
 
 **Plans:** 4 plans
 
 Plans:
-- [ ] 13-01-PLAN.md — Skeleton loaders for treatments, workers, organizations, and command center (Wave 1)
-- [ ] 13-02-PLAN.md — Geofence schema fix + interactive Leaflet map picker (Wave 1)
-- [ ] 13-03-PLAN.md — Geofence exit alert: haversine distance check on every ping (Wave 2)
-- [ ] 13-04-PLAN.md — RIDDOR auto-save, audit trail, and photo gallery (Wave 2)
+- [x] 13-01-PLAN.md — Skeleton loaders for treatments, workers, organizations, and command center (Wave 1)
+- [x] 13-02-PLAN.md — Geofence schema fix + interactive Leaflet map picker (Wave 1)
+- [x] 13-03-PLAN.md — Geofence exit alert: haversine distance check on every ping (Wave 2)
+- [x] 13-04-PLAN.md — RIDDOR auto-save, audit trail, and photo gallery (Wave 2)
 
 ---
 
