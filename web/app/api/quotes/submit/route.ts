@@ -90,8 +90,6 @@ export async function POST(request: NextRequest) {
     if (result.error) {
       console.error('⚠️  Failed to send quote notification email:', result.error);
       // Still return success — the lead data is logged; don't block the user flow
-    } else {
-      console.log('✅ Quote notification sent:', result.data?.id, '| ref:', quoteRef);
     }
 
     return NextResponse.json({ success: true, quoteRef });

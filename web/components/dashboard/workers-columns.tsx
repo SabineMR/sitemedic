@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ArrowUpDown, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export const workersColumns: ColumnDef<Worker>[] = [
   {
@@ -114,5 +115,14 @@ export const workersColumns: ColumnDef<Worker>[] = [
       const date = new Date(row.getValue('created_at'));
       return <span suppressHydrationWarning>{format(date, 'dd/MM/yyyy')}</span>;
     },
+  },
+  {
+    id: 'actions',
+    header: '',
+    cell: ({ row }) => (
+      <Button variant="ghost" size="sm" asChild>
+        <Link href={`/workers/${row.original.id}`}>View Records</Link>
+      </Button>
+    ),
   },
 ];

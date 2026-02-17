@@ -75,8 +75,6 @@ export async function sendBookingReceivedEmail(bookingId: string): Promise<void>
 
     if (result.error) {
       console.error('⚠️  Failed to send booking received email:', result.error);
-    } else {
-      console.log('✅ Booking received email sent:', result.data?.id);
     }
   } catch (err) {
     console.error('⚠️  Error sending booking received email:', err);

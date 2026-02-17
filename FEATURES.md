@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Construction Site Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - Paramedic staffing company using SiteMedic platform
-**Last Updated**: 2026-02-16 (Medic portal, full marketing site: /services, /about, /contact)
+**Last Updated**: 2026-02-16 (Critical gap fixes: quote builder submission, booking received email, worker health records)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -12,6 +12,67 @@
 SiteMedic is a comprehensive platform combining **mobile medic software** (offline-first treatment logging, RIDDOR compliance) with **business operations infrastructure** (booking portal, payment processing, territory management). The platform enables construction companies to book medics online while ensuring automatic compliance documentation and reliable medic payouts.
 
 **Business Model**: Software bundled with medic staffing service (no separate software charge). Revenue from medic bookings with 40% platform markup (medic £30/hr → client £42/hr → platform £12/hr). Weekly medic payouts via UK Faster Payments, Net 30 invoicing for established corporate clients.
+
+---
+
+## Recent Updates — Contact Form + Critical Gap Fixes (2026-02-16)
+
+### Contact Form — Real Submission ✅
+
+**Problem fixed**: The `/contact` page form faked a submit with `setTimeout` and never sent the enquiry anywhere.
+
+| File | Change |
+|------|--------|
+| `web/app/api/contact/submit/route.ts` | **New** POST endpoint. Accepts enquiry form payload, emails admin via Resend with full details (name, company, email, phone, site size, enquiry type, message). Returns `{ success: true }`. |
+| `web/app/(marketing)/contact/contact-form.tsx` | Replaced fake `setTimeout` with real `fetch('/api/contact/submit')`. Shows inline error message on failure; confirmation screen on success (unchanged UX). |
+
+---
+
+## Recent Updates — Critical Gap Fixes (2026-02-16)
+
+### Fix 1: Quote Builder → Real Submission + Booking Link ✅
+
+**Problem fixed**: The "Request Quote" button on the marketing pricing page showed an `alert()` placeholder — captured leads were lost forever.
+
+| File | Change |
+|------|--------|
+| `web/app/api/quotes/submit/route.ts` | **New** POST endpoint. Accepts full QuoteBuilder form payload, emails admin via Resend, returns `{ success: true, quoteRef: 'QT-XXXX' }`. No DB table required. |
+| `web/components/QuoteBuilder.tsx` | Replaced `alert()` with real `fetch('/api/quotes/submit')` call. Added loading spinner while submitting. On success: shows Step 4 "Quote Received" confirmation screen with quote reference and **"Book Now" CTA**. On error: inline error message (modal stays open). |
+| `web/app/(booking)/book/page.tsx` | Converted to client component. On mount, reads `quoteData` from `sessionStorage` (set by QuoteBuilder "Book Now" CTA) and passes it as `prefillData` to `<BookingForm>`. |
+| `web/components/booking/booking-form.tsx` | Added optional `prefillData?: QuoteData` prop. `useEffect` pre-populates `siteAddress`, `specialNotes`, `confinedSpaceRequired`, `traumaSpecialistRequired` from quote data. Clears `sessionStorage` after consuming. |
+
+**Flow**: Pricing page → Quote Builder (3 steps) → submit → Step 4 confirmation screen (quote ref + 24hr message) → "Book Now" → `/book` with form pre-populated from quote details.
+
+---
+
+### Fix 2: Immediate "Booking Received" Email ✅
+
+**Problem fixed**: Email only fired after medic was matched (`/api/bookings/match`). If matching failed or was delayed, the client received zero communication after booking.
+
+| File | Change |
+|------|--------|
+| `web/lib/email/templates/booking-received-email.tsx` | **New** React Email template. Shows booking date/time/location, "we're confirming your medic" message, dashboard link. No medic details needed. |
+| `web/lib/email/send-booking-received.ts` | **New** helper function `sendBookingReceivedEmail(bookingId)`. Fetches booking + client, renders template, sends via Resend. Safe to call fire-and-forget. |
+| `web/app/api/bookings/create/route.ts` | After Net30 booking is created: calls `sendBookingReceivedEmail(booking.id)` (fire-and-forget). |
+| `web/app/api/bookings/create-payment-intent/route.ts` | After prepay booking is created: calls `sendBookingReceivedEmail(booking.id)` (fire-and-forget). |
+| `web/app/api/email/booking-confirmation/route.ts` | Extended to accept `type?: 'received' \| 'confirmed'` param. `type: 'received'` delegates to `sendBookingReceivedEmail` (no medic_id check). `type: 'confirmed'` = existing behaviour (default). |
+
+**Result**: Client receives an acknowledgement email immediately on booking creation, independent of medic matching. Medic assignment email sent separately when matched.
+
+---
+
+### Fix 3: Worker Health Record Page (GDPR Minimum) ✅
+
+**Problem fixed**: No way for admins to view worker health records or fulfil GDPR requests — workers are DB-only records, not auth users.
+
+| File | Change |
+|------|--------|
+| `web/app/(dashboard)/workers/[id]/page.tsx` | **New** server component. Fetches worker profile, treatments, and consent records in parallel. Sections: Worker Profile (name, company, role, phone, emergency contact, health notes), Consent Status (consent_records table or legacy `consent_given` field), Treatment History (table with severity/outcome badges + "View" link to `/treatments/[id]`), GDPR Request form. |
+| `web/components/dashboard/worker-gdpr-form.tsx` | **New** client component. Select `request_type` (export/deletion), optional reason textarea, submits to `erasure_requests` table. Shows confirmation on success. Links to `/admin/gdpr` for processing. |
+| `web/lib/queries/workers.ts` | Added `fetchWorkerById(supabase, id)`, `fetchWorkerTreatments(supabase, workerId)`, `fetchWorkerConsentRecords(supabase, workerId)` server-side queries. |
+| `web/components/dashboard/workers-columns.tsx` | Added `actions` column at end with "View Records" button → links to `/workers/{id}`. |
+
+**GDPR compliance note**: Workers are stored as DB records (not auth users). The GDPR form inserts into `erasure_requests` with the `worker_id` stored in `notes`. Admin processes via the existing `/admin/gdpr` dashboard. Satisfies UK GDPR Art. 15–17 audit obligations.
 
 ---
 
