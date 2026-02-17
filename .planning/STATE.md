@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 Phase: 16-critical-bug-fixes
-Plan: 1 of 2 complete
-Status: In progress
-Last activity: 2026-02-17 — Completed 16-01-PLAN.md (payslip medic_id fix + console.warn removal)
-Progress: [████████░] v1.1 complete + Phase 16 in progress (1/2 plans done)
+Plan: 2 of 2 complete
+Status: Phase 16 complete
+Last activity: 2026-02-17 — Completed 16-02-PLAN.md (RIDDOR Draft Review card with category select + override reason textarea)
+Progress: [█████████] v1.1 complete + Phase 16 complete (2/2 plans done)
 
 ## Performance Metrics
 
@@ -599,8 +599,8 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 
 ## Session Continuity
 
-Last session: 2026-02-17T20:25:40Z
-Stopped at: Completed 16-01-PLAN.md — payslip medic_id fix, null guard, console.warn removal
+Last session: 2026-02-17T20:27:19Z
+Stopped at: Completed 16-02-PLAN.md — RIDDOR Draft Review card with category select and override reason textarea wired to 30s auto-save
 Resume file: None
 
 ---
