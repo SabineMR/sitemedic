@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 09 (Booking Data Completeness) — COMPLETE
-Plan: 09-03 complete (3/3 in Phase 09). Phase 09 fully done.
-Status: Phase 09 complete — ready for Phase 10 or Phase 11
-Last activity: 2026-02-17 — Completed 09-03-PLAN.md (View Details wired, What3WordsDisplay in admin panel, recurring chain table)
-Progress: [████████████████████] Phase 09 100% complete (3/3 plans done).
+Phase: v1.1 — Phase 11 (Org Settings) — In progress
+Plan: 11-01 complete (1/3 in Phase 11).
+Status: In progress
+Last activity: 2026-02-17 — Completed 11-01-PLAN.md (org_settings migration with RLS and seed data)
+Progress: [████████████████████░░░] 93/104 plans complete (~89%).
 
 ## Performance Metrics
 
@@ -536,8 +536,8 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 
 ## Session Continuity
 
-Last session: 2026-02-17T17:25:18Z
-Stopped at: Completed 09-02-PLAN.md — BookingWithRelations type fix + BookingDetailPanel Sheet component
+Last session: 2026-02-17T17:33:06Z
+Stopped at: Completed 11-01-PLAN.md — org_settings migration with RLS and seed data
 Resume file: None
 
 ---
