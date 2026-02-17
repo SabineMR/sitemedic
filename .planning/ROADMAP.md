@@ -38,6 +38,12 @@ v1.1 closes gaps identified in the post-v1.0 codebase audit. The focus is on sur
 
 **Plans:** 4 plans
 
+Plans:
+- [ ] 08-01-PLAN.md — Database migration: contact_submissions + quote_submissions tables with RLS
+- [ ] 08-02-PLAN.md — API route updates: DB-first persistence for contact and quote routes
+- [ ] 08-03-PLAN.md — Admin submissions page with contact/quote tabs and inline status management
+- [ ] 08-04-PLAN.md — Quote-to-booking pre-fill via URL search params on new booking form
+
 ---
 
 ### Phase 09: Booking Data Completeness
