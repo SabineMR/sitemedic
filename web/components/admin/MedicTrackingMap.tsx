@@ -26,6 +26,8 @@ interface MedicLocation {
   status: 'on_site' | 'traveling' | 'break' | 'issue' | 'offline';
   issue_type?: 'late_arrival' | 'battery_low' | 'connection_lost' | 'not_moving';
   last_event?: string;
+  shift_start_time?: string; // PostgreSQL TIME: "07:00:00" — slice to "07:00" for display
+  shift_end_time?: string;   // PostgreSQL TIME: "15:00:00" — slice to "15:00" for display
 }
 
 interface Props {
@@ -143,7 +145,15 @@ export default function MedicTrackingMap({ medics, onMedicClick }: Props) {
             <Popup>
               <div className="text-gray-900">
                 <div className="font-bold text-base mb-1">{medic.medic_name}</div>
-                <div className="text-sm text-gray-600 mb-2">{medic.site_name}</div>
+                <div className="text-sm text-gray-600">{medic.site_name}</div>
+                {medic.shift_start_time && medic.shift_end_time && (
+                  <div className="text-xs text-gray-500 mb-2">
+                    Shift: {medic.shift_start_time.slice(0, 5)}{'\u2013'}{medic.shift_end_time.slice(0, 5)}
+                  </div>
+                )}
+                {(!medic.shift_start_time || !medic.shift_end_time) && (
+                  <div className="mb-2" />
+                )}
                 <div className="text-xs space-y-1">
                   <div>
                     Status:{' '}
