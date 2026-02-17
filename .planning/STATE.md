@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v1.1 — Phase 16 (Critical Bug Fixes) verified complete. Phases 08–16 all shipped.
+**Current focus:** v1.1 — Phase 17 (Geofence Coverage Analytics) in progress. Plan 17-01 complete.
 
 ## Current Position
-Phase: 16-critical-bug-fixes — VERIFIED ✅
-Plan: 2 of 2 complete
-Status: Phase 16 VERIFIED (5/5 must-haves) — ready for Phase 17 or milestone re-audit
-Last activity: 2026-02-17 — Phase 16 verified: payslip fix, RIDDOR draft inputs, console.warn removed
-Progress: [█████████] v1.1 phases 08–16 complete
+Phase: 17-geofence-coverage-analytics — In progress
+Plan: 1 of 1 complete
+Status: Plan 17-01 complete — geofence coverage stat card shipped, GAP-3 closed
+Last activity: 2026-02-17 — Completed 17-01-PLAN.md: useGeofenceCoverage hook + GeofenceCoverageCard
+Progress: [█████████░] v1.1 phases 08–16 complete, phase 17 plan 1/1 done
 
 ## Performance Metrics
 
@@ -41,8 +41,8 @@ Progress: [█████████] v1.1 phases 08–16 complete
 | 15-code-quality | 3/3 | ~8 min | ~2.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 13-01, 13-02 (geofence map picker), 13-03 (geofence exit alerts), 13-04 (RIDDOR auto-save + audit trail, 6 min)
-- Trend: Phase 13 complete — all UX polish shipped. Phase 13 now 4/4 plans done.
+- Last 5 plans: 13-03 (geofence exit alerts), 13-04 (RIDDOR auto-save + audit trail, 6 min), 16-01, 16-02, 17-01 (geofence coverage analytics, 2.5 min)
+- Trend: Phase 17 started — geofence coverage stat card shipped in 2.5 min (below avg)
 
 *Updated after each plan completion*
 
