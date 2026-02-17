@@ -50,8 +50,8 @@ export default function PlatformRevenuePage() {
 
         if (revenueData && revenueData.length > 0) {
           // Calculate aggregated metrics
-          const totalRev = revenueData.reduce((sum, org) => sum + Number(org.revenue), 0);
-          const totalBookings = revenueData.reduce((sum, org) => sum + Number(org.booking_count), 0);
+          const totalRev = revenueData.reduce((sum: number, org: OrgRevenue) => sum + Number(org.revenue), 0);
+          const totalBookings = revenueData.reduce((sum: number, org: OrgRevenue) => sum + Number(org.booking_count), 0);
           const platformFeeRate = 0.10; // 10% platform fee
 
           setMetrics({

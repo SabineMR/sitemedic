@@ -29,6 +29,7 @@ import EmergencyAlertReceiver from '../components/ui/EmergencyAlertReceiver';
 import SOSButton from '../components/ui/SOSButton';
 
 export default function RootLayout() {
+  console.log('[RootLayout] RENDER');
   const [database, setDatabase] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 

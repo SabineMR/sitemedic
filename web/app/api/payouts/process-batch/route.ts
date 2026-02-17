@@ -45,13 +45,15 @@ export async function POST(request: Request) {
         payout_amount,
         payout_status,
         org_id,
+        mileage_miles,
         medics!inner (
           id,
           first_name,
           last_name,
           stripe_account_id,
           stripe_onboarding_complete,
-          org_id
+          org_id,
+          medic_payout_percent
         ),
         bookings!inner (
           id,
