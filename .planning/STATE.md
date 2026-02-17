@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 Phase: v1.1 — Phase 12 (Analytics Dashboard) — In progress
-Plan: 12-02 complete (assignment analytics charts). Plans 12-01/03/05 pending.
+Plan: 12-01 complete (territory analytics charts). Plans 12-03/05 pending.
 Status: In progress
-Last activity: 2026-02-17 — Completed 12-02-PLAN.md (AssignmentSuccessChart + FailureBreakdownChart Recharts components)
-Progress: [█████████████████████░░] 98/105 plans complete (~93%).
+Last activity: 2026-02-17 — Completed 12-01-PLAN.md (TerritoryHeatmap, HiringTriggerCards, CoverageGapTable)
+Progress: [█████████████████████░░] 99/105 plans complete (~94%).
 
 ## Performance Metrics
 
