@@ -118,7 +118,6 @@ export const useMedicLocationsStore = create<MedicLocationsState>((set, get) => 
         if (isFullLocation(update)) {
           locations.set(medicId, update as MedicLocation);
         } else {
-          console.warn('[Realtime] Received partial update for unknown medic:', medicId);
           return state;
         }
       }

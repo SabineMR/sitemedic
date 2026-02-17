@@ -50,7 +50,11 @@ export default function MedicPayslipsPage() {
         .eq('user_id', user.id)
         .single();
 
-      if (medic) setMedicId(medic.id);
+      if (!medic) {
+        setLoading(false);
+        return;
+      }
+      setMedicId(medic.id);
 
       const { data, error } = await supabase
         .from('timesheets')
@@ -62,7 +66,7 @@ export default function MedicPayslipsPage() {
           ),
           payslip:payslips(id, pdf_url, payslip_reference)
         `)
-        .eq('medic_id', user.id)
+        .eq('medic_id', medic.id)
         .in('payout_status', ['admin_approved', 'paid'])
         .order('created_at', { ascending: false });
 
