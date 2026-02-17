@@ -15,7 +15,7 @@
 import '../tasks/backgroundSyncTask';
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StatusBar } from 'react-native';
+import { View, Text, StatusBar, ActivityIndicator } from 'react-native';
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -78,7 +78,7 @@ export default function RootLayout() {
   if (!database) {
     return (
       <View style={{ flex: 1, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center' }}>
-        <View style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 4, borderColor: '#16a34a', borderTopColor: 'transparent' }} />
+        <ActivityIndicator size="large" color="#16a34a" />
         <Text style={{ marginTop: 16, color: '#6b7280', fontSize: 14 }}>Starting SiteMedic…</Text>
       </View>
     );
