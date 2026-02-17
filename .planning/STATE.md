@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 Phase: v1.1 — Phase 09 (Booking Data Completeness) — In progress
-Plan: 09-01 complete (1/? in Phase 09).
-Status: In progress — 09-01 done, awaiting remaining Phase 09 plans
-Last activity: 2026-02-17 — Completed 09-01-PLAN.md (What3WordsDisplay component, API fix, BookingConfirmation extension)
-Progress: [████████████████████] Phase 08 100% complete. Phase 09 started (09-01 done).
+Plan: 09-02 complete (2/3 in Phase 09).
+Status: In progress — 09-01 and 09-02 done, awaiting 09-03
+Last activity: 2026-02-17 — Completed 09-02-PLAN.md (BookingWithRelations type fix, BookingDetailPanel Sheet component)
+Progress: [████████████████████] Phase 08 100% complete. Phase 09: 2/3 plans done.
 
 ## Performance Metrics
 
@@ -475,6 +475,11 @@ Recent decisions affecting current work:
 - D-08-03-002: Status badge shown above inline Select dropdown in Status column (badge = at-a-glance state, Select = action trigger)
 - D-08-03-003: Convert to Booking button hidden when status is 'closed' (prevents converting dead leads)
 
+**From Plan 09-02:**
+- D-09-02-001: Inline formatWhat3Words in BookingDetailPanel instead of importing from what3words.ts — avoids API client initialisation at module load time in a client component
+- D-09-02-002: Refund section hidden when refund_amount === 0 (DB default) — showing GBP 0.00 is confusing for admins reviewing cancelled bookings
+- D-09-02-003: cancelled_by rendered as plain text (not looked up) — value may be admin name, user ID, or system string depending on cancellation source
+
 **From Plan 08-01:**
 - D-08-01-001: No INSERT policy for org users — service role (server-only) handles all public form inserts to lead tables
 - D-08-01-002: No DELETE policy for org users — lead submissions are permanent records; only platform admins can delete
@@ -531,8 +536,8 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 
 ## Session Continuity
 
-Last session: 2026-02-17T17:08:00Z
-Stopped at: Completed Phase 08 — Lead Capture & Data Persistence (4/4 plans, 13/13 must-haves verified).
+Last session: 2026-02-17T17:25:18Z
+Stopped at: Completed 09-02-PLAN.md — BookingWithRelations type fix + BookingDetailPanel Sheet component
 Resume file: None
 
 ---
