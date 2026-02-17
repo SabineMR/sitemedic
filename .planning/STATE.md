@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 11 (Org Settings) — In progress
-Plan: 11-02 complete (2/3 in Phase 11).
+Phase: v1.1 — Phase 10 (Real-Time Ops Polish) — In progress (10-04 done, 10-01/10-03 also in progress in wave 1)
+Plan: 10-04 complete. Phase 11 also in progress (11-02 done, 2/3).
 Status: In progress
-Last activity: 2026-02-17 — Completed 11-02-PLAN.md (admin settings API + Business Configuration UI)
-Progress: [████████████████████░░░] 94/104 plans complete (~90%).
+Last activity: 2026-02-17 — Completed 10-04-PLAN.md (AlertPanel dismiss/resolve notes + bulk dismiss for non-critical alerts)
+Progress: [████████████████████░░░] 95/104 plans complete (~91%).
 
 ## Performance Metrics
 
@@ -40,8 +40,8 @@ Progress: [████████████████████░░░
 | 07.5-territory-auto-assignment | 5/5 | 19 min | 3.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 08-03 (?), 08-04 (?), 09-01 (2 min), 09-02 (?), 09-03 (2 min)
-- Trend: Phase 09 complete — admin booking detail panel fully wired with View Details, What3WordsDisplay, and recurring chain table
+- Last 5 plans: 09-03 (2 min), 11-01 (?), 11-02 (?), 10-04 (7 min)
+- Trend: Phase 10 wave 1 executing (10-01, 10-03, 10-04 in parallel) — AlertPanel note inputs + bulk dismiss complete (10-04 done)
 
 *Updated after each plan completion*
 
@@ -474,6 +474,12 @@ Recent decisions affecting current work:
 - D-08-03-001: onSettled invalidates both contact-submissions and quote-submissions query keys regardless of which table was mutated (simplest correctness guarantee, minimal extra refetch cost)
 - D-08-03-002: Status badge shown above inline Select dropdown in Status column (badge = at-a-glance state, Select = action trigger)
 - D-08-03-003: Convert to Booking button hidden when status is 'closed' (prevents converting dead leads)
+
+**From Plan 10-04:**
+- D-10-04-001: Bulk dismiss restricted to low/medium severity — critical/high never bulk-dismissable (enforced at render level via isNonCritical flag)
+- D-10-04-002: Bulk dismiss passes fixed string 'Bulk dismissed' as note — reduces friction for high-volume triage, audit trail still maintained
+- D-10-04-003: Empty note string passed as undefined to store — keeps DB free of empty strings in dismissal_notes/resolution_notes
+- D-10-04-004: Opening dismiss note panel closes resolve note panel and vice versa — prevents confusing double-open state
 
 **From Plan 09-02:**
 - D-09-02-001: Inline formatWhat3Words in BookingDetailPanel instead of importing from what3words.ts — avoids API client initialisation at module load time in a client component
