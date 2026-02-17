@@ -401,11 +401,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 07.5-01-PLAN.md -- Territory metrics aggregation (pg_cron daily job) and hiring trigger / coverage gap business logic
-- [ ] 07.5-02-PLAN.md -- Enhanced auto-assignment algorithm with calendar check, cert validation, and adjusted scoring weights
-- [ ] 07.5-03-PLAN.md -- Admin drag-drop medic-to-territory assignment panel with dnd-kit and API route
-- [ ] 07.5-04-PLAN.md -- Coverage gap detection alerts and hiring trigger recommendations UI
-- [ ] 07.5-05-PLAN.md -- Enhanced coverage map with territory detail panel and full page integration
+- [x] 07.5-01-PLAN.md -- Territory metrics aggregation (pg_cron daily job) and hiring trigger / coverage gap business logic
+- [x] 07.5-02-PLAN.md -- Enhanced auto-assignment algorithm with calendar check, cert validation, and adjusted scoring weights
+- [x] 07.5-03-PLAN.md -- Admin drag-drop medic-to-territory assignment panel with dnd-kit and API route
+- [x] 07.5-04-PLAN.md -- Coverage gap detection alerts and hiring trigger recommendations UI
+- [x] 07.5-05-PLAN.md -- Enhanced coverage map with territory detail panel and full page integration
 
 ## Progress
 
@@ -426,7 +426,7 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 | 6. RIDDOR Auto-Flagging | 8/8 | Complete | 2026-02-16 |
 | 6.5. Payment Processing & Payouts | 12/12 | Complete | 2026-02-16 |
 | 7. Certification Tracking | 4/6 | Gap closure | - |
-| 7.5. Territory Management & Auto-Assignment | 0/5 | Not started | - |
+| 7.5. Territory Management & Auto-Assignment | 5/5 | Complete | 2026-02-16 |
 
 ---
 *Roadmap created: 2026-02-15*
