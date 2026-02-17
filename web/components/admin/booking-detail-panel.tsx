@@ -8,6 +8,7 @@
  * approval reason, cancellation details, refund amount, and more.
  */
 
+import { useState, useEffect } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -31,13 +32,8 @@ import {
 import CurrencyWithTooltip from '@/components/CurrencyWithTooltip';
 import type { BookingWithRelations } from '@/lib/queries/admin/bookings';
 import { CheckCircle, Activity } from 'lucide-react';
-
-// Inline pure formatting helper — avoids importing the full what3words module
-// which initialises an API client at module load time
-function formatWhat3Words(words: string): string {
-  const cleanWords = words.replace(/^\/+/, '');
-  return `///${cleanWords}`;
-}
+import { What3WordsDisplay } from '@/components/booking/what3words-display';
+import { createClient } from '@/lib/supabase/client';
 
 interface BookingDetailPanelProps {
   booking: BookingWithRelations | null;
@@ -87,6 +83,45 @@ export function BookingDetailPanel({
   open,
   onOpenChange,
 }: BookingDetailPanelProps) {
+  const [recurringChain, setRecurringChain] = useState<Array<{
+    id: string;
+    shift_date: string;
+    shift_start_time: string;
+    shift_end_time: string;
+    status: string;
+  }>>([]);
+  const [chainLoading, setChainLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open || !booking?.is_recurring) {
+      setRecurringChain([]);
+      return;
+    }
+
+    async function fetchChain() {
+      setChainLoading(true);
+      try {
+        const supabase = createClient();
+        // Resolve root booking: if this is a child, use parent_booking_id; otherwise use this booking's id
+        const rootId = booking!.parent_booking_id ?? booking!.id;
+
+        const { data } = await supabase
+          .from('bookings')
+          .select('id, shift_date, shift_start_time, shift_end_time, status')
+          .or(`id.eq.${rootId},parent_booking_id.eq.${rootId}`)
+          .order('shift_date', { ascending: true });
+
+        setRecurringChain(data || []);
+      } catch (err) {
+        console.error('Failed to fetch recurring chain:', err);
+      } finally {
+        setChainLoading(false);
+      }
+    }
+
+    fetchChain();
+  }, [open, booking?.id, booking?.is_recurring, booking?.parent_booking_id]);
+
   if (!booking) return null;
 
   const statusBadge = STATUS_BADGES[booking.status] ?? STATUS_BADGES.pending;
@@ -182,11 +217,9 @@ export function BookingDetailPanel({
             )}
 
             {booking.what3words_address && (
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-gray-400 shrink-0" />
-                <span className="font-mono text-sm text-blue-400">
-                  {formatWhat3Words(booking.what3words_address)}
-                </span>
+              <div>
+                <p className="text-xs text-gray-400 mb-1">What3Words</p>
+                <What3WordsDisplay address={booking.what3words_address} />
               </div>
             )}
           </div>
@@ -379,41 +412,95 @@ export function BookingDetailPanel({
           </section>
         )}
 
-        {/* ── Recurring Info (conditional) ─────────────────────── */}
+        {/* ── Recurring Chain (conditional) ─────────────────────── */}
         {booking.is_recurring && (
-          <section className="pb-4">
+          <div className="border-b border-gray-700/50 pb-4 mb-4">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
-              Recurring Booking
+              Recurring Chain
             </h3>
-            <div className="space-y-2">
-              {booking.recurrence_pattern && (
-                <div className="text-sm text-gray-300">
-                  Pattern:{' '}
-                  <span className="text-white">
-                    {RECURRENCE_LABELS[booking.recurrence_pattern] ??
-                      booking.recurrence_pattern}
-                  </span>
-                </div>
-              )}
+            <div className="flex items-center gap-2 mb-3">
+              <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+                {booking.recurrence_pattern === 'biweekly' ? 'Bi-weekly' : 'Weekly'}
+              </Badge>
               {booking.recurring_until && (
-                <div className="text-sm text-gray-400">
-                  Until:{' '}
-                  <span className="text-gray-300" suppressHydrationWarning>
-                    {new Date(booking.recurring_until).toLocaleDateString(
-                      'en-GB',
-                      { day: 'numeric', month: 'short', year: 'numeric' }
-                    )}
+                <span className="text-sm text-gray-400">
+                  until{' '}
+                  <span suppressHydrationWarning>
+                    {new Date(booking.recurring_until).toLocaleDateString('en-GB', {
+                      day: 'numeric', month: 'short', year: 'numeric'
+                    })}
                   </span>
-                </div>
+                </span>
               )}
-              <div
-                id="recurring-chain-container"
-                className="mt-3 p-3 rounded-lg bg-gray-800/50 border border-gray-700/50 text-sm text-gray-500"
-              >
-                Loading recurring chain...
-              </div>
             </div>
-          </section>
+
+            {chainLoading ? (
+              <p className="text-sm text-gray-500">Loading booking chain...</p>
+            ) : recurringChain.length > 0 ? (
+              <div className="bg-gray-800/50 rounded-lg border border-gray-700/50 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-800 border-b border-gray-700/50">
+                    <tr>
+                      <th className="text-left p-2 text-xs text-gray-400 font-semibold">Date</th>
+                      <th className="text-left p-2 text-xs text-gray-400 font-semibold">Time</th>
+                      <th className="text-left p-2 text-xs text-gray-400 font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-700/50">
+                    {recurringChain.map((instance) => {
+                      const isCurrentBooking = instance.id === booking.id;
+                      const statusColors: Record<string, string> = {
+                        pending: 'bg-yellow-500/20 text-yellow-400',
+                        confirmed: 'bg-green-500/20 text-green-400',
+                        in_progress: 'bg-cyan-500/20 text-cyan-400',
+                        completed: 'bg-purple-500/20 text-purple-400',
+                        cancelled: 'bg-red-500/20 text-red-400',
+                      };
+                      const statusLabel: Record<string, string> = {
+                        pending: 'Pending',
+                        confirmed: 'Confirmed',
+                        in_progress: 'In Progress',
+                        completed: 'Completed',
+                        cancelled: 'Cancelled',
+                        pending_payment: 'Pending Payment',
+                      };
+
+                      return (
+                        <tr
+                          key={instance.id}
+                          className={isCurrentBooking ? 'bg-blue-500/10' : ''}
+                        >
+                          <td className="p-2 text-gray-300" suppressHydrationWarning>
+                            {new Date(instance.shift_date).toLocaleDateString('en-GB', {
+                              day: 'numeric', month: 'short', year: 'numeric'
+                            })}
+                            {isCurrentBooking && (
+                              <span className="ml-2 text-xs text-blue-400">(viewing)</span>
+                            )}
+                          </td>
+                          <td className="p-2 text-gray-400">
+                            {instance.shift_start_time?.substring(0, 5)} -{' '}
+                            {instance.shift_end_time?.substring(0, 5)}
+                          </td>
+                          <td className="p-2">
+                            <Badge className={`text-xs ${statusColors[instance.status] || 'bg-gray-500/20 text-gray-400'}`}>
+                              {statusLabel[instance.status] || instance.status}
+                            </Badge>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No recurring instances found</p>
+            )}
+
+            <p className="text-xs text-gray-500 mt-2">
+              {recurringChain.length} booking{recurringChain.length !== 1 ? 's' : ''} in this series
+            </p>
+          </div>
         )}
       </SheetContent>
     </Sheet>
