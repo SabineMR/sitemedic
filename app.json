@@ -30,7 +30,9 @@
         "android.permission.BLUETOOTH",
         "android.permission.BLUETOOTH_ADMIN",
         "android.permission.BLUETOOTH_SCAN",
-        "android.permission.BLUETOOTH_CONNECT"
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.SCHEDULE_EXACT_ALARM"
       ],
       "package": "com.sitemedic.app"
     },
@@ -39,6 +41,15 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#EF4444",
+          "sounds": ["./assets/sounds/emergency-alert.wav"],
+          "androidMode": "default"
+        }
+      ],
       [
         "react-native-ble-plx",
         {

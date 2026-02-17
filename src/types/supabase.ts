@@ -25,6 +25,8 @@ export interface Database {
           full_name: string;
           email: string;
           phone: string | null;
+          push_token: string | null;
+          push_token_updated_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -35,6 +37,8 @@ export interface Database {
           full_name: string;
           email: string;
           phone?: string | null;
+          push_token?: string | null;
+          push_token_updated_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -45,8 +49,95 @@ export interface Database {
           full_name?: string;
           email?: string;
           phone?: string | null;
+          push_token?: string | null;
+          push_token_updated_at?: string | null;
           created_at?: string;
           updated_at?: string;
+        };
+      };
+      emergency_contacts: {
+        Row: {
+          id: string;
+          org_id: string | null;
+          name: string;
+          phone: string;
+          email: string | null;
+          push_token: string | null;
+          role: string | null;
+          source: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          org_id?: string | null;
+          name: string;
+          phone: string;
+          email?: string | null;
+          push_token?: string | null;
+          role?: string | null;
+          source?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          org_id?: string | null;
+          name?: string;
+          phone?: string;
+          email?: string | null;
+          push_token?: string | null;
+          role?: string | null;
+          source?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      emergency_alerts: {
+        Row: {
+          id: string;
+          org_id: string | null;
+          sent_by: string | null;
+          booking_id: string | null;
+          contact_id: string | null;
+          message_type: 'voice' | 'text';
+          text_message: string | null;
+          audio_url: string | null;
+          push_sent_at: string | null;
+          sms_sent_at: string | null;
+          acknowledged_at: string | null;
+          acknowledged_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          org_id?: string | null;
+          sent_by?: string | null;
+          booking_id?: string | null;
+          contact_id?: string | null;
+          message_type: 'voice' | 'text';
+          text_message?: string | null;
+          audio_url?: string | null;
+          push_sent_at?: string | null;
+          sms_sent_at?: string | null;
+          acknowledged_at?: string | null;
+          acknowledged_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          org_id?: string | null;
+          sent_by?: string | null;
+          booking_id?: string | null;
+          contact_id?: string | null;
+          message_type?: 'voice' | 'text';
+          text_message?: string | null;
+          audio_url?: string | null;
+          push_sent_at?: string | null;
+          sms_sent_at?: string | null;
+          acknowledged_at?: string | null;
+          acknowledged_by?: string | null;
+          created_at?: string;
         };
       };
     };

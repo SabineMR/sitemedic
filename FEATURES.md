@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Construction Site Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - Paramedic staffing company using SiteMedic platform
-**Last Updated**: 2026-02-16 (Critical gap fixes: quote builder submission, booking received email, worker health records)
+**Last Updated**: 2026-02-17 (Referral payout system + variable per-medic revenue split)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -11,7 +11,53 @@
 
 SiteMedic is a comprehensive platform combining **mobile medic software** (offline-first treatment logging, RIDDOR compliance) with **business operations infrastructure** (booking portal, payment processing, territory management). The platform enables construction companies to book medics online while ensuring automatic compliance documentation and reliable medic payouts.
 
-**Business Model**: Software bundled with medic staffing service (no separate software charge). Revenue from medic bookings with 40% platform markup (medic £30/hr → client £42/hr → platform £12/hr). Weekly medic payouts via UK Faster Payments, Net 30 invoicing for established corporate clients.
+**Business Model**: Software bundled with medic staffing service (no separate software charge). Revenue from medic bookings with a configurable platform/medic split (default 60% platform / 40% medic, overridable per employee). Weekly medic payouts via UK Faster Payments, Net 30 invoicing for established corporate clients. Referral bookings (jobs recommended by a third party who cannot take them) trigger a 10% referral payout (configurable) deducted from the platform's share — medic payout is unaffected.
+
+---
+
+## Recent Updates — Referral System + Per-Medic Revenue Split (2026-02-17)
+
+### Referral Payout System ✅
+
+Jobs can now be flagged as referrals when a third party who cannot take the job recommends it to SiteMedic. The referral payout comes out of the platform's share — the medic's payout is unchanged.
+
+**New env vars** (both `.env.example` and `web/.env.local.example`):
+
+| Variable | Default | Description |
+|---|---|---|
+| `DEFAULT_PLATFORM_FEE_PERCENT` / `NEXT_PUBLIC_DEFAULT_PLATFORM_FEE_PERCENT` | `60` | Platform's default share of booking total |
+| `DEFAULT_MEDIC_PAYOUT_PERCENT` / `NEXT_PUBLIC_DEFAULT_MEDIC_PAYOUT_PERCENT` | `40` | Medic's default share of booking total |
+| `REFERRAL_PAYOUT_PERCENT` / `NEXT_PUBLIC_REFERRAL_PAYOUT_PERCENT` | `10` | Percentage of pre-VAT subtotal paid to referrer |
+
+**Note on VAT**: The referral payout is calculated on the **pre-VAT subtotal**, not the client-facing total. This avoids VAT complications — if the referrer is a VAT-registered business, they invoice SiteMedic separately with their own VAT treatment.
+
+**New migration** — `supabase/migrations/115_referral_and_per_medic_rates.sql`:
+
+| Change | Detail |
+|---|---|
+| `medics.platform_fee_percent` | Per-medic platform share. Default 60. Overrides env var for that employee. |
+| `medics.medic_payout_percent` | Per-medic medic share. Default 40. Must sum to 100 with `platform_fee_percent`. |
+| `bookings.is_referral` | Boolean — TRUE when job came via a referral. |
+| `bookings.referred_by` | Name/company of referrer. Only set when `is_referral = TRUE`. |
+| `bookings.referral_payout_percent` | Snapshot of rate at booking creation time so historical records are not affected by future rate changes. |
+| `bookings.referral_payout_amount` | GBP amount owed to referrer: `subtotal × referral_payout_percent / 100`. |
+| `bookings.platform_net` | What SiteMedic nets: `platform_fee − referral_payout_amount`. |
+
+**Revenue breakdown examples**:
+
+| Booking type | Client pays | Medic gets | Referrer gets | Platform nets |
+|---|---|---|---|---|
+| Direct (default rates) | £1,000 | £400 (40%) | — | £600 (60%) |
+| Referral (10% fee) | £1,000 | £400 (40%) | ~£83 (10% of pre-VAT subtotal) | ~£517 |
+| Custom medic rate (50/50) | £1,000 | £500 (50%) | — | £500 (50%) |
+
+**Updated pricing files**:
+
+| File | Change |
+|---|---|
+| `supabase/functions/calculate-pricing/index.ts` | Accepts `platform_fee_percent`, `medic_payout_percent`, `is_referral`, `referral_payout_percent`. Returns `platform_net`. Reads defaults from env secrets. |
+| `web/lib/booking/pricing.ts` | Same additions, reads defaults from `NEXT_PUBLIC_*` env vars. |
+| `web/lib/booking/types.ts` | `PricingBreakdown` extended with `platformFeePercent`, `medicPayoutPercent`, `isReferral`, `referralPayoutPercent`, `referralPayoutAmount`, `platformNet`. |
 
 ---
 

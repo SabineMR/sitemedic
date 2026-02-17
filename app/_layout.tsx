@@ -24,6 +24,8 @@ import { AuthProvider } from '../src/contexts/AuthContext';
 import { SyncProvider } from '../src/contexts/SyncContext';
 import { initDatabase } from '../src/lib/watermelon';
 import { beaconService } from '../services/BeaconService';
+import { emergencyAlertService } from '../services/EmergencyAlertService';
+import EmergencyAlertReceiver from '../components/ui/EmergencyAlertReceiver';
 
 export default function RootLayout() {
   const [database, setDatabase] = useState<any>(null);
@@ -41,6 +43,14 @@ export default function RootLayout() {
         // Non-fatal: GPS is primary; beacons are fallback for no-signal areas.
         beaconService.init().catch((err) => {
           console.warn('[RootLayout] Beacon service unavailable (BLE not supported on this device):', err);
+        });
+
+        // Request notification + microphone permissions and register push token.
+        // Non-fatal: app works without these, but SOS push delivery won't function.
+        emergencyAlertService.requestPermissions().then(() => {
+          return emergencyAlertService.registerPushToken();
+        }).catch((err) => {
+          console.warn('[RootLayout] Emergency alert permissions not granted:', err);
         });
       })
       .catch((err) => {
@@ -73,6 +83,8 @@ export default function RootLayout() {
           <SyncProvider>
             <BottomSheetModalProvider>
               <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+              {/* Emergency alert receiver — listens for push notifications on every screen */}
+              <EmergencyAlertReceiver />
               <Stack
                 screenOptions={{
                   headerShown: false,
