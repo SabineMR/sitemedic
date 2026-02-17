@@ -9,17 +9,17 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 Phase: 7.5 of 8 (Territory Auto-Assignment)
-Plan: 1 of 5 in current phase
+Plan: 2 of 5 in current phase
 Status: In progress
-Last activity: 2026-02-17 — Completed 07.5-01-PLAN.md (Territory Metrics Aggregation Foundation)
-Progress: [█████████████████░] 95% (79/84 plans across Phases 1-7.5)
+Last activity: 2026-02-17 — Completed 07.5-02-PLAN.md (Enhanced Auto-Assignment with Calendar & Certification)
+Progress: [█████████████████░] 95% (80/84 plans across Phases 1-7.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 79
+- Total plans completed: 80
 - Average duration: 4.0 min
-- Total execution time: 5.5 hours
+- Total execution time: 5.6 hours
 
 **By Phase:**
 
@@ -37,11 +37,11 @@ Progress: [█████████████████░] 95% (79/84 pl
 | 06-riddor-auto-flagging | 8/8 | 50 min | 6.3 min |
 | 06.5-payments-payouts | 12/12 | 49.5 min | 4.1 min |
 | 07-certification-tracking | 4/9 | 9.3 min | 2.3 min |
-| 07.5-territory-auto-assignment | 1/5 | 3 min | 3 min |
+| 07.5-territory-auto-assignment | 2/5 | 7 min | 3.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-01 (2 min), 07-02 (2 min), 07-03 (3 min), 07-04 (2.3 min), 07.5-01 (3 min)
-- Trend: Territory metrics aggregation foundation with pg_cron daily jobs and TypeScript business logic for hiring triggers
+- Last 5 plans: 07-02 (2 min), 07-03 (3 min), 07-04 (2.3 min), 07.5-01 (3 min), 07.5-02 (4 min)
+- Trend: Enhanced auto-assignment with calendar conflict detection (batch query prevents double-booking), certification expiry validation, and optimized scoring weights (distance 30%, utilization 20%)
 
 *Updated after each plan completion*
 
@@ -440,6 +440,15 @@ Recent decisions affecting current work:
 - D-07.5-01-003: Require minimum 10 bookings before flagging coverage gaps (prevents false positives from low-volume territories)
 - D-07.5-01-004: Add org_id column to territory_metrics for multi-tenant isolation (all queries filtered by org_id)
 - D-07.5-01-005: Pure TypeScript functions (no database calls) for business logic (enables easy unit testing and reuse across UI components)
+
+**From Plan 07.5-02:**
+- D-07.5-02-001: Calendar conflict check uses batch query (single .in() for all candidates) not N+1 loop (prevents performance degradation with large candidate pools)
+- D-07.5-02-002: Certification expiry validation is hard filter before scoring, not scoring penalty (expired certs are regulatory compliance failure, not performance issue)
+- D-07.5-02-003: Updated scoring weights: distance 30% (highest priority), utilization 20% (prefer <70%), qualifications 15% (already hard-filtered), availability 15%, rating 15% (bonus for >4.5 stars), performance 5% (RIDDOR compliance bonus)
+- D-07.5-02-004: Utilization scoring prefers <70% utilization (max 100 points) to prevent medic burnout and maintain quality
+- D-07.5-02-005: Rating bonus of +10 points for >4.5 stars aligns with quality requirements
+- D-07.5-02-006: Fairness score removed from total (was 5%, now 0%) - shift distribution less important than distance/utilization/quality factors
+- D-07.5-02-007: Client-side scoring module mirrors Edge Function logic exactly for admin UI transparency (enables "Why this medic?" explanations)
 
 **From Plan 06-03:**
 - D-06-03-001: Use @react-pdf/renderer instead of pdf-lib with fillable PDF template (HSE F2508 not reliably available; matches Phase 5 pattern)
