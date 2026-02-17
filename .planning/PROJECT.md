@@ -50,9 +50,24 @@ Documentation happens automatically as the medic does their job, not as separate
 - ✓ Weekly medic payouts via UK Faster Payments — v1.0
 - ✓ IR35 compliance with self-employed/umbrella support — v1.0
 
+**Post-MVP Polish & Data Completeness (Added during v1.1):**
+- ✓ Lead capture pipeline — contact + quote submissions persisted to DB, admin CRM with status management — v1.1
+- ✓ Quote-to-booking conversion — pre-fill booking form from quote via URL search params — v1.1
+- ✓ Booking data completeness — What3Words display, admin detail panel, recurring chain view — v1.1
+- ✓ Real-time operations — medicContext with medic+booking join, payment retry UI, alert escalation timer — v1.1
+- ✓ Organisation settings — all business configuration values from DB (`org_settings` table), no hardcoded values — v1.1
+- ✓ Analytics dashboard — Territory heatmap, assignment success rate chart, medic utilisation table, late arrival heatmap — v1.1
+- ✓ UX polish — skeleton loaders, interactive Leaflet geofence map picker, geofence exit alert monitor — v1.1
+- ✓ RIDDOR auto-save — 30s debounced silent save, status audit trail, photo gallery from storage bucket — v1.1
+- ✓ Compliance exports — payslip PDF, RIDDOR PDF, timesheets/bookings/invoices CSV, certification expiry banners — v1.1
+- ✓ Contract detail — PDF download fix, version history timeline, milestone payment tracker — v1.1
+- ✓ Manual medic assignment — admin dialog in booking detail panel with medic search and override — v1.1
+- ✓ Critical bug fixes — payslip medic_id FK corrected, RIDDOR draft inputs wired — v1.1
+- ✓ Geofence coverage analytics — "X of Y active sites covered" stat card with 60s polling — v1.1
+
 ### Active
 
-(No active requirements — ready to plan v1.1 or v2.0)
+(No active requirements — ready to plan v2.0)
 
 ### Out of Scope
 
@@ -69,19 +84,19 @@ Documentation happens automatically as the medic does their job, not as separate
 
 ## Current State
 
-**v1.0 Shipped:** 2026-02-16
+**v1.1 Shipped:** 2026-02-17
 
-- **Codebase:** 84,500 lines (TypeScript, TSX, SQL)
+- **Codebase:** ~142,000 lines (TypeScript, TSX, SQL) — 58,000 lines added in v1.1
 - **Tech Stack:** Expo (iOS), Next.js 15 (web), Supabase (backend), WatermelonDB (offline storage), Stripe (payments)
-- **Phases:** 13 phases complete (84 plans executed)
-- **Status:** 98% production-ready (1 medium-severity UI issue: booking confirmation page uses mock data)
-- **Integration:** 46/47 cross-phase connections working, 4/5 E2E flows complete
-- **Known Issues:** See v1.0-MILESTONE-AUDIT.md for details
+- **Phases:** 23 phases complete (119 plans executed — 84 in v1.0, 35 in v1.1)
+- **Status:** 100% production-ready — 33/33 requirements satisfied, all E2E flows verified
+- **Integration:** All cross-phase connections verified, 5/5 E2E flows complete
+- **Known Issues:** None critical. Minor tech debt deferred: analytics overview tab DB views lack org_id filter (single-tenant, acceptable)
 
 **Next Steps:**
-- Fix booking confirmation page (fetch real data from Supabase)
-- Deploy to production
+- Deploy to production (configure external services per DEPLOYMENT.md)
 - Begin user testing with Kai and initial clients
+- Plan v2.0 milestone with `/gsd:new-milestone`
 
 ## Context
 
@@ -144,4 +159,4 @@ Documentation happens automatically as the medic does their job, not as separate
 | Stripe Connect for medics | Express accounts handle UK Faster Payments without custom bank integration | ✓ Good (v1.0 - weekly payouts working) |
 
 ---
-*Last updated: 2026-02-17 after v1.0 milestone completion*
+*Last updated: 2026-02-17 after v1.1 milestone completion*

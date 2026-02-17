@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v1.1 — Phase 17 (Geofence Coverage Analytics) verified complete. All v1.1 phases 08–17 shipped.
+**Current focus:** v1.1 COMPLETE — archived 2026-02-17. Ready to plan v2.0 with /gsd:new-milestone.
 
 ## Current Position
-Phase: 17-geofence-coverage-analytics — VERIFIED ✅
-Plan: 1 of 1 complete
-Status: Phase 17 VERIFIED (5/5 must-haves) — all v1.1 phases complete, ready for /gsd:complete-milestone
-Last activity: 2026-02-17 — Phase 17 verified: geofence coverage stat card on /admin/geofences (33/33 requirements)
-Progress: [██████████] v1.1 phases 08–17 complete (33/33 requirements satisfied)
+Phase: — (between milestones)
+Plan: —
+Status: v1.1 MILESTONE COMPLETE — all 10 phases verified, 33/33 requirements satisfied, git tag v1.1 created
+Last activity: 2026-02-17 — v1.1 milestone archived (MILESTONES.md updated, PROJECT.md evolved, git tag v1.1)
+Progress: [██████████] v1.1 complete (33/33 requirements, 35 plans, 10 phases)
 
 ## Performance Metrics
 
@@ -599,9 +599,9 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 
 ## Session Continuity
 
-Last session: 2026-02-17T20:27:19Z
-Stopped at: Completed 16-02-PLAN.md — RIDDOR Draft Review card with category select and override reason textarea wired to 30s auto-save
+Last session: 2026-02-17T21:10:00Z
+Stopped at: v1.1 milestone complete — all 10 phases verified (08–17), archived to .planning/milestones/, git tag v1.1 created
 Resume file: None
 
 ---
-*v1.0 MVP complete and archived. All 13 phases shipped (84 plans). See .planning/MILESTONES.md and .planning/milestones/ for full milestone history. Ready to plan next milestone with /gsd:new-milestone.*
+*v1.1 Post-MVP Polish & Data Completeness complete and archived. 10 phases, 35 plans, 33/33 requirements. See .planning/MILESTONES.md and .planning/milestones/ for full milestone history. Ready to plan v2.0 with /gsd:new-milestone.*
