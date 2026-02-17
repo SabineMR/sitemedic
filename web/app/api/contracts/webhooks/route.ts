@@ -45,7 +45,6 @@ export async function POST(request: NextRequest) {
     // Extract contractId from tags
     const contractIdTag = data.tags?.find((t) => t.name === 'contractId');
     if (!contractIdTag) {
-      console.warn('⚠️  No contractId tag found in webhook payload');
       return NextResponse.json(
         { message: 'No contract tag found' },
         { status: 200 }

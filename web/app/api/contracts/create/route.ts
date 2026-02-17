@@ -220,8 +220,6 @@ export async function POST(request: NextRequest) {
         // Don't fail the request if PDF generation fails
         // Admin can regenerate PDF later
       });
-    } else {
-      console.warn('Supabase credentials missing - PDF generation skipped');
     }
 
     // Log contract event

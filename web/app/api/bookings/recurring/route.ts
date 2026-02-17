@@ -28,10 +28,6 @@ export async function POST(request: Request) {
     const maxWeeks = 52;
     const actualWeeks = Math.min(weeks, maxWeeks);
 
-    if (weeks > maxWeeks) {
-      console.warn(`⚠️  Requested ${weeks} weeks, capped at ${maxWeeks}`);
-    }
-
     const supabase = await createClient();
 
     // Fetch parent booking
