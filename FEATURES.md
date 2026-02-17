@@ -15,6 +15,66 @@ SiteMedic is a comprehensive platform combining **mobile medic software** (offli
 
 ---
 
+## Recent Updates — Analytics Dashboard (2026-02-17)
+
+### Phase 12: Analytics Dashboard ✅
+
+Three new analytics tabs added to the admin analytics page, surfacing operational metrics that have been computed in the background since Phase 07.5 but were never visible to admins. The analytics page now has **7 tabs** (overview, medics, geofences, alerts, territory, assignments, utilisation).
+
+**Territory Analytics Tab**
+
+The new "Territory" tab visualises coverage across all regions:
+
+- **Territory Heatmap** — Shows a summary grid (total territories, active territories, avg utilisation %, territories needing hiring, open coverage gaps, avg rejection rate) above a full Leaflet map rendered via dynamic import with `ssr:false` to avoid SSR crashes. Accepts a `TerritoryMapComponent` prop for flexible map rendering.
+- **Hiring Trigger Cards** — Each card shows a sector with critical capacity shortage. Cards with `weeks_active >= 3` show a pulsing red "HIRE NOW" badge with `animate-ping`. Cards display: sector code, territory name, utilisation %, consecutive high-utilisation weeks, coverage %, and rejection rate. Enriched from `territory.hiring_trigger_weeks` at render time (fixes a hardcoded `weeks_active: 0` in the underlying lib).
+- **Coverage Gap Table** — Sortable table (sortable by rejection rate, click header to toggle ASC/DESC) showing territories with `minimum_volume_met === true`. Columns: sector, territory name, total bookings, rejection rate, unfulfilled bookings. Rows colour-coded: red (>25% rejection), yellow (10-25%), green (<10%).
+
+**Assignments Analytics Tab**
+
+The new "Assignments" tab surfaces auto-assignment system performance from `auto_schedule_logs`:
+
+- **Assignment Success Rate Chart** — Dual-axis LineChart (Recharts). Left Y-axis: success rate 0–100% (green line). Right Y-axis: total attempts (blue dashed line). X-axis: ISO week label (e.g. "W7 2026"). Summary cards above: average success rate, total attempts, average confidence score. Empty state: "No auto-assignment data recorded yet. Data will appear after the auto-assignment system processes bookings."
+- **Failure Reason Breakdown Chart** — Aggregates `top_failure_reason` across all 12 weeks, counts occurrences, renders as a red vertical BarChart sorted by frequency. Empty state: "No assignment failures recorded — excellent auto-assignment performance!"
+
+**Utilisation Analytics Tab**
+
+The new "Utilisation" tab shows per-medic performance metrics:
+
+- **Medic Utilisation Table** — Sortable by: utilisation % (default DESC), medic name, total shifts. Columns: medic name, utilisation % (with coloured progress bar), booked days / 5, total shifts completed, territory count, availability status badge. `getUtilizationTextColor()` applied to the % value. Empty state: "No medic data available."
+- **Out-of-Territory Bookings Chart** — Summary cards: total OOT bookings, total extra cost (£), OOT % of all bookings. Horizontal BarChart (orange) showing top 10 OOT bookings by `out_of_territory_cost`. Tooltip shows medic ID, site postcode, shift date, cost, and type ("Travel Bonus" or "Room & Board" based on `out_of_territory_type`). Empty state: "No out-of-territory bookings recorded."
+- **Late Arrival Heatmap** — CSS grid (not Recharts), rows = medics, columns = Mon–Fri. Cell colour intensity: 0 lates (gray), 1–2 (yellow), 3–5 (orange), 6+ (red). Summary stats above: total late arrivals, worst day, worst medic. Empty state: "No late arrival alerts recorded."
+
+**Data API Layer**
+
+New file `web/lib/queries/admin/analytics.ts` provides TanStack Query hooks consumed by all three tabs:
+
+| Hook | Source | Returns |
+|------|--------|---------|
+| `useAutoAssignmentStats` | `auto_schedule_logs` (direct `.eq('org_id', orgId)`) | `WeeklyAssignmentStats[]` — 12 weeks grouped by ISO week |
+| `useMedicUtilisation` | `medics` + `bookings` + `territories` (parallel) | `MedicUtilisation[]` — per-medic utilisation |
+| `useLateArrivalPatterns` | `medic_alerts` where `alert_type='late_arrival'` | `LateArrivalSummary` with patterns, worst_day, worst_medic |
+| `useOutOfTerritoryBookings` | `bookings` where `out_of_territory_cost > 0` | `OOTSummary` with bookings array + aggregates |
+
+All hooks: `staleTime: 60000`, `refetchInterval: 300000`, `org_id` guard in every query (multi-tenant isolation).
+
+**Architecture Decisions**
+
+- Static imports for all chart components (they are `'use client'`, no SSR issues)
+- Dynamic import with `ssr: false` only for `TerritoryMapDynamic` (Leaflet requires browser APIs)
+- Sub-components `TerritoryTab`, `AssignmentsTab`, `UtilisationTab` defined before the page default export — hooks only run when the tab is active
+- `isNewTab` guard in analytics page prevents legacy `useEffect`-based loading gates from blocking new TanStack Query-powered tabs
+- Column `out_of_territory_cost` / `out_of_territory_type` (not `travel_bonus` / `room_board` — those columns do not exist)
+
+| File | Change |
+|------|--------|
+| `web/lib/queries/admin/analytics.ts` | **New** — 4 hooks + 6 types for analytics data |
+| `web/components/admin/territory-analytics-charts.tsx` | **New** — TerritoryHeatmap, HiringTriggerCards, CoverageGapTable |
+| `web/components/admin/assignment-analytics-charts.tsx` | **New** — AssignmentSuccessChart, FailureBreakdownChart |
+| `web/components/admin/medic-utilisation-charts.tsx` | **New** — MedicUtilisationTable, OOTBookingsChart, LateArrivalHeatmap |
+| `web/app/admin/analytics/page.tsx` | **Modified** — Extended from 4 to 7 tabs; added 3 sub-components; dynamic TerritoryMap import |
+
+---
+
 ## Recent Updates — Booking Data Completeness (2026-02-17)
 
 ### Phase 09: Booking Data Completeness ✅
