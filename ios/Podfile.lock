@@ -1,9 +1,16 @@
 PODS:
+  - EXApplication (7.0.8):
+    - ExpoModulesCore
+  - EXAV (16.0.8):
+    - ExpoModulesCore
+    - ReactCommon/turbomodule/core
   - EXConstants (18.0.13):
     - ExpoModulesCore
   - EXImageLoader (6.0.0):
     - ExpoModulesCore
     - React-Core
+  - EXNotifications (0.32.16):
+    - ExpoModulesCore
   - Expo (54.0.33):
     - ExpoModulesCore
     - hermes-engine
@@ -102,6 +109,7 @@ PODS:
   - libwebp/sharpyuv (1.5.0)
   - libwebp/webp (1.5.0):
     - libwebp/sharpyuv
+  - MultiplatformBleAdapter (0.2.0)
   - RCTDeprecation (0.81.5)
   - RCTRequired (0.81.5)
   - RCTTypeSafety (0.81.5):
@@ -1383,6 +1391,29 @@ PODS:
     - ReactNativeDependencies
   - react-native-background-upload (6.6.0):
     - React
+  - react-native-ble-plx (3.5.0):
+    - hermes-engine
+    - MultiplatformBleAdapter (= 0.2.0)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - react-native-netinfo (11.4.1):
     - React-Core
   - react-native-safe-area-context (5.6.2):
@@ -2119,8 +2150,11 @@ PODS:
   - Yoga (0.0.0)
 
 DEPENDENCIES:
+  - "EXApplication (from `../node_modules/.pnpm/expo-application@7.0.8_expo@54.0.33/node_modules/expo-application/ios`)"
+  - "EXAV (from `../node_modules/.pnpm/expo-av@16.0.8_expo@54.0.33_react-native-web@0.21.2_react-dom@19.1.0_react@19.1.0__reac_73c933c7f441c2e6b905e2b5f22dcf3b/node_modules/expo-av/ios`)"
   - "EXConstants (from `../node_modules/.pnpm/expo-constants@18.0.13_expo@54.0.33_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.1.17_react@19.1.0_/node_modules/expo-constants/ios`)"
   - "EXImageLoader (from `../node_modules/.pnpm/expo-image-loader@6.0.0_expo@54.0.33/node_modules/expo-image-loader/ios`)"
+  - "EXNotifications (from `../node_modules/.pnpm/expo-notifications@0.32.16_expo@54.0.33_react-native@0.81.5_@babel+core@7.29.0_@types+r_e8813aa66a709ab411c13d8ccb1f917a/node_modules/expo-notifications/ios`)"
   - "Expo (from `../node_modules/.pnpm/expo@54.0.33_@babel+core@7.29.0_@expo+metro-runtime@6.1.2_expo-router@6.0.23_react-nati_04b89fd344902dee2c7f2af13e9b3f1a/node_modules/expo`)"
   - "ExpoAsset (from `../node_modules/.pnpm/expo-asset@12.0.12_expo@54.0.33_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.1.17_react@19.1.0__react@19.1.0/node_modules/expo-asset/ios`)"
   - "ExpoBackgroundTask (from `../node_modules/.pnpm/expo-background-task@1.0.10_expo@54.0.33_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.1.17_react@19.1.0_/node_modules/expo-background-task/ios`)"
@@ -2175,6 +2209,7 @@ DEPENDENCIES:
   - "React-Mapbuffer (from `../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@types+react@19.1.17_react@19.1.0/node_modules/react-native/ReactCommon`)"
   - "React-microtasksnativemodule (from `../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@types+react@19.1.17_react@19.1.0/node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)"
   - "react-native-background-upload (from `../node_modules/.pnpm/react-native-background-upload@6.6.0_react-native@0.81.5_@babel+core@7.29.0_@types+reac_0dedeb6c8004351b4d1e029ddb3aada2/node_modules/react-native-background-upload`)"
+  - "react-native-ble-plx (from `../node_modules/.pnpm/react-native-ble-plx@3.5.0_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.1.17_react@19.1.0__react@19.1.0/node_modules/react-native-ble-plx`)"
   - "react-native-netinfo (from `../node_modules/.pnpm/@react-native-community+netinfo@11.4.1_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.1.17_react@19.1.0_/node_modules/@react-native-community/netinfo`)"
   - "react-native-safe-area-context (from `../node_modules/.pnpm/react-native-safe-area-context@5.6.2_react-native@0.81.5_@babel+core@7.29.0_@types+reac_db7e84308fa9a28cdc0cc9a7b78f5e93/node_modules/react-native-safe-area-context`)"
   - "react-native-webview (from `../node_modules/.pnpm/react-native-webview@13.16.0_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.1.17_react@19.1.0__react@19.1.0/node_modules/react-native-webview`)"
@@ -2223,14 +2258,21 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - libwebp
+    - MultiplatformBleAdapter
     - SDWebImage
     - SDWebImageWebPCoder
 
 EXTERNAL SOURCES:
+  EXApplication:
+    :path: "../node_modules/.pnpm/expo-application@7.0.8_expo@54.0.33/node_modules/expo-application/ios"
+  EXAV:
+    :path: "../node_modules/.pnpm/expo-av@16.0.8_expo@54.0.33_react-native-web@0.21.2_react-dom@19.1.0_react@19.1.0__reac_73c933c7f441c2e6b905e2b5f22dcf3b/node_modules/expo-av/ios"
   EXConstants:
     :path: "../node_modules/.pnpm/expo-constants@18.0.13_expo@54.0.33_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.1.17_react@19.1.0_/node_modules/expo-constants/ios"
   EXImageLoader:
     :path: "../node_modules/.pnpm/expo-image-loader@6.0.0_expo@54.0.33/node_modules/expo-image-loader/ios"
+  EXNotifications:
+    :path: "../node_modules/.pnpm/expo-notifications@0.32.16_expo@54.0.33_react-native@0.81.5_@babel+core@7.29.0_@types+r_e8813aa66a709ab411c13d8ccb1f917a/node_modules/expo-notifications/ios"
   Expo:
     :path: "../node_modules/.pnpm/expo@54.0.33_@babel+core@7.29.0_@expo+metro-runtime@6.1.2_expo-router@6.0.23_react-nati_04b89fd344902dee2c7f2af13e9b3f1a/node_modules/expo"
   ExpoAsset:
@@ -2338,6 +2380,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@types+react@19.1.17_react@19.1.0/node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
   react-native-background-upload:
     :path: "../node_modules/.pnpm/react-native-background-upload@6.6.0_react-native@0.81.5_@babel+core@7.29.0_@types+reac_0dedeb6c8004351b4d1e029ddb3aada2/node_modules/react-native-background-upload"
+  react-native-ble-plx:
+    :path: "../node_modules/.pnpm/react-native-ble-plx@3.5.0_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.1.17_react@19.1.0__react@19.1.0/node_modules/react-native-ble-plx"
   react-native-netinfo:
     :path: "../node_modules/.pnpm/@react-native-community+netinfo@11.4.1_react-native@0.81.5_@babel+core@7.29.0_@types+react@19.1.17_react@19.1.0_/node_modules/@react-native-community/netinfo"
   react-native-safe-area-context:
@@ -2428,8 +2472,11 @@ EXTERNAL SOURCES:
     :path: "../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.29.0_@types+react@19.1.17_react@19.1.0/node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
+  EXApplication: 1e98d4b1dccdf30627f92917f4b2c5a53c330e5f
+  EXAV: b60fcf142fae6684d295bc28cd7cfcb3335570ea
   EXConstants: fce59a631a06c4151602843667f7cfe35f81e271
   EXImageLoader: 189e3476581efe3ad4d1d3fb4735b7179eb26f05
+  EXNotifications: 9eec98712cc814ceff916d876cb53859003b0597
   Expo: aadbcc8c6c14ff3105a9154f1683cb1424ff0d2a
   ExpoAsset: f867e55ceb428aab99e1e8c082b5aee7c159ea18
   ExpoBackgroundTask: 835449414ab9f0e551de1f6d382fadbfad191dc7
@@ -2450,6 +2497,7 @@ SPEC CHECKSUMS:
   FBLazyVector: e95a291ad2dadb88e42b06e0c5fb8262de53ec12
   hermes-engine: 9f4dfe93326146a1c99eb535b1cb0b857a3cd172
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
+  MultiplatformBleAdapter: b1fddd0d499b96b607e00f0faa8e60648343dc1d
   RCTDeprecation: 943572d4be82d480a48f4884f670135ae30bf990
   RCTRequired: 8f3cfc90cc25cf6e420ddb3e7caaaabc57df6043
   RCTTypeSafety: 16a4144ca3f959583ab019b57d5633df10b5e97c
@@ -2484,6 +2532,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 9050ee10c19f4f7fca8963d0211b2854d624973e
   React-microtasksnativemodule: f775db9e991c6f3b8ccbc02bfcde22770f96e23b
   react-native-background-upload: 627de1e663b94336abed4a84e88fbfa2d1b6ed7f
+  react-native-ble-plx: 1c093030510e7a070d3a268c5296aba851ae1033
   react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187
   react-native-safe-area-context: 37e680fc4cace3c0030ee46e8987d24f5d3bdab2
   react-native-webview: 3e303e80cadb5f17118c8c1502aa398e9287e415

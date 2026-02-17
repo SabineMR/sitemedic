@@ -151,12 +151,12 @@ export default function RootLayout() {
                   }}
                 />
               </Stack>
-              {/* Floating SOS button — rendered after Stack so it's above all screens */}
-              <SOSButton />
             </BottomSheetModalProvider>
           </SyncProvider>
         </AuthProvider>
       </DatabaseProvider>
+      {/* SOSButton outside all providers — no stacking context interference */}
+      <SOSButton />
     </GestureHandlerRootView>
   );
 }

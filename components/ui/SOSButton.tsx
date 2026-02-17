@@ -9,9 +9,8 @@
  * Tap → confirmation sheet → opens SOSModal
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
-  Animated,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -22,29 +21,8 @@ import {
 import SOSModal from './SOSModal';
 
 export default function SOSButton() {
-  const pulseAnim = useRef(new Animated.Value(1)).current;
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [sosModalVisible, setSosModalVisible] = useState(false);
-
-  // Pulsing animation — draws attention so medic never misses the button
-  useEffect(() => {
-    const pulse = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.15,
-          duration: 700,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 700,
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    pulse.start();
-    return () => pulse.stop();
-  }, [pulseAnim]);
 
   const handleConfirm = () => {
     setConfirmVisible(false);
@@ -54,10 +32,7 @@ export default function SOSButton() {
   return (
     <>
       {/* Floating SOS button */}
-      <Animated.View
-        style={[styles.container, { transform: [{ scale: pulseAnim }] }]}
-        pointerEvents="box-none"
-      >
+      <View style={styles.container} pointerEvents="box-none">
         <TouchableOpacity
           style={styles.button}
           onPress={() => setConfirmVisible(true)}
@@ -68,7 +43,7 @@ export default function SOSButton() {
         >
           <Text style={styles.label}>SOS</Text>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
 
       {/* Confirmation bottom sheet */}
       <Modal
