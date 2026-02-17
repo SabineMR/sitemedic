@@ -57,3 +57,6 @@ export interface PricingBreakdown {
 }
 
 export type UrgencyLevel = 'standard' | 'short_notice' | 'urgent' | 'emergency';
+
+/** Medic experience tier — determines payout percentage */
+export type ExperienceLevel = 'junior' | 'senior' | 'lead';

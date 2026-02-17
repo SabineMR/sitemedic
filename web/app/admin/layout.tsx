@@ -31,6 +31,7 @@ import {
   AlertOctagon,
   Shield,
   Bluetooth,
+  Inbox,
 } from 'lucide-react';
 import { QueryProvider } from '@/components/providers/query-provider';
 
@@ -166,6 +167,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: 'Customers',
       href: '/admin/customers',
       icon: <Building2 className="w-5 h-5" />,
+    },
+    {
+      name: 'Leads',
+      href: '/admin/submissions',
+      icon: <Inbox className="w-5 h-5" />,
     },
     {
       name: 'Shift Swaps',

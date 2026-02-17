@@ -1,69 +1,95 @@
 /**
  * Payout Calculator
- * Phase 06.5-02: Calculate medic payouts and platform fees
  *
- * Platform fee split: Medic gets 71.4%, platform keeps 28.6%
- * Arithmetic: Medic rate £30/hr, Client rate £42/hr
- *   - Platform fee: £12/hr (£42 - £30 = £12)
- *   - Medic percentage: 30/42 = 71.43% (71.4%)
- *   - Platform percentage: 12/42 = 28.57% (28.6%)
+ * Calculates medic payouts using:
+ *   1. Experience-based % split (Junior 35% | Senior 42% | Lead 50%)
+ *   2. HMRC mileage reimbursement (45p/mile) added on top — not deducted from platform
  *
- * Example: Client pays £42/hr for 8 hours = £336 total
- *   - Medic receives: £239.90 (71.4%)
- *   - Platform keeps: £96.10 (28.6%)
+ * Note: Legacy hardcoded 71.4% split has been replaced by per-medic
+ * medic_payout_percent stored on the medics table (migration 116).
+ * The experience tier trigger (trg_payout_from_experience_level) keeps
+ * medic_payout_percent in sync when experience_level changes.
  */
 
+import { calculateTotalMedicPayout, HMRC_MILEAGE_RATE_PENCE } from '@/lib/medics/experience';
+
 export interface PayoutCalculation {
-  medicPayout: number;
-  platformFee: number;
-  grossRevenue: number;
-  medicPercentage: number; // Should be 71.4%
-  platformPercentage: number; // Should be 28.6%
+  shiftPayout: number;          // Booking total × medic_payout_percent
+  mileageReimbursement: number; // mileage_miles × £0.45/mile
+  totalPayout: number;          // shiftPayout + mileageReimbursement
+  platformFee: number;          // Booking total × platform_fee_percent
+  grossRevenue: number;         // Booking total (what client paid)
+  medicPayoutPercent: number;   // Snapshot of the % used
+  platformFeePercent: number;   // Snapshot of the platform %
+  mileageMiles: number | null;  // Distance driven (null = not tracked)
+  mileageRatePence: number;     // HMRC rate used (snapshot)
 }
 
 /**
- * Calculate payout split: medic gets 71.4%, platform keeps 28.6%
+ * Calculate full medic payout for a completed shift
  *
- * @param bookingTotal - Total booking revenue in GBP
- * @returns PayoutCalculation with medic payout and platform fee
+ * @param bookingTotal - Total the client paid (inc. VAT), in GBP
+ * @param medicPayoutPercent - Medic's share % from medics.medic_payout_percent
+ * @param mileageMiles - Distance from home to site in miles (from travel_time_cache)
+ * @param mileageRatePence - Pence per mile (default: HMRC 45p)
  */
-export function calculatePayout(bookingTotal: number): PayoutCalculation {
-  const medicPercentage = 71.4;
-  const platformPercentage = 28.6;
+export function calculatePayout(
+  bookingTotal: number,
+  medicPayoutPercent: number = 40,
+  mileageMiles?: number | null,
+  mileageRatePence: number = HMRC_MILEAGE_RATE_PENCE
+): PayoutCalculation {
+  const platformFeePercent = parseFloat((100 - medicPayoutPercent).toFixed(2));
 
-  const medicPayout = (bookingTotal * medicPercentage) / 100;
-  const platformFee = (bookingTotal * platformPercentage) / 100;
+  const { shiftPayout, mileageReimbursement, totalPayout } = calculateTotalMedicPayout({
+    bookingTotal,
+    medicPayoutPercent,
+    mileageMiles,
+    mileageRatePence,
+  });
+
+  const platformFee = parseFloat(((bookingTotal * platformFeePercent) / 100).toFixed(2));
 
   return {
-    medicPayout: Number(medicPayout.toFixed(2)),
-    platformFee: Number(platformFee.toFixed(2)),
+    shiftPayout,
+    mileageReimbursement,
+    totalPayout,
+    platformFee,
     grossRevenue: bookingTotal,
-    medicPercentage,
-    platformPercentage,
+    medicPayoutPercent,
+    platformFeePercent,
+    mileageMiles: mileageMiles ?? null,
+    mileageRatePence,
   };
 }
 
 /**
- * Calculate platform fee from booking
+ * Calculate platform fee only (for invoicing / reporting)
  *
- * @param bookingTotal - Total booking revenue in GBP
- * @returns Platform fee (28.6% of total)
+ * @param bookingTotal - Total the client paid, in GBP
+ * @param platformFeePercent - Platform's share % (default 60)
  */
-export function calculatePlatformFee(bookingTotal: number): number {
-  return Number(((bookingTotal * 28.6) / 100).toFixed(2));
+export function calculatePlatformFee(
+  bookingTotal: number,
+  platformFeePercent: number = 60
+): number {
+  return parseFloat(((bookingTotal * platformFeePercent) / 100).toFixed(2));
 }
 
 /**
- * Validate payout matches expected calculation
+ * Validate payout amount matches expected calculation (within £0.01 tolerance)
  *
- * @param timesheet - Timesheet with payout_amount
- * @param booking - Booking with total revenue
- * @returns true if payout matches expected 71.4% (within 1 penny tolerance)
+ * @param timesheetPayoutAmount - Stored payout_amount on the timesheet
+ * @param bookingTotal - Booking total in GBP
+ * @param medicPayoutPercent - Medic's payout % (from medics table)
+ * @param mileageMiles - Miles driven (from timesheets.mileage_miles)
  */
-export function validatePayout(timesheet: any, booking: any): boolean {
-  const expected = calculatePayout(booking.total);
-  const actual = timesheet.payout_amount;
-
-  // Allow 1 penny tolerance for rounding
-  return Math.abs(expected.medicPayout - actual) <= 0.01;
+export function validatePayout(
+  timesheetPayoutAmount: number,
+  bookingTotal: number,
+  medicPayoutPercent: number,
+  mileageMiles?: number | null
+): boolean {
+  const expected = calculatePayout(bookingTotal, medicPayoutPercent, mileageMiles);
+  return Math.abs(expected.totalPayout - timesheetPayoutAmount) <= 0.01;
 }
