@@ -222,6 +222,10 @@ export function ContractsTable({ contracts, stats }: ContractsTableProps) {
                       contact_name: contract.client.name ?? '',
                       contact_email: contract.client.email ?? '',
                     },
+                    booking: contract.booking ? {
+                      ...contract.booking,
+                      total: contract.booking.total_price ?? 0,
+                    } : undefined,
                   }}
                   onSent={() =>
                     setContractList((prev) =>

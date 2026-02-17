@@ -63,7 +63,7 @@ export default function PlatformRevenuePage() {
 
           // Map org revenue data
           setOrgRevenues(
-            revenueData.map((org) => ({
+            revenueData.map((org: OrgRevenue) => ({
               org_id: org.org_id,
               org_name: org.org_name,
               revenue: Number(org.revenue),
