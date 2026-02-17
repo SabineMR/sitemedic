@@ -8,6 +8,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { getContractById } from '@/lib/contracts/queries';
 import { ContractDetail } from '@/components/contracts/contract-detail';
+import { formatContractNumber } from '@/lib/contracts/utils';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
@@ -28,7 +29,7 @@ export default async function ContractDetailPage({
   }
 
   // Generate contract number
-  const contractNumber = `SA-${contract.id.slice(0, 8)}`;
+  const contractNumber = formatContractNumber(contract.id, contract.created_at);
 
   return (
     <div className="space-y-4">

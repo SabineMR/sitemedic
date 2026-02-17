@@ -78,10 +78,9 @@ export async function getContracts(filters?: {
   }
 
   // Apply search filter (company name, contract number, site address)
+  // Contract number search is handled client-side using formatContractNumber() after fetch
   if (filters?.search) {
-    // Note: Search by contract number requires custom RPC or client-side filtering
-    // For now, we'll fetch all and filter client-side in the component
-    // TODO: Add contract_number computed column or RPC function
+    // Fetch all and filter client-side — contract numbers are derived from id + created_at
   }
 
   const { data, error } = await query;

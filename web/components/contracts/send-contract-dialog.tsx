@@ -29,6 +29,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { Contract } from '@/lib/contracts/types';
+import { formatContractNumber } from '@/lib/contracts/utils';
 
 // ============================================================================
 // Types
@@ -141,7 +142,7 @@ export function SendContractDialog({
   };
 
   // Calculate contract number display
-  const contractNumber = contract.id.slice(0, 8).toUpperCase();
+  const contractNumber = formatContractNumber(contract.id, contract.created_at);
 
   // Format total amount
   const totalAmount =

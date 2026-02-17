@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { ContractWithRelations } from '@/lib/contracts/types';
+import { formatContractNumber } from '@/lib/contracts/utils';
 import { ContractStatusBadge } from './contract-status-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -101,7 +102,7 @@ export function ContractDetail({ contract }: ContractDetailProps) {
   };
 
   // Generate contract number
-  const contractNumber = `SA-${contract.id.slice(0, 8)}`;
+  const contractNumber = formatContractNumber(contract.id, contract.created_at);
 
   // Get PDF download URL (from current version)
   const pdfUrl = contract.currentVersion?.storage_path

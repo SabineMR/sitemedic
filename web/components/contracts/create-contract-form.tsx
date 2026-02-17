@@ -98,7 +98,7 @@ export function CreateContractForm({
   // Build preview data
   const previewData: Partial<ContractData> = selectedBooking
     ? {
-        contractNumber: 'SA-XXXX-XXX', // Placeholder until created
+        contractNumber: `SA-${new Date().getFullYear()}-PREVIEW`,
         generatedDate: new Date().toISOString(),
         clientName: selectedBooking.client.company_name,
         clientEmail: selectedBooking.client.contact_email,

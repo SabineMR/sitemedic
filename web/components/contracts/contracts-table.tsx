@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { ContractWithRelations, ContractStatus } from '@/lib/contracts/types';
 import { STATUS_LABELS } from '@/lib/contracts/workflow';
+import { formatContractNumber } from '@/lib/contracts/utils';
 import { ContractStatusBadge } from './contract-status-badge';
 import { SendContractDialog } from './send-contract-dialog';
 import { DataTable } from '@/components/dashboard/data-table';
@@ -135,9 +136,7 @@ export function ContractsTable({ contracts, stats }: ContractsTableProps) {
       accessorKey: 'id',
       header: 'Contract #',
       cell: ({ row }) => {
-        // Generate contract number from ID (SA-YYYY-NNN format)
-        // For now, use first 8 chars of ID as placeholder
-        const contractNum = `SA-${row.original.id.slice(0, 8)}`;
+        const contractNum = formatContractNumber(row.original.id, row.original.created_at);
         return (
           <Link
             href={`/contracts/${row.original.id}`}

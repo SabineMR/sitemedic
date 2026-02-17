@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Construction Site Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - Paramedic staffing company using SiteMedic platform
-**Last Updated**: 2026-02-16 (Medium-priority gap fixes: platform admin, legal pages, CSV export, dashboard nav, new admin pages)
+**Last Updated**: 2026-02-16 (Low-priority gap fixes: medic onboarding route, org setup flow, contract numbers, plus all medium gaps)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -82,6 +82,16 @@ The previous homepage was a generic "book a paramedic for compliance" page. The 
 9. **Final CTA** — Blue section with England & Wales geographic scope, dual CTAs (Book / View Pricing)
 
 **UK-only scope explicitly stated** throughout copy.
+
+---
+
+### Low-Priority Gap Fixes — Applied 2026-02-16
+
+| Fix | File(s) Changed |
+|-----|-----------------|
+| **Medic onboarding page under wrong route group** — `(dashboard)/admin/medics/onboarding/[id]` used the white dashboard sidebar instead of the admin dark sidebar | Created `web/app/admin/medics/[id]/onboarding/page.tsx` with admin dark theme; updated `MedicRosterTable` actions column to link "Onboarding" and "Payslips" per medic |
+| **No organisation onboarding flow** — middleware had commented-out `/setup/organization` redirect for users with no `org_id` | Created `web/app/setup/organization/page.tsx` (org name, email, phone, address, postcode form → inserts `organizations` + `org_memberships`); uncommented the redirect in `web/lib/supabase/middleware.ts` |
+| **Contract numbers not human-readable** — used `SA-${uuid.slice(0,8)}` which is opaque | Created `web/lib/contracts/utils.ts` with `formatContractNumber(id, createdAt)` → `SA-2026-A3F9C1` format; updated `contracts/[id]/page.tsx`, `contract-detail.tsx`, `contracts-table.tsx`, `send-contract-dialog.tsx` |
 
 ---
 
