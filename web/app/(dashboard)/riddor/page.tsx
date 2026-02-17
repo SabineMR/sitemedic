@@ -15,20 +15,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useOrg } from '@/contexts/org-context';
 
 export default function RIDDORPage() {
+  const { orgId, loading: orgLoading } = useOrg();
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'submitted' | 'confirmed'>('all');
 
   // Fetch RIDDOR incidents with 60-second polling
   const { data: incidents = [], isLoading } = useQuery({
-    queryKey: ['riddor-incidents', statusFilter],
+    queryKey: ['riddor-incidents', orgId, statusFilter],
     queryFn: async () => {
-      // For demo, using hardcoded org_id - replace with actual auth context
-      const orgId = '10000000-0000-0000-0000-000000000001';
-      return fetchRIDDORIncidents(orgId, statusFilter === 'all' ? undefined : statusFilter);
+      return fetchRIDDORIncidents(orgId!, statusFilter === 'all' ? undefined : statusFilter);
     },
+    enabled: !!orgId,
     refetchInterval: 60000, // Poll every 60 seconds
   });
+
+  if (orgLoading) {
+    return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
+  }
+
+  if (!orgId) {
+    return <div className="text-center py-8 text-muted-foreground">No organization assigned</div>;
+  }
 
   const pendingCount = incidents.filter((i) => i.status === 'draft').length;
   const overdueCount = incidents.filter((i) => {
