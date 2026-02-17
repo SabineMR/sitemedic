@@ -41,11 +41,11 @@ export function calculatePayout(
 ): PayoutCalculation {
   const platformFeePercent = parseFloat((100 - medicPayoutPercent).toFixed(2));
 
-  // mileageMiles from travel_time_cache is one-way — calculateTotalMedicPayout doubles it
-  const { shiftPayout, mileageReimbursement, roundTripMiles, totalPayout } = calculateTotalMedicPayout({
+  // mileageMiles = exact leg miles from mileage router (already accounts for full route)
+  const { shiftPayout, mileageReimbursement, legMiles, totalPayout } = calculateTotalMedicPayout({
     bookingTotal,
     medicPayoutPercent,
-    oneWayMiles: mileageMiles,
+    legMiles: mileageMiles,
     mileageRatePence,
   });
 
@@ -59,7 +59,7 @@ export function calculatePayout(
     grossRevenue: bookingTotal,
     medicPayoutPercent,
     platformFeePercent,
-    mileageMiles: roundTripMiles > 0 ? roundTripMiles : null,
+    mileageMiles: legMiles > 0 ? legMiles : null,
     mileageRatePence,
   };
 }

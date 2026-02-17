@@ -31,7 +31,9 @@ interface CompensationSettingsProps {
 
 /** Example shift for the "estimated payout" preview */
 const EXAMPLE_BOOKING_TOTAL = 403.20; // 8 hrs × £42 + 20% VAT = £403.20
-const EXAMPLE_ONE_WAY_MILES = 12;     // Typical 12-mile one-way (24 miles round trip)
+// Round-trip miles for a single-site day example (12 mi each way = 24 mi total)
+// The mileage router calculates this automatically per shift; this is just for preview.
+const EXAMPLE_ROUND_TRIP_MILES = 24;
 
 export function CompensationSettings({
   medicId,
@@ -45,11 +47,11 @@ export function CompensationSettings({
 
   const selectedTier = EXPERIENCE_TIER_LIST.find(t => t.level === selectedLevel)!;
 
-  // Live preview of payout for an example shift (one-way miles doubled internally)
+  // Live preview: single-site day, 12 mi each way (24 mi round trip)
   const preview = calculateTotalMedicPayout({
     bookingTotal: EXAMPLE_BOOKING_TOTAL,
     medicPayoutPercent: selectedTier.medicPayoutPercent,
-    oneWayMiles: EXAMPLE_ONE_WAY_MILES,
+    legMiles: EXAMPLE_ROUND_TRIP_MILES,
     mileageRatePence: HMRC_MILEAGE_RATE_PENCE,
   });
 
@@ -124,7 +126,7 @@ export function CompensationSettings({
         <div className="flex items-center gap-2 mb-3">
           <TrendingUp className="w-4 h-4 text-gray-400" />
           <span className="text-gray-400 text-xs font-medium uppercase tracking-wide">
-            Example 8-hr Standard Shift · {EXAMPLE_ONE_WAY_MILES} mi each way ({preview.roundTripMiles} mi round trip)
+            Example 8-hr Standard Shift · 12 mi each way ({EXAMPLE_ROUND_TRIP_MILES} mi round trip)
           </span>
         </div>
         <div className="grid grid-cols-3 gap-4 text-sm">
@@ -136,7 +138,7 @@ export function CompensationSettings({
           <div>
             <p className="text-gray-500 text-xs mb-0.5">Mileage</p>
             <p className="text-white font-semibold text-lg">£{preview.mileageReimbursement.toFixed(2)}</p>
-            <p className="text-gray-500 text-xs">{preview.roundTripMiles} mi × {HMRC_MILEAGE_RATE_PENCE}p (round trip)</p>
+            <p className="text-gray-500 text-xs">{EXAMPLE_ROUND_TRIP_MILES} mi × {HMRC_MILEAGE_RATE_PENCE}p (round trip)</p>
           </div>
           <div className="border-l border-gray-700/50 pl-4">
             <p className="text-gray-500 text-xs mb-0.5">Total to medic</p>

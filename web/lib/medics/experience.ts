@@ -13,6 +13,13 @@
  * from medics.experience_level via DB trigger (migration 116).
  *
  * Mileage reimbursement is separate — added on top of the % payout.
+ * Miles are calculated per-leg by the daily mileage router
+ * (web/lib/payouts/mileage-router.ts), which handles:
+ *   - Single site:  home → site → home (full round trip)
+ *   - Multi-site:   home → site1 → site2 → ... → home (sequential legs)
+ * The router stores exact leg miles on timesheets.mileage_miles.
+ * No doubling happens here — the router has already accounted for every
+ * mile driven, including the return journey home.
  */
 
 export type ExperienceLevel = 'junior' | 'senior' | 'lead';
@@ -68,56 +75,58 @@ export function getExperienceTier(level: ExperienceLevel): ExperienceTier {
 }
 
 /**
- * Calculate mileage reimbursement for a given distance.
+ * Calculate mileage reimbursement for exact miles driven.
  *
- * IMPORTANT: pass the ROUND-TRIP distance (one-way × 2).
- * The travel_time_cache stores one-way miles from Google Maps —
- * callers must double it before passing here for day shifts.
+ * Pass the exact miles to reimburse — no doubling is done here.
+ * For a single-site day the mileage router provides the full round-trip miles.
+ * For multi-site days it provides per-leg miles (already including the return
+ * home on the last booking of the day).
  *
- * @param roundTripMiles - Total miles driven there AND back
+ * @param miles - Exact miles to reimburse for this booking
  * @param ratePence - Pence per mile (default: HMRC 45p)
  * @returns Reimbursement amount in GBP
  */
 export function calculateMileageReimbursement(
-  roundTripMiles: number,
+  miles: number,
   ratePence: number = HMRC_MILEAGE_RATE_PENCE
 ): number {
-  if (!roundTripMiles || roundTripMiles <= 0) return 0;
-  return parseFloat(((roundTripMiles * ratePence) / 100).toFixed(2));
+  if (!miles || miles <= 0) return 0;
+  return parseFloat(((miles * ratePence) / 100).toFixed(2));
 }
 
 /**
- * Calculate total medic payout: shift % payout + mileage reimbursement
+ * Calculate total medic payout for a booking: shift % payout + mileage reimbursement.
  *
- * @param bookingTotal - Total booking revenue in GBP (inc. VAT)
- * @param medicPayoutPercent - Medic's payout % (35 | 42 | 50)
- * @param oneWayMiles - One-way distance from travel_time_cache (we double it for round trip)
- * @param mileageRatePence - Pence per mile (default: HMRC 45p)
+ * @param bookingTotal    Total booking revenue in GBP (inc. VAT)
+ * @param medicPayoutPercent  Medic's payout % from medics.medic_payout_percent (35 | 42 | 50)
+ * @param legMiles        Exact miles for this booking as calculated by the mileage router.
+ *                        For a single-site day this is the full round-trip distance.
+ *                        For multi-site days this is the leg miles assigned to this booking.
+ *                        Null/0 = no mileage (e.g. router not yet run).
+ * @param mileageRatePence  Pence per mile (default: HMRC 45p)
  */
 export function calculateTotalMedicPayout(params: {
   bookingTotal: number;
   medicPayoutPercent: number;
-  oneWayMiles?: number | null;   // One-way from Google Maps cache — doubled internally
+  legMiles?: number | null;
   mileageRatePence?: number;
 }): {
   shiftPayout: number;          // % of booking total
-  mileageReimbursement: number; // Round-trip distance reimbursement
-  roundTripMiles: number;       // Total miles paid (one-way × 2)
+  mileageReimbursement: number; // Mileage payout for this booking's leg
+  legMiles: number;             // Miles being reimbursed
   totalPayout: number;          // shiftPayout + mileageReimbursement
 } {
   const {
     bookingTotal,
     medicPayoutPercent,
-    oneWayMiles,
+    legMiles,
     mileageRatePence = HMRC_MILEAGE_RATE_PENCE,
   } = params;
 
-  // Round trip = one-way × 2 (medic drives to site and back home)
-  const roundTripMiles = (oneWayMiles ?? 0) * 2;
-
+  const exactMiles = legMiles ?? 0;
   const shiftPayout = parseFloat(((bookingTotal * medicPayoutPercent) / 100).toFixed(2));
-  const mileageReimbursement = calculateMileageReimbursement(roundTripMiles, mileageRatePence);
+  const mileageReimbursement = calculateMileageReimbursement(exactMiles, mileageRatePence);
   const totalPayout = parseFloat((shiftPayout + mileageReimbursement).toFixed(2));
 
-  return { shiftPayout, mileageReimbursement, roundTripMiles, totalPayout };
+  return { shiftPayout, mileageReimbursement, legMiles: exactMiles, totalPayout };
 }
