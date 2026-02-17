@@ -2,7 +2,8 @@
  * Medic Payslips Page
  *
  * View and download payslips for all paid timesheets.
- * Uses the generate-payslip-pdf edge function.
+ * Fast path: uses stored pdf_url from payslips table (instant open).
+ * Fallback: calls generate-payslip-pdf edge function for older payslips without a stored URL.
  */
 
 'use client';
@@ -21,6 +22,8 @@ interface Payslip {
   payout_status: string;
   paid_at: string | null;
   stripe_transfer_id: string | null;
+  payslip_pdf_url: string | null;
+  payslip_reference: string | null;
   booking: {
     site_name: string;
     shift_date: string;
@@ -56,7 +59,8 @@ export default function MedicPayslipsPage() {
           booking:bookings!inner(
             site_name, shift_date,
             client:clients!inner(company_name)
-          )
+          ),
+          payslip:payslips(id, pdf_url, payslip_reference)
         `)
         .eq('medic_id', user.id)
         .in('payout_status', ['admin_approved', 'paid'])
@@ -65,7 +69,19 @@ export default function MedicPayslipsPage() {
       if (error) {
         console.error('Error fetching payslips:', error);
       } else {
-        setPayslips((data as unknown as Payslip[]) || []);
+        const mapped = (data || []).map((row: any) => ({
+          id: row.id,
+          booking_id: row.booking_id,
+          logged_hours: row.logged_hours,
+          payout_amount: row.payout_amount,
+          payout_status: row.payout_status,
+          paid_at: row.paid_at,
+          stripe_transfer_id: row.stripe_transfer_id,
+          booking: row.booking,
+          payslip_pdf_url: row.payslip?.pdf_url ?? null,
+          payslip_reference: row.payslip?.payslip_reference ?? null,
+        }));
+        setPayslips(mapped);
       }
       setLoading(false);
     }
@@ -81,6 +97,15 @@ export default function MedicPayslipsPage() {
     const supabase = createClient();
 
     try {
+      // Path A (fast path): use stored pdf_url — no edge function call needed
+      if (payslip.payslip_pdf_url) {
+        window.open(payslip.payslip_pdf_url, '_blank');
+        toast.success('Payslip opened');
+        setDownloadingId(null);
+        return;
+      }
+
+      // Path B (fallback): call edge function for older payslips without a stored URL
       const { data, error } = await supabase.functions.invoke('generate-payslip-pdf', {
         body: { timesheet_id: payslip.id, medic_id: medicId },
       });
@@ -171,6 +196,9 @@ export default function MedicPayslipsPage() {
                   )}
                   {!p.paid_at && (
                     <span className="text-yellow-400">Approved — awaiting payment</span>
+                  )}
+                  {p.payslip_reference && (
+                    <span className="text-gray-500">Ref: {p.payslip_reference}</span>
                   )}
                 </div>
               </div>
