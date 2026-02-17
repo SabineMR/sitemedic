@@ -12,6 +12,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import {
   useReactTable,
   getCoreRowModel,
@@ -368,9 +369,18 @@ export function MedicRosterTable() {
         const medic = row.original;
         return (
           <div className="flex gap-2">
-            <button className="text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors">
-              View Details
-            </button>
+            <Link
+              href={`/admin/medics/${medic.id}/onboarding`}
+              className="text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors"
+            >
+              Onboarding
+            </Link>
+            <Link
+              href={`/admin/medics/${medic.id}/payslips`}
+              className="text-gray-400 hover:text-gray-200 text-xs font-medium transition-colors"
+            >
+              Payslips
+            </Link>
           </div>
         );
       },
