@@ -72,6 +72,14 @@ Deno.serve(async (req: Request) => {
             continue; // Skip this cert, already reminded today
           }
 
+          // Fetch organization name for email personalization
+          const { data: org } = await supabase
+            .from('organizations')
+            .select('name')
+            .eq('id', cert.org_id)
+            .single();
+          const orgName = org?.name || 'Your Organization';
+
           // Send email to medic
           console.log(`Sending email to medic: ${cert.medic_email} for ${cert.cert_type}`);
           const medicMessageId = await sendCertificationExpiryEmail({
@@ -83,7 +91,7 @@ Deno.serve(async (req: Request) => {
             renewalUrl: cert.renewal_url,
             recipientEmail: cert.medic_email,
             recipientName: `${cert.medic_first_name} ${cert.medic_last_name}`,
-            orgName: 'Your Organization',
+            orgName: orgName,
             dashboardUrl: `${dashboardBaseUrl}/certifications`,
           });
 
@@ -125,13 +133,13 @@ Deno.serve(async (req: Request) => {
               console.log(`Sending notification to site manager: ${siteManager.email}`);
 
               // Fetch org name for manager email
-              const { data: org, error: orgError } = await supabase
+              const { data: managerOrg } = await supabase
                 .from('organizations')
-                .select('company_name')
+                .select('name')
                 .eq('id', cert.org_id)
                 .single();
 
-              const orgName = org?.company_name || 'Your Organization';
+              const managerOrgName = managerOrg?.name || 'Your Organization';
 
               await sendCertificationExpiryEmail({
                 medicFirstName: cert.medic_first_name,
@@ -142,7 +150,7 @@ Deno.serve(async (req: Request) => {
                 renewalUrl: cert.renewal_url,
                 recipientEmail: siteManager.email,
                 recipientName: `${siteManager.first_name} ${siteManager.last_name}`,
-                orgName: orgName,
+                orgName: managerOrgName,
                 dashboardUrl: `${dashboardBaseUrl}/certifications`,
               });
             }
@@ -178,13 +186,13 @@ Deno.serve(async (req: Request) => {
           }
 
           // Fetch org name
-          const { data: org } = await supabase
+          const { data: expiredOrg } = await supabase
             .from('organizations')
-            .select('company_name')
+            .select('name')
             .eq('id', cert.org_id)
             .single();
 
-          const orgName = org?.company_name || 'Your Organization';
+          const expiredOrgName = expiredOrg?.name || 'Your Organization';
 
           console.log(`Sending EXPIRED notification to manager: ${siteManager.email}`);
 
@@ -197,7 +205,7 @@ Deno.serve(async (req: Request) => {
             renewalUrl: cert.renewal_url,
             recipientEmail: siteManager.email,
             recipientName: `${siteManager.first_name} ${siteManager.last_name}`,
-            orgName: orgName,
+            orgName: expiredOrgName,
             dashboardUrl: `${dashboardBaseUrl}/certifications`,
           });
 
