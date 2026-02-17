@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 Phase: v1.1 — Phase 08 (Lead Capture & Data Persistence) — in progress
-Plan: 08-02 complete (2/4). Wave 2 running parallel: 08-02 done, 08-03 pending
-Status: In progress — 08-02 executed
-Last activity: 2026-02-17 — Completed 08-02-PLAN.md (API DB-first persistence, service-role client)
-Progress: [██░░░░░░░░░░░░░░░░░░] 50% (2/4 plans executed in Phase 08)
+Plan: 08-03 complete (3/4). Wave 2 done (08-02 + 08-03). Wave 3 next: 08-04
+Status: In progress — 08-03 executed
+Last activity: 2026-02-17 — Completed 08-03-PLAN.md (Admin submissions CRM page, TanStack Query hooks)
+Progress: [███░░░░░░░░░░░░░░░░░] 75% (3/4 plans executed in Phase 08)
 
 ## Performance Metrics
 
@@ -470,6 +470,11 @@ Recent decisions affecting current work:
 
 **From Plan 02-07:**
 
+**From Plan 08-03:**
+- D-08-03-001: onSettled invalidates both contact-submissions and quote-submissions query keys regardless of which table was mutated (simplest correctness guarantee, minimal extra refetch cost)
+- D-08-03-002: Status badge shown above inline Select dropdown in Status column (badge = at-a-glance state, Select = action trigger)
+- D-08-03-003: Convert to Booking button hidden when status is 'closed' (prevents converting dead leads)
+
 **From Plan 08-01:**
 - D-08-01-001: No INSERT policy for org users — service role (server-only) handles all public form inserts to lead tables
 - D-08-01-002: No DELETE policy for org users — lead submissions are permanent records; only platform admins can delete
@@ -526,8 +531,8 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 
 ## Session Continuity
 
-Last session: 2026-02-17T16:44:32Z
-Stopped at: Completed 08-01-PLAN.md — DB migration 115_lead_capture_tables.sql and env example updated.
+Last session: 2026-02-17T16:59:00Z
+Stopped at: Completed 08-03-PLAN.md — Admin submissions CRM page, TanStack Query hooks, sidebar nav.
 Resume file: None
 
 ---
