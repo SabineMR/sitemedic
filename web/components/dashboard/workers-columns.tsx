@@ -92,11 +92,17 @@ export const workersColumns: ColumnDef<Worker>[] = [
     accessorKey: 'cert_status',
     header: 'Cert Status',
     cell: ({ row }) => {
-      // TODO Phase 7: Replace with actual certification expiry check
-      // For now, show green "Active" badge for all workers (since cert tracking is Phase 7)
+      // NOTE: This column is a placeholder for future construction worker certification tracking.
+      // Current Phase 7 certification tracking applies to MEDICS (the medical professionals),
+      // not construction site workers. Construction workers (in this workers table) do not have
+      // certifications tracked in the database. If future requirements include tracking
+      // construction worker certifications (e.g., confined space training, CSCS cards),
+      // this column should be updated to query worker-specific certification data.
+      //
+      // For MEDIC certifications, see the Certifications page in the dashboard.
       return (
-        <Badge className="bg-green-100 text-green-800" variant="outline">
-          Active
+        <Badge className="bg-gray-100 text-gray-600" variant="outline">
+          N/A
         </Badge>
       );
     },

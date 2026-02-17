@@ -44,13 +44,12 @@ export function WorkersTable({ initialData }: WorkersTableProps) {
       );
     }
 
-    // Cert status filter (placeholder - all workers are "Active" until Phase 7)
+    // Cert status filter - NOTE: Construction workers do not have certifications tracked
+    // Phase 7 certification tracking applies to MEDICS, not construction site workers
+    // This filter is disabled (returns all workers) until worker-specific cert tracking is implemented
     if (certStatusFilter !== 'all') {
-      // When Phase 7 is implemented, this will filter based on actual cert expiry
-      // For now, all workers pass the "active" filter
-      if (certStatusFilter !== 'active') {
-        filtered = [];
-      }
+      // All filters except 'all' return empty results since workers don't have cert data
+      filtered = [];
     }
 
     return filtered;
@@ -82,16 +81,13 @@ export function WorkersTable({ initialData }: WorkersTableProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">Cert Status</label>
-            <Select value={certStatusFilter} onValueChange={setCertStatusFilter}>
+            <label className="text-sm font-medium text-muted-foreground">Cert Status</label>
+            <Select value={certStatusFilter} onValueChange={setCertStatusFilter} disabled>
               <SelectTrigger className="w-[150px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="expiring">Expiring Soon</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
+                <SelectItem value="all">N/A - Workers</SelectItem>
               </SelectContent>
             </Select>
           </div>
