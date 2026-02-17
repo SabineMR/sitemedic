@@ -41,6 +41,7 @@ import { TREATMENT_TYPES } from '../../services/taxonomy/treatment-types';
 import { OUTCOME_CATEGORIES } from '../../services/taxonomy/outcome-categories';
 import { useSync } from '../../src/contexts/SyncContext';
 import { photoUploadQueue } from '../../src/services/PhotoUploadQueue';
+import { supabase } from '../../src/lib/supabase';
 
 // Common mechanism presets (TREAT-04)
 const MECHANISM_PRESETS = [
@@ -80,6 +81,7 @@ export default function NewTreatmentScreen() {
   const [showOutcomePicker, setShowOutcomePicker] = useState(false);
   const [showSignaturePad, setShowSignaturePad] = useState(false);
   const [riddorFlagged, setRiddorFlagged] = useState(false);
+  const [certValidationError, setCertValidationError] = useState<string | null>(null);
 
   // Initialize treatment record on mount
   useEffect(() => {
@@ -210,8 +212,80 @@ export default function NewTreatmentScreen() {
     setSignatureUri(base64);
   };
 
+  // Validate medic certifications before allowing treatment completion
+  const validateMedicCertifications = async (): Promise<{ valid: boolean; message?: string; expired_certs?: string[] }> => {
+    try {
+      // Get current authenticated user
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        // Offline or unauthenticated - don't block (offline-first architecture)
+        console.warn('No authenticated user, skipping cert validation');
+        return { valid: true };
+      }
+
+      // Look up medic record by user_id to get medics table id
+      const { data: medic, error: medicError } = await supabase
+        .from('medics')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (medicError || !medic) {
+        // No medic record for this user - skip validation
+        console.warn('No medic record found for user, skipping cert validation');
+        return { valid: true };
+      }
+
+      // Call certification validation API with medic table id
+      const webAppUrl = process.env.EXPO_PUBLIC_WEB_APP_URL || 'http://localhost:30500';
+      const response = await fetch(`${webAppUrl}/api/certifications/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ worker_id: medic.id }),
+      });
+
+      // If 403, certifications are expired
+      if (response.status === 403) {
+        const errorData = await response.json();
+        return {
+          valid: false,
+          message: errorData.message || 'You have expired certifications',
+          expired_certs: errorData.expired_certs || [],
+        };
+      }
+
+      // If 200, certifications are valid
+      if (response.ok) {
+        return { valid: true };
+      }
+
+      // Other errors (404, 500) - don't block offline-first workflow
+      console.warn(`Cert validation returned ${response.status}, allowing treatment`);
+      return { valid: true };
+    } catch (error) {
+      // Network error - don't block offline treatment logging
+      console.warn('Cert validation network error, allowing treatment:', error);
+      return { valid: true };
+    }
+  };
+
   // Complete treatment (mark as complete and navigate)
   const handleCompleteTreatment = async () => {
+    // Validate medic certifications FIRST
+    const certCheck = await validateMedicCertifications();
+    if (!certCheck.valid) {
+      setCertValidationError(certCheck.message || 'You have expired certifications');
+      Alert.alert(
+        'Expired Certifications',
+        `You cannot log treatments while you have expired certifications: ${certCheck.expired_certs?.join(', ')}. Please renew your certifications to continue.`,
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+    setCertValidationError(null);
+
+    // Existing validation
     // Validation
     if (!workerId) {
       Alert.alert('Missing Information', 'Please select a worker');
@@ -313,6 +387,15 @@ export default function NewTreatmentScreen() {
           <View style={styles.riddorBanner}>
             <Text style={styles.riddorText}>
               ⚠️ This may be RIDDOR reportable. It will be flagged for review.
+            </Text>
+          </View>
+        )}
+
+        {/* Certification Error Banner */}
+        {certValidationError && (
+          <View style={styles.certErrorBanner}>
+            <Text style={styles.certErrorText}>
+              {certValidationError}
             </Text>
           </View>
         )}
@@ -555,6 +638,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#92400E',
+    textAlign: 'center',
+  },
+  certErrorBanner: {
+    backgroundColor: '#FEF2F2',
+    borderWidth: 2,
+    borderColor: '#EF4444',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  certErrorText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#991B1B',
     textAlign: 'center',
   },
   section: {
