@@ -10,6 +10,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { useRequireOrg } from '@/contexts/org-context';
 
 // =============================================================================
 // TYPES
@@ -71,9 +72,11 @@ export interface PayoutSummary {
 /**
  * Fetch pending timesheets (ready for admin approval)
  * Returns timesheets with status 'pending' or 'manager_approved'
+ * IMPORTANT: Now accepts orgId parameter for org-scoped filtering
  */
 export async function fetchPendingTimesheets(
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  orgId: string
 ): Promise<TimesheetWithDetails[]> {
   const { data, error } = await supabase
     .from('timesheets')
@@ -93,6 +96,7 @@ export async function fetchPendingTimesheets(
         last_name
       )
     `)
+    .eq('org_id', orgId) // CRITICAL: Filter by org_id
     .in('payout_status', ['pending', 'manager_approved'])
     .order('created_at', { ascending: false });
 
@@ -106,9 +110,11 @@ export async function fetchPendingTimesheets(
 
 /**
  * Fetch ALL timesheets (for overview/history view)
+ * IMPORTANT: Now accepts orgId parameter for org-scoped filtering
  */
 export async function fetchAllTimesheets(
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  orgId: string
 ): Promise<TimesheetWithDetails[]> {
   const { data, error } = await supabase
     .from('timesheets')
@@ -128,6 +134,7 @@ export async function fetchAllTimesheets(
         last_name
       )
     `)
+    .eq('org_id', orgId) // CRITICAL: Filter by org_id
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -145,13 +152,15 @@ export async function fetchAllTimesheets(
 /**
  * Hook: Fetch pending timesheets with 60s polling
  * Used for the timesheet approval page
+ * IMPORTANT: Now uses org context to filter timesheets
  */
 export function usePendingTimesheets(initialData?: TimesheetWithDetails[]) {
   const supabase = createClient();
+  const orgId = useRequireOrg(); // Get current user's org_id
 
   return useQuery({
-    queryKey: ['timesheets', 'pending'],
-    queryFn: () => fetchPendingTimesheets(supabase),
+    queryKey: ['timesheets', 'pending', orgId], // Include orgId in cache key
+    queryFn: () => fetchPendingTimesheets(supabase, orgId),
     initialData,
     refetchInterval: 60000, // 60s polling (consistent with Phase 5 pattern)
     staleTime: 30000, // Consider data stale after 30s
@@ -161,13 +170,15 @@ export function usePendingTimesheets(initialData?: TimesheetWithDetails[]) {
 /**
  * Hook: Fetch all timesheets
  * Used for overview/history views
+ * IMPORTANT: Now uses org context to filter timesheets
  */
 export function useAllTimesheets(initialData?: TimesheetWithDetails[]) {
   const supabase = createClient();
+  const orgId = useRequireOrg(); // Get current user's org_id
 
   return useQuery({
-    queryKey: ['timesheets', 'all'],
-    queryFn: () => fetchAllTimesheets(supabase),
+    queryKey: ['timesheets', 'all', orgId], // Include orgId in cache key
+    queryFn: () => fetchAllTimesheets(supabase, orgId),
     initialData,
     refetchInterval: 60000,
     staleTime: 30000,
@@ -187,6 +198,7 @@ export function useAllTimesheets(initialData?: TimesheetWithDetails[]) {
 export function useBatchApproveTimesheets() {
   const queryClient = useQueryClient();
   const supabase = createClient();
+  const orgId = useRequireOrg(); // Get current user's org_id
 
   return useMutation({
     mutationFn: async ({
@@ -230,16 +242,19 @@ export function useBatchApproveTimesheets() {
     // Optimistic update: instantly show as approved
     onMutate: async ({ timesheetIds }) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['timesheets'] });
+      await queryClient.cancelQueries({ queryKey: ['timesheets', 'pending', orgId] });
+      await queryClient.cancelQueries({ queryKey: ['timesheets', 'all', orgId] });
 
       // Snapshot previous value
       const previousPending = queryClient.getQueryData<TimesheetWithDetails[]>([
         'timesheets',
         'pending',
+        orgId,
       ]);
       const previousAll = queryClient.getQueryData<TimesheetWithDetails[]>([
         'timesheets',
         'all',
+        orgId,
       ]);
 
       // Optimistically update cache
@@ -256,10 +271,10 @@ export function useBatchApproveTimesheets() {
         );
 
       queryClient.setQueryData(
-        ['timesheets', 'pending'],
+        ['timesheets', 'pending', orgId],
         updateTimesheets(previousPending)
       );
-      queryClient.setQueryData(['timesheets', 'all'], updateTimesheets(previousAll));
+      queryClient.setQueryData(['timesheets', 'all', orgId], updateTimesheets(previousAll));
 
       // Return context for rollback
       return { previousPending, previousAll };
@@ -269,10 +284,10 @@ export function useBatchApproveTimesheets() {
     onError: (err, variables, context) => {
       console.error('Batch approve failed:', err);
       if (context?.previousPending) {
-        queryClient.setQueryData(['timesheets', 'pending'], context.previousPending);
+        queryClient.setQueryData(['timesheets', 'pending', orgId], context.previousPending);
       }
       if (context?.previousAll) {
-        queryClient.setQueryData(['timesheets', 'all'], context.previousAll);
+        queryClient.setQueryData(['timesheets', 'all', orgId], context.previousAll);
       }
       // TODO: Add toast notification when toast library is set up
     },
@@ -285,7 +300,8 @@ export function useBatchApproveTimesheets() {
 
     // Refetch to ensure consistency
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['timesheets'] });
+      queryClient.invalidateQueries({ queryKey: ['timesheets', 'pending', orgId] });
+      queryClient.invalidateQueries({ queryKey: ['timesheets', 'all', orgId] });
     },
   });
 }
@@ -297,6 +313,7 @@ export function useBatchApproveTimesheets() {
 export function useBatchRejectTimesheets() {
   const queryClient = useQueryClient();
   const supabase = createClient();
+  const orgId = useRequireOrg(); // Get current user's org_id
 
   return useMutation({
     mutationFn: async ({
@@ -346,15 +363,18 @@ export function useBatchRejectTimesheets() {
 
     // Optimistic update
     onMutate: async ({ timesheetIds, rejectionReason }) => {
-      await queryClient.cancelQueries({ queryKey: ['timesheets'] });
+      await queryClient.cancelQueries({ queryKey: ['timesheets', 'pending', orgId] });
+      await queryClient.cancelQueries({ queryKey: ['timesheets', 'all', orgId] });
 
       const previousPending = queryClient.getQueryData<TimesheetWithDetails[]>([
         'timesheets',
         'pending',
+        orgId,
       ]);
       const previousAll = queryClient.getQueryData<TimesheetWithDetails[]>([
         'timesheets',
         'all',
+        orgId,
       ]);
 
       const now = new Date().toISOString();
@@ -371,10 +391,10 @@ export function useBatchRejectTimesheets() {
         );
 
       queryClient.setQueryData(
-        ['timesheets', 'pending'],
+        ['timesheets', 'pending', orgId],
         updateTimesheets(previousPending)
       );
-      queryClient.setQueryData(['timesheets', 'all'], updateTimesheets(previousAll));
+      queryClient.setQueryData(['timesheets', 'all', orgId], updateTimesheets(previousAll));
 
       return { previousPending, previousAll };
     },
@@ -383,10 +403,10 @@ export function useBatchRejectTimesheets() {
     onError: (err, variables, context) => {
       console.error('Batch reject failed:', err);
       if (context?.previousPending) {
-        queryClient.setQueryData(['timesheets', 'pending'], context.previousPending);
+        queryClient.setQueryData(['timesheets', 'pending', orgId], context.previousPending);
       }
       if (context?.previousAll) {
-        queryClient.setQueryData(['timesheets', 'all'], context.previousAll);
+        queryClient.setQueryData(['timesheets', 'all', orgId], context.previousAll);
       }
       // TODO: Add toast notification when toast library is set up
     },
@@ -399,7 +419,8 @@ export function useBatchRejectTimesheets() {
 
     // Refetch to ensure consistency
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['timesheets'] });
+      queryClient.invalidateQueries({ queryKey: ['timesheets', 'pending', orgId] });
+      queryClient.invalidateQueries({ queryKey: ['timesheets', 'all', orgId] });
     },
   });
 }

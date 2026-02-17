@@ -13,6 +13,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { useRequireOrg } from '@/contexts/org-context';
 
 // =============================================================================
 // TYPES
@@ -112,18 +113,20 @@ function getDateRange(timeRange: TimeRange): Date {
 
 /**
  * Fetch revenue data from Supabase and calculate aggregations
+ * IMPORTANT: Now accepts orgId parameter for org-scoped filtering
  *
  * Strategy: Fetch raw bookings/payments/timesheets data and aggregate client-side.
  * The dataset is small enough (weeks of bookings) to process in browser.
  */
 export async function fetchRevenueData(
   supabase: SupabaseClient,
+  orgId: string,
   timeRange: TimeRange = 'last_12_weeks'
 ): Promise<RevenueData> {
   const startDate = getDateRange(timeRange);
   const startDateISO = startDate.toISOString();
 
-  // Fetch completed bookings in time range
+  // Fetch completed bookings in time range for this org
   const { data: bookings, error: bookingsError } = await supabase
     .from('bookings')
     .select(`
@@ -149,6 +152,7 @@ export async function fetchRevenueData(
         last_name
       )
     `)
+    .eq('org_id', orgId) // CRITICAL: Filter by org_id
     .eq('status', 'completed')
     .gte('shift_date', startDateISO)
     .order('shift_date', { ascending: true });
@@ -158,7 +162,7 @@ export async function fetchRevenueData(
     return getEmptyRevenueData();
   }
 
-  // Fetch successful payments in time range
+  // Fetch successful payments in time range for this org
   const { data: payments, error: paymentsError } = await supabase
     .from('payments')
     .select(`
@@ -171,6 +175,7 @@ export async function fetchRevenueData(
         created_at
       )
     `)
+    .eq('org_id', orgId) // CRITICAL: Filter by org_id
     .eq('status', 'succeeded')
     .gte('created_at', startDateISO);
 
@@ -178,10 +183,11 @@ export async function fetchRevenueData(
     console.error('Error fetching payments:', paymentsError);
   }
 
-  // Fetch all clients to count Net 30
+  // Fetch all active clients for this org to count Net 30
   const { data: allClients, error: clientsError } = await supabase
     .from('clients')
     .select('id, payment_terms')
+    .eq('org_id', orgId) // CRITICAL: Filter by org_id
     .eq('status', 'active');
 
   if (clientsError) {
@@ -395,6 +401,7 @@ function getEmptyRevenueData(): RevenueData {
 
 /**
  * useRevenue - Fetch and poll revenue data
+ * IMPORTANT: Now uses org context to filter revenue data
  *
  * @param timeRange - 'last_4_weeks' | 'last_12_weeks' | 'last_52_weeks'
  * @param initialData - Optional SSR initial data
@@ -404,10 +411,11 @@ export function useRevenue(
   initialData?: RevenueData
 ) {
   const supabase = createClient();
+  const orgId = useRequireOrg(); // Get current user's org_id
 
   return useQuery({
-    queryKey: ['admin', 'revenue', timeRange],
-    queryFn: () => fetchRevenueData(supabase, timeRange),
+    queryKey: ['admin', 'revenue', orgId, timeRange], // Include orgId in cache key
+    queryFn: () => fetchRevenueData(supabase, orgId, timeRange),
     initialData,
     refetchInterval: 60000, // 60 second polling
     staleTime: 30000, // Consider stale after 30s

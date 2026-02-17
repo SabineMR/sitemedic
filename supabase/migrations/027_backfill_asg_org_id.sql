@@ -7,11 +7,31 @@ DO $$
 DECLARE
   asg_org_id UUID;
 BEGIN
-  -- Get ASG organization ID
-  SELECT id INTO asg_org_id FROM organizations WHERE slug = 'asg';
+  -- Add slug column if it doesn't exist
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'organizations' AND column_name = 'slug'
+  ) THEN
+    ALTER TABLE organizations ADD COLUMN slug TEXT;
+    ALTER TABLE organizations ADD COLUMN status TEXT DEFAULT 'active';
+    ALTER TABLE organizations ADD COLUMN onboarding_completed BOOLEAN DEFAULT false;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_organizations_slug ON organizations(slug);
+  END IF;
+
+  -- Get or create ASG organization
+  SELECT id INTO asg_org_id FROM organizations WHERE name = 'Allied Services Group' OR slug = 'asg';
 
   IF asg_org_id IS NULL THEN
-    RAISE EXCEPTION 'ASG organization not found. Run migration 00001_organizations.sql first.';
+    -- Create ASG organization if it doesn't exist
+    INSERT INTO organizations (name, slug, status, onboarding_completed)
+    VALUES ('Allied Services Group', 'asg', 'active', true)
+    RETURNING id INTO asg_org_id;
+    RAISE NOTICE 'Created ASG organization with ID: %', asg_org_id;
+  ELSE
+    -- Update existing org with slug if missing
+    UPDATE organizations SET slug = 'asg', status = 'active', onboarding_completed = true
+    WHERE id = asg_org_id AND slug IS NULL;
+    RAISE NOTICE 'Using existing ASG organization with ID: %', asg_org_id;
   END IF;
 
   RAISE NOTICE 'Backfilling all tables with ASG org_id: %', asg_org_id;
@@ -247,4 +267,5 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-COMMENT ON MIGRATION IS 'Backfilled all existing data with ASG org_id and made columns NOT NULL. Ready for RLS policies in migration 028.';
+-- Migration complete: Backfilled all existing data with ASG org_id and made columns NOT NULL.
+-- Ready for RLS policies in migration 028.

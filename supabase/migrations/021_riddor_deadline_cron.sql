@@ -15,7 +15,14 @@ CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE EXTENSION IF NOT EXISTS pg_net;
 
 -- Drop existing job if it exists (for migration idempotency)
-SELECT cron.unschedule('riddor-deadline-checker');
+DO $$
+BEGIN
+  PERFORM cron.unschedule('riddor-deadline-checker');
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Job doesn't exist, which is fine for first run
+    NULL;
+END $$;
 
 -- Schedule RIDDOR deadline checker
 -- Cron expression: '0 9 * * *' = Every day at 09:00 UTC (9 AM UK time)

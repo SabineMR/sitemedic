@@ -13,7 +13,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
+import { useRequireOrg } from '@/contexts/org-context';
 
 /**
  * Admin overview metrics
@@ -42,11 +43,13 @@ export interface RecentActivity {
 
 /**
  * Fetch admin overview metrics from database
+ * IMPORTANT: Now accepts orgId parameter for org-scoped filtering
  */
 export async function fetchAdminOverview(
-  supabaseClient: SupabaseClient
+  supabaseClient: SupabaseClient,
+  orgId: string
 ): Promise<AdminOverview> {
-  // Run all queries in parallel
+  // Run all queries in parallel for this org
   const [
     medicCount,
     todayCount,
@@ -56,52 +59,59 @@ export async function fetchAdminOverview(
     payouts,
     recentBookings,
   ] = await Promise.all([
-    // Active medics count
+    // Active medics count for this org
     supabaseClient
       .from('medics')
       .select('id', { count: 'exact', head: true })
+      .eq('org_id', orgId) // CRITICAL: Filter by org_id
       .eq('available_for_work', true),
 
-    // Today's bookings
+    // Today's bookings for this org
     supabaseClient
       .from('bookings')
       .select('id', { count: 'exact', head: true })
+      .eq('org_id', orgId) // CRITICAL: Filter by org_id
       .eq('shift_date', new Date().toISOString().split('T')[0]),
 
-    // Pending bookings
+    // Pending bookings for this org
     supabaseClient
       .from('bookings')
       .select('id', { count: 'exact', head: true })
+      .eq('org_id', orgId) // CRITICAL: Filter by org_id
       .eq('status', 'pending'),
 
-    // Issues requiring manual approval
+    // Issues requiring manual approval for this org
     supabaseClient
       .from('bookings')
       .select('id', { count: 'exact', head: true })
+      .eq('org_id', orgId) // CRITICAL: Filter by org_id
       .eq('requires_manual_approval', true)
       .eq('status', 'pending'),
 
-    // Total revenue this month (platform fees)
+    // Total revenue this month (platform fees) for this org
     supabaseClient
       .from('bookings')
       .select('platform_fee')
+      .eq('org_id', orgId) // CRITICAL: Filter by org_id
       .eq('status', 'completed')
       .gte(
         'created_at',
         new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
       ),
 
-    // Weekly payouts (last 7 days)
+    // Weekly payouts (last 7 days) for this org
     supabaseClient
       .from('timesheets')
       .select('payout_amount')
+      .eq('org_id', orgId) // CRITICAL: Filter by org_id
       .eq('payout_status', 'paid')
       .gte('paid_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
 
-    // Recent bookings for activity feed
+    // Recent bookings for activity feed for this org
     supabaseClient
       .from('bookings')
       .select('id, site_name, status, total, created_at, site_postcode')
+      .eq('org_id', orgId) // CRITICAL: Filter by org_id
       .order('created_at', { ascending: false })
       .limit(10),
   ]);
@@ -170,11 +180,15 @@ export async function fetchAdminOverview(
 
 /**
  * TanStack Query hook for admin overview with 60s polling
+ * IMPORTANT: Now uses org context to filter overview data
  */
 export function useAdminOverview() {
+  const supabase = createClient();
+  const orgId = useRequireOrg(); // Get current user's org_id
+
   return useQuery({
-    queryKey: ['admin', 'overview'],
-    queryFn: () => fetchAdminOverview(supabase),
+    queryKey: ['admin', 'overview', orgId], // Include orgId in cache key
+    queryFn: () => fetchAdminOverview(supabase, orgId),
     refetchInterval: 60000, // 60 seconds
   });
 }

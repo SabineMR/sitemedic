@@ -145,6 +145,7 @@ export function useBookings(initialData?: BookingWithRelations[]) {
 export function useApproveBookings() {
   const queryClient = useQueryClient();
   const supabase = createClient();
+  const orgId = useRequireOrg(); // Get current user's org_id
 
   return useMutation({
     mutationFn: async (bookingIds: string[]) => {
@@ -165,13 +166,13 @@ export function useApproveBookings() {
     // Optimistic update: instant UI feedback
     onMutate: async (bookingIds) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['admin-bookings'] });
+      await queryClient.cancelQueries({ queryKey: ['admin-bookings', orgId] });
 
       // Snapshot previous value
-      const previousBookings = queryClient.getQueryData<BookingWithRelations[]>(['admin-bookings']);
+      const previousBookings = queryClient.getQueryData<BookingWithRelations[]>(['admin-bookings', orgId]);
 
       // Optimistically update cache
-      queryClient.setQueryData<BookingWithRelations[]>(['admin-bookings'], (old) =>
+      queryClient.setQueryData<BookingWithRelations[]>(['admin-bookings', orgId], (old) =>
         old?.map((booking) =>
           bookingIds.includes(booking.id)
             ? { ...booking, status: 'confirmed' as const, approved_at: new Date().toISOString() }
@@ -185,14 +186,14 @@ export function useApproveBookings() {
     // Rollback on error
     onError: (err, bookingIds, context) => {
       if (context?.previousBookings) {
-        queryClient.setQueryData(['admin-bookings'], context.previousBookings);
+        queryClient.setQueryData(['admin-bookings', orgId], context.previousBookings);
       }
       console.error('Failed to approve bookings:', err);
     },
 
     // Refetch after mutation settles
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-bookings', orgId] });
     },
   });
 }
@@ -201,6 +202,7 @@ export function useApproveBookings() {
 export function useRejectBookings() {
   const queryClient = useQueryClient();
   const supabase = createClient();
+  const orgId = useRequireOrg(); // Get current user's org_id
 
   return useMutation({
     mutationFn: async ({ bookingIds, reason }: { bookingIds: string[]; reason: string }) => {
@@ -221,11 +223,11 @@ export function useRejectBookings() {
 
     // Optimistic update
     onMutate: async ({ bookingIds, reason }) => {
-      await queryClient.cancelQueries({ queryKey: ['admin-bookings'] });
+      await queryClient.cancelQueries({ queryKey: ['admin-bookings', orgId] });
 
-      const previousBookings = queryClient.getQueryData<BookingWithRelations[]>(['admin-bookings']);
+      const previousBookings = queryClient.getQueryData<BookingWithRelations[]>(['admin-bookings', orgId]);
 
-      queryClient.setQueryData<BookingWithRelations[]>(['admin-bookings'], (old) =>
+      queryClient.setQueryData<BookingWithRelations[]>(['admin-bookings', orgId], (old) =>
         old?.map((booking) =>
           bookingIds.includes(booking.id)
             ? {
@@ -243,13 +245,13 @@ export function useRejectBookings() {
 
     onError: (err, variables, context) => {
       if (context?.previousBookings) {
-        queryClient.setQueryData(['admin-bookings'], context.previousBookings);
+        queryClient.setQueryData(['admin-bookings', orgId], context.previousBookings);
       }
       console.error('Failed to reject bookings:', err);
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-bookings', orgId] });
     },
   });
 }
@@ -258,6 +260,7 @@ export function useRejectBookings() {
 export function useReassignBooking() {
   const queryClient = useQueryClient();
   const supabase = createClient();
+  const orgId = useRequireOrg(); // Get current user's org_id
 
   return useMutation({
     mutationFn: async ({
@@ -285,11 +288,11 @@ export function useReassignBooking() {
 
     // Optimistic update for single booking
     onMutate: async ({ bookingId, newMedicId, reason }) => {
-      await queryClient.cancelQueries({ queryKey: ['admin-bookings'] });
+      await queryClient.cancelQueries({ queryKey: ['admin-bookings', orgId] });
 
-      const previousBookings = queryClient.getQueryData<BookingWithRelations[]>(['admin-bookings']);
+      const previousBookings = queryClient.getQueryData<BookingWithRelations[]>(['admin-bookings', orgId]);
 
-      queryClient.setQueryData<BookingWithRelations[]>(['admin-bookings'], (old) =>
+      queryClient.setQueryData<BookingWithRelations[]>(['admin-bookings', orgId], (old) =>
         old?.map((booking) =>
           booking.id === bookingId
             ? {
@@ -306,13 +309,13 @@ export function useReassignBooking() {
 
     onError: (err, variables, context) => {
       if (context?.previousBookings) {
-        queryClient.setQueryData(['admin-bookings'], context.previousBookings);
+        queryClient.setQueryData(['admin-bookings', orgId], context.previousBookings);
       }
       console.error('Failed to reassign booking:', err);
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-bookings', orgId] });
     },
   });
 }
@@ -320,10 +323,11 @@ export function useReassignBooking() {
 // Client-side: Fetch available medics for dropdown
 export function useAvailableMedics(shiftDate: string) {
   const supabase = createClient();
+  const orgId = useRequireOrg(); // Get current user's org_id
 
   return useQuery({
-    queryKey: ['available-medics', shiftDate],
-    queryFn: () => fetchAvailableMedics(supabase, shiftDate),
+    queryKey: ['available-medics', orgId, shiftDate],
+    queryFn: () => fetchAvailableMedics(supabase, orgId, shiftDate),
     enabled: !!shiftDate, // Only fetch when shift date is provided
   });
 }

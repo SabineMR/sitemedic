@@ -4863,10 +4863,80 @@ GET /functions/v1/cert-expiry-checker
 - RLS policies isolate data by role (client, medic, admin, site manager)
 - All tables in same UK region (eu-west-2 London) for GDPR compliance
 
-### Admin Role
-- Add to existing Phase 1 auth system
-- Role: `admin` (vs `medic`, `site_manager`, `client`)
-- Full access to all dashboards and management features
+### Role-Based Admin Architecture (Two-Tier System)
+
+#### User Roles
+The system supports four primary user roles:
+- **`medic`**: Healthcare professionals using the mobile app
+- **`site_manager`**: Client site managers with limited booking view
+- **`org_admin`**: Organization-level administrators (manage their own company)
+- **`platform_admin`**: Platform super administrators (SiteMedic owners)
+
+#### Organization Admin (`org_admin`)
+**Purpose**: Manages a single organization's data via `/admin` routes
+
+**Access**:
+- Organization-scoped data only (filtered by `org_id`)
+- Cannot see other organizations' data
+- Uses `/admin/*` routes
+
+**Capabilities**:
+- View/manage their organization's medics
+- View/manage bookings for their organization
+- View/manage clients
+- Territory management
+- Timesheet approval
+- Revenue analytics (org-scoped)
+- Organization settings
+
+**Database Security**:
+- Row Level Security (RLS) policies enforce `org_id` filtering
+- JWT contains `org_id` in `app_metadata`
+- All queries automatically scoped to user's organization
+
+#### Platform Admin (`platform_admin`)
+**Purpose**: SiteMedic platform owners managing ALL organizations
+
+**Access**:
+- Cross-organization access (no `org_id` filtering)
+- Can see aggregated data across all orgs
+- Uses `/platform/*` routes
+
+**Capabilities**:
+- View all organizations using SiteMedic
+- Platform-wide revenue and profit tracking
+- Cross-org analytics and growth metrics
+- User management across organizations
+- Platform settings and configuration
+- System health monitoring
+
+**Database Security**:
+- Special RLS policies using `is_platform_admin()` function
+- Bypasses `org_id` restrictions
+- Full access to all data for oversight
+
+#### UI Separation
+- **`/admin`**: Purple/blue theme for organization admins
+  - Sidebar navigation: Dashboard, Bookings, Medics, Customers, etc.
+  - Scoped to single organization
+
+- **`/platform`**: Purple/indigo theme for platform admins
+  - Sidebar navigation: Organizations, Revenue, Analytics, Users, Settings
+  - Global view across all orgs
+
+#### Route Protection
+- Organization admins trying to access `/platform` → Redirected to `/admin`
+- Platform admins trying to access `/admin` → Redirected to `/platform`
+- Enforced via `useRequirePlatformAdmin()` and `useIsPlatformAdmin()` hooks
+
+#### Implementation Files
+- **Context**: `web/contexts/org-context.tsx` (exports role hooks)
+- **Migrations**:
+  - `031_add_platform_admin_role.sql` (adds role enum values)
+  - `032_platform_admin_rls_policies.sql` (cross-org RLS policies)
+- **Routes**:
+  - `web/app/admin/` (organization admin UI)
+  - `web/app/platform/` (platform admin UI)
 
 ---
 

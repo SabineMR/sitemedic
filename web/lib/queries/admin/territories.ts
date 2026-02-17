@@ -8,7 +8,9 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { useRequireOrg } from '@/contexts/org-context';
 
 // =============================================================================
 // TYPES
@@ -382,15 +384,17 @@ export const UK_POSTCODE_CENTROIDS: Record<string, { lat: number; lng: number }>
 
 /**
  * Fetch all territories with utilization metrics and medic assignments.
+ * IMPORTANT: Now accepts supabase and orgId parameters for org-scoped filtering.
  *
  * Joins territories with medics and territory_metrics tables.
  * Uses parallel queries to avoid N+1 issues.
  */
-export async function fetchTerritoriesWithMetrics(): Promise<TerritoryWithMetrics[]> {
-  // Fetch all territories
+export async function fetchTerritoriesWithMetrics(supabase: SupabaseClient, orgId: string): Promise<TerritoryWithMetrics[]> {
+  // Fetch all territories for this org
   const { data: territories, error: territoriesError } = await supabase
     .from('territories')
     .select('*')
+    .eq('org_id', orgId) // CRITICAL: Filter by org_id
     .order('postcode_sector', { ascending: true });
 
   if (territoriesError) {
@@ -409,20 +413,22 @@ export async function fetchTerritoriesWithMetrics(): Promise<TerritoryWithMetric
     ...territories.map(t => t.secondary_medic_id)
   ].filter((id): id is string => id !== null);
 
-  // Fetch all data in parallel to avoid N+1 queries
+  // Fetch all data in parallel to avoid N+1 queries for this org
   const [medicsResult, metricsResult] = await Promise.all([
-    // 1. Fetch medics
+    // 1. Fetch medics for this org
     medicIds.length > 0
       ? supabase
           .from('medics')
           .select('id, first_name, last_name')
+          .eq('org_id', orgId) // CRITICAL: Filter by org_id
           .in('id', medicIds)
       : Promise.resolve({ data: [] }),
 
-    // 2. Fetch latest territory metrics for each postcode sector
+    // 2. Fetch latest territory metrics for each postcode sector for this org
     supabase
       .from('territory_metrics')
       .select('*')
+      .eq('org_id', orgId) // CRITICAL: Filter by org_id
       .in('postcode_sector', postcodeSectors)
       .order('metric_date', { ascending: false })
   ]);
@@ -488,15 +494,19 @@ export async function fetchTerritoriesWithMetrics(): Promise<TerritoryWithMetric
 
 /**
  * Query hook for territories with metrics.
+ * IMPORTANT: Now uses org context to filter territories.
  *
  * Features:
  * - 60-second polling for real-time updates
  * - Initial data support for server-side rendering
  */
 export function useTerritories(initialData?: TerritoryWithMetrics[]) {
+  const supabase = createClient();
+  const orgId = useRequireOrg(); // Get current user's org_id
+
   return useQuery({
-    queryKey: ['admin', 'territories', 'with-metrics'],
-    queryFn: fetchTerritoriesWithMetrics,
+    queryKey: ['admin', 'territories', 'with-metrics', orgId], // Include orgId in cache key
+    queryFn: () => fetchTerritoriesWithMetrics(supabase, orgId),
     refetchInterval: 60000, // 60 seconds
     staleTime: 30000, // Consider data fresh for 30s
     initialData,

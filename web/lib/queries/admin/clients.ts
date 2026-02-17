@@ -10,7 +10,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
+import { useRequireOrg } from '@/contexts/org-context';
 
 /**
  * Client record with payment reliability scoring
@@ -98,13 +99,16 @@ function calculateReliabilityScore(client: {
 
 /**
  * Fetch all clients with reliability scoring
+ * IMPORTANT: Now accepts orgId parameter for org-scoped filtering
  */
 export async function fetchClients(
-  supabaseClient: SupabaseClient
+  supabaseClient: SupabaseClient,
+  orgId: string
 ): Promise<ClientWithHistory[]> {
   const { data, error } = await supabaseClient
     .from('clients')
     .select('*')
+    .eq('org_id', orgId) // CRITICAL: Filter by org_id
     .order('company_name', { ascending: true });
 
   if (error) throw error;
@@ -118,11 +122,15 @@ export async function fetchClients(
 
 /**
  * TanStack Query hook for clients with 60s polling
+ * IMPORTANT: Now uses org context to filter clients
  */
 export function useClients(initialData?: ClientWithHistory[]) {
+  const supabase = createClient();
+  const orgId = useRequireOrg(); // Get current user's org_id
+
   return useQuery({
-    queryKey: ['admin', 'clients'],
-    queryFn: () => fetchClients(supabase),
+    queryKey: ['admin', 'clients', orgId], // Include orgId in cache key
+    queryFn: () => fetchClients(supabase, orgId),
     refetchInterval: 60000, // 60 seconds
     initialData,
   });
@@ -130,14 +138,17 @@ export function useClients(initialData?: ClientWithHistory[]) {
 
 /**
  * Fetch booking history for a specific client
+ * IMPORTANT: Now accepts orgId parameter for org-scoped filtering
  */
 export async function fetchClientBookingHistory(
   supabaseClient: SupabaseClient,
+  orgId: string,
   clientId: string
 ): Promise<ClientBooking[]> {
   const { data, error } = await supabaseClient
     .from('bookings')
     .select('id, site_name, shift_date, status, total')
+    .eq('org_id', orgId) // CRITICAL: Filter by org_id
     .eq('client_id', clientId)
     .order('shift_date', { ascending: false })
     .limit(20);
@@ -157,14 +168,17 @@ export async function fetchClientBookingHistory(
  */
 export function useUpgradeToNet30() {
   const queryClient = useQueryClient();
+  const supabase = createClient();
+  const orgId = useRequireOrg(); // Get current user's org_id
 
   return useMutation({
     mutationFn: async (upgrade: PaymentTermsUpgrade) => {
-      // Fetch client to validate
+      // Fetch client to validate (with org filter for security)
       const { data: client, error: fetchError } = await supabase
         .from('clients')
         .select('*')
         .eq('id', upgrade.clientId)
+        .eq('org_id', orgId) // CRITICAL: Verify client belongs to org
         .single();
 
       if (fetchError) throw fetchError;
@@ -209,15 +223,15 @@ export function useUpgradeToNet30() {
     // Optimistic update
     onMutate: async (upgrade) => {
       // Cancel outgoing queries
-      await queryClient.cancelQueries({ queryKey: ['admin', 'clients'] });
+      await queryClient.cancelQueries({ queryKey: ['admin', 'clients', orgId] });
 
       // Snapshot previous value
-      const previousClients = queryClient.getQueryData<ClientWithHistory[]>(['admin', 'clients']);
+      const previousClients = queryClient.getQueryData<ClientWithHistory[]>(['admin', 'clients', orgId]);
 
       // Optimistically update
       if (previousClients) {
         queryClient.setQueryData<ClientWithHistory[]>(
-          ['admin', 'clients'],
+          ['admin', 'clients', orgId],
           previousClients.map((client) =>
             client.id === upgrade.clientId
               ? {
@@ -236,14 +250,14 @@ export function useUpgradeToNet30() {
     // Rollback on error
     onError: (error, upgrade, context) => {
       if (context?.previousClients) {
-        queryClient.setQueryData(['admin', 'clients'], context.previousClients);
+        queryClient.setQueryData(['admin', 'clients', orgId], context.previousClients);
       }
       console.error('Failed to upgrade payment terms:', error);
     },
 
     // Refetch on completion
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'clients'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'clients', orgId] });
     },
   });
 }
@@ -255,10 +269,12 @@ export function useUpgradeToNet30() {
  */
 export function useDowngradeToPrePay() {
   const queryClient = useQueryClient();
+  const supabase = createClient();
+  const orgId = useRequireOrg(); // Get current user's org_id
 
   return useMutation({
     mutationFn: async (downgrade: PaymentTermsDowngrade) => {
-      // Update payment terms to prepay, reset credit limit
+      // Update payment terms to prepay, reset credit limit (RLS handles org filtering)
       const { data, error } = await supabase
         .from('clients')
         .update({
@@ -280,13 +296,13 @@ export function useDowngradeToPrePay() {
 
     // Optimistic update
     onMutate: async (downgrade) => {
-      await queryClient.cancelQueries({ queryKey: ['admin', 'clients'] });
+      await queryClient.cancelQueries({ queryKey: ['admin', 'clients', orgId] });
 
-      const previousClients = queryClient.getQueryData<ClientWithHistory[]>(['admin', 'clients']);
+      const previousClients = queryClient.getQueryData<ClientWithHistory[]>(['admin', 'clients', orgId]);
 
       if (previousClients) {
         queryClient.setQueryData<ClientWithHistory[]>(
-          ['admin', 'clients'],
+          ['admin', 'clients', orgId],
           previousClients.map((client) =>
             client.id === downgrade.clientId
               ? {
@@ -304,13 +320,13 @@ export function useDowngradeToPrePay() {
 
     onError: (error, downgrade, context) => {
       if (context?.previousClients) {
-        queryClient.setQueryData(['admin', 'clients'], context.previousClients);
+        queryClient.setQueryData(['admin', 'clients', orgId], context.previousClients);
       }
       console.error('Failed to downgrade payment terms:', error);
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'clients'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'clients', orgId] });
     },
   });
 }

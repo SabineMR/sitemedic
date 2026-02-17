@@ -624,4 +624,5 @@ END $$;
 -- SUMMARY
 -- =============================================================================
 
-COMMENT ON MIGRATION IS 'Enabled RLS on 35+ tables with org-scoped policies. Multi-tenant architecture complete - cross-org access is now impossible at database level.';
+-- Migration complete: Enabled RLS on 35+ tables with org-scoped policies.
+-- Multi-tenant architecture complete - cross-org access is now impossible at database level.

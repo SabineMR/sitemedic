@@ -8,7 +8,9 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { useRequireOrg } from '@/contexts/org-context';
 
 // =============================================================================
 // TYPES
@@ -77,6 +79,7 @@ interface UpdateAvailabilityParams {
 
 /**
  * Fetch all medics with utilization metrics and territory assignments.
+ * IMPORTANT: Now accepts orgId parameter for org-scoped filtering.
  *
  * Utilization calculation:
  * - Count confirmed/in_progress bookings this week
@@ -85,7 +88,7 @@ interface UpdateAvailabilityParams {
  *
  * Uses parallel queries to avoid N+1 issues.
  */
-export async function fetchMedicsWithMetrics(): Promise<MedicWithMetrics[]> {
+export async function fetchMedicsWithMetrics(supabase: SupabaseClient, orgId: string): Promise<MedicWithMetrics[]> {
   // Get start and end of current week (Monday to Sunday)
   const now = new Date();
   const dayOfWeek = now.getDay();
@@ -98,10 +101,11 @@ export async function fetchMedicsWithMetrics(): Promise<MedicWithMetrics[]> {
   sunday.setDate(monday.getDate() + 6);
   sunday.setHours(23, 59, 59, 999);
 
-  // Fetch all medics
+  // Fetch all medics for this org
   const { data: medics, error: medicsError } = await supabase
     .from('medics')
     .select('*')
+    .eq('org_id', orgId) // CRITICAL: Filter by org_id
     .order('last_name', { ascending: true });
 
   if (medicsError) {
@@ -117,25 +121,28 @@ export async function fetchMedicsWithMetrics(): Promise<MedicWithMetrics[]> {
 
   // Fetch all data in parallel to avoid N+1 queries
   const [territoriesResult, bookingsThisWeekResult, upcomingBookingsResult] = await Promise.all([
-    // 1. Fetch territory assignments
+    // 1. Fetch territory assignments for this org
     supabase
       .from('territories')
       .select('postcode_sector, region, primary_medic_id, secondary_medic_id')
+      .eq('org_id', orgId) // CRITICAL: Filter by org_id
       .or(`primary_medic_id.in.(${medicIds.join(',')}),secondary_medic_id.in.(${medicIds.join(',')})`),
 
-    // 2. Fetch bookings this week (for utilization calculation)
+    // 2. Fetch bookings this week for this org (for utilization calculation)
     supabase
       .from('bookings')
       .select('medic_id, status, shift_date')
+      .eq('org_id', orgId) // CRITICAL: Filter by org_id
       .in('medic_id', medicIds)
       .in('status', ['confirmed', 'in_progress'])
       .gte('shift_date', monday.toISOString().split('T')[0])
       .lte('shift_date', sunday.toISOString().split('T')[0]),
 
-    // 3. Fetch upcoming bookings (future bookings)
+    // 3. Fetch upcoming bookings for this org (future bookings)
     supabase
       .from('bookings')
       .select('medic_id, status, shift_date')
+      .eq('org_id', orgId) // CRITICAL: Filter by org_id
       .in('medic_id', medicIds)
       .in('status', ['confirmed', 'in_progress', 'pending'])
       .gte('shift_date', now.toISOString().split('T')[0])
@@ -214,6 +221,7 @@ export async function fetchMedicsWithMetrics(): Promise<MedicWithMetrics[]> {
 
 /**
  * Query hook for medics with metrics.
+ * IMPORTANT: Now uses org context to filter medics.
  *
  * Features:
  * - 60-second polling for real-time updates
@@ -221,9 +229,12 @@ export async function fetchMedicsWithMetrics(): Promise<MedicWithMetrics[]> {
  * - Initial data support for server-side rendering
  */
 export function useMedics(initialData?: MedicWithMetrics[]) {
+  const supabase = createClient();
+  const orgId = useRequireOrg(); // Get current user's org_id
+
   return useQuery({
-    queryKey: ['admin', 'medics', 'with-metrics'],
-    queryFn: fetchMedicsWithMetrics,
+    queryKey: ['admin', 'medics', 'with-metrics', orgId], // Include orgId in cache key
+    queryFn: () => fetchMedicsWithMetrics(supabase, orgId),
     refetchInterval: 60000, // 60 seconds
     staleTime: 30000, // Consider data fresh for 30s
     initialData,
@@ -239,6 +250,8 @@ export function useMedics(initialData?: MedicWithMetrics[]) {
  */
 export function useUpdateMedicAvailability() {
   const queryClient = useQueryClient();
+  const supabase = createClient();
+  const orgId = useRequireOrg(); // Get current user's org_id
 
   return useMutation({
     mutationFn: async (params: UpdateAvailabilityParams) => {
@@ -267,15 +280,15 @@ export function useUpdateMedicAvailability() {
     },
     onMutate: async (params) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['admin', 'medics', 'with-metrics'] });
+      await queryClient.cancelQueries({ queryKey: ['admin', 'medics', 'with-metrics', orgId] });
 
       // Snapshot previous value
-      const previousMedics = queryClient.getQueryData<MedicWithMetrics[]>(['admin', 'medics', 'with-metrics']);
+      const previousMedics = queryClient.getQueryData<MedicWithMetrics[]>(['admin', 'medics', 'with-metrics', orgId]);
 
       // Optimistically update
       if (previousMedics) {
         queryClient.setQueryData<MedicWithMetrics[]>(
-          ['admin', 'medics', 'with-metrics'],
+          ['admin', 'medics', 'with-metrics', orgId],
           previousMedics.map(medic =>
             medic.id === params.medicId
               ? {
@@ -294,13 +307,13 @@ export function useUpdateMedicAvailability() {
     onError: (err, params, context) => {
       // Rollback on error
       if (context?.previousMedics) {
-        queryClient.setQueryData(['admin', 'medics', 'with-metrics'], context.previousMedics);
+        queryClient.setQueryData(['admin', 'medics', 'with-metrics', orgId], context.previousMedics);
       }
       console.error('Error updating medic availability:', err);
     },
     onSuccess: () => {
       // Refetch to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ['admin', 'medics', 'with-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'medics', 'with-metrics', orgId] });
     },
   });
 }

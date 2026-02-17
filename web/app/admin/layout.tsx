@@ -3,13 +3,16 @@
  *
  * Provides consistent left sidebar navigation across all admin pages.
  * Professional admin dashboard layout with tabs for easy section switching.
+ *
+ * Access: org_admin role only (platform admins use /platform)
  */
 
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { ReactNode } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { ReactNode, useEffect } from 'react';
+import { useIsPlatformAdmin } from '@/contexts/org-context';
 import {
   LayoutDashboard,
   MapPin,
@@ -39,6 +42,15 @@ interface NavItem {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const isPlatformAdmin = useIsPlatformAdmin();
+
+  // Redirect platform admins to /platform
+  useEffect(() => {
+    if (isPlatformAdmin) {
+      router.push('/platform');
+    }
+  }, [isPlatformAdmin, router]);
 
   // Navigation items
   const navItems: NavItem[] = [
