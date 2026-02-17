@@ -156,6 +156,12 @@ Plans:
 
 **Plans:** 4 plans
 
+Plans:
+- [ ] 12-04-PLAN.md — Analytics data API: TanStack Query hooks for all chart data sources (Wave 1)
+- [ ] 12-01-PLAN.md — Territory analytics tab: heatmap, hiring trigger cards, coverage gap table (Wave 2)
+- [ ] 12-02-PLAN.md — Assignment analytics tab: success rate chart, failure breakdown (Wave 2)
+- [ ] 12-03-PLAN.md — Medic utilisation tab: sortable table, OOT bookings, late arrival heatmap (Wave 2)
+
 ---
 
 ### Phase 13: UX Polish & Missing States
