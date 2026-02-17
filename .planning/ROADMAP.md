@@ -336,7 +336,7 @@ Plans:
   11. Admin sees cost breakdown and can approve/deny out-of-territory booking
   12. System denies booking if out-of-territory cost >50% of shift cost (admin can override)
 
-**Plans**: 11 plans
+**Plans**: 12 plans
 
 Plans:
 - [x] 06.5-01-PLAN.md -- Client payment processing with Stripe (card, 3D Secure)
@@ -349,7 +349,8 @@ Plans:
 - [x] 06.5-08-PLAN.md -- [GAP CLOSURE] Create payslip PDF generation Edge Function
 - [x] 06.5-09-PLAN.md -- [GAP CLOSURE] Add Stripe onboarding webhook and GB bank validation
 - [x] 06.5-10-PLAN.md -- [GAP CLOSURE] Wire out-of-territory approval into booking workflow
-- [ ] 06.5-11-PLAN.md -- [GAP CLOSURE] Fix payslip_reference schema and late payment cron vault auth
+- [x] 06.5-11-PLAN.md -- [GAP CLOSURE] Fix payslip_reference schema and late payment cron vault auth
+- [ ] 06.5-12-PLAN.md -- [GAP CLOSURE] Re-add Resend email integration for late payment reminders (regression fix)
 
 ### Phase 7: Certification Tracking
 **Goal**: System tracks UK certifications with progressive expiry alerts, prevents expired workers from logging incidents, and surfaces compliance status to managers.
@@ -419,7 +420,7 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 | 5. PDF Generation | 4/4 | Complete | 2026-02-16 |
 | 5.5. Admin Operations Dashboards | 6/6 | Complete | 2026-02-16 |
 | 6. RIDDOR Auto-Flagging | 6/8 | Gap closure in progress | - |
-| 6.5. Payment Processing & Payouts | 10/11 | Gap closure in progress | - |
+| 6.5. Payment Processing & Payouts | 11/12 | Gap closure in progress | - |
 | 7. Certification Tracking | 0/TBD | Not started | - |
 | 7.5. Territory Management & Auto-Assignment | 0/5 | Not started | - |
 
@@ -452,3 +453,4 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Phase 6.5 gap closure: 2026-02-16 -- 5 gap closure plans (06.5-06 through 06.5-10) addressing 5 critical gaps and 3 partial implementations (platform fee fix, email integration, payslip PDF, Stripe webhook, out-of-territory wiring)*
 *Phase 6.5 gap closure v2: 2026-02-16 -- 1 gap closure plan (06.5-11) addressing final 2 gaps: payslip_reference schema mismatch and late payment cron vault auth pattern*
 *Phase 6 gap closure: 2026-02-16 -- 2 gap closure plans (06-07, 06-08) addressing 4 verification gaps: auto-detection trigger (PRIMARY: wires riddor-detector into data pipeline via pg_net database trigger) and hardcoded org_id replacement with auth context*
+*Phase 6.5 gap closure v3: 2026-02-16 -- 1 gap closure plan (06.5-12) fixing Resend email regression in late payment reminders (reverted in commit d807b2d)*
