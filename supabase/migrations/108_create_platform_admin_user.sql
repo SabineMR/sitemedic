@@ -72,6 +72,7 @@ DECLARE
   admin_id UUID := 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
 BEGIN
   -- Create auth.users record for platform admin
+  -- All string columns must be '' not NULL — GoTrue cannot scan NULL into string fields
   INSERT INTO auth.users (
     instance_id,
     id,
@@ -85,7 +86,15 @@ BEGIN
     raw_app_meta_data,
     raw_user_meta_data,
     is_super_admin,
-    confirmation_token
+    confirmation_token,
+    recovery_token,
+    email_change,
+    email_change_token_new,
+    email_change_token_current,
+    phone,
+    phone_change,
+    phone_change_token,
+    reauthentication_token
   ) VALUES (
     '00000000-0000-0000-0000-000000000000',
     admin_id,
@@ -99,7 +108,7 @@ BEGIN
     '{"provider":"email","providers":["email"],"role":"platform_admin","org_id":null}'::jsonb,
     '{"role":"platform_admin","full_name":"Sabine Resoagli"}'::jsonb,
     false,
-    ''
+    '', '', '', '', '', '', '', '', ''
   )
   ON CONFLICT (id) DO UPDATE SET
     email = EXCLUDED.email,

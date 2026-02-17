@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Construction Site Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - Paramedic staffing company using SiteMedic platform
-**Last Updated**: 2026-02-16
+**Last Updated**: 2026-02-16 (Magic link auth + gap resolution)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -12,6 +12,117 @@
 SiteMedic is a comprehensive platform combining **mobile medic software** (offline-first treatment logging, RIDDOR compliance) with **business operations infrastructure** (booking portal, payment processing, territory management). The platform enables construction companies to book medics online while ensuring automatic compliance documentation and reliable medic payouts.
 
 **Business Model**: Software bundled with medic staffing service (no separate software charge). Revenue from medic bookings with 40% platform markup (medic £30/hr → client £42/hr → platform £12/hr). Weekly medic payouts via UK Faster Payments, Net 30 invoicing for established corporate clients.
+
+---
+
+## Recent Updates - Magic Link Authentication (2026-02-16)
+
+### Authentication Overhaul ✅
+**All password-based authentication removed. Magic link (passwordless) authentication implemented for all user roles.**
+
+**How it works:**
+1. User enters email on `/login` or `/signup`
+2. Supabase sends a secure magic link to their email
+3. User clicks the link — no password ever required
+4. Auth callback exchanges the code for a session and redirects to the correct dashboard by role
+
+**Role-based redirect after login:**
+- `platform_admin` → `/platform`
+- `org_admin` → `/admin`
+- `site_manager` → `/dashboard`
+- `medic` → `/medic`
+
+**Files changed:**
+- `web/app/(auth)/signup/page.tsx` — Removed password/confirm-password fields. Now uses `signInWithOtp` with `full_name` metadata
+- `web/app/auth/callback/route.ts` — Role-based routing on login, new user profile name update
+- `web/lib/supabase/middleware.ts` — `/auth` added to public routes (required for magic link callback), role-based redirect for authenticated users on `/login`/`/signup`
+
+**⚠️ Supabase Dashboard Setup Required (one-time):**
+In your Supabase project go to `Authentication → URL Configuration` and add `{your-domain}/auth/callback` to the list of allowed redirect URLs. Magic link template should be enabled by default.
+
+---
+
+## Recent Updates - Gap Resolution v1.0 (2026-02-16)
+
+### Critical Security & Data Fixes ✅
+**Tier 1: Security & Data Integrity (COMPLETED)**
+
+1. **Fixed medic_alerts RLS Policy**
+   - Added platform admin cross-org access policies
+   - Restricted org-scoped access to org_admin only (not all org users)
+   - Migration: `109_medic_alerts_rls_policy.sql`
+
+2. **Verified Platform Admin Authorization**
+   - Confirmed `is_platform_admin()` function works correctly
+   - Platform admin user properly configured with JWT metadata
+   - Cross-org access enabled via migration 102
+
+3. **Created Platform Metrics Functions**
+   - `get_platform_metrics()` - Real-time org counts, user counts, revenue, active bookings
+   - `get_org_revenue_breakdown()` - Revenue by organization
+   - `get_org_metrics(org_id)` - Per-organization statistics
+   - `get_growth_trends(start, end)` - Analytics time series
+   - `get_platform_organizations()` - Org list with metrics
+   - Migration: `110_platform_metrics_functions.sql`
+
+### Platform Dashboard Updates ✅
+**Tier 2: User-Facing Data (COMPLETED)**
+
+4. **Platform Dashboard** (`/platform/page.tsx`)
+   - Replaced fake data (12 orgs, 458 users, £125k) with real metrics
+   - Added loading states and error handling
+   - Fetches data from `get_platform_metrics()` RPC function
+
+5. **Platform Analytics** (`/platform/analytics/page.tsx`)
+   - Updated growth metrics with real data
+   - Added error states
+   - Note: Change percentages need historical data comparison (currently 0%)
+
+6. **Platform Revenue** (`/platform/revenue/page.tsx`)
+   - Replaced mock org revenue data with `get_org_revenue_breakdown()`
+   - Calculate platform fees dynamically (10% of revenue)
+   - Real-time revenue tracking per organization
+
+7. **Platform Organizations** (`/platform/organizations/page.tsx`)
+   - Fetch orgs with metrics via `get_platform_organizations()`
+   - Display real user counts, booking counts, revenue per org
+   - Added error handling
+
+### Business Operations Improvements ✅
+**Tier 2: Cash Flow & Email Notifications (COMPLETED)**
+
+8. **Cash Flow Monitor - Stripe Balance Integration**
+   - Replaced mock £12k balance with real Stripe Balance API
+   - Added error handling with fallback to mock (logged as warning)
+   - File: `supabase/functions/cash-flow-monitor/index.ts`
+
+9. **Email Notification Templates**
+   - Created centralized email templates using Resend API
+   - Payout failure notifications (to org admins)
+   - Cash flow critical alerts (to platform admins)
+   - Invoice emails (to clients)
+   - File: `supabase/functions/_shared/email-templates.ts`
+
+10. **Payout Failure Email Integration**
+    - Wire up email sending in Friday payout edge function
+    - Sends detailed failure list to org admins
+    - File: `supabase/functions/friday-payout/index.ts`
+
+11. **Cash Flow Alert Email Integration**
+    - Send critical alerts when balance < £5k or gap < 30 days
+    - Professional HTML email template with metrics
+    - File: `supabase/functions/cash-flow-monitor/index.ts`
+
+### Deferred Items (Lower Priority)
+**Tier 3-5: Deferred for Future Phases**
+
+- Invoice email notifications (requires Next.js-compatible Resend setup)
+- Schedule board error handling refactor (remove silent mock fallback)
+- Admin layout real-time badge updates
+- CSV export certification status view
+- Mobile auth UI screens (Phase 2)
+- Worker consent flow UI (Phase 2)
+- SQLCipher encryption (Phase 2)
 
 ---
 
@@ -571,10 +682,11 @@ See **`docs/TODO.md`** for comprehensive list of external compliance tasks inclu
   - Audit logging via PostgreSQL triggers (server-side) + local audit service (client-side)
   - GDPR compliance tables (consent tracking, data retention policies)
 
-- **Mobile Authentication**
-  - Email/password sign up and login
+- **Authentication**
+  - **Web Dashboard**: Magic link (passwordless) authentication via email
+  - **Mobile App**: Email/password sign up and login
   - Offline session persistence (app restart works without network)
-  - Biometric authentication (Face ID/Touch ID) for quick access
+  - Biometric authentication (Face ID/Touch ID) for quick access on mobile
   - Session token refresh and offline token validation
 
 - **Offline Storage Infrastructure**
@@ -5421,6 +5533,38 @@ The system supports four primary user roles:
     - `near_misses` - Cross-org safety incident access
     - `safety_checks` - Cross-org safety compliance access
   - **Impact**: Platform admins can now successfully log in and access all core data tables
+- `108_create_platform_admin_user.sql` - **USER CREATION** - Creates platform admin user in auth.users (Added 2026-02-16)
+  - **Problem**: Database resets wipe auth.users, migrations 105/106 tried to UPDATE user that didn't exist
+  - **Solution**:
+    - Fixed `handle_new_user()` trigger to support platform admins with NULL org_id
+    - Creates user `sabineresoagli@gmail.com` with password `password123` and correct metadata
+    - Sets `raw_app_meta_data.role = 'platform_admin'` for JWT token generation
+    - Uses ON CONFLICT to handle existing users
+  - **Impact**: Platform admin user persists across database resets
+- `112_complete_platform_admin_rls.sql` - **COMPLETE RLS COVERAGE** - Adds RLS policies for 9 remaining tables (Added 2026-02-16)
+  - **Problem**: Migration 107 fixed 5 core tables, but 9 additional tables still blocked platform admins
+  - **Symptom**: Continued "Database error querying schema" errors during login
+  - **Root Cause**: Platform admins could read `profiles` but failed when accessing other tables during authentication flow
+  - **Solution**: Added platform admin RLS policies for ALL remaining tables:
+    - **HIGH PRIORITY (Authentication-Critical)**:
+      - `user_roles` - 4 policies (was using `is_admin()` instead of `is_platform_admin()`)
+      - `audit_logs` - 2 policies (read + insert only for compliance)
+    - **MEDIUM PRIORITY (Admin Operations)**:
+      - `riddor_incidents` - 4 policies (cross-org compliance access)
+      - `certification_reminders` - 4 policies (cross-org certification management)
+      - `weekly_reports` - 4 policies (cross-org reporting access)
+      - `travel_time_cache` - 4 policies (full platform access)
+    - **LOWER PRIORITY (Compliance/Support)**:
+      - `consent_records` - 4 policies (GDPR compliance officer access)
+      - `erasure_requests` - 4 policies (GDPR request management)
+      - `data_retention_log` - 4 policies (audit trail access)
+  - **Impact**: Platform admins now have COMPLETE cross-org access to all 45 tables in the database
+- `113_fix_platform_admin_metadata.sql` - **METADATA FIX** - Ensures JWT token has correct role (Added 2026-02-16)
+  - **Problem**: Migration 108 creates user but `raw_app_meta_data.role` ended up empty/null
+  - **Root Cause**: JSONB literal in INSERT might not persist correctly across database resets
+  - **Solution**: Explicitly UPDATE `raw_app_meta_data` after user creation using `jsonb_build_object()` to ensure persistence
+  - **Verification**: Added DO block to verify role is set correctly and raise notice/warning
+  - **Impact**: JWT tokens now reliably include `app_metadata.role = 'platform_admin'` for authentication flow
 
 **Error Handling**: `web/app/admin/error.tsx`
 - Catches "not assigned to an organization" errors
@@ -5440,6 +5584,9 @@ The system supports four primary user roles:
   - `105_set_platform_admin_user.sql` (sets initial platform admin: sabineresoagli@gmail.com)
   - `106_fix_platform_admin_org_id.sql` (makes org_id nullable for platform admins, adds check constraint)
   - `107_platform_admin_core_tables_rls.sql` (cross-org RLS policies for core tables - fixes login error)
+  - `108_create_platform_admin_user.sql` (creates platform admin user in auth.users with correct metadata)
+  - `112_complete_platform_admin_rls.sql` (completes RLS coverage for 9 remaining tables)
+  - `113_fix_platform_admin_metadata.sql` (ensures JWT metadata persists correctly across resets)
 - **Routes**:
   - `web/app/admin/` (organization admin UI)
   - `web/app/platform/` (platform admin UI)
@@ -5626,8 +5773,39 @@ The system supports four primary user roles:
 ---
 
 **Document Version**: 1.2
-**Last Updated**: 2026-02-16 (Added app icon for iOS/Android - medical cross design with blue background. Updated Phase 7.5 with complete auto-scheduling backend documentation - 11 Edge Functions, 13 tables, 2 PostgreSQL functions)
+**Last Updated**: 2026-02-16 (Added app icon for iOS/Android - medical cross design with blue background. Updated Phase 7.5 with complete auto-scheduling backend documentation - 11 Edge Functions, 13 tables, 2 PostgreSQL functions. Added login form persistence feature.)
 **Next Review**: After Phase 7.5 UI completion
+
+### Recent Changes (2026-02-16)
+- **Magic Link Authentication**: Replaced password-based login with passwordless authentication
+  - **Feature**: Users receive a secure login link via email instead of entering a password
+  - **Method**: Supabase OTP (One-Time Password) magic link authentication
+  - **UX Benefits**:
+    - No passwords to remember or manage
+    - Faster login flow (just enter email and click link)
+    - Reduced support burden (no "forgot password" issues)
+    - More secure (no password reuse, no brute force attacks)
+  - **Implementation Details**:
+    - Removed password field from login form
+    - Uses `supabase.auth.signInWithOtp()` instead of `signInWithPassword()`
+    - Email persistence in localStorage for convenience
+    - Success state UI shows "Check your email" message with instructions
+    - Magic link expires in 60 minutes for security
+    - Includes "resend link" functionality
+  - **New Routes**:
+    - `/auth/callback/route.ts` - Handles magic link token exchange and session creation
+    - Redirects to dashboard after successful authentication
+    - Error handling redirects back to login with error message
+  - **Files Modified**:
+    - `/web/app/(auth)/login/page.tsx` - Updated to magic link flow
+    - `/web/app/auth/callback/route.ts` - New callback handler
+  - **User Experience**:
+    1. User enters email on login page
+    2. Clicks "Send magic link" button
+    3. Receives email with secure login link
+    4. Clicks link in email
+    5. Automatically authenticated and redirected to dashboard
+  - **Security**: Email verification ensures only email owner can authenticate
 
 ### Recent Changes (2026-02-15)
 - **App Icon Added**: Created professional medical cross icon for SiteMedic mobile app
