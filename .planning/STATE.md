@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 Phase: v1.1 — Phase 10 (Real-Time Operations Polish) — In Progress
-Plan: 10-03 complete. Wave 1 executing (10-01 done, 10-03 done, 10-04 done).
-Status: Phase 10 wave 1 complete — payment retry UI, medic context map, alert bulk dismiss all done
-Last activity: 2026-02-17 — Completed 10-03-PLAN.md (payment retry UI with retry button, support mailto, booking reference)
-Progress: [████████████████████] Phase 10 wave 1 100% (10-01, 10-03, 10-04 done)
+Plan: 10-02 complete. Wave 2 executing (10-02 done).
+Status: Phase 10 wave 2 in progress — map popup shift times shipped
+Last activity: 2026-02-17 — Completed 10-02-PLAN.md (map marker popup enhanced with HH:MM shift time display)
+Progress: [████████████████████] Phase 10 wave 1+2 (10-01, 10-02, 10-03, 10-04 done)
 
 ## Performance Metrics
 
@@ -558,6 +558,11 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 - D-10-01-003: subscribe() made async to await context fetch before Realtime channel opens — ensures medicContext Map is populated before any ping arrives
 - D-10-01-004: Context-at-subscribe pattern — single joined query at channel open time, O(1) Map lookup per ping — avoids N+1 anti-pattern
 
+**From Plan 10-02:**
+- D-10-02-001: Shift time fields kept optional in MedicLocation interface — medic pings without active booking context must not crash the popup
+- D-10-02-002: Used .slice(0, 5) to trim PostgreSQL TIME "07:00:00" to "07:00" for display — established pattern for TIME formatting
+- D-10-02-003: MedicTrackingMap.tsx retains its own local MedicLocation interface (not imported from store) — preserves component boundary
+
 **From Plan 10-03:**
 - D-10-03-001: Retry button uses type=submit inside existing <form> — no new handler, handleSubmit naturally reuses same PaymentIntent via Elements context
 - D-10-03-002: paymentFailed is separate from error string — allows recovery panel to be conditionally shown/hidden independently of error message
@@ -566,8 +571,8 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 
 ## Session Continuity
 
-Last session: 2026-02-17T18:15:49Z
-Stopped at: Completed 10-03-PLAN.md — payment retry UI with retry button, booking reference, support mailto all shipped. Build passing.
+Last session: 2026-02-17T18:21:27Z
+Stopped at: Completed 10-02-PLAN.md — map marker popup shift time display (HH:MM–HH:MM) shipped. TypeScript clean.
 Resume file: None
 
 ---
