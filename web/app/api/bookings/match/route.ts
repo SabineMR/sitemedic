@@ -13,6 +13,7 @@ import { NextResponse } from 'next/server';
 
 interface AutoMatchRequest {
   bookingId: string;
+  overrideMedicId?: string; // Admin manual override - skips auto-assign
 }
 
 interface MatchCandidate {
@@ -28,7 +29,7 @@ interface MatchCandidate {
 
 export async function POST(request: Request) {
   try {
-    const { bookingId }: AutoMatchRequest = await request.json();
+    const { bookingId, overrideMedicId }: AutoMatchRequest = await request.json();
 
     if (!bookingId) {
       return NextResponse.json(
@@ -38,6 +39,64 @@ export async function POST(request: Request) {
     }
 
     const supabase = await createClient();
+
+    // === MANUAL OVERRIDE PATH ===
+    // When admin selects a specific medic, skip auto-assign edge function entirely
+    if (overrideMedicId) {
+      // STEP 1: Update booking with manually selected medic
+      const { error: updateError } = await supabase
+        .from('bookings')
+        .update({
+          medic_id: overrideMedicId,
+          requires_manual_approval: false,
+        })
+        .eq('id', bookingId);
+
+      if (updateError) {
+        console.error('Failed to manually assign medic:', updateError);
+        return NextResponse.json(
+          { error: 'Failed to assign medic', details: updateError.message },
+          { status: 500 }
+        );
+      }
+
+      // STEP 2: Trigger email notification chain
+      const emailResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:30500'}/api/email/booking-confirmation`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookingId }),
+        }
+      );
+
+      if (!emailResponse.ok) {
+        console.error('Email sending failed after manual assignment, but booking is confirmed');
+      }
+
+      // STEP 3: Fetch medic details for response
+      const { data: medicRecord } = await supabase
+        .from('medics')
+        .select('first_name, last_name, star_rating')
+        .eq('id', overrideMedicId)
+        .single();
+
+      const manualMatch: MatchCandidate = {
+        medic_id: overrideMedicId,
+        medic_name: medicRecord
+          ? `${medicRecord.first_name} ${medicRecord.last_name}`
+          : 'Assigned Medic',
+        star_rating: medicRecord?.star_rating ?? 0,
+        availability: 'Manually assigned',
+        match_score: 100,
+        match_reasons: ['Manually assigned by admin'],
+      };
+
+      return NextResponse.json({
+        matches: [manualMatch],
+        requiresManualApproval: false,
+      });
+    }
 
     // **STEP 1: Call auto-assign Edge Function**
     const { data: edgeFunctionResult, error: edgeFunctionError } = await supabase.functions.invoke(
