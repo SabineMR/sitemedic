@@ -129,8 +129,8 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 11-01-PLAN.md — Database migration: org_settings table with constraints, RLS, and seed data
-- [ ] 11-02-PLAN.md — Admin settings API route (GET/PUT) and Business Configuration UI section
+- [x] 11-01-PLAN.md — Database migration: org_settings table with constraints, RLS, and seed data
+- [x] 11-02-PLAN.md — Admin settings API route (GET/PUT) and Business Configuration UI section
 - [ ] 11-03-PLAN.md — Wire all 7 consumer files to read from org_settings (remove hardcoded values)
 
 ---
