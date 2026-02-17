@@ -9,6 +9,7 @@
 import { jsonToCSV } from 'react-papaparse';
 import { format } from 'date-fns';
 import { TreatmentWithWorker, Worker } from '@/types/database.types';
+import { TimesheetWithDetails } from '@/lib/queries/admin/timesheets';
 
 /**
  * Export treatments to CSV file
@@ -92,6 +93,122 @@ export function exportWorkersCSV(workers: Worker[]) {
   const link = document.createElement('a');
   link.href = url;
   link.download = `worker-registry-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Export timesheets to CSV file
+ *
+ * Columns: Date, Medic, Client, Site, Scheduled Hours, Logged Hours,
+ *          Payout Amount, Status, Paid At
+ *
+ * Date format: UK format (dd/MM/yyyy)
+ */
+export function exportTimesheetsCSV(timesheets: TimesheetWithDetails[]) {
+  // Map timesheets to flat CSV rows
+  const csvData = timesheets.map((t) => ({
+    'Date': t.booking?.shift_date ? format(new Date(t.booking.shift_date), 'dd/MM/yyyy') : '',
+    'Medic': t.medic ? `${t.medic.first_name} ${t.medic.last_name}` : 'Unknown',
+    'Client': t.booking?.client?.company_name || '',
+    'Site': t.booking?.site_name || '',
+    'Scheduled Hours': t.scheduled_hours ?? '',
+    'Logged Hours': t.logged_hours ?? '',
+    'Payout Amount': t.payout_amount != null ? `£${t.payout_amount.toFixed(2)}` : '',
+    'Status': t.payout_status || '',
+    'Paid At': t.paid_at ? format(new Date(t.paid_at), 'dd/MM/yyyy') : '',
+  }));
+
+  // Generate CSV with react-papaparse (handles escaping, delimiters, special chars)
+  const csv = jsonToCSV(csvData);
+
+  // Create Blob with BOM prefix (\uFEFF) for Excel UTF-8 compatibility
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+
+  // Trigger download
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `timesheets-export-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Export bookings to CSV file
+ *
+ * Columns: Date, Client, Site, Address, Start, End, Medic,
+ *          Total, Platform Fee, Medic Payout, Status
+ *
+ * Date format: UK format (dd/MM/yyyy)
+ */
+export function exportBookingsCSV(bookings: any[]) {
+  // Map bookings to flat CSV rows
+  const csvData = bookings.map((b) => ({
+    'Date': b.shift_date ? format(new Date(b.shift_date), 'dd/MM/yyyy') : '',
+    'Client': b.clients?.company_name || '',
+    'Site': b.site_name || '',
+    'Address': b.site_address || '',
+    'Start': b.shift_start_time ? b.shift_start_time.slice(0, 5) : '',
+    'End': b.shift_end_time ? b.shift_end_time.slice(0, 5) : '',
+    'Medic': b.medics ? `${b.medics.first_name} ${b.medics.last_name}` : 'Unassigned',
+    'Total': b.total_amount != null ? `£${Number(b.total_amount).toFixed(2)}` : '',
+    'Platform Fee': b.platform_fee != null ? `£${Number(b.platform_fee).toFixed(2)}` : '',
+    'Medic Payout': b.medic_payout != null ? `£${Number(b.medic_payout).toFixed(2)}` : '',
+    'Status': b.status || '',
+  }));
+
+  // Generate CSV with react-papaparse
+  const csv = jsonToCSV(csvData);
+
+  // Create Blob with BOM prefix for Excel UTF-8 compatibility
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+
+  // Trigger download
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `bookings-export-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Export invoice history (completed bookings) to CSV file
+ *
+ * Columns: Date, Client, Site Postcode, Total, Platform Fee, Medic Payout, Status
+ *
+ * Date format: UK format (dd/MM/yyyy)
+ */
+export function exportInvoicesCSV(bookings: any[]) {
+  // Map completed bookings to flat CSV rows
+  const csvData = bookings.map((b) => ({
+    'Date': b.shift_date ? format(new Date(b.shift_date), 'dd/MM/yyyy') : '',
+    'Client': b.clients?.company_name || '',
+    'Site Postcode': b.site_postcode || '',
+    'Total': b.total_amount != null ? `£${Number(b.total_amount).toFixed(2)}` : '',
+    'Platform Fee': b.platform_fee != null ? `£${Number(b.platform_fee).toFixed(2)}` : '',
+    'Medic Payout': b.medic_payout != null ? `£${Number(b.medic_payout).toFixed(2)}` : '',
+    'Status': b.status || '',
+  }));
+
+  // Generate CSV with react-papaparse
+  const csv = jsonToCSV(csvData);
+
+  // Create Blob with BOM prefix for Excel UTF-8 compatibility
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+
+  // Trigger download
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `invoice-history-${format(new Date(), 'yyyy-MM-dd')}.csv`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
