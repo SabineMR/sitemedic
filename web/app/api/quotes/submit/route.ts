@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       replyTo: body.email,
       subject: `New Quote Request ${quoteRef} — ${body.company || body.name}`,
       html: emailHtml,
-    }).catch(err => console.error('Email send failed (non-blocking):', err));
+    }).catch((err: unknown) => console.error('Email send failed (non-blocking):', err));
 
     return NextResponse.json({ success: true, quoteRef });
   } catch (error) {
