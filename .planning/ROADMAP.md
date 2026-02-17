@@ -23,7 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5.5: Admin Operations Dashboards** (INSERTED) - Admin dashboard for bookings, medics, territories, revenue, timesheets, client management
 - [x] **Phase 6: RIDDOR Auto-Flagging** - Smart compliance detection with deadline tracking
 - [x] **Phase 6.5: Payment Processing & Payouts** (INSERTED) - Client payment processing, weekly medic payouts via UK Faster Payments, IR35 compliance, invoice generation
-- [ ] **Phase 7: Certification Tracking** - Expiry monitoring with progressive alerts
+- [x] **Phase 7: Certification Tracking** - Expiry monitoring with progressive alerts
 - [ ] **Phase 7.5: Territory Management & Auto-Assignment** (INSERTED) - UK postcode territory system, auto-assignment algorithm, coverage gap detection, hiring triggers
 
 ## Phase Details

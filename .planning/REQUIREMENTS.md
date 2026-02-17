@@ -119,19 +119,19 @@ Requirements for MVP launch. Each maps to roadmap phases.
 
 ### Certification Tracking & Alerts
 
-- [ ] **CERT-01**: System tracks UK certifications (CSCS, CPCS, IPAF, PASMA, Gas Safe, etc.) with expiry dates
-- [ ] **CERT-02**: Dashboard shows list of certifications expiring in next 30/60/90 days
-- [ ] **CERT-03**: Workers on site with expired certifications show critical alert (red)
-- [ ] **CERT-04**: Email notification to site manager when certification expires
-- [ ] **CERT-05**: Progressive reminders before expiry (30, 14, 7, 1 days before)
-- [ ] **CERT-06**: Expired certification prevents worker from logging incidents (validation at point of use)
+- [x] **CERT-01**: System tracks UK certifications (CSCS, CPCS, IPAF, PASMA, Gas Safe, etc.) with expiry dates
+- [x] **CERT-02**: Dashboard shows list of certifications expiring in next 30/60/90 days
+- [x] **CERT-03**: Workers on site with expired certifications show critical alert (red)
+- [x] **CERT-04**: Email notification to site manager when certification expires
+- [x] **CERT-05**: Progressive reminders before expiry (30, 14, 7, 1 days before)
+- [x] **CERT-06**: Expired certification prevents worker from logging incidents (validation at point of use)
 
 ### Email Notifications
 
 - [x] **NOTIF-01**: Site manager receives email when weekly PDF report is ready
 - [x] **NOTIF-02**: Site manager receives email when RIDDOR deadline approaches (3 days before)
-- [ ] **NOTIF-03**: Site manager receives email when worker certification expires
-- [ ] **NOTIF-04**: Email notifications use professional template with company branding
+- [x] **NOTIF-03**: Site manager receives email when worker certification expires
+- [x] **NOTIF-04**: Email notifications use professional template with company branding
 
 ### Mobile UX & Performance
 
@@ -309,14 +309,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RIDD-05 | Phase 6 | Complete |
 | RIDD-06 | Phase 6 | Complete |
 | NOTIF-02 | Phase 6 | Complete |
-| CERT-01 | Phase 7 | Pending |
-| CERT-02 | Phase 7 | Pending |
-| CERT-03 | Phase 7 | Pending |
-| CERT-04 | Phase 7 | Pending |
-| CERT-05 | Phase 7 | Pending |
-| CERT-06 | Phase 7 | Pending |
-| NOTIF-03 | Phase 7 | Pending |
-| NOTIF-04 | Phase 7 | Pending |
+| CERT-01 | Phase 7 | Complete |
+| CERT-02 | Phase 7 | Complete |
+| CERT-03 | Phase 7 | Complete |
+| CERT-04 | Phase 7 | Complete |
+| CERT-05 | Phase 7 | Complete |
+| CERT-06 | Phase 7 | Complete |
+| NOTIF-03 | Phase 7 | Complete |
+| NOTIF-04 | Phase 7 | Complete |
 
 **Coverage:**
 - v1 requirements: 83 total
