@@ -257,6 +257,11 @@ Plans:
 
 **Plans:** 3 plans
 
+Plans:
+- [ ] 15-01-PLAN.md — Console sweep: remove 3 console.warn from API routes (Wave 1)
+- [ ] 15-02-PLAN.md — Schedule board: remove mock data fallback, add proper error/empty states (Wave 1)
+- [ ] 15-03-PLAN.md — Manual medic assignment: extend match endpoint + booking detail panel dialog (Wave 2)
+
 ---
 
 ## Upcoming (v2.0)
