@@ -37,6 +37,7 @@ export interface RIDDORIncident {
     outcome: string;
     reference_number: string;
     created_at: string;
+    photo_uris: string[] | null;
   };
   workers: {
     id: string;
@@ -128,6 +129,53 @@ export async function generateF2508PDF(incidentId: string): Promise<{
   }
 
   return response.json();
+}
+
+/**
+ * RIDDOR Status History Entry
+ * Represents a single status transition in the audit trail
+ */
+export interface StatusHistoryEntry {
+  id: string;
+  incident_id: string;
+  from_status: string | null;
+  to_status: string;
+  changed_at: string;
+  changed_by: string | null;
+  actor_name: string | null;
+}
+
+/**
+ * Fetch status history for a RIDDOR incident (audit trail)
+ */
+export async function fetchRIDDORStatusHistory(
+  incidentId: string
+): Promise<StatusHistoryEntry[]> {
+  const { data, error } = await supabase
+    .from('riddor_status_history')
+    .select('*')
+    .eq('incident_id', incidentId)
+    .order('changed_at', { ascending: true });
+
+  if (error) throw error;
+  return (data || []) as StatusHistoryEntry[];
+}
+
+/**
+ * Update a RIDDOR draft incident (category and/or override reason)
+ * Only valid for incidents in 'draft' status
+ */
+export async function updateRIDDORDraft(
+  incidentId: string,
+  updates: { category?: string; override_reason?: string }
+): Promise<void> {
+  const { error } = await supabase
+    .from('riddor_incidents')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', incidentId)
+    .eq('status', 'draft');
+
+  if (error) throw error;
 }
 
 /**
