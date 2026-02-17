@@ -14,28 +14,38 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, TrendingUp, CheckCircle, XCircle, Clock, ArrowLeft } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useOrg } from '@/contexts/org-context';
 
 export default function RIDDORAnalyticsPage() {
+  const { orgId, loading: orgLoading } = useOrg();
+
   // Fetch override statistics with 5-minute polling
   const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['riddor-override-stats'],
+    queryKey: ['riddor-override-stats', orgId],
     queryFn: async () => {
-      // For demo, using hardcoded org_id - replace with actual auth context
-      const orgId = '10000000-0000-0000-0000-000000000001';
-      return fetchOverrideStats(orgId);
+      return fetchOverrideStats(orgId!);
     },
+    enabled: !!orgId,
     refetchInterval: 300000, // 5 minutes
   });
 
   // Fetch common override reasons
   const { data: reasons = [], isLoading: reasonsLoading } = useQuery({
-    queryKey: ['riddor-override-reasons'],
+    queryKey: ['riddor-override-reasons', orgId],
     queryFn: async () => {
-      const orgId = '10000000-0000-0000-0000-000000000001';
-      return fetchOverrideReasons(orgId);
+      return fetchOverrideReasons(orgId!);
     },
+    enabled: !!orgId,
     refetchInterval: 300000, // 5 minutes
   });
+
+  if (orgLoading) {
+    return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
+  }
+
+  if (!orgId) {
+    return <div className="text-center py-8 text-muted-foreground">No organization assigned</div>;
+  }
 
   const isLoading = statsLoading || reasonsLoading;
 
