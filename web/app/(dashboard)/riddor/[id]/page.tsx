@@ -1,21 +1,31 @@
 /**
  * RIDDOR Incident Detail Page
  * Phase 6: RIDDOR Auto-Flagging - Plan 04
+ * Enhanced in Phase 13-04: Auto-save, audit trail, photo gallery
  */
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { fetchRIDDORIncident, generateF2508PDF } from '@/lib/queries/riddor';
+import Image from 'next/image';
+import {
+  fetchRIDDORIncident,
+  fetchRIDDORStatusHistory,
+  updateRIDDORDraft,
+  generateF2508PDF,
+  type StatusHistoryEntry,
+} from '@/lib/queries/riddor';
+import { createClient } from '@/lib/supabase/client';
 import { RIDDORStatusBadge } from '@/components/riddor/RIDDORStatusBadge';
 import { DeadlineCountdown } from '@/components/riddor/DeadlineCountdown';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, FileText } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ArrowLeft, Camera, Clock, Download, FileText } from 'lucide-react';
 
 export default function RIDDORDetailPage() {
   const params = useParams();
@@ -23,12 +33,87 @@ export default function RIDDORDetailPage() {
   const queryClient = useQueryClient();
   const [generatingPDF, setGeneratingPDF] = useState(false);
 
+  // Draft state for auto-save
+  const [draftCategory, setDraftCategory] = useState<string>('');
+  const [draftOverrideReason, setDraftOverrideReason] = useState<string>('');
+
+  // Auto-save refs — use useRef to avoid re-renders
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasInitialized = useRef(false);
+
   // Fetch RIDDOR incident with 60-second polling
   const { data: incident, isLoading } = useQuery({
     queryKey: ['riddor-incident', incidentId],
     queryFn: () => fetchRIDDORIncident(incidentId),
     refetchInterval: 60000,
   });
+
+  // Fetch status history (audit trail)
+  const { data: statusHistory } = useQuery({
+    queryKey: ['riddor-status-history', incidentId],
+    queryFn: () => fetchRIDDORStatusHistory(incidentId),
+    refetchInterval: 60000,
+  });
+
+  // Initialize draft state once from incident data (one-time, no auto-save)
+  useEffect(() => {
+    if (incident && !hasInitialized.current) {
+      setDraftCategory(incident.category || '');
+      setDraftOverrideReason(incident.override_reason || '');
+      hasInitialized.current = true;
+    }
+  }, [incident]);
+
+  // Auto-save: 30-second debounce, only for drafts
+  useEffect(() => {
+    if (!hasInitialized.current || incident?.status !== 'draft') return;
+
+    // Clear any pending timer
+    if (autoSaveTimer.current) {
+      clearTimeout(autoSaveTimer.current);
+    }
+
+    // Schedule new save — silent (no toast)
+    autoSaveTimer.current = setTimeout(() => {
+      updateRIDDORDraft(incidentId, {
+        category: draftCategory,
+        override_reason: draftOverrideReason,
+      }).catch(() => {
+        // Silent failure — auto-save is best-effort
+      });
+    }, 30000);
+
+    return () => {
+      if (autoSaveTimer.current) {
+        clearTimeout(autoSaveTimer.current);
+      }
+    };
+  }, [draftCategory, draftOverrideReason, incidentId, incident?.status]);
+
+  // Save on unmount if draft
+  useEffect(() => {
+    return () => {
+      if (hasInitialized.current && incident?.status === 'draft') {
+        if (autoSaveTimer.current) {
+          clearTimeout(autoSaveTimer.current);
+        }
+        updateRIDDORDraft(incidentId, {
+          category: draftCategory,
+          override_reason: draftOverrideReason,
+        }).catch(() => {
+          // Silent failure on unmount
+        });
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Compute public photo URLs from treatment-photos bucket
+  const supabaseClient = createClient();
+  const photoUrls = ((incident as { treatments?: { photo_uris?: string[] | null } } | null)?.treatments?.photo_uris || []).map(
+    (path: string) =>
+      supabaseClient.storage.from('treatment-photos').getPublicUrl(path).data.publicUrl
+  );
 
   // Generate F2508 PDF mutation
   const generatePDFMutation = useMutation({
@@ -56,7 +141,19 @@ export default function RIDDORDetailPage() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="text-center py-12">Loading incident details...</div>
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+        </div>
+        <Skeleton className="h-20 w-full rounded-lg" />
+        <div className="grid gap-6 md:grid-cols-2">
+          <Skeleton className="h-40 rounded-lg" />
+          <Skeleton className="h-40 rounded-lg" />
+          <Skeleton className="h-40 rounded-lg md:col-span-2" />
+        </div>
       </div>
     );
   }
@@ -287,6 +384,95 @@ export default function RIDDORDetailPage() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Status History / Audit Trail */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Status History
+            </CardTitle>
+            <CardDescription>
+              Audit trail of all status changes for this incident
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!statusHistory || statusHistory.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                No status changes recorded yet.
+              </p>
+            ) : (
+              <ol className="relative border-l border-gray-200 ml-3 space-y-4">
+                {statusHistory.map((entry: StatusHistoryEntry) => (
+                  <li key={entry.id} className="ml-6">
+                    <span className="absolute -left-2 flex h-4 w-4 items-center justify-center rounded-full bg-blue-100 ring-2 ring-white">
+                      <Clock className="h-2.5 w-2.5 text-blue-600" />
+                    </span>
+                    <p className="text-sm font-medium text-gray-900">
+                      Status changed:{' '}
+                      <span className="capitalize">{entry.from_status ?? 'initial'}</span>
+                      {' → '}
+                      <span className="capitalize">{entry.to_status}</span>
+                      {entry.actor_name && (
+                        <span className="text-muted-foreground font-normal">
+                          {' '}by {entry.actor_name}
+                        </span>
+                      )}
+                    </p>
+                    <time className="text-xs text-muted-foreground">
+                      {new Date(entry.changed_at).toLocaleDateString('en-GB', {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </time>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Evidence Photos */}
+        {photoUrls.length > 0 && (
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Camera className="h-5 w-5" />
+                Evidence Photos
+              </CardTitle>
+              <CardDescription>
+                Photos captured during treatment from the treatment-photos bucket
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {photoUrls.map((url: string, index: number) => (
+                  <a
+                    key={index}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="relative block aspect-square overflow-hidden rounded-lg border border-gray-200 hover:opacity-90 transition-opacity"
+                  >
+                    <Image
+                      src={url}
+                      alt={`Evidence photo ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                    />
+                    <div className="absolute bottom-1 right-1">
+                      <Download className="h-4 w-4 text-white drop-shadow" />
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
