@@ -269,6 +269,7 @@ class EmergencyAlertService {
       if (!uri) return;
 
       // Read the audio file as base64
+      if (!FileSystem) return;
       const base64Audio = await FileSystem.readAsStringAsync(uri, {
         encoding: FileSystem.EncodingType.Base64,
       });
