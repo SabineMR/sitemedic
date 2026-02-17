@@ -569,10 +569,16 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 - D-10-03-003: NEXT_PUBLIC_SUPPORT_EMAIL env var with hardcoded fallback — mailto always functional even without .env.local setup
 - D-10-03-004: setError(null) + setPaymentFailed(false) at top of handleSubmit — clears previous failure state before each retry attempt
 
+**From Plan 10-05:**
+- D-10-05-001: Use triggered_at (server timestamp) not seconds_since_triggered (stale query-time value) for escalation threshold — stale computed column never updates after fetch
+- D-10-05-002: escalatedSoundRef as useRef<Set<string>> — never triggers re-renders, persists across tick cycles, fire-once-per-alert guarantee
+- D-10-05-003: Show Send Message mailto instead of disabled Call/SMS buttons when medicPhone is null — always provides a contact action for the admin
+- D-10-05-004: Escalation styling overrides severity-based styling — red urgency signal takes precedence at 15-minute threshold
+
 ## Session Continuity
 
-Last session: 2026-02-17T18:22:33Z
-Stopped at: Completed 14-01-PLAN.md — payslip download optimised with stored pdf_url fast path and edge function fallback.
+Last session: 2026-02-17T18:23:40Z
+Stopped at: Completed 10-05-PLAN.md — alert escalation timer, SUGGESTED_ACTIONS for 9 types, escalation sound (once per alert), Send Message mailto fallback all shipped.
 Resume file: None
 
 ---
