@@ -9,17 +9,17 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 Phase: 6 of 7 (RIDDOR Auto-Flagging)
-Plan: 7 of 7 in current phase
+Plan: 8 of 8 in current phase
 Status: Phase complete
-Last activity: 2026-02-16 — Completed 06-07-PLAN.md (Gap Closure - RIDDOR Auto-Detection Trigger)
-Progress: [████████████████░░] 87% (72/83 plans across Phases 1-7)
+Last activity: 2026-02-16 — Completed 06-08-PLAN.md (Gap Closure - RIDDOR Dashboard Auth Integration)
+Progress: [████████████████░░] 88% (73/83 plans across Phases 1-7)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 72
-- Average duration: 4.4 min
-- Total execution time: 5.2 hours
+- Total plans completed: 73
+- Average duration: 4.3 min
+- Total execution time: 5.3 hours
 
 **By Phase:**
 
@@ -34,12 +34,12 @@ Progress: [████████████████░░] 87% (72/83 pl
 | 04.6-customer-onboarding | 7/7 | 52 min | 7.4 min |
 | 05-pdf-generation | 4/4 | 18.5 min | 4.6 min |
 | 05.5-admin-operations | 6/6 | 16.7 min | 2.8 min |
-| 06-riddor-auto-flagging | 7/7 | 48 min | 6.9 min |
+| 06-riddor-auto-flagging | 8/8 | 50 min | 6.3 min |
 | 06.5-payments-payouts | 11/11 | 46 min | 4.2 min |
 
 **Recent Trend:**
-- Last 5 plans: 06-05 (1 min), 06-06 (7 min), 06.5-10 (3 min), 06.5-11 (2 min), 06-07 (1 min)
-- Trend: Gap closure complete - RIDDOR auto-detection now fully automated via database trigger
+- Last 5 plans: 06-06 (7 min), 06.5-10 (3 min), 06.5-11 (2 min), 06-07 (1 min), 06-08 (2 min)
+- Trend: RIDDOR Phase 6 complete - All dashboard pages now use authenticated org context instead of hardcoded demo UUIDs
 
 *Updated after each plan completion*
 
@@ -468,9 +468,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-17T00:29:00Z
-Stopped at: Completed 06-07-PLAN.md — Gap Closure - RIDDOR Auto-Detection Trigger (Closed Phase 6 gap: treatments table now auto-invokes riddor-detector via pg_net trigger)
+Last session: 2026-02-17T00:30:00Z
+Stopped at: Completed 06-08-PLAN.md — Gap Closure - RIDDOR Dashboard Auth Integration (Replaced hardcoded demo org_id with dynamic auth context in both RIDDOR pages)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6 (RIDDOR Auto-Flagging) complete (7/7 plans). Phase 6.5 (Payments & Payouts) complete (11/11 plans). Progress: 72/83 plans (87%)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6 (RIDDOR Auto-Flagging) complete (8/8 plans). Phase 6.5 (Payments & Payouts) complete (11/11 plans). Progress: 73/83 plans (88%)*
