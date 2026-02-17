@@ -108,9 +108,10 @@ Plans:
 
 ---
 
-### Phase 11: Organisation Settings
+### Phase 11: Organisation Settings ✅ COMPLETE
 **Goal:** Replace all hardcoded business configuration values with per-organisation settings stored in the database.
 **Priority:** MEDIUM
+**Completed:** 2026-02-17
 
 **Problem:** Key business values are hardcoded in source files — `baseRate: 42`, `DEFAULT_RADIUS: 200`, urgency premiums `[0, 20, 50, 75]`, admin email fallback. These cannot be customised per organisation without a code change.
 
@@ -131,7 +132,7 @@ Plans:
 Plans:
 - [x] 11-01-PLAN.md — Database migration: org_settings table with constraints, RLS, and seed data
 - [x] 11-02-PLAN.md — Admin settings API route (GET/PUT) and Business Configuration UI section
-- [ ] 11-03-PLAN.md — Wire all 7 consumer files to read from org_settings (remove hardcoded values)
+- [x] 11-03-PLAN.md — Wire all 7 consumer files to read from org_settings (remove hardcoded values)
 
 ---
 

@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 12 (Analytics Dashboard) — COMPLETE
-Plan: 12-05 complete. All 5 plans in Phase 12 complete (12-04, 12-01, 12-02, 12-03, 12-05).
-Status: Phase complete
-Last activity: 2026-02-17 — Completed 12-05-PLAN.md (wired territory, assignments, utilisation tabs into analytics page — 7 tabs total)
-Progress: [█████████████████████████] 111/111 plans complete (100%).
+Phase: v1.1 — Phase 11 (Organisation Settings) — ✅ COMPLETE
+Plan: 11-03 complete (3/3). All waves done. Phase verified 10/10 must-haves. Human approved.
+Status: Complete — ready for Phase 12 (Analytics Dashboard)
+Last activity: 2026-02-17 — Completed Phase 11: org_settings migration, admin UI, wired 7 consumer files
+Progress: [████████████████████] 100% (3/3 plans executed in Phase 11)
 
 ## Performance Metrics
 
