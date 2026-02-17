@@ -1,12 +1,14 @@
 /**
  * POST /api/contact/submit
- * Accepts the /contact page enquiry form, emails admin via Resend.
+ * Accepts the /contact page enquiry form.
  *
- * No DB table required. Admin receives full enquiry details by email and
- * can reply directly to the sender.
+ * DB-first: Persists to contact_submissions via service-role client (bypasses RLS).
+ * DB insert is blocking — returns 500 if it fails.
+ * Email notification is fire-and-forget after successful DB write.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { resend } from '@/lib/email/resend';
 
 export const dynamic = 'force-dynamic';
@@ -22,6 +24,13 @@ interface ContactRequest {
   message?: string;
 }
 
+function getServiceRoleClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Supabase service role env vars not configured');
+  return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: ContactRequest = await request.json();
@@ -31,6 +40,27 @@ export async function POST(request: NextRequest) {
         { error: 'First name, last name, email, and enquiry type are required' },
         { status: 400 }
       );
+    }
+
+    // DB insert is FIRST and BLOCKING
+    const supabase = getServiceRoleClient();
+    const orgId = process.env.ASG_ORG_ID;
+    const { error: dbError } = await supabase.from('contact_submissions').insert({
+      org_id: orgId,
+      first_name: body.firstName,
+      last_name: body.lastName,
+      company: body.company,
+      email: body.email,
+      phone: body.phone || null,
+      site_size: body.siteSize || null,
+      enquiry_type: body.enquiryType,
+      message: body.message || null,
+      status: 'new',
+    });
+
+    if (dbError) {
+      console.error('Failed to persist contact submission to DB:', dbError);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@sitemedic.co.uk';
@@ -53,20 +83,14 @@ export async function POST(request: NextRequest) {
       </div>
     `;
 
-    const result = await resend.emails.send({
+    // Email is FIRE-AND-FORGET — failure does not block the response
+    resend.emails.send({
       from: 'SiteMedic Contact <bookings@sitemedic.co.uk>',
       to: adminEmail,
       replyTo: body.email,
       subject: `New Enquiry: ${body.enquiryType} — ${body.company} (${fullName})`,
       html: emailHtml,
-    });
-
-    if (result.error) {
-      console.error('⚠️  Failed to send contact enquiry email:', result.error);
-      // Don't expose Resend errors to the client — still return success
-    } else {
-      console.log('✅ Contact enquiry email sent:', result.data?.id);
-    }
+    }).catch(err => console.error('Email send failed (non-blocking):', err));
 
     return NextResponse.json({ success: true });
   } catch (error) {
