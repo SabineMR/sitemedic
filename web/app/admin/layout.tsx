@@ -167,6 +167,31 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: <Building2 className="w-5 h-5" />,
     },
     {
+      name: 'Shift Swaps',
+      href: '/admin/shift-swaps',
+      icon: <RefreshCw className="w-5 h-5" />,
+    },
+    {
+      name: 'Shift Templates',
+      href: '/admin/shift-templates',
+      icon: <ClipboardList className="w-5 h-5" />,
+    },
+    {
+      name: 'Geofences',
+      href: '/admin/geofences',
+      icon: <Crosshair className="w-5 h-5" />,
+    },
+    {
+      name: 'Conflicts',
+      href: '/admin/booking-conflicts',
+      icon: <AlertOctagon className="w-5 h-5" />,
+    },
+    {
+      name: 'GDPR',
+      href: '/admin/gdpr',
+      icon: <Shield className="w-5 h-5" />,
+    },
+    {
       name: 'Revenue',
       href: '/admin/revenue',
       icon: <Banknote className="w-5 h-5" />,

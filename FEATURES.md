@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Construction Site Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - Paramedic staffing company using SiteMedic platform
-**Last Updated**: 2026-02-16 (Marketing UI/UX overhaul — header, homepage, pricing, footer)
+**Last Updated**: 2026-02-16 (Medium-priority gap fixes: platform admin, legal pages, CSV export, dashboard nav, new admin pages)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -82,6 +82,49 @@ The previous homepage was a generic "book a paramedic for compliance" page. The 
 9. **Final CTA** — Blue section with England & Wales geographic scope, dual CTAs (Book / View Pricing)
 
 **UK-only scope explicitly stated** throughout copy.
+
+---
+
+### Medium-Priority Gap Fixes — Applied 2026-02-16
+
+#### Platform Admin Improvements
+
+| Fix | File(s) Changed |
+|-----|-----------------|
+| **Platform layout showed hardcoded "Platform Admin" / "Super User" / "PA"** | `web/app/platform/layout.tsx` — added `useState`/`useEffect` + `createClient().auth.getUser()` to display real user name and email; initials derived from name |
+| **`/platform/users` returned 404** | Created `web/app/platform/users/page.tsx` — lists all users from `org_memberships` + `profiles`, filterable by role and searchable by name/email/org; role colour badges |
+| **`/platform/settings` returned 404** | Created `web/app/platform/settings/page.tsx` — Feature flags toggles, notification preferences, email config, session security settings |
+
+#### Legal Pages Fix
+
+| Fix | File(s) Changed |
+|-----|-----------------|
+| **Placeholder phone numbers `+44XXXXXXXXXX` in legal pages** (7 occurrences across 4 pages) | `complaints/page.tsx`, `accessibility-statement/page.tsx`, `refund-policy/page.tsx`, `acceptable-use/page.tsx` — replaced `tel:+44XXXXXXXXXX` with `mailto:support@sitemedic.co.uk`; updated "📞 Phone" labels to "📧 Email" / "Support Email" |
+
+#### CSV Export Fix
+
+| Fix | File(s) Changed |
+|-----|-----------------|
+| **Certification status hardcoded as `'Active'` in worker export** | `web/lib/utils/export-csv.ts:78` — changed to use `w.certification_status ?? ''`; updated JSDoc comment |
+
+#### Dashboard Sidebar Active State
+
+| Fix | File(s) Changed |
+|-----|-----------------|
+| **Dashboard sidebar had no active page indicator** — Server Component couldn't use `usePathname()` | Created `web/components/dashboard/DashboardNav.tsx` (`'use client'` component with `usePathname()`); updated `web/app/(dashboard)/layout.tsx` to use it; `SidebarMenuButton isActive` prop now reflects current route |
+
+#### New Backend-without-UI Admin Pages
+
+| Page | Route | File |
+|------|-------|------|
+| **Shift Swaps** — Approve/reject medic shift swap requests from the `shift_swaps` table | `/admin/shift-swaps` | `web/app/admin/shift-swaps/page.tsx` |
+| **Geofences** — Create/edit/delete geofence boundaries for site check-in validation | `/admin/geofences` | `web/app/admin/geofences/page.tsx` |
+| **Shift Templates** — Create reusable shift patterns to speed up booking creation | `/admin/shift-templates` | `web/app/admin/shift-templates/page.tsx` |
+| **Booking Conflicts** — View and resolve conflicts detected by `conflict-detector` edge function | `/admin/booking-conflicts` | `web/app/admin/booking-conflicts/page.tsx` |
+| **GDPR Data Requests** — Manage GDPR Art. 15-17 data export and deletion requests | `/admin/gdpr` | `web/app/admin/gdpr/page.tsx` |
+| **Medic Payslips** — Generate payslips per medic from approved timesheets | `/admin/medics/[id]/payslips` | `web/app/admin/medics/[id]/payslips/page.tsx` |
+
+All 5 new admin section pages have been added to the admin sidebar navigation in `web/app/admin/layout.tsx`.
 
 ---
 
