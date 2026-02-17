@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 14 (Compliance, Exports & Medic Portal) — ✅ COMPLETE
-Plan: 14-05 complete (5/5). All waves done. Phase verified 5/5 must-haves.
-Status: Complete — ready for Phase 15 (Code Quality & Housekeeping)
-Last activity: 2026-02-17 — Completed Phase 14: payslip download fix, 4 export buttons, cert expiry banners, IR35 display, contract detail fixes
-Progress: [████████████████████] 100% (5/5 plans executed in Phase 14)
+Phase: v1.1 — Phase 15 (Code Quality & Housekeeping) — In progress
+Plan: 15-01 complete (1/3). Wave 1 done.
+Status: In progress — 15-01 console sweep complete, ready for 15-02
+Last activity: 2026-02-17 — Completed 15-01: removed all console.warn/console.log from web/app/**, 135 console.error retained
+Progress: [█░░] 33% (1/3 plans executed in Phase 15)
 
 ## Performance Metrics
 
