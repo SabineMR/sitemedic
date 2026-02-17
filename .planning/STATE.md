@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 08 (Lead Capture & Data Persistence) — ✅ COMPLETE
-Plan: 08-04 complete (4/4). All waves done. Phase verified 13/13 must-haves.
-Status: Complete — ready for Phase 09 (Booking Data Completeness)
-Last activity: 2026-02-17 — Completed 08-04-PLAN.md (useSearchParams pre-fill, Suspense boundary)
-Progress: [████████████████████] 100% (4/4 plans executed in Phase 08)
+Phase: v1.1 — Phase 09 (Booking Data Completeness) — In progress
+Plan: 09-01 complete (1/? in Phase 09).
+Status: In progress — 09-01 done, awaiting remaining Phase 09 plans
+Last activity: 2026-02-17 — Completed 09-01-PLAN.md (What3WordsDisplay component, API fix, BookingConfirmation extension)
+Progress: [████████████████████] Phase 08 100% complete. Phase 09 started (09-01 done).
 
 ## Performance Metrics
 
@@ -40,8 +40,8 @@ Progress: [████████████████████] 100% (4
 | 07.5-territory-auto-assignment | 5/5 | 19 min | 3.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 07.5-01 (3 min), 07.5-02 (4 min), 07.5-03 (4 min), 07.5-04 (3 min), 07.5-05 (5 min)
-- Trend: Territory management system complete - drag-drop assignment, auto-assignment (100% success rate), coverage gaps, hiring triggers, interactive map
+- Last 5 plans: 07.5-04 (3 min), 07.5-05 (5 min), 08-03 (?), 08-04 (?), 09-01 (2 min)
+- Trend: Phase 09 started — booking confirmation now surfaces what3words and special notes to clients
 
 *Updated after each plan completion*
 
