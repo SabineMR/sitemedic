@@ -30,6 +30,7 @@ import {
   Users,
   FileText,
   FileSignature,
+  ShieldCheck,
   LogOut,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -55,6 +56,11 @@ const navigation = [
     name: 'Workers',
     href: '/workers',
     icon: Users,
+  },
+  {
+    name: 'Certifications',
+    href: '/certifications',
+    icon: ShieldCheck,
   },
   {
     name: 'Contracts',

@@ -61,8 +61,21 @@ export async function fetchComplianceData(
     .gte('created_at', sevenDaysAgo)
     .is('deleted_at', null);
 
-  // Expired certs: Hard-code 0 (cert tracking is Phase 7)
-  const expiredCerts = 0;
+  // Expired certs: Count medics with expired certifications
+  const { data: medicsWithCerts } = await supabase
+    .from('medics')
+    .select('certifications')
+    .not('certifications', 'eq', '[]');
+
+  let expiredCerts = 0;
+  if (medicsWithCerts) {
+    for (const medic of medicsWithCerts) {
+      const certs = medic.certifications as any[];
+      if (certs?.some(c => c.expiry_date && new Date(c.expiry_date) < new Date())) {
+        expiredCerts++;
+      }
+    }
+  }
 
   // RIDDOR deadlines: Count RIDDOR treatments created in last 15 days (15-day reporting window)
   const { count: riddorDeadlines } = await supabase
