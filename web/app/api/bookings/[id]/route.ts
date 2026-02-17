@@ -70,6 +70,7 @@ export async function GET(
         site_name: booking.site_name,
         site_address: booking.site_address,
         site_postcode: booking.site_postcode,
+        what3words_address: booking.what3words_address,
         site_contact_name: booking.site_contact_name,
         site_contact_phone: booking.site_contact_phone,
         shift_date: booking.shift_date,
