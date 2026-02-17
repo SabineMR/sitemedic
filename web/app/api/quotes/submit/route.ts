@@ -1,13 +1,15 @@
 /**
  * POST /api/quotes/submit
- * Accepts a QuoteBuilder form payload, emails admin, and returns a quote reference.
+ * Accepts a QuoteBuilder form payload, persists to DB, emails admin, returns quote reference.
  *
- * No DB table required — keeps it lightweight.
- * Admin receives full quote details via email.
+ * DB-first: Persists to quote_submissions via service-role client (bypasses RLS).
+ * DB insert is blocking — returns 500 if it fails.
+ * Email notification is fire-and-forget after successful DB write.
  * Caller receives a short quote reference (QT-XXXX) for the confirmation screen.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { resend } from '@/lib/email/resend';
 
 export const dynamic = 'force-dynamic';
@@ -21,6 +23,7 @@ interface QuoteSubmitRequest {
   estimatedDuration: string;
   location: string;
   siteAddress: string;
+  coordinates?: string;
   what3wordsAddress?: string;
   startDate: string;
   endDate: string;
@@ -30,6 +33,13 @@ interface QuoteSubmitRequest {
   email: string;
   phone: string;
   company: string;
+}
+
+function getServiceRoleClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Supabase service role env vars not configured');
+  return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
 }
 
 export async function POST(request: NextRequest) {
@@ -46,6 +56,36 @@ export async function POST(request: NextRequest) {
 
     // Generate a short, human-readable quote reference
     const quoteRef = `QT-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+
+    // DB insert is FIRST and BLOCKING
+    const supabase = getServiceRoleClient();
+    const orgId = process.env.ASG_ORG_ID;
+    const { error: dbError } = await supabase.from('quote_submissions').insert({
+      org_id: orgId,
+      quote_ref: quoteRef,
+      name: body.name,
+      email: body.email,
+      phone: body.phone,
+      company: body.company || null,
+      worker_count: body.workerCount || null,
+      project_type: body.projectType || null,
+      medic_count: body.medicCount || null,
+      duration_known: body.durationKnown || null,
+      estimated_duration: body.estimatedDuration || null,
+      site_address: body.siteAddress || null,
+      coordinates: body.coordinates || null,
+      what3words_address: body.what3wordsAddress || null,
+      start_date: body.startDate || null,
+      end_date: body.endDate || null,
+      project_phase: body.projectPhase || null,
+      special_requirements: body.specialRequirements ?? [],
+      status: 'new',
+    });
+
+    if (dbError) {
+      console.error('Failed to persist quote submission to DB:', dbError);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@sitemedic.co.uk';
 
@@ -66,8 +106,8 @@ export async function POST(request: NextRequest) {
           <tr><td style="padding:8px 0;color:#64748b;font-weight:600">Workers on Site</td><td style="padding:8px 0">${body.workerCount || '—'}</td></tr>
           <tr><td style="padding:8px 0;color:#64748b;font-weight:600">Project Type</td><td style="padding:8px 0">${body.projectType || '—'}</td></tr>
           <tr><td style="padding:8px 0;color:#64748b;font-weight:600">Medics Required</td><td style="padding:8px 0">${body.medicCount || '—'}</td></tr>
-          <tr><td style="padding:8px 0;color:#64748b;font-weight:600">Duration</td><td style="padding:8px 0">${body.duration || '—'} (${body.durationKnown})</td></tr>
-          <tr><td style="padding:8px 0;color:#64748b;font-weight:600">Site Address</td><td style="padding:8px 0">${body.siteAddress || body.location || '—'}</td></tr>
+          <tr><td style="padding:8px 0;color:#64748b;font-weight:600">Duration</td><td style="padding:8px 0">${body.estimatedDuration || '—'} (${body.durationKnown})</td></tr>
+          <tr><td style="padding:8px 0;color:#64748b;font-weight:600">Site Address</td><td style="padding:8px 0">${body.siteAddress || '—'}</td></tr>
           ${body.what3wordsAddress ? `<tr><td style="padding:8px 0;color:#64748b;font-weight:600">what3words</td><td style="padding:8px 0">${body.what3wordsAddress}</td></tr>` : ''}
           <tr><td style="padding:8px 0;color:#64748b;font-weight:600">Start Date</td><td style="padding:8px 0">${body.startDate || '—'}</td></tr>
           <tr><td style="padding:8px 0;color:#64748b;font-weight:600">End Date</td><td style="padding:8px 0">${body.endDate || '—'}</td></tr>
@@ -79,18 +119,14 @@ export async function POST(request: NextRequest) {
       </div>
     `;
 
-    const result = await resend.emails.send({
+    // Email is FIRE-AND-FORGET — failure does not block the response
+    resend.emails.send({
       from: 'SiteMedic Quotes <bookings@sitemedic.co.uk>',
       to: adminEmail,
       replyTo: body.email,
       subject: `New Quote Request ${quoteRef} — ${body.company || body.name}`,
       html: emailHtml,
-    });
-
-    if (result.error) {
-      console.error('⚠️  Failed to send quote notification email:', result.error);
-      // Still return success — the lead data is logged; don't block the user flow
-    }
+    }).catch(err => console.error('Email send failed (non-blocking):', err));
 
     return NextResponse.json({ success: true, quoteRef });
   } catch (error) {
