@@ -900,9 +900,46 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
               </div>
             </div>
           )}
+
+          {/* Step 4: Confirmation */}
+          {step === 4 && (
+            <div className="p-6 flex flex-col items-center text-center space-y-6">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">Quote Received!</h3>
+                <p className="text-slate-600">
+                  Thanks, <strong>{formData.name}</strong>. We&apos;ll be in touch within 24 hours.
+                </p>
+                {quoteRef && (
+                  <p className="mt-3 text-sm text-slate-500">
+                    Your reference: <span className="font-mono font-semibold text-slate-700">{quoteRef}</span>
+                  </p>
+                )}
+              </div>
+              <div className="w-full space-y-3 pt-2">
+                <button
+                  onClick={handleBookNow}
+                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition"
+                >
+                  Book Now
+                </button>
+                <button
+                  onClick={onClose}
+                  className="w-full text-slate-600 hover:text-slate-900 font-medium py-2"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Footer */}
+        {/* Footer — hidden on confirmation screen */}
+        {step < 4 && (
         <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 flex items-center justify-between">
           <div>
             {step > 1 && (
@@ -914,7 +951,10 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
               </button>
             )}
           </div>
-          <div>
+          <div className="flex flex-col items-end gap-2">
+            {submitError && (
+              <p className="text-sm text-red-600">{submitError}</p>
+            )}
             {step < 3 ? (
               <button
                 onClick={nextStep}
@@ -924,18 +964,22 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
               </button>
             ) : (
               <button
-                onClick={() => {
-                  // Here you would submit the form data
-                  alert('Quote request submitted! (This would actually send the data to your backend)');
-                  onClose();
-                }}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition"
+                onClick={submitQuote}
+                disabled={isSubmitting}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                Request Quote
+                {isSubmitting && (
+                  <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                )}
+                {isSubmitting ? 'Sending...' : 'Request Quote'}
               </button>
             )}
           </div>
         </div>
+        )}
       </div>
     </div>
     </>

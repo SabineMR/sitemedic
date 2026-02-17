@@ -463,7 +463,6 @@ export const useScheduleBoardStore = create<ScheduleBoardState>((set, get) => ({
         ),
       }));
 
-      console.log('[ScheduleBoard] Successfully assigned booking:', bookingId, 'to medic:', medicId);
     } catch (error) {
       console.error('[ScheduleBoard] Error assigning booking:', error);
       // Re-fetch to ensure consistency
@@ -476,8 +475,6 @@ export const useScheduleBoardStore = create<ScheduleBoardState>((set, get) => ({
    * Subscribe to real-time booking updates
    */
   subscribe: () => {
-    console.log('[ScheduleBoard] Setting up real-time subscription...');
-
     // Unsubscribe from existing channel if any
     const existingChannel = get().realtimeChannel;
     if (existingChannel) {
@@ -499,15 +496,12 @@ export const useScheduleBoardStore = create<ScheduleBoardState>((set, get) => ({
           filter: `shift_date=gte.${selectedWeekStart}`,
         },
         (payload) => {
-          console.log('[ScheduleBoard] Booking change:', payload);
-
           // Re-fetch schedule data to stay in sync
           // (In a production app, you might want to handle INSERTs/UPDATEs/DELETEs individually for better performance)
           get().fetchScheduleData();
         }
       )
       .subscribe((status) => {
-        console.log('[ScheduleBoard] Subscription status:', status);
         set({ isConnected: status === 'SUBSCRIBED' });
       });
 
@@ -520,7 +514,6 @@ export const useScheduleBoardStore = create<ScheduleBoardState>((set, get) => ({
   unsubscribe: () => {
     const channel = get().realtimeChannel;
     if (channel) {
-      console.log('[ScheduleBoard] Unsubscribing from real-time...');
       supabase.removeChannel(channel);
       set({ realtimeChannel: null, isConnected: false });
     }

@@ -1,18 +1,38 @@
 /**
  * Book a Medic Page
  * Phase 4.5: Customer-facing booking form
+ *
+ * Reads quoteData from sessionStorage (set by QuoteBuilder "Book Now" CTA)
+ * and passes it as prefillData to BookingForm.
  */
 
-import { Metadata } from 'next';
+'use client';
+
+import { useEffect, useState } from 'react';
 import { BookingForm } from '@/components/booking/booking-form';
 
-export const metadata: Metadata = {
-  title: 'Book a Medic - Apex Safety Group',
-  description:
-    'Book qualified paramedics for your construction site. Select dates, configure shift requirements, and see real-time pricing.',
-};
+interface QuoteData {
+  location?: string;
+  siteAddress?: string;
+  specialRequirements?: string[];
+  confinedSpaceRequired?: boolean;
+  traumaSpecialistRequired?: boolean;
+}
 
 export default function BookPage() {
+  const [prefillData, setPrefillData] = useState<QuoteData | null>(null);
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem('quoteData');
+    if (raw) {
+      try {
+        setPrefillData(JSON.parse(raw));
+      } catch {
+        // Ignore malformed data
+      }
+    }
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -24,7 +44,7 @@ export default function BookPage() {
       </div>
 
       {/* Booking Form */}
-      <BookingForm />
+      <BookingForm prefillData={prefillData} />
     </div>
   );
 }

@@ -74,7 +74,6 @@ export function ScheduleGrid() {
 
     // If not dropped on a valid target, do nothing
     if (!over) {
-      console.log('[ScheduleGrid] Dropped outside valid drop zone');
       return;
     }
 
@@ -96,13 +95,6 @@ export function ScheduleGrid() {
       return;
     }
 
-    console.log('[ScheduleGrid] Attempting to assign booking:', {
-      bookingId,
-      medicId,
-      date,
-      booking,
-    });
-
     // Check conflicts before assignment
     try {
       const conflictResult = await checkConflicts({
@@ -114,8 +106,6 @@ export function ScheduleGrid() {
         confined_space_required: booking.confined_space_required,
         trauma_specialist_required: booking.trauma_specialist_required,
       });
-
-      console.log('[ScheduleGrid] Conflict check result:', conflictResult);
 
       if (conflictResult.can_assign) {
         // No conflicts - assign immediately
@@ -140,8 +130,6 @@ export function ScheduleGrid() {
     // Find the booking ID from the current drag context
     // Note: In a production app, you'd want to store this in state during handleDragEnd
     // For now, we'll need to extract it from the conflict or pass it through
-    console.log('[ScheduleGrid] Force assign requested - implement based on your conflict tracking');
-
     // Close modal
     setCurrentConflict(null);
   };

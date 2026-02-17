@@ -15,7 +15,19 @@ import { PricingBreakdown } from './pricing-breakdown';
 import { BookingFormData, PricingBreakdown as PricingData } from '@/lib/booking/types';
 import { calculateBookingPrice, getUrgencyPremium } from '@/lib/booking/pricing';
 
-export function BookingForm() {
+interface QuoteData {
+  location?: string;
+  siteAddress?: string;
+  specialRequirements?: string[];
+  confinedSpaceRequired?: boolean;
+  traumaSpecialistRequired?: boolean;
+}
+
+interface BookingFormProps {
+  prefillData?: QuoteData | null;
+}
+
+export function BookingForm({ prefillData }: BookingFormProps = {}) {
   const router = useRouter();
 
   // Initialize form state
@@ -44,6 +56,24 @@ export function BookingForm() {
   const handleChange = (updates: Partial<BookingFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
   };
+
+  // Pre-populate form from quote data (set by QuoteBuilder "Book Now" CTA)
+  useEffect(() => {
+    if (!prefillData) return;
+    const specialNotes = prefillData.specialRequirements?.length
+      ? prefillData.specialRequirements.join(', ')
+      : '';
+    setFormData((prev) => ({
+      ...prev,
+      siteAddress: prefillData.siteAddress || prefillData.location || prev.siteAddress,
+      specialNotes: specialNotes || prev.specialNotes,
+      confinedSpaceRequired: prefillData.confinedSpaceRequired ?? prev.confinedSpaceRequired,
+      traumaSpecialistRequired: prefillData.traumaSpecialistRequired ?? prev.traumaSpecialistRequired,
+    }));
+    // Clear sessionStorage after consuming the data
+    sessionStorage.removeItem('quoteData');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillData]);
 
   // Recalculate pricing whenever relevant fields change
   useEffect(() => {

@@ -68,7 +68,6 @@ export const useMedicLocationsStore = create<MedicLocationsState>((set, get) => 
 
     // Debounce: Skip if updated less than 1 second ago
     if (now - lastUpdateTime < DEBOUNCE_MS) {
-      console.log(`[Realtime] Debounced update for medic ${medicId}`);
       return;
     }
 
@@ -121,8 +120,6 @@ export const useMedicLocationsStore = create<MedicLocationsState>((set, get) => 
    * Subscribe to real-time updates
    */
   subscribe: () => {
-    console.log('[Realtime] Setting up subscriptions...');
-
     // Unsubscribe from existing channel if any
     const existingChannel = get().subscriptionChannel;
     if (existingChannel) {
@@ -142,7 +139,6 @@ export const useMedicLocationsStore = create<MedicLocationsState>((set, get) => 
           filter: `recorded_at=gte.${new Date().toISOString().split('T')[0]}`,
         },
         (payload) => {
-          console.log('[Realtime] Location ping received:', payload);
           const ping = payload.new as any;
 
           // Update location in store
@@ -166,7 +162,6 @@ export const useMedicLocationsStore = create<MedicLocationsState>((set, get) => 
           table: 'medic_shift_events',
         },
         (payload) => {
-          console.log('[Realtime] Shift event received:', payload);
           const event = payload.new as any;
 
           // Update medic status based on event
@@ -207,7 +202,6 @@ export const useMedicLocationsStore = create<MedicLocationsState>((set, get) => 
         }
       )
       .subscribe((status) => {
-        console.log('[Realtime] Subscription status:', status);
         get().setConnected(status === 'SUBSCRIBED');
       });
 
@@ -220,7 +214,6 @@ export const useMedicLocationsStore = create<MedicLocationsState>((set, get) => 
   unsubscribe: () => {
     const channel = get().subscriptionChannel;
     if (channel) {
-      console.log('[Realtime] Unsubscribing...');
       supabase.removeChannel(channel);
       set({ subscriptionChannel: null, isConnected: false });
     }
