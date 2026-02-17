@@ -9,17 +9,17 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 Phase: 7.5 of 8 (Territory Auto-Assignment)
-Plan: 2 of 5 in current phase
+Plan: 4 of 5 in current phase
 Status: In progress
-Last activity: 2026-02-17 — Completed 07.5-02-PLAN.md (Enhanced Auto-Assignment with Calendar & Certification)
-Progress: [█████████████████░] 95% (80/84 plans across Phases 1-7.5)
+Last activity: 2026-02-17 — Completed 07.5-04-PLAN.md (Coverage Gap Alerts & Hiring Recommendations UI)
+Progress: [█████████████████░] 96% (81/84 plans across Phases 1-7.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 80
+- Total plans completed: 81
 - Average duration: 4.0 min
-- Total execution time: 5.6 hours
+- Total execution time: 5.65 hours
 
 **By Phase:**
 
@@ -37,11 +37,11 @@ Progress: [█████████████████░] 95% (80/84 pl
 | 06-riddor-auto-flagging | 8/8 | 50 min | 6.3 min |
 | 06.5-payments-payouts | 12/12 | 49.5 min | 4.1 min |
 | 07-certification-tracking | 4/9 | 9.3 min | 2.3 min |
-| 07.5-territory-auto-assignment | 2/5 | 7 min | 3.5 min |
+| 07.5-territory-auto-assignment | 4/5 | 10 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-02 (2 min), 07-03 (3 min), 07-04 (2.3 min), 07.5-01 (3 min), 07.5-02 (4 min)
-- Trend: Enhanced auto-assignment with calendar conflict detection (batch query prevents double-booking), certification expiry validation, and optimized scoring weights (distance 30%, utilization 20%)
+- Last 5 plans: 07-03 (3 min), 07-04 (2.3 min), 07.5-01 (3 min), 07.5-02 (4 min), 07.5-04 (3 min)
+- Trend: Coverage gap alerts with minimum volume filtering (>10 bookings prevents false positives), hiring recommendations grouped by region, summary stats bar for territory health overview
 
 *Updated after each plan completion*
 
@@ -450,6 +450,12 @@ Recent decisions affecting current work:
 - D-07.5-02-006: Fairness score removed from total (was 5%, now 0%) - shift distribution less important than distance/utilization/quality factors
 - D-07.5-02-007: Client-side scoring module mirrors Edge Function logic exactly for admin UI transparency (enables "Why this medic?" explanations)
 
+**From Plan 07.5-04:**
+- D-07.5-04-001: Severity color scheme: red for critical (>25%), yellow for warning (10-25%), green for healthy (standard severity colors align with user expectations)
+- D-07.5-04-002: Region grouping for hiring triggers (admin may want to hire one medic to cover multiple adjacent sectors, e.g., hire 1 Manchester medic for M1, M2, M3)
+- D-07.5-04-003: Minimum volume filter: coverage gaps only flagged if total_bookings > 10 (prevents false positives from low-volume territories - 1 booking rejected = 100% but not actionable)
+- D-07.5-04-004: Pulsing indicator for critical hiring triggers (draws immediate attention to urgent capacity issues requiring >80% utilization or <90% fulfillment)
+
 **From Plan 06-03:**
 - D-06-03-001: Use @react-pdf/renderer instead of pdf-lib with fillable PDF template (HSE F2508 not reliably available; matches Phase 5 pattern)
 - D-06-03-002: Store PDFs in {incident_id}/F2508-{timestamp}.pdf format for multiple versions per incident
@@ -499,9 +505,9 @@ None. External API key configuration pending but does not block development.
 
 ## Session Continuity
 
-Last session: 2026-02-17T00:49:27Z
-Stopped at: Completed 07-04-PLAN.md — Certification Validation API & Worker Table Update (API enforces expired cert blocking at 403 level, workers vs medics distinction clarified)
+Last session: 2026-02-17T01:11:10Z
+Stopped at: Completed 07.5-04-PLAN.md — Coverage Gap Alerts & Hiring Recommendations UI (severity-based alerts with minimum volume filtering, hiring recommendations grouped by region)
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6 (RIDDOR Auto-Flagging) complete (8/8 plans). Phase 6.5 (Payments & Payouts) complete (12/12 plans). Phase 7 (Certification Tracking) in progress (3/9 plans). Progress: 77/83 plans (93%)*
+*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6 (RIDDOR Auto-Flagging) complete (8/8 plans). Phase 6.5 (Payments & Payouts) complete (12/12 plans). Phase 7 (Certification Tracking) in progress (4/9 plans). Phase 7.5 (Territory Auto-Assignment) in progress (4/5 plans). Progress: 81/84 plans (96%)*
