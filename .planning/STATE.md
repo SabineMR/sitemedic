@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 10 (Real-Time Ops Polish) — In progress (10-04 done, 10-01/10-03 also in progress in wave 1)
-Plan: 10-04 complete. Phase 11 also in progress (11-02 done, 2/3).
+Phase: v1.1 — Phase 10 (Real-Time Ops Polish) — In progress
+Plan: 10-01 complete (medicContext Map). 10-04 also complete.
 Status: In progress
-Last activity: 2026-02-17 — Completed 10-04-PLAN.md (AlertPanel dismiss/resolve notes + bulk dismiss for non-critical alerts)
-Progress: [████████████████████░░░] 95/104 plans complete (~91%).
+Last activity: 2026-02-17 — Completed 10-01-PLAN.md (medicContext Map + joined query in useMedicLocationsStore, no N+1)
+Progress: [████████████████████░░░] 96/104 plans complete (~92%).
 
 ## Performance Metrics
 
@@ -540,10 +540,16 @@ After v1.0 milestone, three additional critical gaps were identified and closed:
 
 None. v1.0 + gap fixes are 100% production-ready. External API configuration pending for production deployment (see DEPLOYMENT.md).
 
+**From Plan 10-01:**
+- D-10-01-001: Status filter for medicContext query includes 'confirmed' AND 'in_progress' — 'confirmed' medics (shift not yet started) must appear in map context or their pings are silently dropped
+- D-10-01-002: Photo field excluded from MedicContextEntry — medics table has no photo/avatar column; deferred to future phase
+- D-10-01-003: subscribe() made async to await context fetch before Realtime channel opens — ensures medicContext Map is populated before any ping arrives
+- D-10-01-004: Context-at-subscribe pattern — single joined query at channel open time, O(1) Map lookup per ping — avoids N+1 anti-pattern
+
 ## Session Continuity
 
-Last session: 2026-02-17T17:39:14Z
-Stopped at: Completed 11-02-PLAN.md — admin settings API + Business Configuration UI
+Last session: 2026-02-17T17:41:18Z
+Stopped at: Completed 10-01-PLAN.md — medicContext Map + joined query in useMedicLocationsStore
 Resume file: None
 
 ---
