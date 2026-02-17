@@ -7,8 +7,8 @@
 
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CalendarPlus, ArrowLeft, MapPin, Clock, Users, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,25 +27,26 @@ const SHIFT_TIMES = [
   '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00',
 ];
 
-export default function NewBookingPage() {
+function NewBookingForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
-    clientEmail: '',
+    clientEmail: searchParams.get('clientEmail') ?? '',
     siteName: '',
-    siteAddress: '',
+    siteAddress: searchParams.get('siteAddress') ?? '',
     sitePostcode: '',
     siteContactName: '',
     siteContactPhone: '',
-    shiftDate: '',
+    shiftDate: searchParams.get('shiftDate') ?? '',
     shiftStartTime: '07:00',
     shiftEndTime: '19:00',
     qualification: 'paramedic',
-    confinedSpace: false,
-    traumaSpecialist: false,
-    specialNotes: '',
+    confinedSpace: searchParams.get('confinedSpace') === '1',
+    traumaSpecialist: searchParams.get('traumaSpecialist') === '1',
+    specialNotes: searchParams.get('specialNotes') ?? '',
   });
 
   const set = (field: string, value: string | boolean) =>
@@ -303,5 +304,17 @@ export default function NewBookingPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function NewBookingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 flex items-center justify-center">
+        <p className="text-gray-400">Loading...</p>
+      </div>
+    }>
+      <NewBookingForm />
+    </Suspense>
   );
 }
