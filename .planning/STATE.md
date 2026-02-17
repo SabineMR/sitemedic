@@ -8,11 +8,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.1 — Phase 13 verified complete. Phases 08–15 all shipped.
 
 ## Current Position
-Phase: v1.1 — Phase 13 (UX Polish) — Verified ✅
-Plan: All 4 plans complete, verified 13/13 must-haves
-Status: Phase 13 VERIFIED — ready for Phase 14 or milestone completion
-Last activity: 2026-02-17 — Phase 13 verification passed (13/13 must-haves)
-Progress: [████████] v1.1 all phases complete (08, 09, 10, 11, 12, 13, 14, 15)
+Phase: 16-critical-bug-fixes
+Plan: 1 of 2 complete
+Status: In progress
+Last activity: 2026-02-17 — Completed 16-01-PLAN.md (payslip medic_id fix + console.warn removal)
+Progress: [████████░] v1.1 complete + Phase 16 in progress (1/2 plans done)
 
 ## Performance Metrics
 
@@ -593,10 +593,14 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 - D-13-04-004: Auto-save is silent (no toast) and swallows errors — best-effort draft persistence, not user-facing action
 - D-13-04-005: photo_uris typed as string[] | null in RIDDORIncident.treatments — JSONB array paths, not actual URLs
 
+**From Plan 16-01:**
+- D-16-01-001: timesheets.medic_id is FK to medics(id) — always use medics table PK, never auth user UUID
+- D-16-01-002: Null guard exits early with setLoading(false) so spinner does not hang when medic record is absent
+
 ## Session Continuity
 
-Last session: 2026-02-17T19:48:36Z
-Stopped at: Completed 13-04-PLAN.md — RIDDOR auto-save (useRef debounce), riddor_status_history audit trail, Evidence Photos gallery. Phase 13 complete.
+Last session: 2026-02-17T20:25:40Z
+Stopped at: Completed 16-01-PLAN.md — payslip medic_id fix, null guard, console.warn removal
 Resume file: None
 
 ---
