@@ -290,22 +290,32 @@ export default function CommandCenter() {
 
               {/* Contact Buttons */}
               <div className="flex gap-2 mb-6">
-                <button
-                  onClick={() => handleContactMedic('call')}
-                  disabled={!medicPhone}
-                  className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition"
-                  title={medicPhone ? `Call ${medicPhone}` : 'No phone number on record'}
-                >
-                  📞 Call
-                </button>
-                <button
-                  onClick={() => handleContactMedic('sms')}
-                  disabled={!medicPhone}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition"
-                  title={medicPhone ? `SMS ${medicPhone}` : 'No phone number on record'}
-                >
-                  💬 SMS
-                </button>
+                {medicPhone ? (
+                  <>
+                    <button
+                      onClick={() => handleContactMedic('call')}
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition"
+                      title={`Call ${medicPhone}`}
+                    >
+                      📞 Call
+                    </button>
+                    <button
+                      onClick={() => handleContactMedic('sms')}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition"
+                      title={`SMS ${medicPhone}`}
+                    >
+                      💬 SMS
+                    </button>
+                  </>
+                ) : (
+                  <a
+                    href={`mailto:?subject=${encodeURIComponent(`Message for ${selectedMedic.medic_name}`)}&body=${encodeURIComponent(`Hi ${selectedMedic.medic_name},\n\n`)}`}
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-purple-600 py-3 text-sm font-medium text-white hover:bg-purple-700"
+                    title="No phone number on record — send email instead"
+                  >
+                    ✉️ Send Message
+                  </a>
+                )}
               </div>
               {medicPhone && (
                 <p className="text-xs text-gray-500 -mt-4 mb-4 text-center">{medicPhone}</p>
