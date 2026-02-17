@@ -1,7 +1,7 @@
 /**
  * Tab Navigation Layout
  *
- * 4-tab navigation: Home, Treatments, Workers, Safety
+ * 5-tab navigation: Home, Treatments, Workers, Safety, Settings
  * Design specs:
  * - 80px tab bar height (gloves-on usability)
  * - 28px icons, 14px labels
@@ -103,6 +103,17 @@ export default function TabsLayout() {
           tabBarLabel: 'Safety',
           tabBarIcon: ({ color }) => (
             <Text style={[styles.iconText, { color }]}>🛡️</Text>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          headerTitle: 'Settings',
+          tabBarLabel: 'Settings',
+          tabBarIcon: ({ color }) => (
+            <Text style={[styles.iconText, { color }]}>⚙️</Text>
           ),
         }}
       />
