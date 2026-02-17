@@ -327,14 +327,12 @@ export function useRealtimeMedicLocations() {
   const locations = useMedicLocationsStore((state) => state.getActiveMedics());
   const isConnected = useMedicLocationsStore((state) => state.isConnected);
 
-  // Subscribe on mount, unsubscribe on unmount
-  if (typeof window !== 'undefined') {
-    // Only run in browser (not SSR)
-    React.useEffect(() => {
-      subscribe();
-      return () => unsubscribe();
-    }, []);
-  }
+  // Subscribe on mount, unsubscribe on unmount (always call hook, guard inside)
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    subscribe();
+    return () => unsubscribe();
+  }, []);
 
   return { locations, isConnected };
 }
