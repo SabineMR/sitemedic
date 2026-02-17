@@ -2,19 +2,48 @@
  * Alert Panel - Real-time alerts for command center
  *
  * Displays active alerts with severity-based styling, actions, and sound/notification controls.
+ * Includes auto-escalation (red pulse + sound) for unacknowledged alerts older than 15 minutes,
+ * suggested actions per alert type, and escalation sound that fires once per alert.
  */
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useMedicAlertsStore } from '@/stores/useMedicAlertsStore';
 import type { MedicAlert } from '@/stores/useMedicAlertsStore';
+
+/**
+ * Suggested action text for each alert type.
+ * Guides admins on the appropriate response for each alert category.
+ */
+const SUGGESTED_ACTIONS: Record<string, string> = {
+  battery_low: 'Contact medic to ensure device is charging',
+  battery_critical: 'Call medic immediately — device may go offline',
+  late_arrival: 'Call medic — may need to arrange replacement',
+  early_departure: 'Call medic to confirm departure reason',
+  connection_lost: 'Call medic — may need assistance',
+  not_moving_20min: 'Call medic to check status',
+  geofence_failure: 'Verify medic is at the correct site',
+  gps_accuracy_poor: 'Ask medic to move to an open area for better signal',
+  shift_overrun: 'Confirm whether shift is being extended or medic should depart',
+};
 
 export default function AlertPanel() {
   const [dismissNote, setDismissNote] = useState<{ alertId: string; note: string } | null>(null);
   const [resolveNote, setResolveNote] = useState<{ alertId: string; note: string } | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDismissing, setBulkDismissing] = useState(false);
+
+  // Tick state — re-renders every 60 seconds so escalation status stays live
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setTick((t) => t + 1), 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Ref tracking which alert IDs have already had their escalation sound fired.
+  // Using a ref (not state) so it never triggers re-renders and never resets on tick.
+  const escalatedSoundRef = useRef<Set<string>>(new Set());
 
   // Store state
   const alerts = useMedicAlertsStore((state) => state.alerts);
@@ -27,6 +56,7 @@ export default function AlertPanel() {
   const browserNotificationsEnabled = useMedicAlertsStore((state) => state.browserNotificationsEnabled);
   const requestBrowserNotifications = useMedicAlertsStore((state) => state.requestBrowserNotifications);
   const isConnected = useMedicAlertsStore((state) => state.isConnected);
+  const playAlertSound = useMedicAlertsStore((state) => state.playAlertSound);
 
   // Subscribe on mount
   useEffect(() => {
@@ -42,6 +72,26 @@ export default function AlertPanel() {
       return next.size === prev.size ? prev : next;
     });
   }, [alerts]);
+
+  /**
+   * Fire escalation sound once per alert when crossing the 15-minute threshold.
+   * Re-evaluated every 60 seconds via tick, but each alert's sound fires only once
+   * thanks to the escalatedSoundRef Set.
+   *
+   * Uses triggered_at (server timestamp) — NOT seconds_since_triggered (stale).
+   */
+  useEffect(() => {
+    alerts.forEach((alert) => {
+      if (alert.is_dismissed) return;
+      const elapsed = Math.floor(
+        (Date.now() - new Date(alert.triggered_at).getTime()) / 1000
+      );
+      if (elapsed >= 900 && !escalatedSoundRef.current.has(alert.id)) {
+        escalatedSoundRef.current.add(alert.id);
+        playAlertSound(alert.alert_severity);
+      }
+    });
+  }, [alerts, tick, playAlertSound]);
 
   /**
    * Get severity styling
@@ -274,10 +324,21 @@ export default function AlertPanel() {
               const isNonCritical =
                 alert.alert_severity === 'low' || alert.alert_severity === 'medium';
 
+              // Compute elapsed seconds from server timestamp (NOT stale seconds_since_triggered)
+              const elapsedSeconds = Math.floor(
+                (Date.now() - new Date(alert.triggered_at).getTime()) / 1000
+              );
+              // Alert escalates at 15 minutes (900 seconds) if not dismissed
+              const isEscalated = elapsedSeconds >= 900 && !alert.is_dismissed;
+
               return (
                 <div
                   key={alert.id}
-                  className={`${style.bg} border ${style.border} rounded-lg p-4`}
+                  className={`border rounded-lg p-4 ${
+                    isEscalated
+                      ? 'animate-pulse border-red-600 bg-red-900/20'
+                      : `${style.bg} ${style.border}`
+                  }`}
                 >
                   {/* Alert Header */}
                   <div className="flex items-start justify-between mb-2">
@@ -299,7 +360,9 @@ export default function AlertPanel() {
                       )}
                       <div className="text-2xl">{icon}</div>
                       <div>
-                        <h4 className={`font-semibold ${style.text}`}>{alert.alert_title}</h4>
+                        <h4 className={`font-semibold ${isEscalated ? 'text-red-400' : style.text}`}>
+                          {alert.alert_title}
+                        </h4>
                         <p className="text-gray-300 text-sm mt-1">{alert.alert_message}</p>
                       </div>
                     </div>
@@ -314,6 +377,13 @@ export default function AlertPanel() {
                     <span>👤 {alert.medic_name}</span>
                     <span>🕒 {formatTimeAgo(alert.seconds_since_triggered)}</span>
                   </div>
+
+                  {/* Suggested action */}
+                  {SUGGESTED_ACTIONS[alert.alert_type] && (
+                    <p className="mt-1 mb-3 text-xs italic text-gray-500">
+                      Suggested: {SUGGESTED_ACTIONS[alert.alert_type]}
+                    </p>
+                  )}
 
                   {/* Additional metadata */}
                   {Object.keys(alert.metadata).length > 0 && (
