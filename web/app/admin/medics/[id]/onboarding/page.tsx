@@ -15,9 +15,11 @@
 import { createClient } from '@/lib/supabase/server';
 import { IR35Form } from '@/components/medics/ir35-form';
 import { StripeOnboardingStatus } from '@/components/medics/stripe-onboarding-status';
+import { CompensationSettings } from '@/components/medics/compensation-settings';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-react';
+import type { ExperienceLevel } from '@/lib/medics/experience';
 
 export default async function MedicOnboardingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: medicId } = await params;
@@ -198,6 +200,23 @@ export default async function MedicOnboardingPage({ params }: { params: Promise<
             <StatusBadge completed={hasStripeAccount} />
           </div>
           <StripeOnboardingStatus medicId={medicId} />
+        </div>
+
+        {/* Compensation & Mileage */}
+        <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-white font-semibold text-lg">Compensation & Mileage</h2>
+              <p className="text-gray-500 text-xs mt-0.5">
+                Experience tier · payout % · HMRC mileage rate
+              </p>
+            </div>
+          </div>
+          <CompensationSettings
+            medicId={medicId}
+            initialLevel={(medic.experience_level ?? 'junior') as ExperienceLevel}
+            medicName={`${medic.first_name} ${medic.last_name}`}
+          />
         </div>
 
         {/* Payslip History */}
