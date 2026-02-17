@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 Phase: v1.1 — Phase 12 (Analytics Dashboard) — In progress
-Plan: 12-04 complete (analytics query hooks). Plans 12-01/02/03/05 pending.
+Plan: 12-02 complete (assignment analytics charts). Plans 12-01/03/05 pending.
 Status: In progress
-Last activity: 2026-02-17 — Completed 12-04-PLAN.md (TanStack Query hooks: auto-assignment, medic utilisation, late arrivals, OOT)
-Progress: [█████████████████████░░] 97/105 plans complete (~92%).
+Last activity: 2026-02-17 — Completed 12-02-PLAN.md (AssignmentSuccessChart + FailureBreakdownChart Recharts components)
+Progress: [█████████████████████░░] 98/105 plans complete (~93%).
 
 ## Performance Metrics
 
