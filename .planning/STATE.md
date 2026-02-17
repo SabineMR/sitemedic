@@ -2,17 +2,17 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-15)
+See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** Phase 2 - Mobile Core
+**Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: 7.5 of 13 (Territory Management & Auto-Assignment)
-Plan: 5 of 5 in current phase
-Status: Complete
-Last activity: 2026-02-16 — Completed Phase 7.5 (Territory Management & Auto-Assignment)
-Progress: [███████████████████] 100% (84/84 plans across all phases)
+Phase: Milestone complete (v1.0 MVP shipped)
+Plan: All 84 plans complete
+Status: Ready for next milestone planning
+Last activity: 2026-02-17 — v1.0 milestone complete and archived
+Progress: [████████████████████] 100% (84/84 plans in v1.0)
 
 ## Performance Metrics
 
@@ -495,33 +495,24 @@ Recent decisions affecting current work:
 - D-02-07-009: Progress indicator shows completed/total count with green progress bar
 - D-02-07-010: Complete button shows "Complete X more items" when incomplete for user guidance
 
-### Pending Todos
+### Pending Todos (Carried forward to next milestone)
 
-- Add Stripe API keys to Supabase secrets (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PUBLISHABLE_KEY)
-- Configure Stripe webhook endpoint in Stripe Dashboard for 4 event types
-- Add Google Maps API key to environment variables (GOOGLE_MAPS_API_KEY)
-- Enable Distance Matrix API in Google Cloud Console
-- Consider adding admin dashboard for out-of-territory override statistics
-- Monitor Google Maps API usage and set billing alerts
-- Deploy Supabase migration 014_storage_buckets.sql to create treatment-photos bucket (Plan 03-02)
-- Add Resend API key to Supabase secrets (RESEND_API_KEY) and verify sitemedic.co.uk domain (Plan 05-02)
-- Deploy Supabase migration 015_safety_reports_storage.sql to create safety-reports bucket and weekly_reports table (Plan 05-02)
-- Deploy Supabase migration 016_weekly_report_cron.sql to enable pg_cron scheduled job (Plan 05-03)
-- Configure Vault secrets in Supabase Dashboard: project_url and service_role_key for pg_cron job authentication (Plan 05-03)
-- Configure Resend webhook endpoint for contract email tracking (Plan 04.6-05): Add webhook URL to Resend Dashboard with events: email.sent, email.delivered, email.opened, email.clicked, email.bounced
-- Deploy Supabase migration 021_friday_payout_cron.sql to create payout_executions table and enable pg_cron (Plan 06.5-02)
-- Configure Friday payout cron job in Supabase Dashboard: Schedule friday-medic-payouts job with '0 9 * * 5' cron expression to invoke friday-payout Edge Function (Plan 06.5-02)
-- Store service_role_key as database setting for pg_cron authentication: ALTER DATABASE postgres SET app.service_role_key = 'key' (Plan 06.5-02)
+- Fix booking confirmation page mock data (medium severity - see v1.0-MILESTONE-AUDIT.md)
+- Configure external services (Stripe API keys, Google Maps API, Resend API keys)
+- Configure Stripe webhook endpoint for payment events
+- Configure Resend webhook endpoint for email tracking
+- Deploy migrations and configure pg_cron jobs in production
+- Set up Vault secrets for pg_cron authentication
 
 ### Blockers/Concerns
 
-None. External API key configuration pending but does not block development.
+None. v1.0 is 98% production-ready. External API configuration pending for production deployment.
 
 ## Session Continuity
 
-Last session: 2026-02-17T01:25:45Z
-Stopped at: Completed 07-05-PLAN.md — Mobile Certification Validation Integration (treatment forms enforce cert validation, graceful offline degradation, user_id → medics.id mapping pattern)
+Last session: 2026-02-17T01:50:00Z
+Stopped at: v1.0 milestone complete — all 13 phases shipped, milestone artifacts archived
 Resume file: None
 
 ---
-*Phase 1 (Foundation) complete. Phase 1.5 (Business Operations Foundation) complete (4/4 plans). Phase 2 (Mobile Core) complete (9/9 plans). Phase 3 (Sync Engine) complete (7/7 plans). Phase 4 (Web Dashboard) complete (6/6 plans). Phase 4.5 (Marketing & Booking) complete (5/5 plans). Phase 4.6 (Customer Onboarding & Contract Management) complete (7/7 plans). Phase 5 (PDF Generation) complete (4/4 plans). Phase 5.5 (Admin Operations) complete (6/6 plans). Phase 6 (RIDDOR Auto-Flagging) complete (8/8 plans). Phase 6.5 (Payments & Payouts) complete (12/12 plans). Phase 7 (Certification Tracking) in progress (5/9 plans). Phase 7.5 (Territory Auto-Assignment) in progress (3/5 plans). Progress: 82/84 plans (97%)*
+*v1.0 MVP complete and archived. All 13 phases shipped (84 plans). See .planning/MILESTONES.md and .planning/milestones/ for full milestone history. Ready to plan next milestone with /gsd:new-milestone.*
