@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Construction Site Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - Paramedic staffing company using SiteMedic platform
-\*\*Last Updated\*\*: 2026-02-17 (Experience tiers + mileage reimbursement; mileage auto-triggered on timesheet approval; migration numbering fixed)
+\*\*Last Updated\*\*: 2026-02-17 (Phase 09: Booking data completeness — What3Words display, admin booking detail panel, recurring chain view)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -12,6 +12,57 @@
 SiteMedic is a comprehensive platform combining **mobile medic software** (offline-first treatment logging, RIDDOR compliance) with **business operations infrastructure** (booking portal, payment processing, territory management). The platform enables construction companies to book medics online while ensuring automatic compliance documentation and reliable medic payouts.
 
 **Business Model**: Software bundled with medic staffing service (no separate software charge). Revenue from medic bookings with a configurable platform/medic split (default 60% platform / 40% medic, overridable per employee). Weekly medic payouts via UK Faster Payments, Net 30 invoicing for established corporate clients. Referral bookings (jobs recommended by a third party who cannot take them) trigger a 10% referral payout (configurable) deducted from the platform's share — medic payout is unaffected.
+
+---
+
+## Recent Updates — Booking Data Completeness (2026-02-17)
+
+### Phase 09: Booking Data Completeness ✅
+
+Surfaced all booking fields that were stored in the database but never displayed in any UI. Clients now see everything they entered; admins now see full operational context for every booking.
+
+**What3Words Location Display**
+
+A reusable `What3WordsDisplay` component now renders what3words addresses across the platform. Displays the address in `///word.word.word` format with a copy-to-clipboard button (2-second "Copied!" feedback) and an external link that opens the location on what3words.com.
+
+**Client-Facing Booking Confirmation**
+
+The booking confirmation page now shows all client-relevant fields:
+- `specialNotes` — displayed with `whitespace-pre-wrap` to preserve line breaks
+- `what3words_address` — rendered via the `What3WordsDisplay` component with copy + link
+- Recurrence pattern and recurring weeks already shown (pre-existing)
+
+The `/api/bookings/[id]` API route was updated to include `what3words_address` in its response (field was fetched but never returned).
+
+**Admin Booking Detail Panel**
+
+A new `BookingDetailPanel` Sheet slide-over (right side) is now accessible from the admin bookings table. The "View Details" dropdown option — previously a no-op — now opens this panel. Sections include:
+
+| Section | When Shown |
+|---------|-----------|
+| Date & Time | Always |
+| Site Details (address, contact name, contact phone, what3words) | Always (fields conditional) |
+| Client & Medic (auto-matched badge, match score) | Always |
+| Pricing (total, platform fee, medic payout, travel surcharge, urgency premium) | Always (extras conditional) |
+| Approval Details (approval reason, approved by, approved at) | Only when `requires_manual_approval` is true |
+| Cancellation Details (reason, cancelled by, cancelled at) | Only when `status === 'cancelled'` |
+| Refund Amount | Only when `refund_amount > 0` |
+| Special Notes | Only when present |
+| Recurring Chain | Only when `is_recurring` is true |
+
+**Recurring Booking Chain View**
+
+When a booking is part of a recurring series, the admin detail panel shows a table of all instances — parent and children — fetched in a single Supabase `.or()` query. Each row shows date, time range, and status badge. The currently-viewed booking is highlighted in blue with a "(viewing)" label.
+
+| File | Change |
+|------|--------|
+| `web/components/booking/what3words-display.tsx` | **New** — Reusable read-only display component; `'use client'`; clipboard copy with 2s feedback; external map link |
+| `web/app/api/bookings/[id]/route.ts` | **Modified** — Added `what3words_address` to response JSON |
+| `web/components/booking/booking-confirmation.tsx` | **Modified** — Added `specialNotes` and `what3wordsAddress` props; conditional render for both; imports `What3WordsDisplay` |
+| `web/app/(booking)/book/confirmation/page.tsx` | **Modified** — Maps `special_notes` and `what3words_address` from API to confirmation component props |
+| `web/lib/queries/admin/bookings.ts` | **Modified** — Added `what3words_address: string \| null` to `BookingWithRelations` interface |
+| `web/components/admin/booking-detail-panel.tsx` | **New** — Full admin booking detail Sheet component with all 9 sections |
+| `web/components/admin/booking-approval-table.tsx` | **Modified** — Wired "View Details" onClick to open `BookingDetailPanel`; added panel state and component render |
 
 ---
 
