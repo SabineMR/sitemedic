@@ -1,0 +1,207 @@
+/**
+ * Medic Profile Page
+ *
+ * View personal details, IR35 status, availability toggle,
+ * and Stripe payout onboarding status.
+ */
+
+'use client';
+
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { StripeOnboardingStatus } from '@/components/medics/stripe-onboarding-status';
+import { User, CheckCircle2, XCircle, ToggleLeft, ToggleRight } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface MedicData {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  home_postcode: string | null;
+  qualifications: string[] | null;
+  employment_status: string | null;
+  utr: string | null;
+  umbrella_company_name: string | null;
+  cest_assessment_result: string | null;
+  available_for_work: boolean;
+  star_rating: number | null;
+  stripe_onboarding_complete: boolean;
+}
+
+export default function MedicProfilePage() {
+  const [medic, setMedic] = useState<MedicData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [toggling, setToggling] = useState(false);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('medics')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching medic profile:', error);
+      } else {
+        setMedic(data);
+      }
+      setLoading(false);
+    }
+    fetchProfile();
+  }, []);
+
+  async function toggleAvailability() {
+    if (!medic) return;
+    setToggling(true);
+    const supabase = createClient();
+    const newValue = !medic.available_for_work;
+
+    const { error } = await supabase
+      .from('medics')
+      .update({ available_for_work: newValue })
+      .eq('id', medic.id);
+
+    if (error) {
+      toast.error('Failed to update availability');
+    } else {
+      setMedic((prev) => prev ? { ...prev, available_for_work: newValue } : prev);
+      toast.success(newValue ? 'You are now available for work' : 'You are now unavailable');
+    }
+    setToggling(false);
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!medic) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-900/20 border border-red-700/30 rounded-2xl p-6 text-center">
+          <p className="text-red-300">Profile not found. Contact your administrator.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-white">My Profile</h1>
+        <p className="text-gray-400 mt-1">Your account details and preferences</p>
+      </div>
+
+      {/* Availability Toggle */}
+      <div className={`flex items-center justify-between p-5 rounded-2xl border ${
+        medic.available_for_work
+          ? 'bg-green-900/20 border-green-700/30'
+          : 'bg-gray-800/50 border-gray-700/50'
+      }`}>
+        <div>
+          <p className="text-white font-semibold">Available for Work</p>
+          <p className="text-gray-400 text-sm mt-0.5">
+            {medic.available_for_work
+              ? 'You are visible to the scheduling team'
+              : 'You are currently marked as unavailable'}
+          </p>
+        </div>
+        <button
+          onClick={toggleAvailability}
+          disabled={toggling}
+          className="flex items-center gap-2 transition-all"
+        >
+          {medic.available_for_work ? (
+            <ToggleRight className="w-12 h-12 text-green-400" />
+          ) : (
+            <ToggleLeft className="w-12 h-12 text-gray-500" />
+          )}
+        </button>
+      </div>
+
+      {/* Personal Info */}
+      <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <User className="w-5 h-5 text-green-400" />
+          <h2 className="text-white font-semibold text-lg">Personal Information</h2>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <InfoRow label="Full Name" value={`${medic.first_name} ${medic.last_name}`} />
+          <InfoRow label="Email" value={medic.email} />
+          <InfoRow label="Phone" value={medic.phone} />
+          <InfoRow label="Home Postcode" value={medic.home_postcode} />
+          <InfoRow
+            label="Star Rating"
+            value={medic.star_rating ? `${medic.star_rating.toFixed(1)} ★` : 'No ratings yet'}
+          />
+        </div>
+      </div>
+
+      {/* Qualifications */}
+      {medic.qualifications && medic.qualifications.length > 0 && (
+        <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
+          <h2 className="text-white font-semibold text-lg mb-4">Qualifications</h2>
+          <div className="flex flex-wrap gap-2">
+            {medic.qualifications.map((qual, i) => (
+              <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-900/50 border border-blue-700/50 text-blue-300 rounded-full text-sm">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {qual}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* IR35 Status */}
+      <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
+        <h2 className="text-white font-semibold text-lg mb-4">IR35 Status</h2>
+        {medic.employment_status ? (
+          <div className="grid grid-cols-2 gap-4">
+            <InfoRow label="Employment Status" value={medic.employment_status.replace('_', ' ')} capitalize />
+            {medic.utr && <InfoRow label="UTR" value={medic.utr} />}
+            {medic.umbrella_company_name && <InfoRow label="Umbrella Company" value={medic.umbrella_company_name} />}
+            {medic.cest_assessment_result && (
+              <InfoRow label="CEST Result" value={medic.cest_assessment_result.replace('_', ' ')} capitalize />
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-yellow-400 text-sm">
+            <XCircle className="w-4 h-4" />
+            IR35 status not yet submitted — contact your administrator
+          </div>
+        )}
+      </div>
+
+      {/* Stripe Payout Setup */}
+      <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
+        <h2 className="text-white font-semibold text-lg mb-4">Payout Account (Stripe)</h2>
+        <StripeOnboardingStatus medicId={medic.id} />
+      </div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value, capitalize = false }: {
+  label: string;
+  value: string | null | undefined;
+  capitalize?: boolean;
+}) {
+  return (
+    <div>
+      <p className="text-gray-400 text-xs mb-0.5">{label}</p>
+      <p className={`text-gray-100 font-medium ${capitalize ? 'capitalize' : ''}`}>
+        {value ?? <span className="text-gray-500 font-normal">Not provided</span>}
+      </p>
+    </div>
+  );
+}
