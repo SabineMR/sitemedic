@@ -8,18 +8,18 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 **Current focus:** v1.0 complete — planning next milestone
 
 ## Current Position
-Phase: v1.1 — Phase 15 (Code Quality & Housekeeping) — In progress
-Plan: 15-02 complete (2/3). Wave 1 in progress.
-Status: In progress — 15-02 mock data removal complete, ready for 15-03
-Last activity: 2026-02-17 — Completed 15-02: removed generateMockScheduleData (~150 lines), proper error/empty states added to schedule board
-Progress: [██░] 67% (2/3 plans executed in Phase 15)
+Phase: v1.1 — Phase 15 (Code Quality & Housekeeping) — COMPLETE
+Plan: 15-03 complete (3/3). Phase 15 fully done.
+Status: Phase 15 complete — all 3 plans executed
+Last activity: 2026-02-17 — Completed 15-03: manual medic assignment via match endpoint + dialog in BookingDetailPanel
+Progress: [███] 100% (3/3 plans executed in Phase 15)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 84
+- Total plans completed: 87
 - Average duration: 4.1 min
-- Total execution time: 5.8 hours
+- Total execution time: ~6.0 hours
 
 **By Phase:**
 
@@ -38,10 +38,11 @@ Progress: [██░] 67% (2/3 plans executed in Phase 15)
 | 06.5-payments-payouts | 12/12 | 49.5 min | 4.1 min |
 | 07-certification-tracking | 6/6 | 20.3 min | 3.4 min |
 | 07.5-territory-auto-assignment | 5/5 | 19 min | 3.8 min |
+| 15-code-quality | 3/3 | ~8 min | ~2.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 09-03 (2 min), 10-04 (7 min), 10-01 (?), 10-03 (42 min)
-- Trend: Phase 10 wave 1 complete — payment retry UI, medic context map, alert bulk dismiss all shipped
+- Last 5 plans: 09-03 (2 min), 10-04 (7 min), 15-01 (?), 15-02 (?), 15-03 (2 min)
+- Trend: Phase 15 complete — TypeScript strict fixes, mock data removal, manual medic assignment all shipped
 
 *Updated after each plan completion*
 
@@ -577,8 +578,8 @@ None. v1.0 + gap fixes are 100% production-ready. External API configuration pen
 
 ## Session Continuity
 
-Last session: 2026-02-17T18:23:40Z
-Stopped at: Completed 10-05-PLAN.md — alert escalation timer, SUGGESTED_ACTIONS for 9 types, escalation sound (once per alert), Send Message mailto fallback all shipped.
+Last session: 2026-02-17T19:22:34Z
+Stopped at: Completed 15-03-PLAN.md — Phase 15 complete. Manual medic assignment via match endpoint with email notification chain, Assign Medic Manually dialog in BookingDetailPanel.
 Resume file: None
 
 ---
