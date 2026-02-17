@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Construction Site Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - Paramedic staffing company using SiteMedic platform
-**Last Updated**: 2026-02-17 (Referral payout system + variable per-medic revenue split)
+\*\*Last Updated\*\*: 2026-02-17 (Emergency SOS Alert System — one-tap push + SMS emergency alerts for medics)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -15,49 +15,46 @@ SiteMedic is a comprehensive platform combining **mobile medic software** (offli
 
 ---
 
-## Recent Updates — Referral System + Per-Medic Revenue Split (2026-02-17)
+## Recent Updates — Emergency SOS Alert System (2026-02-17)
 
-### Referral Payout System ✅
+### Emergency SOS Alert System ✅
 
-Jobs can now be flagged as referrals when a third party who cannot take the job recommends it to SiteMedic. The referral payout comes out of the platform's share — the medic's payout is unchanged.
-
-**New env vars** (both `.env.example` and `web/.env.local.example`):
-
-| Variable | Default | Description |
-|---|---|---|
-| `DEFAULT_PLATFORM_FEE_PERCENT` / `NEXT_PUBLIC_DEFAULT_PLATFORM_FEE_PERCENT` | `60` | Platform's default share of booking total |
-| `DEFAULT_MEDIC_PAYOUT_PERCENT` / `NEXT_PUBLIC_DEFAULT_MEDIC_PAYOUT_PERCENT` | `40` | Medic's default share of booking total |
-| `REFERRAL_PAYOUT_PERCENT` / `NEXT_PUBLIC_REFERRAL_PAYOUT_PERCENT` | `10` | Percentage of pre-VAT subtotal paid to referrer |
-
-**Note on VAT**: The referral payout is calculated on the **pre-VAT subtotal**, not the client-facing total. This avoids VAT complications — if the referrer is a VAT-registered business, they invoice SiteMedic separately with their own VAT treatment.
-
-**New migration** — `supabase/migrations/115_referral_and_per_medic_rates.sql`:
-
-| Change | Detail |
-|---|---|
-| `medics.platform_fee_percent` | Per-medic platform share. Default 60. Overrides env var for that employee. |
-| `medics.medic_payout_percent` | Per-medic medic share. Default 40. Must sum to 100 with `platform_fee_percent`. |
-| `bookings.is_referral` | Boolean — TRUE when job came via a referral. |
-| `bookings.referred_by` | Name/company of referrer. Only set when `is_referral = TRUE`. |
-| `bookings.referral_payout_percent` | Snapshot of rate at booking creation time so historical records are not affected by future rate changes. |
-| `bookings.referral_payout_amount` | GBP amount owed to referrer: `subtotal × referral_payout_percent / 100`. |
-| `bookings.platform_net` | What SiteMedic nets: `platform_fee − referral_payout_amount`. |
-
-**Revenue breakdown examples**:
-
-| Booking type | Client pays | Medic gets | Referrer gets | Platform nets |
-|---|---|---|---|---|
-| Direct (default rates) | £1,000 | £400 (40%) | — | £600 (60%) |
-| Referral (10% fee) | £1,000 | £400 (40%) | ~£83 (10% of pre-VAT subtotal) | ~£517 |
-| Custom medic rate (50/50) | £1,000 | £500 (50%) | — | £500 (50%) |
-
-**Updated pricing files**:
+One-tap emergency alert system for construction site medics. A floating red SOS button appears on every screen. When triggered, the medic can send a 90-second voice recording (AI-transcribed live) or a typed message to pre-registered site contacts. Recipients receive a loud full-screen push notification. If unacknowledged after 60 seconds, an SMS is automatically sent via Twilio as a fallback.
 
 | File | Change |
-|---|---|
-| `supabase/functions/calculate-pricing/index.ts` | Accepts `platform_fee_percent`, `medic_payout_percent`, `is_referral`, `referral_payout_percent`. Returns `platform_net`. Reads defaults from env secrets. |
-| `web/lib/booking/pricing.ts` | Same additions, reads defaults from `NEXT_PUBLIC_*` env vars. |
-| `web/lib/booking/types.ts` | `PricingBreakdown` extended with `platformFeePercent`, `medicPayoutPercent`, `isReferral`, `referralPayoutPercent`, `referralPayoutAmount`, `platformNet`. |
+|------|--------|
+| `supabase/migrations/060_emergency_alerts.sql` | **New** — Creates `emergency_contacts` table (reusable across bookings), `emergency_alerts` table (alert log with push/SMS timestamps, acknowledgment tracking), adds `push_token` and `push_token_updated_at` columns to `profiles`. Includes RLS policies for org-scoped access. |
+| `services/EmergencyAlertService.ts` | **New** — Singleton service (matches pattern of `LocationTrackingService`). Handles: permission requests, Expo push token registration (saved to `profiles.push_token`), audio recording via `expo-av` (90s max, m4a), live chunked transcription every 5s to Whisper, audio upload to Supabase Storage (`emergency-recordings` bucket), alert row insertion + Expo Push API call, alert acknowledgment. |
+| `components/ui/SOSButton.tsx` | **New** — Floating 72×72px red circle button with pulsing `Animated.loop` animation. Positioned `bottom: 100, right: 20` (above tab bar). Shows confirmation bottom sheet on press, opens `SOSModal` on confirm. |
+| `components/ui/SOSModal.tsx` | **New** — Full-screen modal for composing emergency alert. Step 1: choose voice or text. Step 2a (voice): large record button, live countdown timer, waveform animation, live transcription panel (chunks sent to Whisper). Step 2b (text): large pre-filled text input. Step 3: sending spinner → success/error states. |
+| `components/ui/EmergencyAlertReceiver.tsx` | **New** — Recipient-side component. Registers foreground + background notification listeners. On `type: 'emergency'` notification: plays `emergency-alert.wav` in a loop, shows full-screen red modal (covers all UI). Only dismissable via "ACKNOWLEDGED" button which calls `acknowledgeAlert()`. Handles both foreground and notification-tap flows. |
+| `supabase/functions/send-emergency-sms/index.ts` | **New** — Supabase Edge Function. Two modes: (1) `action: 'transcribe'` — receives base64 audio, calls OpenAI Whisper API, returns transcript; (2) `action: 'sms_fallback'` (pg_cron) — queries unacknowledged alerts where push was sent >60s ago, sends Twilio SMS to each contact, updates `sms_sent_at`. |
+| `assets/sounds/emergency-alert.wav` | **New** — 3-second loopable pulsing 880Hz alert tone (generated, bundled in app). Used by both push notification and `expo-av` in-app playback. |
+| `app/(tabs)/_layout.tsx` | **Modified** — Wrapped tabs in `<View>`, added `<SOSButton />` floating absolutely over all tab screens. |
+| `app/_layout.tsx` | **Modified** — Added `<EmergencyAlertReceiver />` inside `BottomSheetModalProvider`. Added permission + push token registration on DB init (non-fatal if denied). |
+| `app.json` | **Modified** — Added `expo-notifications` plugin with sound config and `#EF4444` color. Added `RECEIVE_BOOT_COMPLETED` and `SCHEDULE_EXACT_ALARM` Android permissions. |
+| `src/types/supabase.ts` | **Modified** — Added `Row/Insert/Update` types for `emergency_contacts` and `emergency_alerts` tables. Added `push_token` and `push_token_updated_at` fields to `profiles`. |
+
+#### Environment Variables Required (Supabase secrets):
+```
+TWILIO_ACCOUNT_SID     — Twilio account SID for SMS fallback
+TWILIO_AUTH_TOKEN      — Twilio auth token
+TWILIO_PHONE_NUMBER    — Twilio sender phone number (E.164 format)
+OPENAI_API_KEY         — OpenAI key for Whisper voice transcription
+```
+
+#### Database Tables Added:
+- **`emergency_contacts`** — Reusable contacts seeded from booking `site_contact_name`/`site_contact_phone`. RLS: org-scoped read/write.
+- **`emergency_alerts`** — Log of every SOS trigger. Tracks `push_sent_at`, `sms_sent_at`, `acknowledged_at`, `text_message` (transcript), `audio_url`.
+
+#### SMS Fallback pg_cron Setup:
+After deploying the Edge Function, run this in the Supabase SQL editor to schedule the 60-second SMS fallback check:
+```sql
+SELECT cron.schedule('emergency-sms-fallback', '* * * * *',
+  $$SELECT net.http_post(url := current_setting('app.supabase_url') || '/functions/v1/send-emergency-sms',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || current_setting('app.service_role_key')),
+    body := '{"action":"sms_fallback"}'::jsonb)$$);
+```
 
 ---
 
