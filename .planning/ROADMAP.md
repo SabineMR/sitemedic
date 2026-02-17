@@ -266,6 +266,55 @@ Plans:
 
 ---
 
+### Phase 16: Critical Bug Fixes
+**Goal:** Fix two bugs that break key E2E flows: payslip downloads return empty (wrong medic ID used in query) and RIDDOR draft editing is impossible (no UI inputs wired to state setters). Remove residual console.warn from production stores.
+**Priority:** CRITICAL
+**Gap Closure:** Closes GAP-1, GAP-2 from v1.1-MILESTONE-AUDIT.md
+
+**Problem:** Two code bugs found during integration audit: (1) `medic/payslips/page.tsx` queries timesheets with `.eq('medic_id', user.id)` (auth UUID) but `timesheets.medic_id` references `medics(id)` (a separate generated UUID) — every medic sees an empty list. (2) RIDDOR detail page has `draftCategory` and `draftOverrideReason` state and a 30-second auto-save timer but no `<select>` or `<textarea>` inputs bound to their setters — the state never changes from initial values.
+
+**Requirements:**
+- Payslip page: use the already-fetched `medic.id` (from `medics` table) in the timesheets query, not `user.id`
+- RIDDOR detail page: add category `<select>` dropdown (draft-only, 8 RIDDOR categories) wired to `setDraftCategory`
+- RIDDOR detail page: add override_reason `<textarea>` (draft-only) wired to `setDraftOverrideReason`
+- Remove `console.warn('[Realtime] Received partial update for unknown medic:', medicId)` from `useMedicLocationsStore.ts:121`
+
+**Success Criteria:**
+1. Medic logs in, navigates to /medic/payslips — payslip rows appear (previously empty list)
+2. Admin opens a draft RIDDOR incident — can change category via dropdown, edit override reason — changes auto-save silently after 30 seconds
+3. Zero console.warn in production stores
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 16-01-PLAN.md — Payslip medic_id fix + console.warn removal in stores (Wave 1)
+- [ ] 16-02-PLAN.md — RIDDOR detail draft edit inputs: category select + override_reason textarea (Wave 1)
+
+---
+
+### Phase 17: Geofence Coverage Analytics
+**Goal:** Surface the % of active booking sites covered by at least one geofence — the Phase 13 requirement that was deferred during implementation.
+**Priority:** MEDIUM
+**Gap Closure:** Closes GAP-3 from v1.1-MILESTONE-AUDIT.md
+
+**Problem:** Phase 13 ROADMAP.md requirement "Geofence coverage analytics: show % of booking sites covered by at least one active geofence" was never implemented. The 13-RESEARCH.md explicitly noted it as "Not yet implemented". No component, query, or API route computes this metric.
+
+**Requirements:**
+- TanStack Query hook: count distinct `booking_id` in active geofences vs count of confirmed bookings in current/upcoming dates
+- Coverage stat card on `/admin/geofences` page: "X of Y active sites have geofence coverage (Z%)"
+- Edge cases: 0 bookings → "No active bookings to cover", 0 geofences → "0% coverage"
+
+**Success Criteria:**
+1. Admin navigates to /admin/geofences — sees a stat card showing "X of Y active sites covered (Z%)"
+2. Stat updates when a geofence is added or removed (60-second poll or invalidation on mutation)
+
+**Plans:** 1 plan
+
+Plans:
+- [ ] 17-01-PLAN.md — Geofence coverage stat: TanStack Query hook + stat card on geofences page
+
+---
+
 ## Upcoming (v2.0)
 
 - Film/TV mode (different labels, same platform)
