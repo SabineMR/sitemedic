@@ -306,7 +306,7 @@ Plans:
 **Database Schema**: ✅ **COMPLETED** - Migration `018_riddor_incidents.sql` added with full table structure, RLS policies, and indexes
 
 Plans:
-- [x] 06-01-PLAN.md -- Database schema ✅ (migration 018 added) and RIDDOR detection Edge Function with confidence scoring
+- [x] 06-01-PLAN.md -- Database schema (migration 018 added) and RIDDOR detection Edge Function with confidence scoring
 - [x] 06-02-PLAN.md -- Mobile medic override UI workflow with reason capture
 - [x] 06-03-PLAN.md -- HSE F2508 PDF generation with form field mapping
 - [x] 06-04-PLAN.md -- Web dashboard RIDDOR pages with deadline countdown
@@ -369,10 +369,13 @@ Plans:
   7. Email notifications use professional template with company branding
   8. Server-side scheduled jobs check expiry daily (not device-local notifications)
 
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] TBD during planning
+- [ ] 07-01-PLAN.md -- Database infrastructure (GIN index, certification_reminders table, RPC functions) and TypeScript types
+- [ ] 07-02-PLAN.md -- Certification expiry checker Edge Function with progressive email reminders and daily pg_cron
+- [ ] 07-03-PLAN.md -- Certifications dashboard page with expiry table, status badges, and compliance score integration
+- [ ] 07-04-PLAN.md -- Certification validation API (expired worker blocking) and worker table cert status update
 
 ### Phase 7.5: Territory Management & Auto-Assignment (INSERTED)
 **Goal**: UK-wide territory system operational with postcode-based coverage, intelligent auto-assignment algorithm, coverage gap detection, and hiring recommendations to scale medic roster.
@@ -421,7 +424,7 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 | 5.5. Admin Operations Dashboards | 6/6 | Complete | 2026-02-16 |
 | 6. RIDDOR Auto-Flagging | 6/8 | Gap closure in progress | - |
 | 6.5. Payment Processing & Payouts | 11/12 | Gap closure in progress | - |
-| 7. Certification Tracking | 0/TBD | Not started | - |
+| 7. Certification Tracking | 0/4 | Planned | - |
 | 7.5. Territory Management & Auto-Assignment | 0/5 | Not started | - |
 
 ---
@@ -455,3 +458,4 @@ Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 4.5 -> 4.6 -> 5 -> 5
 *Phase 6 gap closure: 2026-02-16 -- 2 gap closure plans (06-07, 06-08) addressing 4 verification gaps: auto-detection trigger (PRIMARY: wires riddor-detector into data pipeline via pg_net database trigger) and hardcoded org_id replacement with auth context*
 *Phase 6.5 gap closure v3: 2026-02-16 -- 1 gap closure plan (06.5-12) fixing Resend email regression in late payment reminders (reverted in commit d807b2d)*
 *Phase 7.5 planned: 2026-02-16 -- 5 plans in 3 waves (2 parallel Wave 1: metrics+auto-assignment, 2 parallel Wave 2: drag-drop+alerts, 1 integration Wave 3: map+detail+page). Builds on existing Phase 1.5 postcode seeding, Phase 5.5 territory map/queries, and Phase 6.5 out-of-territory cost logic.*
+*Phase 7 planned: 2026-02-16 -- 4 plans in 3 waves (Wave 1: schema+types foundation, Wave 2 parallel: backend email/cron + frontend dashboard, Wave 3: validation enforcement + worker table integration)*
