@@ -11,7 +11,7 @@
  *  motorsport        → Competitor / Circuit / Race day
  *  tv_film           → Crew / Set / Production day
  *  festivals         → Attendee / Venue / Event day
- *  sporting_events   → Participant / Stadium / Match day
+ *  sporting_events   → Player / Pitch / Ground / Match day
  *  education         → Student / Campus / Session
  *  outdoor_adventure → Participant / Course / Event day
  *  construction      → Worker / Site / Shift
@@ -62,11 +62,11 @@ const LABEL_MAP: Record<VerticalId, OrgLabels> = {
     primaryVertical: 'festivals',
   },
   sporting_events: {
-    personSingular: 'Participant',
-    personPlural:   'Participants',
-    locationTerm:   'Stadium',
-    periodTerm:     'Match day',
-    eventTerm:      'Event',
+    personSingular:  'Player',
+    personPlural:    'Players',
+    locationTerm:    'Pitch / Ground',
+    periodTerm:      'Match day',
+    eventTerm:       'Club',
     primaryVertical: 'sporting_events',
   },
   education: {
