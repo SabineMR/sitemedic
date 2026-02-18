@@ -13,6 +13,8 @@ import Worker from '../../src/database/models/Worker';
 import Treatment from '../../src/database/models/Treatment';
 import LargeTapButton from '../../components/ui/LargeTapButton';
 import StatusBadge from '../../components/ui/StatusBadge';
+import { useOrg } from '../../src/contexts/OrgContext';
+import { getPatientLabel } from '../../services/taxonomy/vertical-outcome-labels';
 
 interface CertificationExpiry {
   type: string;
@@ -41,6 +43,8 @@ export default function WorkerProfile({
   const [worker, setWorker] = useState<Worker | null>(null);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [loading, setLoading] = useState(true);
+  const { primaryVertical } = useOrg();
+  const personLabel = getPatientLabel(primaryVertical);
 
   useEffect(() => {
     loadWorkerAndTreatments();
@@ -121,7 +125,7 @@ export default function WorkerProfile({
   if (!worker) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>Worker not found</Text>
+        <Text style={styles.errorText}>{personLabel} not found</Text>
       </View>
     );
   }

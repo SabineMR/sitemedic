@@ -3,6 +3,8 @@ import { View, Text, TextInput, StyleSheet, ScrollView } from 'react-native';
 import { getDatabase } from '../../src/lib/watermelon';
 import Worker from '../../src/database/models/Worker';
 import LargeTapButton from '../../components/ui/LargeTapButton';
+import { useOrg } from '../../src/contexts/OrgContext';
+import { getPatientLabel } from '../../services/taxonomy/vertical-outcome-labels';
 
 /**
  * WorkerQuickAdd - Minimal quick-add modal
@@ -27,6 +29,8 @@ export default function WorkerQuickAdd({
   const [company, setCompany] = useState('');
   const [role, setRole] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { primaryVertical } = useOrg();
+  const personLabel = getPatientLabel(primaryVertical);
 
   const handleAddWorker = async () => {
     // Validate required fields
@@ -74,7 +78,7 @@ export default function WorkerQuickAdd({
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Quick Add Worker</Text>
+        <Text style={styles.title}>Quick Add {personLabel}</Text>
         <Text style={styles.subtitle}>
           Add basic details now. Complete full induction later.
         </Text>
@@ -113,7 +117,7 @@ export default function WorkerQuickAdd({
 
         <View style={styles.actions}>
           <LargeTapButton
-            label="Add Worker"
+            label={`Add ${personLabel}`}
             variant="primary"
             onPress={handleAddWorker}
             disabled={isSubmitting || !name.trim() || !company.trim()}

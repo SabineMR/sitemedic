@@ -27,12 +27,15 @@ import Worker from '../../src/database/models/Worker';
 import LargeTapButton from '../../components/ui/LargeTapButton';
 import StatusBadge from '../../components/ui/StatusBadge';
 import SwipeableListItem from '../../components/ui/SwipeableListItem';
+import { useOrg } from '../../src/contexts/OrgContext';
+import { getPatientLabel } from '../../services/taxonomy/vertical-outcome-labels';
 
 interface WorkersListProps {
   workers: Worker[];
+  personPluralLabel: string;
 }
 
-function WorkersList({ workers }: WorkersListProps) {
+function WorkersList({ workers, personPluralLabel }: WorkersListProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filter workers by search query (debounced in real implementation)
@@ -172,12 +175,12 @@ function WorkersList({ workers }: WorkersListProps) {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Text style={styles.emptyTitle}>No Workers Registered</Text>
+      <Text style={styles.emptyTitle}>No {personPluralLabel} Registered</Text>
       <Text style={styles.emptySubtitle}>
-        Add workers during site induction
+        Add {personPluralLabel.toLowerCase()} during site induction
       </Text>
       <LargeTapButton
-        label="Add Worker"
+        label={`Add ${personPluralLabel}`}
         variant="primary"
         onPress={handleAddWorker}
       />
@@ -186,10 +189,10 @@ function WorkersList({ workers }: WorkersListProps) {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      {/* Add Worker Button */}
+      {/* Add Button */}
       <View style={styles.header}>
         <LargeTapButton
-          label="➕ Add Worker"
+          label={`➕ Add ${personPluralLabel}`}
           variant="primary"
           onPress={handleAddWorker}
         />
@@ -230,9 +233,11 @@ const enhance = withObservables([], ({ database }: { database: any }) => ({
 
 export default function WorkersScreen() {
   const database = useDatabase();
+  const { primaryVertical } = useOrg();
+  const personPluralLabel = primaryVertical === 'tv_film' ? 'Cast & Crew' : getPatientLabel(primaryVertical) + 's';
   const EnhancedWorkersList = enhance(WorkersList);
 
-  return <EnhancedWorkersList database={database} />;
+  return <EnhancedWorkersList database={database} personPluralLabel={personPluralLabel} />;
 }
 
 const styles = StyleSheet.create({

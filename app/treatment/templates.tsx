@@ -18,6 +18,8 @@ import WorkerSearchPicker from '../../components/forms/WorkerSearchPicker';
 import PresetTemplateCard from '../../components/forms/PresetTemplateCard';
 import LargeTapButton from '../../components/ui/LargeTapButton';
 import { supabase } from '../../src/lib/supabase';
+import { useOrg } from '../../src/contexts/OrgContext';
+import { getPatientLabel } from '../../services/taxonomy/vertical-outcome-labels';
 
 // Preset template structure
 interface PresetTemplate {
@@ -143,6 +145,8 @@ const PRESET_TEMPLATES: PresetTemplate[] = [
 export default function TreatmentTemplatesScreen() {
   const [selectedWorkerId, setSelectedWorkerId] = useState<string>('');
   const [certValidationError, setCertValidationError] = useState<string | null>(null);
+  const { primaryVertical } = useOrg();
+  const personLabel = getPatientLabel(primaryVertical);
 
   /**
    * Validate medic certifications before allowing treatment completion
@@ -324,13 +328,13 @@ export default function TreatmentTemplatesScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {/* Step 1: Worker Selection */}
+        {/* Step 1: Patient/Worker Selection */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>1. Select Worker</Text>
+          <Text style={styles.sectionTitle}>1. Select {personLabel}</Text>
           <WorkerSearchPicker
             onSelect={setSelectedWorkerId}
             selectedWorkerId={selectedWorkerId}
-            placeholder="Search worker by name or company"
+            placeholder={`Search ${personLabel.toLowerCase()} by name or company`}
           />
         </View>
 

@@ -35,6 +35,8 @@ import { useSync } from '../../src/contexts/SyncContext';
 import RIDDOROverrideModal from '../../components/treatment/RIDDOROverrideModal';
 import { fetchRIDDORIncident, RIDDORIncident } from '../../src/lib/riddor-client';
 import { supabase } from '../../src/lib/supabase';
+import { useOrg } from '../../src/contexts/OrgContext';
+import { getPatientLabel } from '../../services/taxonomy/vertical-outcome-labels';
 
 export default function TreatmentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -44,6 +46,8 @@ export default function TreatmentDetailScreen() {
   const [riddorIncident, setRiddorIncident] = useState<RIDDORIncident | null>(null);
   const [showRiddorModal, setShowRiddorModal] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>('');
+  const { primaryVertical } = useOrg();
+  const patientLabel = getPatientLabel(primaryVertical);
 
   useEffect(() => {
     loadTreatment();
@@ -228,9 +232,9 @@ export default function TreatmentDetailScreen() {
           </View>
         )}
 
-        {/* Worker Information */}
+        {/* Patient/Worker Information */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Worker Information</Text>
+          <Text style={styles.sectionTitle}>{patientLabel} Information</Text>
           {worker ? (
             <>
               <DetailRow label="Name" value={`${worker.firstName} ${worker.lastName}`} />

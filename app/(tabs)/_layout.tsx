@@ -121,9 +121,9 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="workers"
         options={{
-          title: 'Workers',
-          headerTitle: 'Worker Registry',
-          tabBarLabel: 'Workers',
+          title: personPluralLabel,
+          headerTitle: registryLabel,
+          tabBarLabel: personPluralLabel,
           tabBarIcon: ({ color }) => (
             <Text style={[styles.iconText, { color }]}>👷</Text>
           ),

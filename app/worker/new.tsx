@@ -13,6 +13,8 @@ import Worker from '../../src/database/models/Worker';
 import LargeTapButton from '../../components/ui/LargeTapButton';
 import BottomSheetPicker from '../../components/ui/BottomSheetPicker';
 import { useSync } from '../../src/contexts/SyncContext';
+import { useOrg } from '../../src/contexts/OrgContext';
+import { getPatientLabel } from '../../services/taxonomy/vertical-outcome-labels';
 
 interface WorkerInductionFormData {
   // Basic Info
@@ -75,6 +77,8 @@ export default function WorkerInductionForm({
   onComplete?: () => void;
 }) {
   const { enqueueSyncItem } = useSync();
+  const { primaryVertical } = useOrg();
+  const personLabel = getPatientLabel(primaryVertical);
   const [worker, setWorker] = useState<Worker | null>(null);
   const [showBloodTypePicker, setShowBloodTypePicker] = useState(false);
   const [showRelationshipPicker, setShowRelationshipPicker] = useState(false);
@@ -270,7 +274,7 @@ export default function WorkerInductionForm({
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Add Worker - Site Induction</Text>
+        <Text style={styles.title}>Add {personLabel} - Site Induction</Text>
         <Text style={styles.subtitle}>All fields auto-save</Text>
       </View>
 
