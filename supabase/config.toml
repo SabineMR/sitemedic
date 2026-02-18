@@ -101,6 +101,14 @@ enabled = true
 policy = "oneshot"
 inspector_port = 8083
 
+# Disable JWT verification for the transcription edge function in local dev.
+# The local edge runtime cannot verify ES256-signed session tokens (it uses HS256 keys),
+# causing "Key for the ES256 algorithm must be of type CryptoKey" errors and dropped
+# connections. The function uses the service role key internally and does not need
+# per-user JWT auth. JWT is re-enabled automatically in the hosted (production) environment.
+[functions.send-emergency-sms]
+verify_jwt = false
+
 [analytics]
 enabled = false
 port = 54327

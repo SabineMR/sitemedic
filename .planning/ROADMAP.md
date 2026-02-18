@@ -209,7 +209,7 @@ Plans:
 5. A site manager on the org dashboard can view an incident frequency trend chart — treatment count and near-miss count per week over the last 12 months are plotted, making volume trends visible
 6. A platform admin can view aggregate compliance trends across all orgs and identify the top and bottom performing orgs by compliance score
 
-**Plans:** 5 plans
+**Plans:** 7 plans (5 core + 2 gap closure)
 
 Plans:
 - [x] 23-01-PLAN.md — Compliance score history: migration 130 (UNIQUE index + platform admin RLS policy on compliance_score_history); generate-weekly-report Edge Function upsert of numeric score 0-100 with v1 formula; formula_version in details JSONB
@@ -217,6 +217,8 @@ Plans:
 - [x] 23-03-PLAN.md — Near-miss heat map (platform admin): AdminNearMissHeatMap with org colour-coding; admin query hook; Heat Map tab added to admin analytics page
 - [x] 23-04-PLAN.md — Compliance trend charts (org): ComplianceScoreChart (Recharts LineChart, 12-month weekly scores); IncidentFrequencyChart (Recharts AreaChart, treatment + near-miss counts per week); compliance page at /analytics/compliance
 - [x] 23-05-PLAN.md — Platform admin compliance analytics: AdminComplianceTrend (aggregate score across all orgs); OrgComplianceTable (top/bottom performers with trend arrows); Compliance tab on admin analytics page
+- [ ] 23-06-PLAN.md — [GAP CLOSURE] Motorsport Incident Report Card: MotorsportIncidentReportCard component, generateMotorsportIncidentPDF query, wired into treatment detail page for event_vertical === 'motorsport' (closes MOTO-07)
+- [ ] 23-07-PLAN.md — [GAP CLOSURE] Competitor Clearance UI Toggle: add competitor_cleared_to_return checkbox to mobile motorsport form outside concussion gate (closes Flow 3 stuck clearance)
 
 ---
 
@@ -255,4 +257,4 @@ Plans:
 | 20. Festivals & Events Vertical | v2.0 | 4/4 | Complete | 2026-02-17 |
 | 21. Film/TV Production Vertical | v2.0 | 2/2 | Complete | 2026-02-17 |
 | 22. Football / Sports Vertical | v2.0 | 5/5 | Complete | 2026-02-18 |
-| 23. Analytics — Heat Maps & Trend Charts | v2.0 | 5/5 | Complete | 2026-02-17 |
+| 23. Analytics — Heat Maps & Trend Charts | v2.0 | 5/7 | Gap Closure | 2026-02-18 |

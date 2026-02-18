@@ -31,7 +31,9 @@ try { FileSystem = require('expo-file-system/legacy'); } catch (_) {}
 // Notification channel for emergency alerts (Android)
 const EMERGENCY_CHANNEL_ID = 'emergency';
 const MAX_RECORDING_DURATION_MS = 90_000; // 90 seconds
-const TRANSCRIPTION_CHUNK_INTERVAL_MS = 8_000; // 8 seconds — balance between live feedback and stop/restart gap
+// 5s gives first feedback at ~7s (5s record + ~2s Whisper API).
+// Going below 4s risks chunks being too short for meaningful transcription.
+const TRANSCRIPTION_CHUNK_INTERVAL_MS = 5_000;
 const AUDIO_BUCKET = 'emergency-recordings';
 
 export interface EmergencyContact {

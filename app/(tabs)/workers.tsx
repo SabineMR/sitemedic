@@ -9,6 +9,7 @@
  */
 
 import React, { useState } from 'react';
+import { useRole } from '../../hooks/useRole';
 import {
   View,
   Text,
@@ -232,11 +233,19 @@ const enhance = withObservables([], ({ database }: { database: any }) => ({
 }));
 
 export default function WorkersScreen() {
+  const { isAdmin } = useRole();
   const database = useDatabase();
   const { primaryVertical } = useOrg();
   const personPluralLabel = primaryVertical === 'tv_film' ? 'Cast & Crew' : getPatientLabel(primaryVertical) + 's';
   const EnhancedWorkersList = enhance(WorkersList);
 
+  if (isAdmin) return (
+    <View style={{ flex: 1, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+      <Text style={{ fontSize: 48, marginBottom: 16 }}>🔒</Text>
+      <Text style={{ fontSize: 18, fontWeight: '700', color: '#1e293b', marginBottom: 8 }}>Access Restricted</Text>
+      <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 20 }}>This area is for medics and site managers only.</Text>
+    </View>
+  );
   return <EnhancedWorkersList database={database} personPluralLabel={personPluralLabel} />;
 }
 

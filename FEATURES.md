@@ -2,12 +2,75 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Platform admin compliance analytics: aggregate trend chart + org ranking table; Compliance tab (9th) added to /admin/analytics; ANLT-06 closed)
+**Last Updated**: 2026-02-18 (Role-aware tabs & settings: admin users see Events + Team tabs instead of Treatments/Workers/Safety; admin Settings shows org configuration; new Events and Team screens added)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
 
-## Recent Updates — Analytics: Platform Admin Compliance (2026-02-18)
+## Recent Updates — Role-Aware Tabs & Settings (2026-02-18)
+
+### Mobile App: Role-Based Navigation & Admin Screens ✅
+
+The mobile app tab bar and Settings screen are now fully role-aware. Admin users (e.g. Apex Safety Group org managers) see a different set of tabs and Settings content from medics and site managers.
+
+**Tab Visibility by Role (`app/(tabs)/_layout.tsx`):**
+
+| Tab | Medic / Site Manager | Admin |
+|-----|----------------------|-------|
+| Home | ✅ visible | ✅ visible |
+| Treatments | ✅ visible | ❌ hidden (`href: null`) |
+| Workers/Patients | ✅ visible | ❌ hidden |
+| Safety | ✅ visible | ❌ hidden |
+| Events | ❌ hidden | ✅ visible (new) |
+| Team | ❌ hidden | ✅ visible (new) |
+| Settings | ✅ visible | ✅ visible |
+
+- `isAdmin` is derived from `state.user?.role === 'admin'` (AuthContext)
+- Expo Router `href: null` removes a tab from navigation state entirely — no ghost routes
+- TabletSidebar automatically reflects the correct tabs (iterates `state.routes` which excludes `href:null` screens)
+
+**New Screen: Events (`app/(tabs)/events.tsx`):**
+- Admin-only screen listing upcoming bookings for the admin's organisation
+- Supabase query: `bookings` table, filtered to `status IN ['pending', 'confirmed', 'in_progress']`, ordered by `shift_date` ascending, limit 50
+- RLS ensures admins only see their own org's bookings
+- Each event card shows: `site_name` (bold), formatted date, shift start–end time, status badge
+- Status badge colour coding: pending=amber, confirmed=green, in_progress=blue
+- Empty state: "No upcoming events. Book through the web portal."
+- Error state with warning icon
+
+**New Screen: Team (`app/(tabs)/team.tsx`):**
+- Admin-only screen showing the roster of team members in the admin's organisation
+- Supabase query: `profiles` table, filtered by `org_id`, excluding self (`neq('id', userId)`), ordered alphabetically by `full_name`
+- Each member card shows: `full_name` (bold), `email` (muted), role badge
+- Role badge colour coding: Medic=blue, Site Manager=purple, Admin=amber
+- Empty state: "No team members yet."
+- Error state with warning icon
+
+**Updated Screen: Settings (`app/(tabs)/settings.tsx`):**
+- `isAdmin` flag added at component level
+- **Admin-only: Organisation section** — rendered between Account card and Security:
+  - Fetches from `org_settings` table (single row per org) on mount
+  - **Industry Verticals**: displayed as pill/chip badges (e.g. "Motorsport", "Sporting Events"), using a `VERTICAL_LABELS` map for human-readable names
+  - **CQC Status**: green "● Registered" badge if `cqc_registered = true`; shows `cqc_registration_number` if present
+  - Supports 10 vertical keys: `construction`, `tv_film`, `motorsport`, `festivals`, `sporting_events`, `fairs_shows`, `corporate`, `private_events`, `education`, `outdoor_adventure`
+- **Emergency Contacts section**: hidden for admin users (`{!isAdmin && (...)}`) — admins manage orgs, not personal SOS contacts
+- Security (biometrics) and Status sections unchanged — shown to all roles
+
+**Updated: TabletSidebar (`components/ui/TabletSidebar.tsx`):**
+- `TAB_ICONS` and `TAB_LABELS` extended with `events: '📅'` and `team: '👥'`
+- No loop logic changes needed — sidebar iterates `state.routes` which Expo Router already filters by `href`
+
+| File | Change |
+|---|---|
+| `app/(tabs)/_layout.tsx` | `isAdmin` flag; `href:null` on medic/admin-only tabs; Events + Team Tabs.Screen added |
+| `app/(tabs)/events.tsx` | **New** — Admin upcoming events list with status badges |
+| `app/(tabs)/team.tsx` | **New** — Admin team roster with role badges |
+| `app/(tabs)/settings.tsx` | `isAdmin` flag; org settings state + useEffect; Organisation section; Emergency Contacts wrapped in `{!isAdmin}` |
+| `components/ui/TabletSidebar.tsx` | `TAB_ICONS` + `TAB_LABELS` extended with events/team entries |
+
+---
+
+## Previous Updates — Analytics: Platform Admin Compliance (2026-02-18)
 
 ### Phase 23-05: Platform Admin Compliance Analytics ✅
 

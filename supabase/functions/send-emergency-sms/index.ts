@@ -225,7 +225,11 @@ async function transcribeAudio(audioBase64: string, mimeType = 'audio/m4a'): Pro
     }
 
     const formData = new FormData();
-    formData.append('file', new Blob([bytes], { type: mimeType }), 'audio.m4a');
+    // OpenAI Whisper identifies M4A by the filename extension (.m4a).
+    // The MIME type must be audio/mp4 — not audio/m4a — because audio/m4a is
+    // non-standard and causes a 400 "Invalid file format" response from the API.
+    const blobType = mimeType === 'audio/m4a' ? 'audio/mp4' : mimeType;
+    formData.append('file', new Blob([bytes], { type: blobType }), 'audio.m4a');
     formData.append('model', 'whisper-1');
     formData.append('language', 'en');
     // Context prompt reduces hallucinations — Whisper uses it to bias towards

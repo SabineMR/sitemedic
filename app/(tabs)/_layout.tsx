@@ -18,6 +18,7 @@ import { useSync } from '../../src/contexts/SyncContext';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useOrg } from '../../src/contexts/OrgContext';
 import { useIsTablet } from '../../hooks/useIsTablet';
+import { useRole } from '../../hooks/useRole';
 import TabletSidebar from '../../components/ui/TabletSidebar';
 import { getPatientLabel } from '../../services/taxonomy/vertical-outcome-labels';
 
@@ -58,6 +59,12 @@ export default function TabsLayout() {
   const { primaryVertical } = useOrg();
   const personPluralLabel = primaryVertical === 'tv_film' ? 'Cast & Crew' : getPatientLabel(primaryVertical) + 's';
   const registryLabel = primaryVertical === 'tv_film' ? 'Cast & Crew Registry' : `${getPatientLabel(primaryVertical)} Registry`;
+  const { isAdmin } = useRole();
+  // During auth load, user is null → isAdmin is false, which would briefly show
+  // the wrong tabs to an admin. Hide role-specific tabs while loading so the
+  // correct set only appears once the session resolves.
+  const medicOnlyHref = state.isLoading ? null : (isAdmin ? null : undefined);
+  const adminOnlyHref = state.isLoading ? null : (!isAdmin ? null : undefined);
 
   // Standard auth guard: fires whenever isAuthenticated changes (e.g. SIGNED_OUT event)
   useEffect(() => {
@@ -113,6 +120,7 @@ export default function TabsLayout() {
           title: 'Treatments',
           headerTitle: 'Treatments',
           tabBarLabel: 'Treatments',
+          href: medicOnlyHref,
           tabBarIcon: ({ color }) => (
             <Text style={[styles.iconText, { color }]}>📋</Text>
           ),
@@ -124,6 +132,7 @@ export default function TabsLayout() {
           title: personPluralLabel,
           headerTitle: registryLabel,
           tabBarLabel: personPluralLabel,
+          href: medicOnlyHref,
           tabBarIcon: ({ color }) => (
             <Text style={[styles.iconText, { color }]}>👷</Text>
           ),
@@ -135,8 +144,33 @@ export default function TabsLayout() {
           title: 'Safety',
           headerTitle: 'Safety',
           tabBarLabel: 'Safety',
+          href: medicOnlyHref,
           tabBarIcon: ({ color }) => (
             <Text style={[styles.iconText, { color }]}>🛡️</Text>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="events"
+        options={{
+          title: 'Events',
+          headerTitle: 'Upcoming Events',
+          tabBarLabel: 'Events',
+          href: adminOnlyHref,
+          tabBarIcon: ({ color }) => (
+            <Text style={[styles.iconText, { color }]}>📅</Text>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="team"
+        options={{
+          title: 'Team',
+          headerTitle: 'Team',
+          tabBarLabel: 'Team',
+          href: adminOnlyHref,
+          tabBarIcon: ({ color }) => (
+            <Text style={[styles.iconText, { color }]}>👥</Text>
           ),
         }}
       />

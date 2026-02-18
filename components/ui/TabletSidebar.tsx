@@ -30,6 +30,8 @@ const TAB_ICONS: Record<string, string> = {
   treatments: '📋',
   workers: '👷',
   safety: '🛡️',
+  events: '📅',
+  team: '👥',
   settings: '⚙️',
 };
 
@@ -38,6 +40,8 @@ const TAB_LABELS: Record<string, string> = {
   treatments: 'Treatments',
   workers: 'Workers',
   safety: 'Safety',
+  events: 'Events',
+  team: 'Team',
   settings: 'Settings',
 };
 

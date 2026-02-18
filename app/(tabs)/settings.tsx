@@ -27,12 +27,50 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useRole } from '../../hooks/useRole';
 import { emergencyAlertService, EmergencyContact } from '../../services/EmergencyAlertService';
+
+const VERTICAL_LABELS: Record<string, string> = {
+  construction: 'Construction',
+  tv_film: 'TV & Film',
+  motorsport: 'Motorsport',
+  festivals: 'Festivals',
+  sporting_events: 'Sporting Events',
+  fairs_shows: 'Fairs & Shows',
+  corporate: 'Corporate',
+  private_events: 'Private Events',
+  education: 'Education',
+  outdoor_adventure: 'Outdoor Adventure',
+};
 
 export default function SettingsScreen() {
   const { state, signOut, enableBiometrics, disableBiometrics, biometricSupport } = useAuth();
+  const { isAdmin } = useRole();
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Org settings state (admin only)
+  const [orgSettings, setOrgSettings] = useState<{
+    industry_verticals: string[];
+    cqc_registered: boolean;
+    cqc_registration_number: string | null;
+  } | null>(null);
+  const [orgSettingsLoading, setOrgSettingsLoading] = useState(isAdmin);
+
+  useEffect(() => {
+    if (!isAdmin || !state.user?.orgId) return;
+    import('../../src/lib/supabase').then(({ supabase }) => {
+      supabase
+        .from('org_settings')
+        .select('industry_verticals, cqc_registered, cqc_registration_number')
+        .eq('org_id', state.user!.orgId)
+        .single()
+        .then(({ data }) => {
+          if (data) setOrgSettings(data as any);
+          setOrgSettingsLoading(false);
+        });
+    });
+  }, [isAdmin, state.user?.orgId]);
 
   // Emergency contacts state
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
@@ -47,7 +85,7 @@ export default function SettingsScreen() {
   const roleInputRef = useRef<any>(null);
 
   useEffect(() => {
-    loadContacts();
+    if (!isAdmin) loadContacts();
   }, []);
 
   // Reset suggestions when modal closes
@@ -350,7 +388,64 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Emergency Contacts Section */}
+        {/* Organisation Section (admin only) */}
+        {isAdmin && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Organisation</Text>
+
+            <View style={styles.card}>
+              {orgSettingsLoading ? (
+                <ActivityIndicator color="#2563EB" style={{ paddingVertical: 20 }} />
+              ) : (<>
+              {/* Industry Verticals */}
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Industry Verticals</Text>
+                {orgSettings && orgSettings.industry_verticals?.length > 0 ? (
+                  <View style={styles.verticalChips}>
+                    {orgSettings.industry_verticals.map((v) => (
+                      <View key={v} style={styles.chip}>
+                        <Text style={styles.chipText}>
+                          {VERTICAL_LABELS[v] ?? v}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <Text style={styles.infoValue}>—</Text>
+                )}
+              </View>
+
+              <View style={styles.divider} />
+
+              {/* CQC Status */}
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>CQC Status</Text>
+                {orgSettings ? (
+                  orgSettings.cqc_registered ? (
+                    <View>
+                      <View style={styles.cqcRegistered}>
+                        <Text style={styles.cqcRegisteredText}>● Registered</Text>
+                      </View>
+                      {orgSettings.cqc_registration_number ? (
+                        <Text style={styles.cqcNumber}>
+                          {orgSettings.cqc_registration_number}
+                        </Text>
+                      ) : null}
+                    </View>
+                  ) : (
+                    <Text style={styles.infoValue}>Not registered</Text>
+                  )
+                ) : (
+                  <Text style={styles.infoValue}>—</Text>
+                )}
+              </View>
+              </>)}
+            </View>
+          </View>
+        )}
+
+        {/* Emergency Contacts Section (medic / site_manager only) */}
+        {!isAdmin && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Emergency Contacts</Text>
@@ -397,6 +492,7 @@ export default function SettingsScreen() {
             )}
           </View>
         </View>
+        )}
 
         {/* Security Section */}
         <View style={styles.section}>
@@ -830,6 +926,41 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
+  },
+  verticalChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 6,
+  },
+  chip: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  chipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1D4ED8',
+  },
+  cqcRegistered: {
+    marginTop: 4,
+    alignSelf: 'flex-start',
+    backgroundColor: '#D1FAE5',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  cqcRegisteredText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#065F46',
+  },
+  cqcNumber: {
+    fontSize: 13,
+    color: '#64748b',
+    marginTop: 4,
   },
   suggestionsContainer: {
     backgroundColor: '#FFFFFF',

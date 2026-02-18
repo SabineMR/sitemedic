@@ -12,6 +12,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useRole } from '../../hooks/useRole';
 import {
   View,
   Text,
@@ -39,6 +40,7 @@ interface TreatmentWithWorker extends Treatment {
 }
 
 export default function TreatmentsScreen() {
+  const { isAdmin } = useRole();
   const [treatments, setTreatments] = useState<TreatmentWithWorker[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -277,6 +279,14 @@ export default function TreatmentsScreen() {
       </GestureHandlerRootView>
     );
   }
+
+  if (isAdmin) return (
+    <View style={{ flex: 1, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+      <Text style={{ fontSize: 48, marginBottom: 16 }}>🔒</Text>
+      <Text style={{ fontSize: 18, fontWeight: '700', color: '#1e293b', marginBottom: 8 }}>Access Restricted</Text>
+      <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 20 }}>This area is for medics and site managers only.</Text>
+    </View>
+  );
 
   return (
     <GestureHandlerRootView style={styles.container}>
