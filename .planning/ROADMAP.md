@@ -44,7 +44,7 @@ See: `.planning/milestones/v2.0-ROADMAP.md`
 - [x] **Phase 25: Billing Infrastructure** — Stripe Products, billing webhook handler, feature gates map ✓ 2026-02-18
 - [x] **Phase 26: Subdomain Routing** — Middleware wildcard DNS, subdomain extraction, security headers, branded login ✓ 2026-02-18
 - [x] **Phase 27: Branding — Web Portal** — BrandingProvider, SSR header injection, CSS custom properties, portal rebrand ✓ 2026-02-18
-- [ ] **Phase 28: Branding — PDFs & Emails** — Org logo in all 8 PDF Edge Functions + all 3 email templates
+- [ ] **Phase 28: Branding — PDFs & Emails** — Org logo in all 8 PDF Edge Functions + all 4 email templates
 - [ ] **Phase 29: Org Onboarding Flow** — Signup page, Stripe Checkout, activation queue, welcome email
 - [ ] **Phase 30: Subscription Management & Feature Gating** — Tier gates in UI and API, Stripe Customer Portal, MRR dashboard, suspension flow
 - [ ] **Phase 31: Branding Settings UI** — Org admin logo upload + colour picker, platform admin branding override
@@ -165,11 +165,12 @@ Plans:
 3. A booking confirmation email sent for an org with a configured logo shows the org's logo in the email header and the org's primary colour in the email accent — not hardcoded SiteMedic or "Apex Safety Group Ltd" branding
 4. All 3 email templates (`booking-confirmation`, `shift-alert`, `invoice-notification`) have a required `branding: OrgBranding` prop — all sending routes fetch org branding before calling `resend.emails.send()`
 
-**Plans:** TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 28-01: PDF branding — test `@react-pdf/renderer` `<Image>` with a real Supabase Storage public URL in a Deno Edge runtime (minimal test PDF first); if successful, update all 8 PDF Edge Functions to fetch `org_branding` via service-role Supabase client and pass as required `branding` prop to document components; fallback: ArrayBuffer → base64 data URI if remote URL loading fails in Deno
-- [ ] 28-02: Email branding — create `OrgBranding` interface at `web/lib/email/types.ts`; add required `branding` prop to all 3 email templates; update all email-sending routes to fetch `org_branding` before `resend.emails.send()`; remove all hardcoded "Apex Safety Group Ltd" text from email footers
+- [ ] 28-01-PLAN.md — Shared PDF branding infrastructure + pilot: create _shared/branding-helpers.ts (OrgBranding type, fetchOrgBranding, fetchLogoAsDataUri) and _shared/pdf-branding.tsx (BrandedPdfHeader, BrandedPdfFooter); integrate into generate-weekly-report as pilot test
+- [ ] 28-02-PLAN.md — PDF branding rollout: apply proven branding pattern to remaining 7 PDF Edge Functions (6 @react-pdf + 1 HTML template); each fetches org_branding and passes to document component
+- [ ] 28-03-PLAN.md — Email branding: create EmailBranding type; update 4 email templates (booking-confirmation, medic-assignment, booking-received, invoice-notification) with required branding prop; update 3 sending routes to fetch org_branding
 
 ---
 
@@ -272,7 +273,7 @@ Note: Phases 27 and 28 can be parallelised once Phase 26 is deployed. Phase 30 a
 | 25. Billing Infrastructure | v3.0 | 0/3 | Not started | - |
 | 26. Subdomain Routing | v3.0 | 4/4 | Complete | 2026-02-18 |
 | 27. Branding — Web Portal | v3.0 | 0/3 | Not started | - |
-| 28. Branding — PDFs & Emails | v3.0 | 0/2 | Not started | - |
+| 28. Branding — PDFs & Emails | v3.0 | 0/3 | Not started | - |
 | 29. Org Onboarding Flow | v3.0 | 0/5 | Not started | - |
 | 30. Subscription Management & Feature Gating | v3.0 | 0/5 | Not started | - |
 | 31. Branding Settings UI | v3.0 | 0/2 | Not started | - |
