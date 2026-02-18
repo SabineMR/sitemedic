@@ -2,12 +2,61 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-17 (Emergency SOS — storage bucket migration fix, transcription error feedback)
+**Last Updated**: 2026-02-18 (Platform admin compliance analytics: aggregate trend chart + org ranking table; Compliance tab (9th) added to /admin/analytics; ANLT-06 closed)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
 
-## Recent Updates — Analytics: Near-Miss Heat Map (2026-02-18)
+## Recent Updates — Analytics: Platform Admin Compliance (2026-02-18)
+
+### Phase 23-05: Platform Admin Compliance Analytics ✅
+
+Platform admins can now view cross-organisation compliance analytics in a new **Compliance** tab on the admin analytics page (`/admin/analytics`). This closes ANLT-06.
+
+**New Query Hooks (`web/lib/queries/analytics/compliance-history.ts`):**
+- `useAdminComplianceTrend()` — Fetches all `compliance_score_history` rows for `vertical='general'` (no org filter; admin RLS allows all rows). Groups by `period_end` client-side, computing `avg_score`, `min_score`, `max_score`, and `org_count` per period. Returns last 52 periods sorted chronologically. Query key: `['admin-compliance-trend']`
+- `useOrgComplianceRanking()` — Fetches all compliance rows DESC by `period_start`. Groups by `org_id`, taking the latest 2 scores per org. Fetches org names from `organizations` table (`WHERE id IN uniqueOrgIds`). Computes trend (`up`/`down`/`stable`). Sorts by `latest_score DESC`. Query key: `['org-compliance-ranking']`
+
+**New Interfaces:**
+- `AdminComplianceTrendPoint` — `period_end`, `avg_score`, `org_count`, `min_score`, `max_score`
+- `OrgComplianceRanking` — `org_id`, `org_name`, `latest_score`, `previous_score`, `trend`
+
+**`AdminComplianceTrend` Component (`web/components/analytics/AdminComplianceTrend.tsx`):**
+- Uses `ComposedChart` (NOT LineChart) — required for mixing `Line` and `Area` elements in Recharts
+- `Area` element for `max_score` (blue fill, 15% opacity) — top of shaded band
+- `Area` element for `min_score` (background fill) — bottom of band; visual subtraction creates shaded range
+- `Line` element for `avg_score` (blue, strokeWidth 2) — trend line
+- Custom tooltip shows avg, min, max, and org count per period
+- YAxis domain `[0, 100]`, dark theme matching revenue-charts.tsx
+- Loading skeleton, empty state message
+- `ResponsiveContainer` width 100% height 400
+
+**`OrgComplianceTable` Component (`web/components/analytics/OrgComplianceTable.tsx`):**
+- Full ranked list of all orgs, sorted best compliance score first
+- Top 5 rows: green left accent (`border-l-4 border-green-500`) + "Top Performers" badge
+- Bottom 5 rows: red left accent (`border-l-4 border-red-500`) + "Needs Improvement" badge
+- Middle rows: no accent
+- Columns: Rank (#), Organisation, Score (coloured: ≥70 green, 40–69 yellow, <40 red, shown as `XX/100`), Trend (`ArrowUp` green / `ArrowDown` red / `Minus` gray from lucide-react), Previous score
+- Loading skeleton, empty state message
+
+**Admin Analytics Page (`web/app/admin/analytics/page.tsx`) — 9 Tabs:**
+- Added `'compliance'` to `activeTab` union type
+- Added `'compliance'` to the tabs array (9th tab, rendered as "Compliance")
+- Added `'compliance'` to `isNewTab` guard (bypasses legacy metrics loading gate)
+- Dynamic imports for both components: `ssr: false`, named export pattern (`.then(m => ({ default: m.NamedExport }))`)
+- Compliance tab content: two `bg-gray-800` cards — "Aggregate Compliance Trend" (chart) + "Organisation Rankings" (table)
+- All 8 existing tabs preserved
+
+| File | Change |
+|---|---|
+| `web/lib/queries/analytics/compliance-history.ts` | Modified — added 2 interfaces + 2 hooks (now 4 hooks total) |
+| `web/components/analytics/AdminComplianceTrend.tsx` | New — ComposedChart aggregate trend with min/max band + avg line |
+| `web/components/analytics/OrgComplianceTable.tsx` | New — ranked compliance table with top/bottom accent rows + trend arrows |
+| `web/app/admin/analytics/page.tsx` | Modified — 9th Compliance tab added; 2 dynamic imports; isNewTab guard extended |
+
+---
+
+## Previous Updates — Analytics: Near-Miss Heat Map (2026-02-18)
 
 ### Phase 23-02: Near-Miss Geographic Heat Map ✅
 

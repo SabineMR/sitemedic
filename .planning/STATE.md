@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 23: Analytics — Heat Maps & Trend Charts (in progress, plan 23-04 complete)
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 23: Analytics — Heat Maps & Trend Charts (COMPLETE — all 5 plans done)
 
 ## Current Position
 
-Phase: 23 of 23 (Analytics — Heat Maps & Trend Charts) — In progress (4/5 plans)
-Plan: 23-04 complete (compliance trend charts: ComplianceScoreChart + IncidentFrequencyChart + useComplianceHistory + useIncidentFrequency + /analytics/compliance page)
-Status: In progress — compliance chart page at /analytics/compliance live; both charts lazy-loaded ssr:false
-Last activity: 2026-02-18 — Completed 23-04-PLAN.md: LineChart compliance score trend with amber/red thresholds, AreaChart incident frequency, two TanStack Query hooks, compliance page with AnalyticsSubNav
+Phase: 23 of 23 (Analytics — Heat Maps & Trend Charts) — COMPLETE (5/5 plans)
+Plan: 23-05 complete (platform admin compliance analytics: useAdminComplianceTrend + useOrgComplianceRanking hooks, AdminComplianceTrend ComposedChart, OrgComplianceTable ranking table, Compliance tab as 9th tab on /admin/analytics)
+Status: Phase 23 complete — v2.0 roadmap fully complete (27/27 plans)
+Last activity: 2026-02-18 — Completed 23-05-PLAN.md: ANLT-06 closed; admin analytics now has 9 tabs; aggregate compliance trend with min/max band; org ranking table with trend arrows
 
-Progress: [██████████] v1.1 complete | [█████████░] v2.0 26/27 plans (Phase 18 + 18.5 + 19-01…05 + 20-01…04 + 21 + 22-01…05 + 23-01 + 23-02 + 23-03 + 23-04 complete)
+Progress: [██████████] v1.1 complete | [██████████] v2.0 27/27 plans (Phase 18 + 18.5 + 19-01…05 + 20-01…04 + 21 + 22-01…05 + 23-01…05 complete)
 
 ## Performance Metrics
 
@@ -32,8 +32,8 @@ Progress: [██████████] v1.1 complete | [██████�
 | 18–23 (v2.0) | 12/25 | ~22 min | ~1.8 min |
 
 **Recent Trend:**
-- Last plan: 23-03 — admin near-miss heat map: AdminNearMissHeatMap (org-colour-coded CircleMarkers, severity sizing, dual legend), useAdminNearMissGeoData hook with two-step org enrichment, Heat Map tab in /admin/analytics (~2 min)
-- Phase 23 plan 23-03: platform admin now has cross-org geographic near-miss visibility — identifies systemic safety issues spanning multiple organisations
+- Last plan: 23-05 — admin compliance analytics: useAdminComplianceTrend + useOrgComplianceRanking hooks, AdminComplianceTrend ComposedChart (Line avg + Area min/max band), OrgComplianceTable ranking table (top/bottom 5 accents + trend arrows), Compliance 9th tab in /admin/analytics (~2 min)
+- Phase 23 plan 23-05: platform admin now has full cross-org compliance visibility — aggregate trend chart with shaded band + org ranking table; ANLT-06 closed; v2.0 roadmap complete
 - Trend: Stable — consistent 1–8 min for vertical surgical additions
 
 *Updated after each plan completion*
@@ -120,6 +120,12 @@ Key decisions affecting v2.0:
 - 23-04: week_label uses format(weekDate, "'W'I MMM") from date-fns — gives 'W7 Feb' style, compact for chart X-axis
 - 23-04: compliance page dynamic import uses .then(m => ({ default: m.NamedExport })) — unwraps named exports for ssr:false compatibility
 
+- 23-05: ComposedChart (not LineChart) required when mixing Line + Area in same Recharts chart — Area elements need ComposedChart as container
+- 23-05: Admin compliance hooks fetch all compliance_score_history rows for vertical='general' without org filter — admin RLS allows; client-side grouping avoids multi-tenant SQL complexity
+- 23-05: Two-step query (compliance_score_history then organizations WHERE id IN) for org names — consistent with 23-03 useAdminNearMissGeoData pattern
+- 23-05: orgScoreMap takes only latest 2 rows per org (rows DESC by period_start) — minimal data for trend (up/down/stable) with no extra query
+- 23-05: Top 5 / bottom 5 accent threshold hardcoded as visual convention in OrgComplianceTable
+
 ### Research Flags (Phase-Blocking)
 
 - **Phase 19 (Motorsport PDF) — DRAFT APPROACH:** `motorsport-incident-generator` built with inferred MOTO-01 fields and DRAFT watermark (user approved "proceed with draft" in 19-03 checkpoint). Obtain physical Motorsport UK Accident Form from Incident Pack V8.0 before regulatory submission to validate field layout.
@@ -136,6 +142,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T05:33:01Z
-Stopped at: Completed 23-04-PLAN.md (compliance trend charts — ComplianceScoreChart LineChart with amber/red ReferenceLine, IncidentFrequencyChart AreaChart two-series, useComplianceHistory + useIncidentFrequency hooks, /analytics/compliance page with AnalyticsSubNav)
+Last session: 2026-02-18T05:40:28Z
+Stopped at: Completed 23-05-PLAN.md (platform admin compliance analytics — useAdminComplianceTrend + useOrgComplianceRanking hooks, AdminComplianceTrend ComposedChart, OrgComplianceTable ranking table, Compliance tab as 9th tab on /admin/analytics; ANLT-06 closed; v2.0 complete)
 Resume file: None
