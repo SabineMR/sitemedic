@@ -138,7 +138,7 @@ Plans:
 - [ ] 20-01-PLAN.md — Festival form fields: TST triage priority (P1/P2/P3/P4) required field, alcohol/substance flag, safeguarding flag, attendee disposition; RIDDOR banner gate for festivals; all written to vertical_extra_fields JSONB
 - [ ] 20-02-PLAN.md — RIDDOR gate verification: confirm festivals in NON_RIDDOR_VERTICALS in riddor-detector and F2508 generator; confirm VERTICAL_COMPLIANCE.festivals.riddorApplies is false; read-only verification
 - [ ] 20-03-PLAN.md — Purple Guide PDF Edge Function: replace 501 stub with full PurpleGuideDocument React-PDF generation; purple-guide-mapping.ts; storage bucket migration 125
-- [ ] 20-04-PLAN.md — Dashboard wiring: EventIncidentReportCard client component, generateEventIncidentPDF query, vertical-aware terminology (Attendee/Organiser) on treatment detail page
+- [ ] 20-04-PLAN.md — Dashboard wiring: EventIncidentReportCard, generateEventIncidentPDF query, vertical-aware terminology (Attendee/Venue/Organiser), medic profile recommended cert types (FEST-05)
 
 ---
 
