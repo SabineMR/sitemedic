@@ -2,12 +2,56 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Role-aware tabs & settings: admin users see Events + Team tabs instead of Treatments/Workers/Safety; admin Settings shows org configuration; new Events and Team screens added)
+**Last Updated**: 2026-02-18 (Gap closure 23-06: MotorsportIncidentReportCard + generateMotorsportIncidentPDF — one-click Motorsport UK Accident Form PDF download on treatment detail page for motorsport vertical; MOTO-07 closed)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
 
-## Recent Updates — Role-Aware Tabs & Settings (2026-02-18)
+## Recent Updates — Motorsport UK Accident Form PDF Download (2026-02-18)
+
+### Phase 23-06: Motorsport Incident Report Card (Gap Closure MOTO-07) ✅
+
+Medics can now generate and download a Motorsport UK Accident Form PDF directly from the treatment detail page when the treatment is for a motorsport event. This closes the MOTO-07 gap — the Edge Function was fully implemented in Phase 19 but had no web UI to trigger it.
+
+**New Query Function (`web/lib/queries/motorsport-incidents.ts`):**
+- `generateMotorsportIncidentPDF(treatmentId: string)` — sends `POST /functions/v1/motorsport-incident-generator` with `{ incident_id: treatmentId, event_vertical: 'motorsport' }`
+- Authenticates via session JWT (falls back to anon key)
+- Returns `{ success: boolean, pdf_path: string, signed_url: string }`
+- Throws `'Failed to generate Motorsport Incident Report'` on HTTP error
+
+**New Component (`web/components/dashboard/MotorsportIncidentReportCard.tsx`):**
+- Client component (`'use client'`) with `useMutation` from `@tanstack/react-query`
+- Card layout with `CardTitle`: "Motorsport UK — Accident Form"
+- Card description: "Pre-filled Motorsport UK Accident Form generated from this treatment record for submission to race control or Motorsport UK"
+- Button text: "Generate Motorsport Incident Report" (idle) / "Generating PDF..." (pending)
+- On success: opens `signed_url` in new browser tab via `window.open`
+- On error: shows `alert('Failed to generate Motorsport Incident Report. Please try again.')`
+- Footer note: "Click to generate a pre-filled Motorsport UK Accident Form. Review all information for accuracy before sharing with race control or the Clerk of the Course."
+- `FileText` icon from lucide-react on button
+- Mirrors `EventIncidentReportCard` (festivals) and `FAIncidentReportCard` (sporting_events) exactly
+
+**Updated Page (`web/app/(dashboard)/treatments/[id]/page.tsx`):**
+- Added import for `MotorsportIncidentReportCard`
+- Added conditional render: `{treatment.event_vertical === 'motorsport' && <MotorsportIncidentReportCard treatmentId={treatment.id} />}`
+- Positioned after the FA/SGSA card (sporting_events) and before the Photos section — consistent with other vertical-specific card ordering
+
+**End-to-End Flow:**
+1. Medic opens a motorsport treatment detail page
+2. "Motorsport UK — Accident Form" card is shown (hidden for other verticals)
+3. Medic clicks "Generate Motorsport Incident Report"
+4. Button shows "Generating PDF..." while the Edge Function runs
+5. Edge Function generates a pre-filled Motorsport UK Accident Form PDF (with DRAFT watermark pending Motorsport UK Incident Pack V8.0 validation) and uploads it to the `motorsport-reports` Storage bucket
+6. On success, the PDF opens in a new browser tab via a 7-day signed URL
+
+| File | Change |
+|---|---|
+| `web/lib/queries/motorsport-incidents.ts` | **New** — `generateMotorsportIncidentPDF()` query function |
+| `web/components/dashboard/MotorsportIncidentReportCard.tsx` | **New** — useMutation PDF download card component |
+| `web/app/(dashboard)/treatments/[id]/page.tsx` | Added import + conditional render for motorsport vertical |
+
+---
+
+## Previous Updates — Role-Aware Tabs & Settings (2026-02-18)
 
 ### Mobile App: Role-Based Navigation & Admin Screens ✅
 

@@ -125,6 +125,10 @@ Key decisions affecting v2.0:
 - 23-05: Two-step query (compliance_score_history then organizations WHERE id IN) for org names — consistent with 23-03 useAdminNearMissGeoData pattern
 - 23-05: orgScoreMap takes only latest 2 rows per org (rows DESC by period_start) — minimal data for trend (up/down/stable) with no extra query
 - 23-05: Top 5 / bottom 5 accent threshold hardcoded as visual convention in OrgComplianceTable
+- 23-06: MotorsportIncidentReportCard mirrors EventIncidentReportCard and FAIncidentReportCard exactly — same useMutation, Card/Button layout, onSuccess opens signed_url; MOTO-07 gap closed
+- 23-06: request body uses incident_id (not treatment_id) — confirmed from motorsport-incident-generator/index.ts line 39 validation
+- 23-06: event_vertical: 'motorsport' required in request body — Edge Function returns 400 if missing or wrong value
+- 23-06: motorsport card positioned after sporting_events card and before Photos section — consistent ordering of vertical-specific cards in treatment detail page
 - 23-07: competitor_cleared_to_return checkbox placed OUTSIDE concussion_suspected gate — visible for all motorsport treatments, not just concussion-suspected ones
 - 23-07: No change to buildVerticalExtraFields() — field already in INITIAL_MOTORSPORT_FIELDS; JSON.stringify(motorsportFields) covers it automatically
 - 23-07: Concussion clearance gate (lines 420-431) left unchanged — still checks only hia_conducted, competitor_stood_down, cmo_notified
@@ -145,6 +149,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T06:24:34Z
-Stopped at: Completed 23-07-PLAN.md (GAP Flow 3 closed — competitor_cleared_to_return checkbox added to app/treatment/new.tsx motorsport section; MOTO-07 closed; 'Concussion clearance required' badge now resolvable by medic)
+Last session: 2026-02-18T06:25:26Z
+Stopped at: Completed 23-06-PLAN.md (MOTO-07 gap closed — MotorsportIncidentReportCard + generateMotorsportIncidentPDF created; treatment detail page conditionally renders card for motorsport vertical; end-to-end PDF download flow complete)
 Resume file: None
