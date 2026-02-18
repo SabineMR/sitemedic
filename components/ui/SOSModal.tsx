@@ -148,7 +148,13 @@ export default function SOSModal({ visible, onClose }: Props) {
         // iOS: real-time PCM streaming via OpenAI Realtime API (word-by-word)
         await emergencyAlertService.startStreamingTranscription(
           (delta) => {
-            setTranscript((prev) => prev + delta);
+            setTranscript((prev) => {
+              // Add a space after sentence-ending punctuation so words don't run together
+              if (prev && /[.?!]$/.test(prev) && delta && !/^\s/.test(delta)) {
+                return prev + ' ' + delta;
+              }
+              return prev + delta;
+            });
             setTranscriptUnavailable(false);
           },
           () => stopRecording(),
