@@ -70,6 +70,10 @@ export const UK_CERT_TYPES = [
   // ── Outdoor & Adventure ─────────────────────────────────────────────────
   'Mountain First Aid',           // MFA (Mountain Training / equivalent)
   'Wilderness First Aid',         // WFA — remote/wilderness first aid
+
+  // ── Film / TV Production ────────────────────────────────────────────────
+  'ScreenSkills Production Safety Passport',  // CPD-based production safety passport (no fixed expiry)
+  'EFR',                                      // Emergency First Responder — basic pre-hospital first aid
 ] as const;
 
 export type UKCertType = typeof UK_CERT_TYPES[number];
@@ -138,6 +142,19 @@ export const CERT_TYPE_METADATA: Record<UKCertType, CertTypeMetadata> = {
 
   'Mountain First Aid':     { label: 'Mountain First Aid', category: 'outdoor', description: 'Mountain First Aid (Mountain Training or equivalent)', renewalUrl: 'https://www.mountain-training.org/' },
   'Wilderness First Aid':   { label: 'Wilderness First Aid', category: 'outdoor', description: 'Wilderness First Aid — remote environment care', renewalUrl: undefined },
+
+  'ScreenSkills Production Safety Passport': {
+    label: 'ScreenSkills Production Safety Passport',
+    category: 'medical',
+    description: 'ScreenSkills Production Safety Passport — CPD-based, no fixed expiry',
+    renewalUrl: 'https://www.screenskills.com/learning/screenstore/production-safety-passport/',
+  },
+  'EFR': {
+    label: 'Emergency First Responder (EFR)',
+    category: 'medical',
+    description: 'Emergency First Responder — basic pre-hospital first aid, renewal every 3 years',
+    renewalUrl: undefined,
+  },
 };
 
 // =============================================

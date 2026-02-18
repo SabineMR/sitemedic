@@ -62,6 +62,10 @@ export const CERT_TYPES = [
   // ── Outdoor & Adventure ─────────────────────────────────────────────────
   'Mountain First Aid',
   'Wilderness First Aid',
+
+  // ── Film / TV Production ────────────────────────────────────────────────
+  'ScreenSkills Production Safety Passport',
+  'EFR',
 ] as const;
 
 export type CertType = typeof CERT_TYPES[number];
@@ -121,6 +125,17 @@ export const CERT_TYPE_INFO: Record<CertType, CertTypeInfo> = {
 
   'Mountain First Aid':   { label: 'Mountain First Aid', category: 'outdoor', description: 'Mountain First Aid certificate' },
   'Wilderness First Aid': { label: 'Wilderness First Aid', category: 'outdoor', description: 'Wilderness / remote environment first aid' },
+
+  'ScreenSkills Production Safety Passport': {
+    label: 'ScreenSkills Production Safety Passport',
+    category: 'medical',
+    description: 'ScreenSkills Production Safety Passport (CPD-based, no fixed expiry)',
+  },
+  'EFR': {
+    label: 'Emergency First Responder (EFR)',
+    category: 'medical',
+    description: 'Emergency First Responder — basic pre-hospital first aid',
+  },
 };
 
 /** Cert types recommended per vertical (ordered by relevance) */
