@@ -91,8 +91,6 @@ Core plumbing that all four new verticals depend on. Must ship before any vertic
 
 ## Traceability
 
-Populated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | VERT-01 | Phase 18 | Pending |
@@ -101,42 +99,42 @@ Populated during roadmap creation.
 | VERT-04 | Phase 18 | Pending |
 | VERT-05 | Phase 18 | Pending |
 | VERT-06 | Phase 18 | Pending |
-| FILM-01 | TBD | Pending |
-| FILM-02 | TBD | Pending |
-| FILM-03 | TBD | Pending |
-| FILM-04 | TBD | Pending |
-| FEST-01 | TBD | Pending |
-| FEST-02 | TBD | Pending |
-| FEST-03 | TBD | Pending |
-| FEST-04 | TBD | Pending |
-| FEST-05 | TBD | Pending |
-| FEST-06 | TBD | Pending |
-| MOTO-01 | TBD | Pending |
-| MOTO-02 | TBD | Pending |
-| MOTO-03 | TBD | Pending |
-| MOTO-04 | TBD | Pending |
-| MOTO-05 | TBD | Pending |
-| MOTO-06 | TBD | Pending |
-| MOTO-07 | TBD | Pending |
-| FOOT-01 | TBD | Pending |
-| FOOT-02 | TBD | Pending |
-| FOOT-03 | TBD | Pending |
-| FOOT-04 | TBD | Pending |
-| FOOT-05 | TBD | Pending |
-| FOOT-06 | TBD | Pending |
-| FOOT-07 | TBD | Pending |
-| ANLT-01 | TBD | Pending |
-| ANLT-02 | TBD | Pending |
-| ANLT-03 | TBD | Pending |
-| ANLT-04 | TBD | Pending |
-| ANLT-05 | TBD | Pending |
-| ANLT-06 | TBD | Pending |
+| FILM-01 | Phase 21 | Pending |
+| FILM-02 | Phase 21 | Pending |
+| FILM-03 | Phase 21 | Pending |
+| FILM-04 | Phase 21 | Pending |
+| FEST-01 | Phase 20 | Pending |
+| FEST-02 | Phase 20 | Pending |
+| FEST-03 | Phase 20 | Pending |
+| FEST-04 | Phase 20 | Pending |
+| FEST-05 | Phase 20 | Pending |
+| FEST-06 | Phase 20 | Pending |
+| MOTO-01 | Phase 19 | Pending |
+| MOTO-02 | Phase 19 | Pending |
+| MOTO-03 | Phase 19 | Pending |
+| MOTO-04 | Phase 19 | Pending |
+| MOTO-05 | Phase 19 | Pending |
+| MOTO-06 | Phase 19 | Pending |
+| MOTO-07 | Phase 19 | Pending |
+| FOOT-01 | Phase 22 | Pending |
+| FOOT-02 | Phase 22 | Pending |
+| FOOT-03 | Phase 22 | Pending |
+| FOOT-04 | Phase 22 | Pending |
+| FOOT-05 | Phase 22 | Pending |
+| FOOT-06 | Phase 22 | Pending |
+| FOOT-07 | Phase 22 | Pending |
+| ANLT-01 | Phase 23 | Pending |
+| ANLT-02 | Phase 23 | Pending |
+| ANLT-03 | Phase 23 | Pending |
+| ANLT-04 | Phase 23 | Pending |
+| ANLT-05 | Phase 23 | Pending |
+| ANLT-06 | Phase 23 | Pending |
 
 **Coverage:**
 - v2.0 requirements: 36 total
-- Mapped to phases: TBD (roadmapper will complete)
-- Unmapped: TBD
+- Mapped to phases: 36/36 (100%)
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-17*
-*Last updated: 2026-02-17 after initial definition*
+*Last updated: 2026-02-17 — traceability complete, all 36 requirements mapped to phases 18–23*
