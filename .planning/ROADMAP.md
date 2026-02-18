@@ -40,7 +40,7 @@ See: `.planning/milestones/v2.0-ROADMAP.md`
 
 **Phase list:**
 
-- [ ] **Phase 24: DB Foundation** — Next.js CVE patch, migrations 132/133/134, org backfill
+- [x] **Phase 24: DB Foundation** — Next.js CVE patch, migrations 132/133/134, org backfill ✓ 2026-02-18
 - [ ] **Phase 25: Billing Infrastructure** — Stripe Products, billing webhook handler, feature gates map
 - [ ] **Phase 26: Subdomain Routing** — Middleware wildcard DNS, subdomain extraction, security headers, branded login
 - [ ] **Phase 27: Branding — Web Portal** — BrandingProvider, SSR header injection, CSS custom properties, portal rebrand

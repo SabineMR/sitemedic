@@ -85,11 +85,11 @@ Foundation work that all subsequent phases depend on. No user-visible output —
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | Phase 24 | Pending |
-| INFRA-02 | Phase 24 | Pending |
-| INFRA-03 | Phase 24 | Pending |
-| INFRA-04 | Phase 24 | Pending |
-| INFRA-05 | Phase 24 | Pending |
+| INFRA-01 | Phase 24 | Complete |
+| INFRA-02 | Phase 24 | Complete |
+| INFRA-03 | Phase 24 | Complete |
+| INFRA-04 | Phase 24 | Complete |
+| INFRA-05 | Phase 24 | Complete |
 | SUB-01 | Phase 25 | Pending |
 | SUB-03 | Phase 25 | Pending |
 | GATE-01 | Phase 25 | Pending |
