@@ -2,12 +2,53 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Phase 25: Billing Infrastructure — feature gates, billing webhook handler, webhook_events migration)
+**Last Updated**: 2026-02-18 (Phase 27: Branding — Web Portal — BrandingProvider, CSS custom properties, portal rebrand)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
 
-## Recent Updates — Phase 25: Billing Infrastructure (2026-02-18)
+## Recent Updates — Phase 27: Branding — Web Portal (2026-02-18)
+
+### White-label branding applied to web portal
+
+Phase 27 delivers per-org branding across the dashboard and admin portal. All branding is resolved server-side via `x-org-*` headers from Phase 26 middleware — zero client-side branding fetches, no flash of unbranded content.
+
+**BrandingProvider Context (`web/contexts/branding-context.tsx`):**
+- `BrandingProvider` — client component providing org branding via React context
+- `useBranding()` hook — returns `Branding` interface (companyName, logoUrl, primaryColour, tagline, isSubdomain)
+- CSS custom property injection: renders `<style>:root { --org-primary: #hex }</style>` at root level
+- XSS defence: validates hex colour with `/^#[0-9a-fA-F]{6}$/` regex before injection; falls back to `#2563eb` (Tailwind blue-600)
+- `DEFAULT_BRANDING` — SiteMedic defaults: `#2563eb`, "SiteMedic", no logo, no tagline
+- Separate from `OrgContext` — BrandingContext is SSR-header-driven, OrgContext is JWT-driven
+
+**Root Layout Integration (`web/app/layout.tsx`):**
+- Reads 5 `x-org-*` headers server-side and passes to BrandingProvider wrapping all children
+- Dynamic tab titles via `generateMetadata()`: org portals show `[Company Name] — SiteMedic` (em dash), apex shows default SiteMedic title
+- Title template: child pages get `%s — [Company Name]` format automatically
+
+**Dashboard Layout Rebrand (`web/app/(dashboard)/layout.tsx`):**
+- Sidebar header shows org company name (fallback: "SiteMedic")
+- Org logo displayed when `x-org-logo-url` present; initials fallback in org-primary coloured square
+- Tagline from `x-org-tagline` (fallback: "Dashboard")
+- Server component reads headers directly — no hook needed
+
+**Admin Layout Rebrand (`web/app/admin/layout.tsx`):**
+- All hardcoded `blue-600`/`blue-700` accent colours replaced with `var(--org-primary)` CSS custom property
+- Brand icon: gradient replaced with solid org colour; shows org logo or dynamic 2-char initials
+- Active nav item: `bg-[color:var(--org-primary)]` with neutral `shadow-black/10`
+- User avatar: `bg-[color:var(--org-primary)]` replaces blue gradient
+- Loading spinners: `border-[color:var(--org-primary)]` replaces `border-blue-600`
+- Badge fallback: `bg-[color:var(--org-primary)]` replaces `bg-blue-500`
+- Company name and tagline dynamic from `useBranding()` hook
+- Zero remaining blue-600/blue-700/blue-500 references
+
+**Auth Layout Cleanup (`web/app/(auth)/layout.tsx`):**
+- Removed redundant inline `--org-primary` CSS injection (now handled at root level by BrandingProvider)
+- Simplified to pure layout component
+
+---
+
+## Previous Updates — Phase 25: Billing Infrastructure (2026-02-18)
 
 ### Subscription billing plumbing for three-tier model
 

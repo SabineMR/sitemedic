@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v3.0 White-Label Platform & Subscription Engine — Phase 25 complete; Phase 27 next (Branding — Web Portal)
+**Current focus:** v3.0 White-Label Platform & Subscription Engine — Phase 27 complete; Phase 28 next (Branding — PDFs & Emails)
 
 ## Current Position
 
-Phase: 25 of 31 (Billing Infrastructure — COMPLETE)
-Plan: 3 of 3 in Phase 25
-Status: Phase 25 complete — all 3 plans done (25-01 through 25-03)
-Last activity: 2026-02-18 — Completed 25-03-PLAN.md (billing webhook handler and webhook_events migration)
+Phase: 27 of 31 (Branding — Web Portal — COMPLETE)
+Plan: 3 of 3 in Phase 27
+Status: Phase 27 complete — all 3 plans done (27-01 through 27-03)
+Last activity: 2026-02-18 — Completed 27-03-PLAN.md (admin layout rebrand with CSS custom properties)
 
-Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [█████░░░░░] v3.0 ~38% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4 done)
+Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [██████░░░░] v3.0 ~50% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4, Phase 27: 3/3 done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 132 (84 v1.0 + 35 v1.1 + 30 v2.0 + 12 v3.0)
+- Total plans completed: 135 (84 v1.0 + 35 v1.1 + 30 v2.0 + 15 v3.0)
 - Average duration: 4.0 min
-- Total execution time: ~8.5 hours
+- Total execution time: ~8.7 hours
 
 **By Phase:**
 
@@ -33,9 +33,10 @@ Progress: [██████████] v1.0 complete | [██████�
 | 24 (v3.0) | 5/5 | ~6 min | ~1.2 min |
 | 25 (v3.0) | 3/3 | ~8 min | ~2.7 min |
 | 26 (v3.0) | 4/4 | ~8 min | ~2 min |
+| 27 (v3.0) | 3/3 | ~6 min | ~2 min |
 
 **Recent Trend:**
-- Last plan: 25-03 — billing webhook handler + webhook_events migration (~4 min)
+- Last plan: 27-03 — admin layout rebrand with CSS custom properties (~2 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -77,6 +78,10 @@ Progress: [██████████] v1.0 complete | [██████�
 - **25-03:** handlePaymentFailed does NOT change subscription_status — waits for customer.subscription.updated with 'past_due'
 - **25-03:** Out-of-order webhook protection via subscription_status_updated_at timestamp comparison
 - **25-03:** priceIdToTier() parses comma-separated STRIPE_PRICE_* env vars with .trim() for whitespace tolerance
+- **27-01:** BrandingProvider injects `<style>:root { --org-primary: #hex }</style>` at root level — XSS defence via hex regex validation
+- **27-01:** Root layout's generateMetadata() reads x-org-company-name header for dynamic title template with em dash separator
+- **27-02:** Dashboard sidebar reads headers directly (server component) — no useBranding() needed
+- **27-03:** Admin sidebar uses `bg-[color:var(--org-primary)]` pattern for all accent colours; `shadow-black/10` replaces `shadow-blue-500/20` (can't use CSS var in Tailwind shadow)
 
 ### Pending Todos
 
@@ -96,5 +101,5 @@ Progress: [██████████] v1.0 complete | [██████�
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed Phase 25 Billing Infrastructure — all 3 plans done; feature gates verified, webhook handler deployed
+Stopped at: Completed Phase 27 Branding — Web Portal — all 3 plans done; verification passed (human testing checklist in VERIFICATION.md)
 Resume file: None

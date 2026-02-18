@@ -43,7 +43,7 @@ See: `.planning/milestones/v2.0-ROADMAP.md`
 - [x] **Phase 24: DB Foundation** — Next.js CVE patch, migrations 132/133/134, org backfill ✓ 2026-02-18
 - [x] **Phase 25: Billing Infrastructure** — Stripe Products, billing webhook handler, feature gates map ✓ 2026-02-18
 - [x] **Phase 26: Subdomain Routing** — Middleware wildcard DNS, subdomain extraction, security headers, branded login ✓ 2026-02-18
-- [ ] **Phase 27: Branding — Web Portal** — BrandingProvider, SSR header injection, CSS custom properties, portal rebrand
+- [x] **Phase 27: Branding — Web Portal** — BrandingProvider, SSR header injection, CSS custom properties, portal rebrand ✓ 2026-02-18
 - [ ] **Phase 28: Branding — PDFs & Emails** — Org logo in all 8 PDF Edge Functions + all 3 email templates
 - [ ] **Phase 29: Org Onboarding Flow** — Signup page, Stripe Checkout, activation queue, welcome email
 - [ ] **Phase 30: Subscription Management & Feature Gating** — Tier gates in UI and API, Stripe Customer Portal, MRR dashboard, suspension flow
@@ -140,12 +140,12 @@ Plans:
 3. An org with no branding configured (null logo, null colour) sees the SiteMedic defaults throughout — no broken image placeholders, no missing colour variables
 4. The browser tab title for an org portal reads "[Company Name] — SiteMedic" — not the generic "SiteMedic" title
 
-**Plans:** TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 27-01: `BrandingContext` — create `web/contexts/branding-context.tsx` with `BrandingProvider` (client component reading SSR-passed branding props) and `useBranding()` hook; `<style>` tag rendering `:root { --org-primary: ${hex}; }` CSS custom property; fallback to SiteMedic defaults when no branding set
-- [ ] 27-02: Layout integration — update dashboard and admin root layouts to read `x-org-*` headers via `next/headers` and pass branding values to `BrandingProvider`; update `<head>` title template to include org company name
-- [ ] 27-03: Portal rebrand — update navigation header (logo swap, company name), sidebar (accent colour via `var(--org-primary)` CSS custom property), and browser tab title; all dynamic colours use `bg-[color:var(--org-primary)]` pattern — no Tailwind dynamic class name construction from runtime strings
+- [x] 27-01-PLAN.md — BrandingContext + Root Layout Integration: BrandingProvider with useBranding() hook, CSS custom property injection, root layout reads headers and wraps in provider, generateMetadata() for dynamic tab title
+- [x] 27-02-PLAN.md — Dashboard Layout Rebrand: sidebar header shows org company name, logo/initials, tagline from x-org-* headers
+- [x] 27-03-PLAN.md — Admin Layout Rebrand: replace all blue-600/blue-700 with var(--org-primary), logo swap, company name and tagline from useBranding()
 
 ---
 
