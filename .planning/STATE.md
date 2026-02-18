@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 20: Festivals / Events Vertical (active) + Phase 19 + 22 in progress
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 22: Football / Sports Vertical (active) + Phase 20 remaining
 
 ## Current Position
 
-Phase: 20 of 23 (Festivals / Events Vertical) — 20-03 complete
-Plan: 20-01, 20-02, 20-03 complete; 20-04 (festival compliance) remains
-Status: In progress — 20-03 (FEST-06 Purple Guide PDF backend) complete; 20-04 (compliance) remains
-Last activity: 2026-02-18 — Completed 20-03-PLAN.md: Purple Guide PDF document, mapping, storage bucket, 501 stub replaced
+Phase: 22 of 23 (Football / Sports Vertical) — 22-03 complete
+Plan: 22-01, 22-02, 22-03, 22-04 all complete — Phase 22 complete
+Status: Phase 22 complete — fa-incident-generator 501 stub replaced; FA player + SGSA spectator PDFs wired
+Last activity: 2026-02-18 — Completed 22-03-PLAN.md: FA/SGSA PDF routing, storage bucket migration 127, 4 new files
 
-Progress: [██████████] v1.1 complete | [████████░░] v2.0 16/27 plans (Phase 18 + 18.5 + 19-01 + 19-02 + 20-01 + 20-02 + 20-03 + 21 + 22-01 + 22-02 + 22-04 complete)
+Progress: [██████████] v1.1 complete | [████████░░] v2.0 17/27 plans (Phase 18 + 18.5 + 19-01 + 19-02 + 20-01 + 20-02 + 20-03 + 21 + 22-01 + 22-02 + 22-03 + 22-04 complete)
 
 ## Performance Metrics
 
@@ -32,10 +32,10 @@ Progress: [██████████] v1.1 complete | [██████�
 | 18–23 (v2.0) | 8/25 | ~10 min | ~1 min |
 
 **Recent Trend:**
-- Last plan: 20-03 — Purple Guide PDF (PurpleGuideDocument + mapping + storage + 501 stub replaced) (2 min)
+- Last plan: 22-03 — FA/SGSA incident PDF (FAPlayerDocument + FASpectatorDocument + mapping files + storage + 501 stub replaced) (8 min)
+- Phase 22 plans: 22-01 (football dual patient type form + HIA + FA severity), 22-02 (RIDDOR gate FOOT-04), 22-03 (FA/SGSA PDF), 22-04 (cert types + terminology) — ALL COMPLETE
 - Phase 20 plans so far: 20-01 (FEST-01/02 form fields), 20-02 (previously complete), 20-03 (FEST-06 Purple Guide PDF backend)
 - Phase 19 plans so far: 19-01 (MOTO-01/02/03 form + gate + alert), 19-02 (cert taxonomy + TreatmentWithWorker)
-- Phase 22 plans so far: 22-01 (football dual patient type form + HIA + FA severity), 22-02 (RIDDOR gate FOOT-04), 22-04 (cert types + terminology)
 - Trend: Stable — consistent 1–8 min for vertical surgical additions
 
 *Updated after each plan completion*
@@ -87,11 +87,14 @@ Key decisions affecting v2.0:
 - 20-03: upsert:true for event-incident-reports storage upload (vs F2508 upsert:false) — allows PDF regeneration without timestamp uniqueness constraint
 - 20-03: triageCategory defaults to 'P3' (Delayed/Green) when vertical_extra_fields null — safest assumption; PDF always renders
 - 20-03: RLS SELECT policy for event-incident-reports joins via treatments table (not a separate incidents table)
+- 22-03: Migration numbering gap — fa-incident-reports uses migration 127 (125 = event-incident-reports Phase 20, 126 = motorsport concussion Phase 19)
+- 22-03: React.createElement() used in fa-incident-generator index.ts (not JSX) — avoids JSX pragma in .ts Edge Function files
+- 22-03: fa-incident-generator routes patient_type='player' to FA Match Day Injury Form, 'spectator' to SGSA Medical Incident Report; missing patient_type returns 400
 
 ### Research Flags (Phase-Blocking)
 
 - **Phase 19 (Motorsport PDF):** Obtain physical Motorsport UK Accident Form from Incident Pack V8.0 before building `motorsport-incident-generator` Edge Function. Field names inferred from regulatory text only — do not build the PDF template without the actual form.
-- **Phase 22 (Football scope):** Confirm with client whether SGSA form is required for v2.0 (professional clubs) or only FA form (grassroots). Determines whether `fa-incident-generator` must output two formats.
+- **Phase 22 (Football scope) — RESOLVED:** Both FA Match Day Injury Form (player) and SGSA Medical Incident Report (spectator) implemented in 22-03. Both formats wired in fa-incident-generator routed by patient_type.
 - **Phase 23 (Compliance score formula):** Formula must be agreed and frozen before building the trend chart. Recommend: PostgreSQL view with `formula_version` column so historical scores remain interpretable after formula updates.
 
 ### Pending Todos
@@ -104,6 +107,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T04:21:04Z
-Stopped at: Completed 20-03-PLAN.md (Purple Guide PDF document + mapping + storage bucket + 501 stub replaced)
+Last session: 2026-02-18T04:26:40Z
+Stopped at: Completed 22-03-PLAN.md (FA/SGSA incident PDF routing + storage bucket migration 127 + 501 stub replaced)
 Resume file: None
