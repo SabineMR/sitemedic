@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v3.0 White-Label Platform & Subscription Engine — Phase 29 in progress (Org Onboarding Flow)
+**Current focus:** v3.0 White-Label Platform & Subscription Engine — Phase 29 complete; Phase 30 next (Subscription Management & Feature Gating)
 
 ## Current Position
 

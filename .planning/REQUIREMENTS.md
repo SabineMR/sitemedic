@@ -34,9 +34,9 @@ Foundation work that all subsequent phases depend on. No user-visible output —
 ### SUB — Subscription Engine
 
 - [x] **SUB-01**: Three Stripe Products/Prices exist in Stripe Dashboard: Starter £149/mo, Growth £299/mo, Enterprise £599/mo — price IDs stored as env vars (`STRIPE_PRICE_STARTER`, `STRIPE_PRICE_GROWTH`, `STRIPE_PRICE_ENTERPRISE`)
-- [ ] **SUB-02**: A new medic business can sign up at `sitemedic.co.uk/signup`, select a plan, and complete payment via Stripe Checkout — flow works end-to-end in test mode
+- [x] **SUB-02**: A new medic business can sign up at `sitemedic.co.uk/signup`, select a plan, and complete payment via Stripe Checkout — flow works end-to-end in test mode
 - [x] **SUB-03**: A dedicated `/api/stripe/billing-webhooks` endpoint (separate signing secret from Connect webhooks) handles subscription lifecycle events: `checkout.session.completed` creates the org record; `customer.subscription.updated` updates tier; `customer.subscription.deleted` suspends org access
-- [ ] **SUB-04**: Platform admin receives a notification and sees a pending activation queue when a new org signs up — can activate the org, assign slug, and trigger branding setup
+- [x] **SUB-04**: Platform admin receives a notification and sees a pending activation queue when a new org signs up — can activate the org, assign slug, and trigger branding setup
 - [ ] **SUB-05**: Org admin can access the Stripe Customer Portal from their settings page to manage billing (upgrade plan, update payment method, view invoices, cancel)
 - [ ] **SUB-06**: Platform admin dashboard shows all org subscriptions with plan, status, MRR summary, and churn indicators
 - [ ] **SUB-07**: When a subscription is cancelled or payment lapses, the org's access is gracefully suspended — admins see a "subscription inactive" screen, data is preserved, reactivation restores full access
@@ -50,10 +50,10 @@ Foundation work that all subsequent phases depend on. No user-visible output —
 
 ### ONBOARD — Org Onboarding Flow
 
-- [ ] **ONBOARD-01**: A public signup page at `sitemedic.co.uk/signup` allows a new medic business to create an account and select a subscription tier
-- [ ] **ONBOARD-02**: After Stripe Checkout completes, the new org admin is guided through a post-payment setup wizard: upload logo, pick brand colour, set company name, invite first medic
-- [ ] **ONBOARD-03**: Platform admin receives an email notification when a new org signs up and can activate the org from the platform admin panel (hybrid: org pays online, Sabine configures and activates)
-- [ ] **ONBOARD-04**: New org admin receives a welcome email after platform admin activation with login URL, subdomain, and getting-started guide
+- [x] **ONBOARD-01**: A public signup page at `sitemedic.co.uk/signup` allows a new medic business to create an account and select a subscription tier
+- [x] **ONBOARD-02**: After Stripe Checkout completes, the new org admin is guided through a post-payment setup wizard: upload logo, pick brand colour, set company name, invite first medic
+- [x] **ONBOARD-03**: Platform admin receives an email notification when a new org signs up and can activate the org from the platform admin panel (hybrid: org pays online, Sabine configures and activates)
+- [x] **ONBOARD-04**: New org admin receives a welcome email after platform admin activation with login URL, subdomain, and getting-started guide
 
 ## Future Requirements (v3.1+)
 
@@ -101,12 +101,12 @@ Foundation work that all subsequent phases depend on. No user-visible output —
 | BRAND-06 | Phase 27 | Complete |
 | BRAND-04 | Phase 28 | Complete |
 | BRAND-05 | Phase 28 | Complete |
-| SUB-02 | Phase 29 | Pending |
-| SUB-04 | Phase 29 | Pending |
-| ONBOARD-01 | Phase 29 | Pending |
-| ONBOARD-02 | Phase 29 | Pending |
-| ONBOARD-03 | Phase 29 | Pending |
-| ONBOARD-04 | Phase 29 | Pending |
+| SUB-02 | Phase 29 | Complete |
+| SUB-04 | Phase 29 | Complete |
+| ONBOARD-01 | Phase 29 | Complete |
+| ONBOARD-02 | Phase 29 | Complete |
+| ONBOARD-03 | Phase 29 | Complete |
+| ONBOARD-04 | Phase 29 | Complete |
 | GATE-02 | Phase 30 | Pending |
 | GATE-03 | Phase 30 | Pending |
 | GATE-04 | Phase 30 | Pending |

@@ -45,7 +45,7 @@ See: `.planning/milestones/v2.0-ROADMAP.md`
 - [x] **Phase 26: Subdomain Routing** — Middleware wildcard DNS, subdomain extraction, security headers, branded login ✓ 2026-02-18
 - [x] **Phase 27: Branding — Web Portal** — BrandingProvider, SSR header injection, CSS custom properties, portal rebrand ✓ 2026-02-18
 - [x] **Phase 28: Branding — PDFs & Emails** — Org logo in all 8 PDF Edge Functions + all 4 email templates ✓ 2026-02-18
-- [ ] **Phase 29: Org Onboarding Flow** — Signup page, Stripe Checkout, activation queue, welcome email
+- [x] **Phase 29: Org Onboarding Flow** — Signup page, Stripe Checkout, activation queue, welcome email ✓ 2026-02-18
 - [ ] **Phase 30: Subscription Management & Feature Gating** — Tier gates in UI and API, Stripe Customer Portal, MRR dashboard, suspension flow
 - [ ] **Phase 31: Branding Settings UI** — Org admin logo upload + colour picker, platform admin branding override
 
@@ -274,6 +274,6 @@ Note: Phases 27 and 28 can be parallelised once Phase 26 is deployed. Phase 30 a
 | 26. Subdomain Routing | v3.0 | 4/4 | Complete | 2026-02-18 |
 | 27. Branding — Web Portal | v3.0 | 3/3 | Complete | 2026-02-18 |
 | 28. Branding — PDFs & Emails | v3.0 | 3/3 | Complete | 2026-02-18 |
-| 29. Org Onboarding Flow | v3.0 | 1/5 | In progress | - |
+| 29. Org Onboarding Flow | v3.0 | 5/5 | Complete | 2026-02-18 |
 | 30. Subscription Management & Feature Gating | v3.0 | 0/5 | Not started | - |
 | 31. Branding Settings UI | v3.0 | 0/2 | Not started | - |
