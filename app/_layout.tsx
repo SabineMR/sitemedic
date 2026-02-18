@@ -21,6 +21,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { DatabaseProvider } from '@nozbe/watermelondb/react';
 import { AuthProvider } from '../src/contexts/AuthContext';
+import { OrgProvider } from '../src/contexts/OrgContext';
 import { SyncProvider } from '../src/contexts/SyncContext';
 import { initDatabase } from '../src/lib/watermelon';
 import { beaconService } from '../services/BeaconService';
@@ -86,78 +87,80 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <DatabaseProvider database={database}>
         <AuthProvider>
-          <SyncProvider>
-            <BottomSheetModalProvider>
-              <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-              {/* Emergency alert receiver — listens for push notifications on every screen */}
-              <EmergencyAlertReceiver />
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: '#FFFFFF' },
-                }}
-              >
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen
-                  name="treatment/[id]"
-                  options={{
-                    presentation: 'modal',
-                    headerShown: true,
-                    title: 'Treatment Details',
+          <OrgProvider>
+            <SyncProvider>
+              <BottomSheetModalProvider>
+                <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+                {/* Emergency alert receiver — listens for push notifications on every screen */}
+                <EmergencyAlertReceiver />
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: '#FFFFFF' },
                   }}
-                />
-                <Stack.Screen
-                  name="treatment/new"
-                  options={{
-                    presentation: 'modal',
-                    headerShown: true,
-                    title: 'New Treatment',
-                  }}
-                />
-                <Stack.Screen
-                  name="worker/[id]"
-                  options={{
-                    presentation: 'modal',
-                    headerShown: true,
-                    title: 'Worker Profile',
-                  }}
-                />
-                <Stack.Screen
-                  name="worker/new"
-                  options={{
-                    presentation: 'modal',
-                    headerShown: true,
-                    title: 'Add Worker',
-                  }}
-                />
-                <Stack.Screen
-                  name="worker/quick-add"
-                  options={{
-                    presentation: 'modal',
-                    headerShown: true,
-                    title: 'Quick Add Worker',
-                  }}
-                />
-                <Stack.Screen
-                  name="safety/near-miss"
-                  options={{
-                    presentation: 'modal',
-                    headerShown: true,
-                    title: 'Report Near-Miss',
-                  }}
-                />
-                <Stack.Screen
-                  name="safety/daily-check"
-                  options={{
-                    presentation: 'modal',
-                    headerShown: true,
-                    title: 'Daily Safety Check',
-                  }}
-                />
-              </Stack>
-            </BottomSheetModalProvider>
-          </SyncProvider>
+                >
+                  <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen
+                    name="treatment/[id]"
+                    options={{
+                      presentation: 'modal',
+                      headerShown: true,
+                      title: 'Treatment Details',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="treatment/new"
+                    options={{
+                      presentation: 'modal',
+                      headerShown: true,
+                      title: 'New Treatment',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="worker/[id]"
+                    options={{
+                      presentation: 'modal',
+                      headerShown: true,
+                      title: 'Worker Profile',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="worker/new"
+                    options={{
+                      presentation: 'modal',
+                      headerShown: true,
+                      title: 'Add Worker',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="worker/quick-add"
+                    options={{
+                      presentation: 'modal',
+                      headerShown: true,
+                      title: 'Quick Add Worker',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="safety/near-miss"
+                    options={{
+                      presentation: 'modal',
+                      headerShown: true,
+                      title: 'Report Near-Miss',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="safety/daily-check"
+                    options={{
+                      presentation: 'modal',
+                      headerShown: true,
+                      title: 'Daily Safety Check',
+                    }}
+                  />
+                </Stack>
+              </BottomSheetModalProvider>
+            </SyncProvider>
+          </OrgProvider>
         </AuthProvider>
       </DatabaseProvider>
       {/* SOSButton outside all providers — no stacking context interference */}
