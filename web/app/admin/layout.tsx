@@ -32,6 +32,7 @@ import {
   Shield,
   Bluetooth,
   Inbox,
+  FileSignature,
 } from 'lucide-react';
 import { QueryProvider } from '@/components/providers/query-provider';
 
@@ -162,6 +163,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: 'Medics',
       href: '/admin/medics',
       icon: <Users className="w-5 h-5" />,
+    },
+    {
+      name: 'Contracts',
+      href: '/admin/contracts',
+      icon: <FileSignature className="w-5 h-5" />,
     },
     {
       name: 'Customers',
