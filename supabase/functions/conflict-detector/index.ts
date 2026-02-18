@@ -63,6 +63,10 @@ serve(async (req: Request) => {
     const timeOffIssue = await checkTimeOffConflict(checkData);
     if (timeOffIssue) conflicts.push(timeOffIssue);
 
+    // Check 7: Google Calendar conflict
+    const gcalIssue = await checkGoogleCalendarConflict(checkData);
+    if (gcalIssue) conflicts.push(gcalIssue);
+
     // Categorize severity
     const criticalConflicts = conflicts.filter(c => c.severity === 'critical');
     const warnings = conflicts.filter(c => c.severity === 'warning');
@@ -258,6 +262,93 @@ async function checkTravelTime(check: ConflictCheck): Promise<Conflict | null> {
         };
       }
     }
+  }
+
+  return null;
+}
+
+async function checkGoogleCalendarConflict(check: ConflictCheck): Promise<Conflict | null> {
+  // Get medic's Google Calendar tokens
+  const { data: prefs } = await supabase
+    .from('medic_preferences')
+    .select('google_calendar_enabled, google_calendar_access_token, google_calendar_refresh_token, google_calendar_token_expires_at')
+    .eq('medic_id', check.medic_id)
+    .single();
+
+  if (!prefs || !prefs.google_calendar_enabled || !prefs.google_calendar_refresh_token) {
+    return null; // No Google Calendar connected
+  }
+
+  try {
+    // Refresh token if expired
+    let accessToken = prefs.google_calendar_access_token;
+    const expiresAt = prefs.google_calendar_token_expires_at
+      ? new Date(prefs.google_calendar_token_expires_at)
+      : new Date(0);
+
+    if (expiresAt.getTime() - 5 * 60 * 1000 <= Date.now()) {
+      const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: Deno.env.get('GOOGLE_CLIENT_ID') || '',
+          client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET') || '',
+          refresh_token: prefs.google_calendar_refresh_token,
+          grant_type: 'refresh_token',
+        }),
+      });
+
+      if (!tokenRes.ok) return null;
+      const tokens = await tokenRes.json();
+      accessToken = tokens.access_token;
+
+      // Update stored token
+      await supabase
+        .from('medic_preferences')
+        .update({
+          google_calendar_access_token: accessToken,
+          google_calendar_token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+        })
+        .eq('medic_id', check.medic_id);
+    }
+
+    // Call FreeBusy API for the shift time range
+    const timeMin = new Date(`${check.shift_date}T${check.shift_start_time}:00`).toISOString();
+    const timeMax = new Date(`${check.shift_date}T${check.shift_end_time}:00`).toISOString();
+
+    const freeBusyRes = await fetch('https://www.googleapis.com/calendar/v3/freeBusy', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        timeMin,
+        timeMax,
+        timeZone: 'Europe/London',
+        items: [{ id: 'primary' }],
+      }),
+    });
+
+    if (!freeBusyRes.ok) return null;
+
+    const freeBusyData = await freeBusyRes.json();
+    const busySlots = freeBusyData.calendars?.primary?.busy || [];
+
+    if (busySlots.length > 0) {
+      return {
+        type: 'google_calendar_conflict',
+        severity: 'warning',
+        message: `Medic has ${busySlots.length} Google Calendar event(s) during ${check.shift_start_time}-${check.shift_end_time}`,
+        details: {
+          busy_slots: busySlots,
+        },
+        can_override: true, // Warning only — external events may not be blocking
+      };
+    }
+  } catch (err) {
+    // Google Calendar check is best-effort — don't block assignment on failure
+    console.error('[ConflictDetector] Google Calendar check error:', err);
   }
 
   return null;
