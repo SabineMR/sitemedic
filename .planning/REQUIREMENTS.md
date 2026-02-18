@@ -99,8 +99,8 @@ Foundation work that all subsequent phases depend on. No user-visible output —
 | ROUTE-04 | Phase 26 | Complete |
 | BRAND-03 | Phase 27 | Complete |
 | BRAND-06 | Phase 27 | Complete |
-| BRAND-04 | Phase 28 | Pending |
-| BRAND-05 | Phase 28 | Pending |
+| BRAND-04 | Phase 28 | Complete |
+| BRAND-05 | Phase 28 | Complete |
 | SUB-02 | Phase 29 | Pending |
 | SUB-04 | Phase 29 | Pending |
 | ONBOARD-01 | Phase 29 | Pending |

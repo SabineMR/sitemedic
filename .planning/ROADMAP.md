@@ -44,7 +44,7 @@ See: `.planning/milestones/v2.0-ROADMAP.md`
 - [x] **Phase 25: Billing Infrastructure** — Stripe Products, billing webhook handler, feature gates map ✓ 2026-02-18
 - [x] **Phase 26: Subdomain Routing** — Middleware wildcard DNS, subdomain extraction, security headers, branded login ✓ 2026-02-18
 - [x] **Phase 27: Branding — Web Portal** — BrandingProvider, SSR header injection, CSS custom properties, portal rebrand ✓ 2026-02-18
-- [ ] **Phase 28: Branding — PDFs & Emails** — Org logo in all 8 PDF Edge Functions + all 4 email templates
+- [x] **Phase 28: Branding — PDFs & Emails** — Org logo in all 8 PDF Edge Functions + all 4 email templates ✓ 2026-02-18
 - [ ] **Phase 29: Org Onboarding Flow** — Signup page, Stripe Checkout, activation queue, welcome email
 - [ ] **Phase 30: Subscription Management & Feature Gating** — Tier gates in UI and API, Stripe Customer Portal, MRR dashboard, suspension flow
 - [ ] **Phase 31: Branding Settings UI** — Org admin logo upload + colour picker, platform admin branding override
@@ -168,9 +168,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 28-01-PLAN.md — Shared PDF branding infrastructure + pilot: create _shared/branding-helpers.ts (OrgBranding type, fetchOrgBranding, fetchLogoAsDataUri) and _shared/pdf-branding.tsx (BrandedPdfHeader, BrandedPdfFooter); integrate into generate-weekly-report as pilot test
-- [ ] 28-02-PLAN.md — PDF branding rollout: apply proven branding pattern to remaining 7 PDF Edge Functions (6 @react-pdf + 1 HTML template); each fetches org_branding and passes to document component
-- [ ] 28-03-PLAN.md — Email branding: create EmailBranding type; update 4 email templates (booking-confirmation, medic-assignment, booking-received, invoice-notification) with required branding prop; update 3 sending routes to fetch org_branding
+- [x] 28-01-PLAN.md — Shared PDF branding infrastructure + pilot: create _shared/branding-helpers.ts (OrgBranding type, fetchOrgBranding, fetchLogoAsDataUri) and _shared/pdf-branding.tsx (BrandedPdfHeader, BrandedPdfFooter); integrate into generate-weekly-report as pilot test
+- [x] 28-02-PLAN.md — PDF branding rollout: apply proven branding pattern to remaining 7 PDF Edge Functions (6 @react-pdf + 1 HTML template); each fetches org_branding and passes to document component
+- [x] 28-03-PLAN.md — Email branding: create EmailBranding type; update 4 email templates (booking-confirmation, medic-assignment, booking-received, invoice-notification) with required branding prop; update 3 sending routes to fetch org_branding
 
 ---
 
@@ -269,11 +269,11 @@ Note: Phases 27 and 28 can be parallelised once Phase 26 is deployed. Phase 30 a
 | 21. Film/TV Production Vertical | v2.0 | 2/2 | Complete | 2026-02-17 |
 | 22. Football / Sports Vertical | v2.0 | 5/5 | Complete | 2026-02-18 |
 | 23. Analytics — Heat Maps & Trend Charts | v2.0 | 7/7 | Complete | 2026-02-18 |
-| 24. DB Foundation | v3.0 | 0/5 | Not started | - |
-| 25. Billing Infrastructure | v3.0 | 0/3 | Not started | - |
+| 24. DB Foundation | v3.0 | 5/5 | Complete | 2026-02-18 |
+| 25. Billing Infrastructure | v3.0 | 3/3 | Complete | 2026-02-18 |
 | 26. Subdomain Routing | v3.0 | 4/4 | Complete | 2026-02-18 |
-| 27. Branding — Web Portal | v3.0 | 0/3 | Not started | - |
-| 28. Branding — PDFs & Emails | v3.0 | 0/3 | Not started | - |
-| 29. Org Onboarding Flow | v3.0 | 0/5 | Not started | - |
+| 27. Branding — Web Portal | v3.0 | 3/3 | Complete | 2026-02-18 |
+| 28. Branding — PDFs & Emails | v3.0 | 3/3 | Complete | 2026-02-18 |
+| 29. Org Onboarding Flow | v3.0 | 1/5 | In progress | - |
 | 30. Subscription Management & Feature Gating | v3.0 | 0/5 | Not started | - |
 | 31. Branding Settings UI | v3.0 | 0/2 | Not started | - |
