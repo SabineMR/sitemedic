@@ -2,12 +2,55 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Sprint 4 — SEO, Duplicate Booking Detection & Polish)
+**Last Updated**: 2026-02-18 (Sprint 5 — Data Integrity, Contracts Fix & Cancellation Email)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
 
-## Recent Updates — Sprint 4: SEO, Duplicate Detection & Polish (2026-02-18)
+## Recent Updates — Sprint 5: Data Integrity, Contracts Fix & Cancellation Email (2026-02-18)
+
+### Overview
+
+Sprint 5 of the gap analysis: fixes critical data integrity bugs in the contracts system and confirmation emails, adds a cancellation email notification, and persists admin notification preferences to the database.
+
+### Critical Bug Fixes
+
+| File | Bug | Fix |
+|------|-----|-----|
+| `web/app/api/email/booking-confirmation/route.ts:168` | Used `booking.total_price` (non-existent column) — confirmation emails showed £0.00 | Changed to `booking.total` |
+| `web/lib/contracts/queries.ts` | Both queries selected non-existent columns from bookings table: `total_price`, `address_line1`, `address_line2`, `city`, `postcode`, `service_type`, `scheduled_date`. Also wrong client columns: `name`, `email`, `phone`. **This broke the entire contracts feature at runtime.** | Mapped to real columns: `total`, `subtotal`, `vat`, `site_address`, `site_postcode`, `site_name`, `event_vertical`, `shift_date`, and `company_name`, `contact_email`, `contact_phone` |
+| `web/lib/contracts/types.ts` | `ContractWithRelations` interface had wrong field names matching the bad queries | Updated to match real DB schema |
+| `web/components/contracts/contract-viewer.tsx` | Displayed wrong fields (`address_line1`, `city`, `total_price`, `service_type`, `scheduled_date`) | Updated to `site_address`, `site_postcode`, `total`/`subtotal`/`vat`, `event_vertical`, `shift_date` |
+| `web/components/contracts/contract-detail.tsx` | Same wrong field references for client and booking data | Updated all references to match corrected types |
+| `web/components/contracts/contracts-table.tsx` | Table columns, search filter, and SendContractDialog mapping all used wrong field names | Updated `client.name` → `company_name`, `booking.address_line1` → `site_name`, `booking.total_price` → `total` |
+| `web/app/(dashboard)/contracts/[id]/page.tsx` | Page subtitle used `client?.name` and `booking?.address_line1` | Changed to `company_name` and `site_name` |
+| `web/app/admin/contracts/[id]/page.tsx` | Same subtitle issue | Same fix |
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/lib/email/templates/booking-cancelled-email.tsx` | React Email template for booking cancellation confirmation. Shows booking details, cancellation reason, and refund amount with policy explanation. Red-tinted details box. Org branding support. |
+| `web/lib/email/send-booking-cancelled.ts` | Fire-and-forget function to send cancellation email. Fetches booking + client + org branding, renders template, sends via Resend. Same pattern as `send-booking-received.ts`. |
+| `supabase/migrations/137_notification_preferences.sql` | Adds `notification_preferences` JSONB column to `org_settings` table. Default: all notifications enabled. |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/app/api/bookings/[id]/cancel/route.ts` | Added `sendBookingCancelledEmail()` call (fire-and-forget) after successful cancellation |
+| `web/app/api/admin/settings/route.ts` | Added `notification_preferences` to request body type, validation (must be object with known boolean keys), and update payload builder |
+| `web/app/admin/settings/page.tsx` | Removed localStorage persistence for notification prefs. Now loads from API response (`data.notification_preferences`) and saves via PUT `/api/admin/settings`. Toggle handler is now async with optimistic update + revert on failure. |
+
+### Key Details
+
+- **Contracts pricing now accurate**: The contract viewer/detail now shows real subtotal + VAT + total from the bookings table instead of reverse-calculating from a non-existent `total_price` field
+- **Cancellation email flow**: Client cancels booking → API processes cancellation + refund → `sendBookingCancelledEmail()` fires asynchronously → client receives branded email with refund details and policy explanation
+- **Notification preferences**: Shared across all admin users in the org (DB-backed). Supports 5 notification types: booking confirmations, RIDDOR alerts, certification expiry, payout summaries, cashflow alerts
+
+---
+
+## Previous Updates — Sprint 4: SEO, Duplicate Detection & Polish (2026-02-18)
 
 ### Overview
 

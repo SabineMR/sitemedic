@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireOrgId } from '@/lib/organizations/org-resolver';
 import { differenceInDays } from 'date-fns';
+import { sendBookingCancelledEmail } from '@/lib/email/send-booking-cancelled';
 
 export const dynamic = 'force-dynamic';
 
@@ -134,6 +135,16 @@ export async function POST(
         }
       }
     }
+
+    // Fire-and-forget: send cancellation confirmation email to client
+    sendBookingCancelledEmail({
+      bookingId,
+      refundPercent,
+      refundAmount,
+      reason: body.reason,
+    }).catch((err) =>
+      console.error('Failed to send cancellation email:', err)
+    );
 
     return NextResponse.json({
       success: true,

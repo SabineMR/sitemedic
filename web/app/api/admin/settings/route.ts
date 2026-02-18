@@ -58,6 +58,8 @@ export async function PUT(request: NextRequest) {
       mileage_enabled?: unknown;
       mileage_rate_pence?: unknown;
       referral_commission_percent?: unknown;
+      // Notification preferences
+      notification_preferences?: unknown;
     };
 
     try {
@@ -180,6 +182,32 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    // Validate notification_preferences: if provided must be an object with boolean values
+    if (body.notification_preferences !== undefined) {
+      if (typeof body.notification_preferences !== 'object' || body.notification_preferences === null || Array.isArray(body.notification_preferences)) {
+        return NextResponse.json(
+          { error: 'notification_preferences must be a JSON object' },
+          { status: 400 }
+        );
+      }
+      const validKeys = new Set(['booking_confirmations', 'riddor_alerts', 'cert_expiry', 'payout_summaries', 'cashflow_alerts']);
+      const prefs = body.notification_preferences as Record<string, unknown>;
+      for (const [key, val] of Object.entries(prefs)) {
+        if (!validKeys.has(key)) {
+          return NextResponse.json(
+            { error: `notification_preferences contains unknown key: ${key}` },
+            { status: 400 }
+          );
+        }
+        if (typeof val !== 'boolean') {
+          return NextResponse.json(
+            { error: `notification_preferences.${key} must be a boolean` },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
     // Validate industry_verticals: must be non-empty array of known vertical IDs
     if (body.industry_verticals !== undefined) {
       if (!Array.isArray(body.industry_verticals) || body.industry_verticals.length === 0) {
@@ -220,6 +248,7 @@ export async function PUT(request: NextRequest) {
     if (body.mileage_enabled !== undefined) updatePayload.mileage_enabled = Boolean(body.mileage_enabled);
     if (body.mileage_rate_pence !== undefined) updatePayload.mileage_rate_pence = Number(body.mileage_rate_pence);
     if (body.referral_commission_percent !== undefined) updatePayload.referral_commission_percent = Number(body.referral_commission_percent);
+    if (body.notification_preferences !== undefined) updatePayload.notification_preferences = body.notification_preferences;
 
     const { data, error } = await supabase
       .from('org_settings')

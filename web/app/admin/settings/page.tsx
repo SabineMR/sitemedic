@@ -83,8 +83,8 @@ export default function SettingsPage() {
   const [mileageRatePence, setMileageRatePence] = useState(45);
   const [referralCommissionPercent, setReferralCommissionPercent] = useState(10);
 
-  // Notification preferences — persisted to localStorage until DB columns are added
-  const NOTIF_STORAGE_KEY = 'sitemedic_notification_prefs';
+  // Notification preferences — persisted to org_settings DB column
+  const [savingNotifs, setSavingNotifs] = useState(false);
   const defaultNotifPrefs = {
     booking_confirmations: true,
     riddor_alerts: true,
@@ -133,6 +133,10 @@ export default function SettingsPage() {
         setMileageEnabled(data.mileage_enabled ?? true);
         setMileageRatePence(data.mileage_rate_pence ?? 45);
         setReferralCommissionPercent(data.referral_commission_percent ?? 10);
+        // Notification preferences from DB
+        if (data.notification_preferences) {
+          setNotifPrefs({ ...defaultNotifPrefs, ...data.notification_preferences });
+        }
       } catch (err) {
         console.error('Error fetching settings:', err);
         toast.error('Could not load business configuration');
@@ -142,12 +146,6 @@ export default function SettingsPage() {
     }
 
     fetchSettings();
-
-    // Load notification prefs from localStorage
-    try {
-      const stored = localStorage.getItem(NOTIF_STORAGE_KEY);
-      if (stored) setNotifPrefs(JSON.parse(stored));
-    } catch { /* ignore parse errors */ }
 
     // Fetch subscription
     async function fetchSubscription() {
@@ -403,13 +401,25 @@ export default function SettingsPage() {
     }
   }
 
-  function handleNotifToggle(key: keyof typeof defaultNotifPrefs) {
-    setNotifPrefs((prev) => {
-      const next = { ...prev, [key]: !prev[key] };
-      localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(next));
+  async function handleNotifToggle(key: keyof typeof defaultNotifPrefs) {
+    const next = { ...notifPrefs, [key]: !notifPrefs[key] };
+    setNotifPrefs(next);
+    setSavingNotifs(true);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notification_preferences: next }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
       toast.success(`${next[key] ? 'Enabled' : 'Disabled'} notification`);
-      return next;
-    });
+    } catch {
+      // Revert on failure
+      setNotifPrefs(notifPrefs);
+      toast.error('Failed to save notification preference');
+    } finally {
+      setSavingNotifs(false);
+    }
   }
 
   return (
