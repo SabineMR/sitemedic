@@ -2,8 +2,57 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Org Onboarding — Post-Payment Wizard & Middleware)
+**Last Updated**: 2026-02-18 (Org Onboarding — Platform Admin Activation Queue)
 **Audience**: Web developers, technical reviewers, product team
+
+---
+
+## Recent Updates — Platform Admin Org Activation (2026-02-18)
+
+### Overview
+
+Platform admin activation queue and API route for reviewing and approving new org signups. This is the "human in the loop" quality control step. Platform admin sees pending orgs (paid but not activated), assigns subdomains for Growth/Enterprise tiers, and activates them — which sets `onboarding_completed=true`, unlocks middleware gate, and sends welcome email.
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/app/api/platform/organizations/activate/route.ts` | POST handler for org activation. Auth check (platform_admin role), slug validation/uniqueness for Growth/Enterprise, sets `onboarding_completed=true`, fetches org admin profile for welcome email, calls `sendWelcomeEmail()`. Returns success with slug and email status |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/app/platform/organizations/page.tsx` | Added pending activation queue above search bar. Fetches orgs with `onboarding_completed=false` and active subscription. Shows company name (from org_branding join), tier badge (colour-coded), signup date, Stripe Dashboard link, slug input (Growth/Enterprise), and Activate button with loading state. Removes org from pending list on successful activation and refreshes active orgs |
+| `FEATURES.md` | Updated with platform admin activation documentation |
+
+### Key Features
+
+- **Pending Activation Queue**: Amber-themed section at top of organizations page showing orgs awaiting manual review. Only appears when pending orgs exist
+- **Tier Badges**: Colour-coded badges — Starter (gray), Growth (blue), Enterprise (purple) — on both pending and active org cards
+- **Slug Assignment**: Text input for Growth/Enterprise orgs to set subdomain (e.g., `my-company.sitemedic.co.uk`). Pre-populated with slugified company name. Server validates format (3-30 chars, lowercase alphanumeric + hyphens) and uniqueness
+- **Stripe Dashboard Link**: Direct link to customer in Stripe test dashboard for payment verification
+- **Activation API**: `POST /api/platform/organizations/activate` — requires `platform_admin` role, validates slug for Growth/Enterprise, sets `onboarding_completed=true`, sends welcome email
+- **Welcome Email Integration**: On activation, fetches org admin profile (name + email) and org branding (company name), sends branded welcome email via Resend
+- **Optimistic UI**: Org removed from pending queue immediately on activation success; active orgs list refreshed in background
+- **Error Handling**: Toast notifications for success/failure, loading spinners during activation, validation messages for missing/invalid slugs
+
+### Activation Flow
+
+```
+Platform Admin visits /platform/organizations
+-> Sees amber "Pending Activation" section with new signups
+-> Reviews org details, checks Stripe Dashboard link
+-> For Growth/Enterprise: enters/confirms subdomain slug
+-> Clicks "Activate"
+-> API validates platform_admin role
+-> API validates slug format + uniqueness (Growth/Enterprise)
+-> API sets onboarding_completed=true (+ slug for Growth/Enterprise)
+-> API fetches org admin profile + branding
+-> API sends welcome email
+-> Org moves from pending queue to active orgs grid
+-> Org admin's middleware gate unlocks -> redirected to /admin
+```
 
 ---
 
