@@ -2,8 +2,50 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Gap analysis & fixes: 15 codebase gaps identified and resolved — payment form bug fix, admin settings persistence, postcode validation, empty states, medic detail page, branding UI, subscription billing, referral fields, booking confirmation verification)
+**Last Updated**: 2026-02-18 (Phase 26: Subdomain routing — middleware subdomain extraction, org header injection, branded login page, cookie scope isolation)
 **Audience**: Web developers, technical reviewers, product team
+
+---
+
+## Recent Updates — Phase 26: Subdomain Routing (2026-02-18)
+
+### White-label subdomain infrastructure for multi-tenant org portals
+
+Each subscribing org on Growth or Enterprise tier gets their own subdomain at `slug.sitemedic.co.uk`. The Next.js middleware extracts the subdomain, resolves the org from the database, and injects org context headers that all SSR pages consume.
+
+**Middleware Subdomain Extraction (`web/lib/supabase/middleware.ts`):**
+- `extractSubdomain()` helper parses subdomain from host header — handles apex domain, www, Vercel preview deploys, and localhost dev
+- All `x-org-*` headers stripped at top of middleware before any processing (CVE-2025-29927 header injection mitigation)
+- Service-role Supabase client performs org lookup by slug with joined branding query (single DB call)
+- Injects 7 org context headers: `x-org-id`, `x-org-slug`, `x-org-tier`, `x-org-company-name`, `x-org-primary-colour`, `x-org-logo-url`, `x-org-tagline`
+- Unknown subdomains redirect to apex domain root (not 404)
+- Dynamic import of `@supabase/supabase-js` — only loaded when subdomain is detected
+
+**Branded Login Page:**
+- `web/app/(auth)/login/page.tsx` — converted to server component that reads `x-org-*` headers via `next/headers`
+- `web/app/(auth)/login/login-form.tsx` — new client component receiving branding props from server page
+- Subdomain login shows: org company name (card title), org tagline (subtitle), org logo (above title), "Powered by SiteMedic" footer
+- Apex domain login shows SiteMedic defaults unchanged
+- Auth layout injects `--org-primary` CSS custom property for branded accent colours
+
+**Auth Cookie Scope Isolation:**
+- Supabase SSR cookies scoped to exact hostname (no `.sitemedic.co.uk` domain widening)
+- Session at `apex.sitemedic.co.uk` does NOT carry to `another.sitemedic.co.uk`
+- Signout route updated to use request origin (not hardcoded URL) for subdomain support
+
+**Environment Configuration:**
+- `NEXT_PUBLIC_ROOT_DOMAIN` env var — `sitemedic.co.uk` (production) / `localhost:30500` (development)
+- `SUPABASE_SERVICE_ROLE_KEY` used by middleware for org lookup (bypasses RLS)
+- Vercel wildcard domain `*.sitemedic.co.uk` required for production (DNS CNAME to cname.vercel-dns.com)
+
+| File | Change |
+|---|---|
+| `web/lib/supabase/middleware.ts` | Added `extractSubdomain()`, header stripping, service-role org+branding lookup, x-org-* header injection, unknown slug redirect |
+| `web/app/(auth)/login/page.tsx` | Converted to server component reading x-org-* headers |
+| `web/app/(auth)/login/login-form.tsx` | **New** — client login form with branding props |
+| `web/app/(auth)/layout.tsx` | Reads x-org-primary-colour, injects CSS custom property |
+| `web/app/api/auth/signout/route.ts` | Fixed to use request origin for subdomain redirect |
+| `web/.env.local.example` | Added `NEXT_PUBLIC_ROOT_DOMAIN` documentation |
 
 ---
 
