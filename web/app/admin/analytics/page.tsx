@@ -31,6 +31,11 @@ const TerritoryMapDynamic = dynamic(
   { ssr: false, loading: () => <div className="h-[500px] bg-gray-800 rounded-lg animate-pulse" /> }
 );
 
+const AdminNearMissHeatMapDynamic = dynamic(
+  () => import('@/components/analytics/AdminNearMissHeatMap'),
+  { ssr: false, loading: () => <div className="h-[500px] bg-gray-800 rounded-lg animate-pulse" /> }
+);
+
 interface SystemMetrics {
   period_start: string;
   period_end: string;
@@ -159,7 +164,7 @@ export default function AnalyticsPage() {
   const [geofences, setGeofences] = useState<GeofencePerformance[]>([]);
   const [alerts, setAlerts] = useState<AlertSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'medics' | 'geofences' | 'alerts' | 'territory' | 'assignments' | 'utilisation'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'medics' | 'geofences' | 'alerts' | 'territory' | 'assignments' | 'utilisation' | 'heat-map'>('overview');
 
   useEffect(() => {
     loadAnalytics();
@@ -215,7 +220,7 @@ export default function AnalyticsPage() {
   };
 
   // New tabs render independently of the legacy metrics loading state
-  const isNewTab = activeTab === 'territory' || activeTab === 'assignments' || activeTab === 'utilisation';
+  const isNewTab = activeTab === 'territory' || activeTab === 'assignments' || activeTab === 'utilisation' || activeTab === 'heat-map';
 
   if (loading && !isNewTab) {
     return (
@@ -247,7 +252,7 @@ export default function AnalyticsPage() {
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6 border-b border-gray-700 flex-wrap">
-        {(['overview', 'medics', 'geofences', 'alerts', 'territory', 'assignments', 'utilisation'] as const).map((tab) => (
+        {(['overview', 'medics', 'geofences', 'alerts', 'territory', 'assignments', 'utilisation', 'heat-map'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -257,7 +262,7 @@ export default function AnalyticsPage() {
                 : 'text-gray-400 hover:text-white'
             }`}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab === 'heat-map' ? 'Heat Map' : tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </div>
@@ -526,6 +531,22 @@ export default function AnalyticsPage() {
 
       {/* Utilisation Tab */}
       {activeTab === 'utilisation' && <UtilisationTab />}
+
+      {/* Heat Map Tab */}
+      {activeTab === 'heat-map' && (
+        <div className="space-y-6">
+          <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <h2 className="text-xl font-semibold mb-4">Near-Miss Heat Map (All Organisations)</h2>
+            <p className="text-gray-400 text-sm mb-4">
+              Geographic distribution of near-miss incidents across all organisations. Colour
+              represents organisation, size represents severity.
+            </p>
+            <div className="h-[500px]">
+              <AdminNearMissHeatMapDynamic />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
