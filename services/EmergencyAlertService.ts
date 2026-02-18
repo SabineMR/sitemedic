@@ -123,6 +123,12 @@ class EmergencyAlertService {
   private streamActive = false;
   private streamOnTranscript: ((delta: string) => void) | null = null;
   private streamOnError: (() => void) | null = null;
+  // Fallback: if streaming produces no transcript within this window, switch
+  // to the HTTP chunked Whisper path so the medic always gets transcription.
+  private streamFallbackTimer: ReturnType<typeof setTimeout> | null = null;
+  private streamHasTranscript = false;
+  // True when we fell back from streaming to HTTP chunks mid-session.
+  private _streamUsedHttpFallback = false;
 
   /**
    * Request notification and microphone permissions.
@@ -636,26 +642,56 @@ class EmergencyAlertService {
     const ws = new WebSocket(wsUrl);
     this.streamWs = ws;
 
+    // Fallback: if no transcript arrives within 8s, the streaming path is
+    // broken (bad WebSocket, OpenAI error, etc.) — automatically switch to
+    // the reliable HTTP chunked Whisper path so the medic is never silent.
+    const STREAMING_FALLBACK_MS = 8_000;
+    this.streamHasTranscript = false;
+    this.streamFallbackTimer = setTimeout(() => {
+      if (!this.streamHasTranscript && this.streamActive) {
+        console.warn('[EmergencyAlert] Streaming produced no transcript in 8s — falling back to HTTP chunks');
+        this._activateHttpFallback(onAutoStop, onError);
+      }
+    }, STREAMING_FALLBACK_MS);
+
     ws.onopen = () => console.log('[EmergencyAlert] Streaming WS open');
 
     ws.onmessage = (ev) => {
       try {
         const msg = JSON.parse(ev.data as string);
         if (msg.type === 'transcript_delta' && msg.delta) {
+          this.streamHasTranscript = true;
+          if (this.streamFallbackTimer) {
+            clearTimeout(this.streamFallbackTimer);
+            this.streamFallbackTimer = null;
+          }
           this.streamOnTranscript?.(msg.delta);
+        } else if (msg.type === 'transcript_done' && msg.transcript) {
+          this.streamHasTranscript = true;
+          if (this.streamFallbackTimer) {
+            clearTimeout(this.streamFallbackTimer);
+            this.streamFallbackTimer = null;
+          }
         } else if (msg.type === 'error') {
-          console.warn('[EmergencyAlert] Streaming error:', msg.message);
+          console.warn('[EmergencyAlert] Streaming error from OpenAI:', msg.message);
           this.streamOnError?.();
         }
       } catch (_) {}
     };
 
-    ws.onerror = () => {
-      console.warn('[EmergencyAlert] Streaming WS error');
-      this.streamOnError?.();
+    ws.onerror = (e) => {
+      console.warn('[EmergencyAlert] Streaming WS error — activating fallback');
+      this._activateHttpFallback(onAutoStop, onError);
     };
 
-    ws.onclose = () => console.log('[EmergencyAlert] Streaming WS closed');
+    ws.onclose = () => {
+      console.log('[EmergencyAlert] Streaming WS closed');
+      // If the WS closes before we ever got a transcript AND we're still
+      // recording, activate fallback (handles server-side close/rejection).
+      if (this.streamActive && !this.streamHasTranscript) {
+        this._activateHttpFallback(onAutoStop, onError);
+      }
+    };
 
     // Start recording and rotation
     await this._startPcmChunk();
@@ -733,11 +769,94 @@ class EmergencyAlertService {
   }
 
   /**
+   * Tear down the streaming WebSocket and PCM recording, switch to the standard
+   * HTTP chunked Whisper path. Called automatically if streaming stalls.
+   */
+  private _activateHttpFallback(
+    onAutoStop: () => void,
+    onError?: () => void,
+  ): void {
+    // Avoid re-entrant fallback calls
+    if (!this.streamActive || this._streamUsedHttpFallback) return;
+    this._streamUsedHttpFallback = true;
+
+    // Cancel the fallback timer if still pending
+    if (this.streamFallbackTimer) {
+      clearTimeout(this.streamFallbackTimer);
+      this.streamFallbackTimer = null;
+    }
+
+    // Tear down PCM recording / rotation
+    if (this.rotationInterval) {
+      clearInterval(this.rotationInterval);
+      this.rotationInterval = null;
+    }
+    if (this.stopRecordingTimeout) {
+      clearTimeout(this.stopRecordingTimeout);
+      this.stopRecordingTimeout = null;
+    }
+    if (this.recording) {
+      this.recording.stopAndUnloadAsync().catch(() => {});
+      this.recording = null;
+    }
+
+    // Close the WebSocket without triggering the onclose fallback loop
+    if (this.streamWs) {
+      this.streamWs.onclose = null;
+      this.streamWs.onerror = null;
+      if (this.streamWs.readyState === WebSocket.OPEN) this.streamWs.close();
+      this.streamWs = null;
+    }
+
+    // Re-use the existing HTTP chunked path — pass through the delta callback
+    const deltaCallback = this.streamOnTranscript;
+    this.streamOnTranscript = null;
+    this.streamOnError = null;
+
+    if (!deltaCallback) return;
+
+    console.log('[EmergencyAlert] Switching to HTTP Whisper fallback path');
+    // startRecording takes a full-chunk callback (not delta), so wrap to append
+    this.startRecording(
+      (chunk) => deltaCallback(chunk + ' '),
+      onAutoStop,
+      onError,
+    ).catch((err) => {
+      console.warn('[EmergencyAlert] HTTP fallback startRecording failed:', err);
+      onError?.();
+    });
+  }
+
+  /**
    * Stop streaming transcription and return the URI of the final audio chunk
    * (for optional upload to Supabase Storage).
+   *
+   * If the session silently fell back to HTTP chunks, this delegates to
+   * stopRecording() so the correct cleanup path runs.
    */
   async stopStreamingTranscription(): Promise<string | null> {
+    // If we fell back to HTTP chunks mid-session, delegate to stopRecording
+    if (this._streamUsedHttpFallback) {
+      this.streamActive = false;
+      this._streamUsedHttpFallback = false;
+      if (this.streamFallbackTimer) {
+        clearTimeout(this.streamFallbackTimer);
+        this.streamFallbackTimer = null;
+      }
+      // WebSocket is already closed by _activateHttpFallback
+      this.streamWs = null;
+      this.streamOnTranscript = null;
+      this.streamOnError = null;
+      return this.stopRecording();
+    }
+
     this.streamActive = false;
+    this._streamUsedHttpFallback = false;
+
+    if (this.streamFallbackTimer) {
+      clearTimeout(this.streamFallbackTimer);
+      this.streamFallbackTimer = null;
+    }
 
     if (this.stopRecordingTimeout) {
       clearTimeout(this.stopRecordingTimeout);

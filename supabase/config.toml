@@ -98,7 +98,10 @@ inactivity_timeout = "168h"
 
 [edge_runtime]
 enabled = true
-policy = "oneshot"
+# per_worker keeps Deno processes alive for long-lived WebSocket connections
+# (e.g. realtime-transcribe). "oneshot" terminates the process after the
+# HTTP upgrade handshake response, killing the WebSocket before events fire.
+policy = "per_worker"
 inspector_port = 8083
 
 # Disable JWT verification for the transcription edge function in local dev.

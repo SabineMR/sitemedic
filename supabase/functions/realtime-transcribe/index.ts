@@ -21,9 +21,9 @@
  */
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-// Use the stable snapshot to avoid unexpected behaviour from rolling model updates.
+// Use the rolling alias — it always points to the latest stable snapshot.
 const OPENAI_REALTIME_URL =
-  'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17';
+  'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview';
 
 Deno.serve(async (req: Request) => {
   const corsHeaders = {
@@ -66,6 +66,10 @@ Deno.serve(async (req: Request) => {
     console.log('[Realtime] OpenAI WebSocket connected');
 
     // Transcription-only session: server VAD, no model response generated.
+    // - create_response: false prevents the model from auto-responding after each turn.
+    // - input_audio_transcription enables the delta/completed transcript events.
+    // - max_response_output_tokens is intentionally omitted — 0 is invalid and
+    //   causes a session.update error from OpenAI.
     openaiWs.send(
       JSON.stringify({
         type: 'session.update',
@@ -80,10 +84,8 @@ Deno.serve(async (req: Request) => {
             threshold: 0.5,
             prefix_padding_ms: 200,
             silence_duration_ms: 400,
+            create_response: false,
           },
-          // Prevent the model from generating spoken/text responses.
-          instructions: 'You are a transcription-only assistant. Never respond.',
-          max_response_output_tokens: 0,
         },
       }),
     );

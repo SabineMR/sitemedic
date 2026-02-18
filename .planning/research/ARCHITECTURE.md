@@ -1,834 +1,979 @@
-# Architecture Patterns: Multi-Vertical Integration
+# Architecture Patterns: White-Label Multi-Tenancy
 
-**Domain:** SiteMedic v2.0 — Multi-vertical expansion (Film/TV, Festivals, Motorsport, Sporting Events)
-**Researched:** 2026-02-17
-**Supersedes:** General offline-first architecture (2026-02-15) for this milestone
-**Confidence:** HIGH — all findings verified against actual source files read during this session
-
----
-
-## What Already Exists vs What Needs to Be Built
-
-This inventory was produced by reading the actual source files. All "already exists" claims
-are HIGH confidence because they cite a specific file and line range that was read.
-
-### Already Exists (Do Not Rebuild)
-
-| Artifact | Location | Notes |
-|----------|----------|-------|
-| `VERTICAL_COMPLIANCE` record with 10 verticals fully populated | `services/taxonomy/vertical-compliance.ts` | Mirrored identically to `web/lib/compliance/vertical-compliance.ts` |
-| `getVerticalCompliance()`, `getPostTreatmentGuidance()`, `isRIDDORVertical()` | Both mobile and web taxonomy files | Pure functions, no side effects |
-| `MECHANISM_PRESETS_BY_VERTICAL` for all 10 verticals | `services/taxonomy/mechanism-presets.ts` | Used in `new.tsx` line 393 |
-| `getPatientLabel()` — "Worker" / "Crew member" / "Attendee" / etc. | `services/taxonomy/vertical-outcome-labels.ts` line 120 | Used in `new.tsx` line 395 |
-| `getVerticalOutcomeCategories()` — outcome label overrides per vertical | Same file | Used in `new.tsx` line 394 |
-| `CERT_TYPES` / `CERT_TYPE_INFO` (mobile) | `services/taxonomy/certification-types.ts` | 32 cert types across 7 categories |
-| `UK_CERT_TYPES` / `CERT_TYPE_METADATA` (web) | `web/types/certification.types.ts` | Same 32 types, adds `renewalUrl` |
-| `VERTICAL_CERT_TYPES` per-vertical recommended cert lists | Both files | `getRecommendedCertTypes()` function also exists |
-| `VerticalId` TypeScript union type | `web/contexts/org-context.tsx` line 25 | 10 valid vertical strings |
-| `industryVerticals: VerticalId[]` on OrgContext (web) | `web/contexts/org-context.tsx` line 47 | Fetches from `org_settings` on auth |
-| Vertical-aware treatment form in `new.tsx` | `app/treatment/new.tsx` | Already uses presets/labels dynamically |
-| Ad-hoc `fetchOrgVertical()` in treatment form | `app/treatment/new.tsx` lines 93–113 | Works but is per-render, should be replaced by OrgContext |
-| Vertical-aware RIDDOR page | `web/app/(dashboard)/riddor/page.tsx` | Uses `useOrg().industryVerticals[0]` |
-| `bookings.event_vertical` column | `supabase/migrations/123_booking_briefs.sql` | Schema column added |
-| `booking_briefs.extra_fields JSONB` | Same migration | Vertical-specific brief data |
-| Recharts (`^3.7.0`) | `web/package.json` line 53 | Used in 4 existing chart components |
-| Leaflet + react-leaflet | `web/package.json` lines 44, 51 | Used in geofence and tracking maps |
-| `dynamic(..., { ssr: false })` Leaflet pattern | `web/components/admin/GeofenceMapPicker.tsx` line 1 comment | Established pattern |
-| `@react-pdf/renderer@4.3.2` in Edge Functions | `generate-weekly-report/index.tsx` line 14 | Established — `renderToBuffer()` pattern |
-| Existing F2508 PDF Edge Function | `supabase/functions/riddor-f2508-generator/` | Full directory with components/, types.ts |
-| Weekly report PDF Edge Function | `supabase/functions/generate-weekly-report/` | Full directory pattern |
-| `OrgProvider` + `useOrg()` hook (web) | `web/contexts/org-context.tsx` | Complete, wraps app root layout |
-| `AuthProvider` + `useAuth()` hook (mobile) | `src/contexts/AuthContext.tsx` | Established, in `app/_layout.tsx` |
-| Root layout provider tree | `app/_layout.tsx` | GestureHandlerRoot → DatabaseProvider → AuthProvider → SyncProvider |
-| WatermelonDB schema v3 | `src/database/schema.ts` | 6 tables, no `event_vertical` or GPS columns |
-| WatermelonDB migrations to v3 | `src/database/migrations.ts` | v2 (worker columns), v3 (audit_log table) |
-| `near_misses` table has `location TEXT` only — no GPS coords | `supabase/migrations/00003_health_data_tables.sql` line 85 | Free-text description only |
-| `GET/PATCH /api/medics/[id]/certifications` API route | `web/app/api/medics/[id]/certifications/route.ts` | Annotates with status + renewal_url |
-
-### Must Be Built
-
-| What | File Path | Depends On |
-|------|-----------|-----------|
-| Mobile `OrgContext` + `useOrg()` hook | `src/contexts/OrgContext.tsx` (new) | AuthContext (user session for org_id) |
-| Register `OrgProvider` in root layout | `app/_layout.tsx` (update) | OrgContext |
-| `useVerticalLabels()` hook (mobile) | `src/hooks/useVerticalLabels.ts` (new) | OrgContext |
-| Replace ad-hoc `fetchOrgVertical()` in `new.tsx` | `app/treatment/new.tsx` (update lines 80–113) | OrgContext |
-| WatermelonDB schema v4 | `src/database/schema.ts` + `migrations.ts` | None (prerequisite for everything below) |
-| `event_vertical` column in WatermelonDB `treatments` | Schema v4 migration | Schema v4 |
-| GPS columns (`gps_lat`, `gps_lng`) in WatermelonDB `near_misses` | Schema v4 migration | Schema v4 |
-| GPS columns on Supabase `near_misses` table | New SQL migration | Schema v4 |
-| GPS capture in near-miss form | `app/safety/near-miss.tsx` (update) | expo-location (already in Expo SDK) |
-| Vertical-specific conditional sections in treatment form | `app/treatment/new.tsx` (update) | OrgContext, schema v4 |
-| `vertical_extra_fields` column on Supabase `treatments` | New SQL migration | None |
-| `vertical_extra_fields` WatermelonDB column | Schema v4 | Above |
-| `useVerticalLabels()` hook (web) | `web/hooks/useVerticalLabels.ts` (new) | Existing OrgContext |
-| Cert profile UI ordering by vertical | `web/app/medic/profile/page.tsx` (update) | `VERTICAL_CERT_TYPES` (exists) |
-| `compliance_score_history` table + migration | New SQL migration | None |
-| Update `generate-weekly-report` to upsert score history | `supabase/functions/generate-weekly-report/index.tsx` | Above |
-| `event-incident-report-generator` Edge Function | `supabase/functions/event-incident-report-generator/` | `@react-pdf/renderer` (exists) |
-| `motorsport-incident-generator` Edge Function | `supabase/functions/motorsport-incident-generator/` | Same |
-| `fa-incident-generator` Edge Function | `supabase/functions/fa-incident-generator/` | Same |
-| `incident-report-dispatcher.ts` web utility | `web/lib/pdf/incident-report-dispatcher.ts` | Above 3 Edge Functions |
-| `ComplianceScoreChart` component | `web/components/compliance/ComplianceScoreChart.tsx` | Recharts (exists), score history table |
-| `IncidentFrequencyChart` component | `web/components/incidents/IncidentFrequencyChart.tsx` | Recharts (exists) |
-| `NearMissHeatMap` component | `web/components/incidents/NearMissHeatMap.tsx` | Leaflet (exists), GPS data |
-| `leaflet.heat` plugin install | `web/package.json` | Leaflet v1.9.4 (exists) |
+**Domain:** White-label SaaS — per-org branding, subdomain routing, Stripe Billing tiers
+**Researched:** 2026-02-18
+**Supersedes:** Multi-vertical integration architecture (2026-02-17) for this milestone
+**Confidence:** HIGH (middleware and Vercel patterns verified against official Next.js/Vercel docs; Stripe separation verified against official Stripe documentation; all existing code claims verified by reading source files)
 
 ---
 
-## Architecture Decisions (Per Question)
+## 1. Existing Architecture Baseline
 
-### 1. Data Layer: Vertical Propagation to Mobile App
+Before detailing what to add, this section maps what already exists so changes are additive, not destructive.
 
-**Current state confirmed from source:**
-
-`app/treatment/new.tsx` lines 93–113 fetch `org_settings.industry_verticals` fresh on every form
-open via a direct Supabase query. This produces a network call per treatment session and stores
-the result in local `useState` — lost when the component unmounts.
-
-WatermelonDB schema v3 (`src/database/schema.ts`) has no `event_vertical` column on `treatments`
-and no GPS columns on `near_misses`. The `bookings.event_vertical` PostgreSQL column exists but
-has no mobile path.
-
-**Decision: OrgContext on mobile; `event_vertical` in WatermelonDB treatments.**
-
-The org-level vertical (what industry the org primarily serves) changes rarely. It should be
-loaded once at auth time and held in React context — not refetched per form. This mirrors
-exactly how the web `org-context.tsx` works.
-
-The booking-level vertical should be stored in WatermelonDB `treatments.event_vertical` (added
-in schema v4) so the treatment PDF can carry the correct vertical without a network call at
-submission time. It is populated from navigation params when a treatment is opened from a
-booking, and falls back to `OrgContext.primaryVertical` for ad-hoc treatments.
-
-**The vertical should NOT be stored in WatermelonDB as org data.** It is session/configuration
-data, not a document. React context is the correct layer.
-
----
-
-### 2. Mobile App Context: VerticalContext Placement
-
-**Decision: Extend OrgContext. No separate VerticalContext.**
-
-A dedicated `VerticalContext` wrapping `OrgContext` adds an indirection layer with no benefit.
-The vertical is a property of the org. One context provides both.
-
-**Provider tree after change:**
-
-```
-app/_layout.tsx:
-
-GestureHandlerRootView
-  DatabaseProvider (WatermelonDB)
-    AuthProvider             <- existing, src/contexts/AuthContext.tsx
-      OrgProvider            <- NEW, src/contexts/OrgContext.tsx
-        SyncProvider         <- existing
-          BottomSheetModalProvider
-            Stack (Expo Router)
-```
-
-`OrgProvider` must be inside `AuthProvider` because it reads `user.app_metadata.org_id` from
-the auth session. It must be outside `SyncProvider` because the sync system can use the org
-context to scope payloads (include `event_vertical` in treatment sync).
-
-**Mobile `OrgContext` shape:**
-
-```typescript
-// src/contexts/OrgContext.tsx  (NEW FILE)
-interface OrgContextValue {
-  orgId: string | null;
-  industryVerticals: string[];
-  primaryVertical: string;   // industryVerticals[0] ?? 'general'
-  loading: boolean;
-}
-
-export function OrgProvider({ children }: { children: ReactNode }) {
-  // On auth state: read user.app_metadata.org_id
-  // Fetch org_settings.industry_verticals once
-  // Store in state
-}
-
-export function useOrg(): OrgContextValue { ... }
-```
-
-**The `fetchOrgVertical()` function in `new.tsx` is deleted** and replaced with
-`const { primaryVertical } = useOrg()`.
-
----
-
-### 3. Incident Form Architecture: One Form with Conditional Sections
-
-**Current state confirmed from source:**
-
-`app/treatment/new.tsx` is already a single adaptive form. Lines 392–395 derive
-`mechanismPresets`, `verticalOutcomes`, and `patientLabel` from `orgVertical`. Line 434 uses
-`patientLabel` in the section heading. Line 438 uses it in placeholder text. The RIDDOR banner
-(lines 415–421) is already conditional on `riddorFlagged`.
-
-**Decision: One form with conditional sections. Do not create separate files per vertical.**
-
-Separate form files per vertical would create 10 near-identical files that diverge over time.
-The existing single-form approach is correct and scales to 10 verticals without structural change.
-
-**Vertical-specific section pattern:**
-
-```typescript
-// Motorsport: race event details
-{primaryVertical === 'motorsport' && (
-  <View style={styles.section}>
-    <Text style={styles.sectionTitle}>Race Event Details</Text>
-    <TextInput placeholder="Car / race number" ... />
-    <TextInput placeholder="Circuit zone (e.g. Turn 3 hairpin)" ... />
-    <TextInput placeholder="Clerk of Course name" ... />
-  </View>
-)}
-
-// Festivals: triage details
-{primaryVertical === 'festivals' && (
-  <View style={styles.section}>
-    <Text style={styles.sectionTitle}>Triage Details</Text>
-    {/* Triage category, wristband colour picker */}
-  </View>
-)}
-
-// Education: patient classification
-{primaryVertical === 'education' && (
-  <View style={styles.section}>
-    <Text style={styles.fieldLabel}>Patient is a:</Text>
-    {/* Student / Staff / Visitor radio buttons */}
-  </View>
-)}
-
-// TV/Film: stunt/pyro flag
-{primaryVertical === 'tv_film' && (
-  <View style={styles.section}>
-    <Text style={styles.fieldLabel}>Incident context</Text>
-    {/* Stunt, pyrotechnic, practical fire toggle */}
-  </View>
-)}
-```
-
-**Vertical-specific data storage pattern:**
-
-Vertical-specific fields (car number, triage category, student/staff classification) must persist.
-Use a `vertical_extra_fields JSONB` column on the Supabase `treatments` table — the same pattern
-already used in `booking_briefs.extra_fields` (migration 123). Add a matching optional string column
-to WatermelonDB `treatments` in schema v4 (stored as JSON string, matching the existing `treatment_types`
-pattern in the schema).
-
-**Section visibility map:**
-
-| Section | Condition | What it controls |
-|---------|-----------|-----------------|
-| Patient information | Always | Label from `getPatientLabel()` |
-| Injury details | Always | Mechanism presets from `getMechanismPresets()` |
-| RIDDOR warning banner | `compliance.riddorApplies && riddorFlagged` | Existing |
-| Non-RIDDOR framework info | `!compliance.riddorApplies` | "Purple Guide logged" style note |
-| Race / motorsport details | `primaryVertical === 'motorsport'` | Car, zone, COC |
-| Triage details | `primaryVertical === 'festivals'` | Category, wristband |
-| Student/staff classification | `primaryVertical === 'education'` | Patient role |
-| Stunt/production context | `primaryVertical === 'tv_film'` | Stunt flag, pyro flag |
-| Treatment given | Always | Multi-select, unchanged |
-| Photos | Always | Unchanged |
-| Outcome | Always | Labels from `getVerticalOutcomeCategories()` |
-| Signature | Always | Unchanged |
-
----
-
-### 4. PDF Generation Architecture: One Edge Function per Report Type
-
-**Current state confirmed from source:**
-
-The codebase has two PDF Edge Function patterns:
-- `riddor-f2508-generator/index.ts` — dedicated function, `components/` directory, `types.ts`
-- `generate-weekly-report/index.tsx` — same pattern
-
-Both use `renderToBuffer()` from `@react-pdf/renderer@4.3.2`.
-
-**Decision: One Edge Function per report type. Not a monolithic switch function.**
-
-Reason: Supabase Edge Functions have cold-start costs. A monolithic function importing all PDF
-templates is slower and harder to maintain. The established pattern is one function per report
-type — follow it.
-
-Verticals cluster by report type:
-- **RIDDOR F2508** — `construction`, `tv_film`, `corporate`, `education`, `outdoor_adventure` → `riddor-f2508-generator` (EXISTING)
-- **Event Incident Report** — `festivals`, `fairs_shows`, `private_events` → `event-incident-report-generator` (NEW)
-- **Motorsport UK Report** — `motorsport` → `motorsport-incident-generator` (NEW)
-- **FA/NGB Report** — `sporting_events` → `fa-incident-generator` (NEW)
-
-**New Edge Function structure mirrors existing:**
-
-```
-supabase/functions/event-incident-report-generator/
-  index.ts                      <- Deno.serve, fetches incident, calls renderToBuffer
-  EventIncidentDocument.tsx     <- @react-pdf/renderer React component
-  event-incident-mapping.ts     <- Maps treatment data to Purple Guide fields
-  types.ts                      <- TypeScript interfaces for incident data
-
-supabase/functions/motorsport-incident-generator/
-  index.ts
-  MotorsportIncidentDocument.tsx
-  motorsport-mapping.ts
-  types.ts
-
-supabase/functions/fa-incident-generator/
-  index.ts
-  FAIncidentDocument.tsx
-  fa-mapping.ts
-  types.ts
-```
-
-**Web-side dispatch utility:**
-
-```typescript
-// web/lib/pdf/incident-report-dispatcher.ts
-import { getVerticalCompliance } from '@/lib/compliance/vertical-compliance';
-
-const FUNCTION_BY_FRAMEWORK: Record<string, string> = {
-  'RIDDOR':           'riddor-f2508-generator',
-  'riddor_plus_ofsted': 'riddor-f2508-generator',
-  'purple_guide':     'event-incident-report-generator',
-  'event_incident':   'event-incident-report-generator',
-  'motorsport_uk':    'motorsport-incident-generator',
-  'fa_incident':      'fa-incident-generator',
-};
-
-export async function generateIncidentReportPDF(
-  incidentId: string,
-  vertical: string,
-  supabase: SupabaseClient
-): Promise<{ signedUrl: string }> {
-  const { primaryFramework } = getVerticalCompliance(vertical);
-  const functionName = FUNCTION_BY_FRAMEWORK[primaryFramework];
-
-  const { data, error } = await supabase.functions.invoke(functionName, {
-    body: { incident_id: incidentId },
-  });
-
-  if (error) throw error;
-  return data;
-}
-```
-
-The `getVerticalCompliance()` function already exists in `web/lib/compliance/vertical-compliance.ts`
-and the `primaryFramework` field is already defined on `VerticalComplianceConfig`. The dispatch
-utility is purely glue code.
-
----
-
-### 5. Certification Tracking Architecture
-
-**Current state confirmed from source:**
-
-`medics.certifications` is JSONB. `UK_CERT_TYPES` (32 types), `CERT_TYPE_METADATA`,
-`VERTICAL_CERT_TYPES`, and `getRecommendedCertTypes()` all exist and are complete. The API
-route at `web/app/api/medics/[id]/certifications/route.ts` annotates each cert with `status`
-and `renewal_url`.
-
-**The taxonomy is complete. What is missing is UI wiring.**
-
-**Decision: No new tables. Wire existing taxonomy functions to UI.**
-
-The `JSONB` approach for cert storage is correct. The cert types are stable configuration —
-they belong in code as typed constants, not in a database table.
-
-**What to build:**
-
-1. The cert type selector in the admin medic edit form should call `getRecommendedCertTypes(vertical)`
-   to order options — the function exists, it just needs wiring. The current `medic/profile/page.tsx`
-   displays certs but the edit form type dropdown does not use vertical ordering.
-
-2. The admin medic list should show compliance gap indicators per vertical: which medics assigned
-   to motorsport bookings lack an FIA Grade cert. This is a query-layer feature, not a schema change.
-
-3. Optional: a PostgreSQL view for compliance gap queries (avoids application-layer filtering of
-   JSONB):
+### organizations table (current shape, from migrations 00001 + 027)
 
 ```sql
--- Optional view for compliance gap reporting
-CREATE OR REPLACE VIEW medic_cert_gaps AS
-SELECT
-  m.id         AS medic_id,
-  m.first_name || ' ' || m.last_name AS medic_name,
-  required.vertical_id,
-  required.required_cert,
-  NOT EXISTS (
-    SELECT 1
-    FROM jsonb_array_elements(m.certifications) c
-    WHERE c->>'type' = required.required_cert
-      AND (c->>'expiry_date')::date > CURRENT_DATE
-  ) AS has_gap
-FROM medics m
-CROSS JOIN (VALUES
-  ('motorsport',  'FIA Grade 3'),
-  ('motorsport',  'Motorsport UK CMO Letter'),
-  ('education',   'Paediatric First Aid'),
-  ('education',   'Enhanced DBS (Children)')
-) AS required(vertical_id, required_cert);
-```
-
-**What NOT to change:**
-
-- Do not create separate cert type tables per vertical.
-- Do not make `UK_CERT_TYPES` a DB table.
-- The existing CSCS/CPCS construction cert tracking in the workers table (`workers.cscs_card_number`,
-  `workers.cscs_expiry_date`) remains unchanged. It predates the taxonomy expansion and is only used
-  for construction sites.
-
----
-
-### 6. Terminology/Label Architecture: `useVerticalLabels()` Hook
-
-**Decision: A `useVerticalLabels()` hook. Not React context, not CSS custom properties, not i18n.**
-
-CSS custom properties are for visual theming, not domain terminology. i18n systems (react-i18next,
-next-intl) solve locale/language differences, not business-domain terminology differences. The
-vertical terminology is driven by which vertical an org serves — a business logic concern, not a
-localization concern. Using i18n for this would be architectural overreach.
-
-A dedicated context for labels is unnecessary because `getPatientLabel()` and related functions are
-pure lookups that run in microseconds. There is nothing to memoize or subscribe to. A hook that
-reads from OrgContext and calls the pure functions is the right layer.
-
-**Mobile hook:**
-
-```typescript
-// src/hooks/useVerticalLabels.ts  (NEW FILE)
-import { useOrg } from '../contexts/OrgContext';
-import { getPatientLabel, getVerticalOutcomeCategories } from '../../services/taxonomy/vertical-outcome-labels';
-import { getMechanismPresets } from '../../services/taxonomy/mechanism-presets';
-import { getVerticalCompliance } from '../../services/taxonomy/vertical-compliance';
-import { OUTCOME_CATEGORIES } from '../../services/taxonomy/outcome-categories';
-
-export function useVerticalLabels() {
-  const { primaryVertical } = useOrg();
-  const compliance = getVerticalCompliance(primaryVertical);
-
-  return {
-    patientLabel:         getPatientLabel(primaryVertical),
-    mechanismPresets:     getMechanismPresets(primaryVertical),
-    outcomeCategories:    getVerticalOutcomeCategories(OUTCOME_CATEGORIES, primaryVertical),
-    vertical:             primaryVertical,
-    riddorApplies:        compliance.riddorApplies,
-    frameworkLabel:       compliance.frameworkLabel,
-    incidentPageLabel:    compliance.incidentPageLabel,
-    reportFormLabel:      compliance.reportFormLabel,
-    postTreatmentMsg:     compliance.postTreatmentGuidance,
-    complianceBadgeLabel: compliance.complianceBadgeLabel,
-  };
+organizations {
+  id:                   UUID PRIMARY KEY
+  name:                 TEXT NOT NULL
+  slug:                 TEXT UNIQUE         -- added migration 027, e.g. 'asg'
+  status:               TEXT DEFAULT 'active'
+  onboarding_completed: BOOLEAN DEFAULT false
+  created_at:           TIMESTAMPTZ
+  updated_at:           TIMESTAMPTZ
 }
 ```
 
-**Web hook:**
+### org_settings table (current shape, from migration 118)
 
-```typescript
-// web/hooks/useVerticalLabels.ts  (NEW FILE)
-import { useOrg } from '@/contexts/org-context';
-import { getVerticalCompliance } from '@/lib/compliance/vertical-compliance';
-import { getPatientLabel } from '@/lib/taxonomy/vertical-outcome-labels';
-
-export function useVerticalLabels() {
-  const { industryVerticals } = useOrg();
-  const primaryVertical = industryVerticals[0] ?? 'general';
-  const compliance = getVerticalCompliance(primaryVertical);
-
-  return {
-    patientLabel:         getPatientLabel(primaryVertical),
-    primaryVertical,
-    compliance,
-    riddorApplies:        compliance.riddorApplies,
-    frameworkLabel:       compliance.frameworkLabel,
-    incidentPageLabel:    compliance.incidentPageLabel,
-  };
+```sql
+org_settings {
+  id, org_id (FK, unique), base_rate, geofence_default_radius,
+  urgency_premiums (JSONB), admin_email, net30_eligible,
+  credit_limit, created_at, updated_at
 }
 ```
 
-**Key fact:** "Cast & Crew" for tv_film and "Attendee" for festivals are already returned by
-`getPatientLabel()` (confirmed from `vertical-outcome-labels.ts` lines 122–135). The function
-is complete. Only the hook wrapper and consistent usage need to be built.
+### JWT app_metadata (current shape, from migrations 105/106 + org-context.tsx)
+
+```json
+{
+  "org_id":   "uuid",
+  "org_slug": "asg",
+  "role":     "org_admin | medic | site_manager | platform_admin"
+}
+```
+
+Platform admins carry no `org_id` or `org_slug` in the JWT (explicitly stripped in migration 106).
+
+### RLS baseline (migrations 00004, 003, 011, 028)
+
+Every data table uses `get_user_org_id()` which reads `auth.jwt() -> 'app_metadata' ->> 'org_id'`. All policies are anchored to this function. The new architecture must not change this function or any existing caller.
+
+### Middleware baseline (web/middleware.ts + web/lib/supabase/middleware.ts)
+
+`middleware.ts` delegates entirely to `updateSession()`. That function:
+1. Refreshes Supabase session cookies via `createServerClient` with cookie handlers
+2. Calls `supabase.auth.getUser()` (server-validated, not just JWT parse)
+3. Redirects unauthenticated requests to `/login`
+4. Redirects authenticated users from auth pages to role-based dashboards (`/platform`, `/admin`, `/medic`, `/dashboard`)
+5. Redirects users without `org_id` to `/setup/organization`
+
+The matcher excludes: `_next/static`, `_next/image`, `favicon.ico`, `api/`, and public marketing pages.
+
+### Existing Stripe infrastructure
+
+Two parallel Stripe webhook handlers exist:
+
+**Handler 1 — Supabase Edge Function:** `supabase/functions/stripe-webhooks/index.ts`
+- Events: `account.updated`, `payment_intent.succeeded`, `payment_intent.payment_failed`, `transfer.created`
+- Uses: `STRIPE_WEBHOOK_SECRET` env var
+- Primary Connect handler for medic payouts
+
+**Handler 2 — Next.js Route Handler:** `web/app/api/stripe/webhooks/route.ts`
+- Events: `payment_intent.succeeded`, `payment_intent.payment_failed`, `account.updated`
+- Uses: `STRIPE_WEBHOOK_SECRET` env var
+- Partial overlap with Edge Function; likely the earlier handler before Edge Functions were built
+
+Both use a **single `STRIPE_WEBHOOK_SECRET`** and handle Stripe Connect events only. Neither handles subscription lifecycle events. Stripe Billing is completely absent from the codebase today.
+
+### Existing email and PDF infrastructure
+
+- **Email:** Resend via `web/lib/email/resend.ts`. Templates in `web/lib/email/templates/` use `@react-email/components`. Footer hardcodes "Apex Safety Group Ltd."
+- **PDFs:** `@react-pdf/renderer@4.3.2` in Supabase Edge Functions. Header component uses "SiteMedic" text placeholder with comment "logo from Supabase Storage will be added in Plan 02."
 
 ---
 
-### 7. Heat Map Architecture: Leaflet + `leaflet.heat`
+## 2. New DB Schema
 
-**Current state confirmed from source:**
+### 2a. org_branding table (new — migration 132)
 
-- `near_misses` table has `location TEXT` — free-text only. No GPS columns exist anywhere in
-  the schema (confirmed by reading `00003_health_data_tables.sql`).
-- `leaflet ^1.9.4` and `react-leaflet ^5.0.0` are installed (`web/package.json` lines 44, 51).
-- The `dynamic(..., { ssr: false })` SSR bypass pattern is established in `GeofenceMapPicker.tsx`.
-- `@types/leaflet` is already in devDependencies.
+Separate table rather than columns on `org_settings` or `organizations`. Branding is presentation-layer data; `org_settings` is operational config (rates, geofencing); `organizations` is identity. Keeping them separate:
+- Allows independent RLS policies
+- Avoids adding nullable columns to tables with existing tight constraints
+- Can be fetched in isolation by middleware without joining
 
-**GPS capture is a prerequisite.** Before any heat map can be built:
-
-1. **New SQL migration:** `ALTER TABLE near_misses ADD COLUMN gps_lat FLOAT8, ADD COLUMN gps_lng FLOAT8;`
-2. **WatermelonDB schema v4:** Add `{ name: 'gps_lat', type: 'number', isOptional: true }` and
-   `{ name: 'gps_lng', type: 'number', isOptional: true }` to `near_misses` table
-3. **Mobile near-miss form:** Capture GPS on form open via `expo-location.getCurrentPositionAsync()`.
-   Request permission gracefully — if denied, save near-miss without GPS coordinates.
-4. **Sync payload:** Include `gps_lat` and `gps_lng` in the near-miss sync payload.
-
-**Heat map implementation: `leaflet.heat` plugin (no new mapping library).**
-
-Since `leaflet` is already installed and actively used, `leaflet.heat` is the correct choice.
-It is a 3KB plugin that adds heat layer rendering to any Leaflet map instance. Adding Mapbox or
-Google Maps would introduce a second mapping library, API key dependency, and per-request billing.
-
-**Install:**
-
-```bash
-pnpm add leaflet.heat
-pnpm add -D @types/leaflet.heat
-```
-
-**Component structure (follows existing `GeofenceMapPicker.tsx` pattern):**
-
-```typescript
-// web/components/incidents/NearMissHeatMap.tsx  (import wrapper)
-import dynamic from 'next/dynamic';
-
-export const NearMissHeatMap = dynamic(
-  () => import('./NearMissHeatMapInner'),
-  { ssr: false }
+```sql
+-- Migration 132: org_branding
+CREATE TABLE org_branding (
+  id                UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  org_id            UUID        NOT NULL UNIQUE
+                    REFERENCES organizations(id) ON DELETE CASCADE,
+  company_name      TEXT,           -- overrides organizations.name on branded surfaces
+  tagline           TEXT,           -- e.g. "Professional Paramedics for Events"
+  primary_color     TEXT,           -- hex, e.g. '#1D4ED8' — validated in app layer
+  logo_storage_path TEXT,           -- Supabase Storage path, e.g. 'org-logos/uuid/logo.png'
+  logo_public_url   TEXT,           -- cached CDN URL, regenerated on upload
+  created_at        TIMESTAMPTZ DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE INDEX idx_org_branding_org ON org_branding (org_id);
+COMMENT ON TABLE org_branding IS
+  'Per-org visual identity: logo, brand colour, display name, tagline. '
+  'Separate from org_settings (operational config). Read by middleware for SSR branding injection.';
+
+ALTER TABLE org_branding ENABLE ROW LEVEL SECURITY;
+
+-- Org users read their own branding
+CREATE POLICY "Org users read own branding"
+  ON org_branding FOR SELECT
+  USING (org_id = get_user_org_id());
+
+-- Platform admins: full access
+CREATE POLICY "Platform admins manage all branding"
+  ON org_branding FOR ALL
+  USING (is_platform_admin())
+  WITH CHECK (is_platform_admin());
+
+-- Backfill: create empty branding rows for all existing orgs
+INSERT INTO org_branding (org_id)
+SELECT id FROM organizations
+ON CONFLICT (org_id) DO NOTHING;
 ```
 
+**Note on anon reads:** The middleware reads `org_branding` using the **service role** client (bypasses RLS). No anon RLS policy is needed or safe. The service role key never leaves the server.
+
+### 2b. New columns on organizations table (migration 133)
+
+Subscription tier belongs on `organizations` not `org_settings` because:
+- It is read in middleware for every request (alongside `slug` and `status` — already queried)
+- It gates access — it is identity-level, not operational config
+- The middleware query that already fetches `slug` can fetch `subscription_tier` for free
+
+```sql
+-- Migration 133: org subscription columns
+ALTER TABLE organizations
+  ADD COLUMN IF NOT EXISTS stripe_customer_id      TEXT UNIQUE,
+  ADD COLUMN IF NOT EXISTS stripe_subscription_id  TEXT UNIQUE,
+  ADD COLUMN IF NOT EXISTS subscription_tier       TEXT NOT NULL DEFAULT 'starter'
+                           CHECK (subscription_tier IN ('starter', 'growth', 'enterprise')),
+  ADD COLUMN IF NOT EXISTS subscription_status     TEXT NOT NULL DEFAULT 'trialing'
+                           CHECK (subscription_status IN
+                             ('active', 'trialing', 'past_due', 'canceled', 'unpaid'));
+
+COMMENT ON COLUMN organizations.stripe_customer_id IS
+  'Stripe Billing customer ID (distinct from medic Stripe Express account IDs). '
+  'Used for subscription management only, not Connect payouts.';
+COMMENT ON COLUMN organizations.stripe_subscription_id IS
+  'Active Stripe Billing subscription ID. NULL until org subscribes.';
+COMMENT ON COLUMN organizations.subscription_tier IS
+  'Current plan tier: starter | growth | enterprise. Updated by billing webhook.';
+COMMENT ON COLUMN organizations.subscription_status IS
+  'Current Stripe subscription status. Drives feature gating and access control.';
+```
+
+### 2c. Supabase Storage bucket for org logos (migration 134 or Dashboard)
+
+```
+Bucket name:   org-logos
+Access policy: public (logos are not sensitive data)
+Path format:   org-logos/{org_id}/logo.{ext}
+```
+
+**Why public bucket:** Logos are not PHI or compliance documents. A public bucket eliminates the need for signed URLs in PDF Edge Functions, SSR pages, and email templates. The `org_id` UUID in the path provides practical obscurity (not guessable without knowing the UUID). The alternative — private bucket with signed URLs — adds complexity at every consumption point for no meaningful security benefit.
+
+The public URL is deterministic: `${SUPABASE_URL}/storage/v1/object/public/org-logos/${org_id}/logo.png`. This URL is cached in `org_branding.logo_public_url` to avoid constructing it at every call site.
+
+---
+
+## 3. Subdomain Routing in Middleware
+
+### 3a. Vercel infrastructure (prerequisite — DNS change, not code)
+
+**Must happen before code changes are deployed to production:**
+
+1. Add wildcard domain `*.sitemedic.com` in Vercel Project Settings → Domains
+2. Point DNS to Vercel nameservers: `ns1.vercel-dns.com` and `ns2.vercel-dns.com`
+   - Required for Vercel to issue wildcard SSL certificates automatically
+   - Without this, individual subdomain SSL will not work
+3. Apex domain `sitemedic.com` also registered in the same Vercel project
+
+Once the wildcard is configured, any `tenant.sitemedic.com` resolves to the same Next.js deployment. Vercel issues individual SSL certificates per subdomain on demand.
+
+Source: [Vercel Wildcard Domains](https://vercel.com/blog/wildcard-domains), [Vercel Multi-Tenant Domain Management](https://vercel.com/docs/multi-tenant/domain-management) — both official Vercel documentation, HIGH confidence.
+
+### 3b. Subdomain extraction helper
+
 ```typescript
-// web/components/incidents/NearMissHeatMapInner.tsx  (actual component)
-'use client';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
-import { useEffect } from 'react';
-import 'leaflet/dist/leaflet.css';
-import 'leaflet.heat';
+// web/lib/supabase/middleware.ts (new helper function, called inside updateSession)
 
-type SeverityWeight = { low: number; medium: number; high: number; critical: number };
-const SEVERITY_WEIGHT: SeverityWeight = { low: 0.3, medium: 0.5, high: 0.8, critical: 1.0 };
+function extractSubdomain(request: NextRequest): string | null {
+  const hostname = request.headers.get('host') ?? '';
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? 'sitemedic.com';
 
-function HeatLayer({ points }: { points: [number, number, number][] }) {
-  const map = useMap();
-  useEffect(() => {
-    const layer = (window.L as any).heatLayer(points, {
-      radius: 25,
-      blur: 15,
-      gradient: { 0.4: '#3b82f6', 0.65: '#f59e0b', 1.0: '#ef4444' },
-    }).addTo(map);
-    return () => { map.removeLayer(layer); };
-  }, [map, points]);
+  // Skip apex and www
+  if (hostname === rootDomain || hostname === `www.${rootDomain}`) {
+    return null;
+  }
+
+  // Skip Vercel preview deployments (*.vercel.app)
+  if (hostname.endsWith('.vercel.app')) {
+    return null;
+  }
+
+  // Local dev: tenant.localhost:30500 → 'tenant'
+  if (hostname.includes('localhost')) {
+    const parts = hostname.split('.');
+    return parts.length >= 2 ? parts[0] : null;
+  }
+
+  // Production: tenant.sitemedic.com → 'tenant'
+  const parts = hostname.split('.');
+  if (parts.length >= 3) {
+    return parts[0];
+  }
+
   return null;
 }
+```
 
-interface NearMissPoint { gps_lat: number; gps_lng: number; severity: string; }
+### 3c. Service role org lookup by subdomain
 
-export default function NearMissHeatMapInner({ incidents }: { incidents: NearMissPoint[] }) {
-  const points: [number, number, number][] = incidents
-    .filter(i => i.gps_lat != null && i.gps_lng != null)
-    .map(i => [i.gps_lat, i.gps_lng, SEVERITY_WEIGHT[i.severity as keyof SeverityWeight] ?? 0.5]);
+The middleware runs at the Edge. It cannot use the user's Supabase client (no auth cookie yet at subdomain resolution time). Use the Supabase **service role** client — read-only lookup on a slug column, no sensitive data exposed:
 
-  return (
-    <MapContainer center={[51.5, -0.1]} zoom={12} style={{ height: '400px', width: '100%' }}>
-      <TileLayer
-        attribution='&copy; OpenStreetMap contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {points.length > 0 && <HeatLayer points={points} />}
-    </MapContainer>
+```typescript
+// Inside updateSession(), before auth checks
+
+// SECURITY: Strip any injected x-org-* headers first (CVE-2025-29927 pattern)
+const requestHeaders = new Headers(request.headers);
+const ORG_HEADERS = [
+  'x-org-id', 'x-org-slug', 'x-org-tier',
+  'x-org-company-name', 'x-org-primary-color',
+  'x-org-logo-url', 'x-org-tagline',
+];
+ORG_HEADERS.forEach(h => requestHeaders.delete(h));
+
+const subdomain = extractSubdomain(request);
+let resolvedOrg: {
+  id: string;
+  slug: string;
+  subscription_tier: string;
+  subscription_status: string;
+} | null = null;
+
+if (subdomain) {
+  // Service role client — bypasses RLS, server-only, never sent to browser
+  const adminClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!  // NOT NEXT_PUBLIC_ — server only
   );
+
+  const { data } = await adminClient
+    .from('organizations')
+    .select('id, slug, subscription_tier, subscription_status')
+    .eq('slug', subdomain)
+    .eq('status', 'active')
+    .maybeSingle();  // returns null instead of error when not found
+
+  if (!data) {
+    // Unknown subdomain — redirect to apex with a clear path
+    const url = request.nextUrl.clone();
+    url.host = process.env.NEXT_PUBLIC_ROOT_DOMAIN!;
+    url.pathname = '/';
+    return NextResponse.redirect(url);
+  }
+
+  resolvedOrg = data;
 }
 ```
 
-**Note on `@types/leaflet.heat`:** The types package exists on npm but has historically had
-maintenance gaps. If it is missing or incomplete, a local declaration shim is sufficient:
+**Performance note:** This adds one DB round-trip per request for subdomain requests. At current scale (single org) this is negligible. At 10–20 orgs it remains fine. At 100+ orgs, add Vercel KV (or Upstash Redis) cache: `slug → { id, tier, status }`, TTL 60 seconds. Do not add caching until latency measurement shows it is needed.
+
+### 3d. Branding data propagation via request headers
+
+After org resolution, fetch branding and inject into request headers. Server components read these headers via `next/headers` — no client-side fetch needed for branding:
 
 ```typescript
-// web/types/leaflet-heat.d.ts
-declare module 'leaflet.heat' {}
-```
+// Continuation of updateSession() after resolvedOrg is set
 
-**Alternative with zero new packages:** Use Leaflet `CircleMarker` components scaled by severity
-(radius = severity × 20, opacity = 0.4). Less visually "heat map" but zero new dependencies and
-works today with existing installed packages.
+if (resolvedOrg) {
+  // Fetch branding in same middleware call
+  const { data: branding } = await adminClient
+    .from('org_branding')
+    .select('company_name, primary_color, logo_public_url, tagline')
+    .eq('org_id', resolvedOrg.id)
+    .maybeSingle();
 
----
+  requestHeaders.set('x-org-id', resolvedOrg.id);
+  requestHeaders.set('x-org-slug', resolvedOrg.slug);
+  requestHeaders.set('x-org-tier', resolvedOrg.subscription_tier);
 
-### 8. Trend Charts Architecture: Recharts (Already Installed)
-
-**Confirmed from source:**
-
-`recharts ^3.7.0` is in `web/package.json` line 53. Recharts is in active use across 4 existing
-components: `OverridePatternChart.tsx` (BarChart), `revenue-charts.tsx`, `medic-utilisation-charts.tsx`,
-`assignment-analytics-charts.tsx`. All follow the `<ResponsiveContainer>` wrapping pattern.
-
-**Decision: Recharts with TanStack Query. No new chart library.**
-
-Adding Chart.js, Victory, or Nivo would create inconsistency for zero benefit. The existing
-Recharts pattern is mature and consistent — follow it.
-
-**Compliance score history chart:**
-
-```typescript
-// web/components/compliance/ComplianceScoreChart.tsx
-'use client';
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, ReferenceLine, ResponsiveContainer
-} from 'recharts';
-
-interface WeeklyScore { week_ending: string; compliance_score: number; }
-
-export function ComplianceScoreChart({ data }: { data: WeeklyScore[] }) {
-  return (
-    <ResponsiveContainer width="100%" height={250}>
-      <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="week_ending" />
-        <YAxis domain={[0, 100]} unit="%" />
-        <ReferenceLine y={80} stroke="#10b981" strokeDasharray="4 4" label="Target" />
-        <Tooltip formatter={(value: number) => `${value}%`} />
-        <Line type="monotone" dataKey="compliance_score" stroke="#3b82f6"
-              strokeWidth={2} dot={false} />
-      </LineChart>
-    </ResponsiveContainer>
-  );
+  if (branding) {
+    requestHeaders.set('x-org-company-name', branding.company_name ?? '');
+    requestHeaders.set('x-org-primary-color', branding.primary_color ?? '#2563eb');
+    requestHeaders.set('x-org-logo-url', branding.logo_public_url ?? '');
+    requestHeaders.set('x-org-tagline', branding.tagline ?? '');
+  }
 }
-```
 
-**Incident frequency chart:**
-
-```typescript
-// web/components/incidents/IncidentFrequencyChart.tsx
-'use client';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-// data shape: [{ week: 'YYYY-MM-DD', riddor: 2, event_incident: 5, near_miss: 3 }]
-```
-
-**TanStack Query data fetching (follows existing codebase pattern):**
-
-```typescript
-// In dashboard page component
-const { data: scoreHistory = [] } = useQuery({
-  queryKey: ['compliance-score-history', orgId],
-  queryFn: () => fetchComplianceScoreHistory(orgId!),
-  enabled: !!orgId,
-  staleTime: 5 * 60 * 1000,  // 5 minutes — score history is not real-time
+// Pass modified headers forward to server components
+supabaseResponse = NextResponse.next({
+  request: { headers: requestHeaders },
 });
 ```
 
-**Compliance score history table — required DB addition:**
-
-No `compliance_score_history` table currently exists (confirmed by checking the migration files).
-The `generate-weekly-report` Edge Function computes a score but does not persist it in a
-queryable format. A new migration and Edge Function update are required:
-
-```sql
--- New migration: compliance_score_history
-CREATE TABLE compliance_score_history (
-  id               UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id           UUID        NOT NULL REFERENCES organizations(id),
-  week_ending      DATE        NOT NULL,
-  compliance_score INTEGER     NOT NULL CHECK (compliance_score BETWEEN 0 AND 100),
-  treatment_count  INTEGER     DEFAULT 0,
-  near_miss_count  INTEGER     DEFAULT 0,
-  riddor_count     INTEGER     DEFAULT 0,
-  created_at       TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(org_id, week_ending)
-);
-
-CREATE INDEX idx_compliance_score_history_org_week
-  ON compliance_score_history (org_id, week_ending DESC);
-
-ALTER TABLE compliance_score_history ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "org_read_score_history"
-  ON compliance_score_history FOR SELECT
-  USING (org_id = get_user_org_id());
-```
-
-The `generate-weekly-report` Edge Function `index.tsx` should upsert into this table after
-computing the weekly score, using `ON CONFLICT (org_id, week_ending) DO UPDATE`.
-
----
-
-## Data Flow: Vertical from `org_settings` to PDF
-
-```
-org_settings.industry_verticals (JSONB array in PostgreSQL)
-  │
-  ├── WEB PATH:
-  │   OrgProvider (web/app/layout.tsx wraps entire app)
-  │     fetches org_settings once on auth
-  │     → industryVerticals in OrgContext
-  │     → useOrg().industryVerticals[0] = primaryVertical
-  │     → getVerticalCompliance(primaryVertical) = compliance config
-  │         → RIDDOR page header, cert recommendations, PDF dispatch
-  │
-  └── MOBILE PATH:
-      OrgProvider (NEW, app/_layout.tsx inside AuthProvider)
-        fetches org_settings once on auth
-        → primaryVertical in OrgContext
-        → useVerticalLabels() hook
-            → patientLabel, mechanismPresets, outcomeCategories
-            → new.tsx treatment form (replaces fetchOrgVertical())
-                → Treatment record with event_vertical saved to WatermelonDB
-                    → Sync to Supabase treatments table
-                        → Web dashboard reads treatment
-                            → incident-report-dispatcher selects PDF Edge Function
-                                → Edge Function renders PDF
-                                    → Signed URL → download button
-```
-
-**Booking context override:**
-
-When a treatment is opened from a specific booking, the booking's `event_vertical` takes
-precedence over the org's default vertical. This is passed as a route param:
-
-```
-/treatment/new?booking_id=xxx&event_vertical=motorsport
-```
-
-The treatment form reads the param first, falls back to `useOrg().primaryVertical`:
+Consuming in server components:
 
 ```typescript
-const params = useLocalSearchParams();
-const { primaryVertical } = useOrg();
-const vertical = (params.event_vertical as string) ?? primaryVertical;
+// web/app/(dashboard)/layout.tsx (server component)
+import { headers } from 'next/headers';
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const headersList = await headers();
+
+  const branding = {
+    companyName:   headersList.get('x-org-company-name') || 'SiteMedic',
+    primaryColor:  headersList.get('x-org-primary-color') || '#2563eb',
+    logoUrl:       headersList.get('x-org-logo-url') || '',
+    tagline:       headersList.get('x-org-tagline') || '',
+    tier:          headersList.get('x-org-tier') || 'starter',
+  };
+
+  return (
+    <BrandingProvider branding={branding}>
+      {children}
+    </BrandingProvider>
+  );
+}
+```
+
+**Security rationale for stripping headers first:** CVE-2025-29927 demonstrated that specially crafted external HTTP headers could bypass Next.js middleware checks. By deleting all `x-org-*` headers at the top of middleware before setting them, we ensure values in these headers always come from our trusted middleware logic, never from the incoming request.
+
+Source: CVE-2025-29927 analysis confirmed in search results. Strip-before-set is the standard mitigation for middleware-injected headers. HIGH confidence.
+
+### 3e. Updated middleware execution flow
+
+```
+Incoming request
+│
+├─ Strip all x-org-* headers (security — prevents external injection)
+│
+├─ Supabase session refresh (existing createServerClient + cookie handlers)
+│
+├─ extractSubdomain(request)
+│   ├─ null → apex domain; skip org resolution
+│   └─ 'tenant'
+│       ├─ Service role lookup: organizations WHERE slug = 'tenant' AND status = 'active'
+│       ├─ Not found → redirect to apex /
+│       └─ Found → fetch org_branding for tenant
+│
+├─ Inject x-org-* into request headers (if subdomain resolved)
+│
+├─ supabase.auth.getUser() — server-validated auth check
+│
+├─ Auth guard (existing logic unchanged)
+│   ├─ No user + protected route → redirect /login
+│   └─ User on auth page → redirect to role dashboard
+│
+├─ Org ID guard (existing logic unchanged)
+│   └─ User with no org_id + not /setup/* → redirect /setup/organization
+│
+└─ NextResponse.next({ request: { headers: requestHeaders } })
+```
+
+### 3f. Matcher update
+
+The existing matcher already excludes `api/`. The billing webhook at `/api/stripe/billing-webhooks` is covered by this exclusion. No matcher change is strictly required. However, document the exclusion explicitly:
+
+```typescript
+// web/middleware.ts — config.matcher comment update
+// '/api/' routes excluded: Stripe webhook endpoints must not be intercepted by auth middleware.
+// Stripe POSTs raw bodies with signature headers — middleware auth would reject them.
 ```
 
 ---
 
-## Component Boundaries
+## 4. Branding Data Flow
+
+### 4a. SSR pages
+
+```
+Request to tenant.sitemedic.com/admin
+  └─ Middleware: resolve slug → org → branding → inject x-org-* headers
+       └─ app/(dashboard)/layout.tsx (server component): headers() → branding object
+            └─ BrandingProvider (new client component): React context
+                 └─ NavBar, headers, footers: useBranding() hook
+                      └─ CSS custom property injection: --org-primary: {primaryColor}
+```
+
+**New `BrandingContext` (separate from `OrgContext`):**
+
+Do not merge branding into `OrgContext`. `OrgContext` fetches from Supabase client-side on mount. Branding arrives via SSR headers before client JavaScript runs — mixing them would require `OrgContext` to wait for headers it cannot read (headers are server-only). Keep them separate.
+
+```typescript
+// web/contexts/branding-context.tsx (new file)
+'use client';
+import { createContext, useContext } from 'react';
+
+interface BrandingValue {
+  companyName:  string;
+  primaryColor: string;
+  logoUrl:      string;
+  tagline:      string;
+  tier:         'starter' | 'growth' | 'enterprise';
+}
+
+const BrandingContext = createContext<BrandingValue>({
+  companyName:  'SiteMedic',
+  primaryColor: '#2563eb',
+  logoUrl:      '',
+  tagline:      '',
+  tier:         'starter',
+});
+
+export function BrandingProvider({
+  branding,
+  children,
+}: {
+  branding: BrandingValue;
+  children: React.ReactNode;
+}) {
+  return (
+    <BrandingContext.Provider value={branding}>
+      <style>{`:root { --org-primary: ${branding.primaryColor}; }`}</style>
+      {children}
+    </BrandingContext.Provider>
+  );
+}
+
+export function useBranding(): BrandingValue {
+  return useContext(BrandingContext);
+}
+```
+
+### 4b. PDFs (Supabase Edge Functions)
+
+Edge Functions do not go through Next.js middleware. They receive an HTTP POST with an `org_id` in the request body (from the Next.js API route that invokes them). The Edge Function uses the service role client to fetch branding directly:
+
+```typescript
+// Pattern for all PDF Edge Functions (e.g. generate-weekly-report/index.tsx)
+
+const { data: branding } = await adminClient
+  .from('org_branding')
+  .select('company_name, primary_color, logo_public_url')
+  .eq('org_id', orgId)
+  .maybeSingle();
+
+const logoUrl = branding?.logo_public_url ?? null;
+
+// For @react-pdf/renderer <Image>:
+// Option A (preferred): pass URL directly if accessible from Deno runtime
+// Option B (fallback): fetch → ArrayBuffer → base64 data URI
+const logoSrc = logoUrl ?? null;
+// <Image src={logoSrc} /> in the PDF component — renders nothing if null
+```
+
+**Current state:** The `generate-weekly-report/components/Header.tsx` uses a text placeholder ("SiteMedic") with a comment about adding the logo later. This is the primary integration point for branded PDFs.
+
+**All PDF Edge Functions need the same branding fetch added to their `index.ts` and passed to their document component as a prop.**
+
+### 4c. Emails (Resend + React Email)
+
+Email templates currently hardcode "Apex Safety Group Ltd" in footers (confirmed in `booking-confirmation-email.tsx`). The fix is a required `branding` prop on all templates:
+
+```typescript
+// Template interface change (all email templates)
+interface OrgBranding {
+  companyName:  string;
+  primaryColor: string;
+  logoUrl?:     string;
+}
+
+interface BookingConfirmationEmailProps {
+  branding: OrgBranding;  // required, not optional
+  booking:  { ... };
+  // ... rest unchanged
+}
+
+// In template body:
+// Replace hardcoded company name in footer
+// Add <Img src={branding.logoUrl} /> above heading (if logoUrl present)
+// Replace button color: backgroundColor: branding.primaryColor
+```
+
+Call sites (API routes that send email) must fetch branding before calling `resend.emails.send()`:
+
+```typescript
+// Pattern for email-sending API routes
+const supabase = await createClient();
+const { data: { user } } = await supabase.auth.getUser();
+const orgId = user?.app_metadata?.org_id;
+
+const { data: branding } = await supabase
+  .from('org_branding')
+  .select('company_name, primary_color, logo_public_url')
+  .eq('org_id', orgId)
+  .maybeSingle();
+
+const orgBranding: OrgBranding = {
+  companyName:  branding?.company_name ?? 'SiteMedic',
+  primaryColor: branding?.primary_color ?? '#2563eb',
+  logoUrl:      branding?.logo_public_url ?? undefined,
+};
+
+await resend.emails.send({
+  react: <BookingConfirmationEmail branding={orgBranding} booking={...} ... />,
+  // ...
+});
+```
+
+---
+
+## 5. Stripe Billing alongside Stripe Connect
+
+### 5a. Conceptual separation (critical)
+
+| Dimension | Stripe Connect (existing) | Stripe Billing (new) |
+|-----------|--------------------------|----------------------|
+| Direction | Money OUT — platform pays medics | Money IN — orgs pay platform |
+| Account | Medic Express accounts | Platform's own Stripe account |
+| Webhook endpoint | `/api/stripe/webhooks` or Supabase Edge Function | `/api/stripe/billing-webhooks` (new) |
+| Webhook secret env var | `STRIPE_WEBHOOK_SECRET` | `STRIPE_BILLING_WEBHOOK_SECRET` (new) |
+| Key events | `account.updated`, `transfer.created`, `payment_intent.*` | `customer.subscription.*`, `invoice.payment_failed`, `checkout.session.completed` |
+| DB tables written | `medics`, `timesheets`, `payments`, `bookings` | `organizations` (subscription columns) |
+
+These concerns must never be handled in the same webhook endpoint. Different secrets, different payloads, different DB tables.
+
+Source: [Stripe Connect Webhooks](https://docs.stripe.com/connect/webhooks) and [Stripe Billing Subscription Webhooks](https://docs.stripe.com/billing/subscriptions/webhooks) — official Stripe documentation, HIGH confidence.
+
+### 5b. New billing webhook endpoint
+
+```typescript
+// web/app/api/stripe/billing-webhooks/route.ts (new file)
+
+import { NextRequest, NextResponse } from 'next/server';
+import { stripe } from '@/lib/stripe/server';
+import { createClient } from '@supabase/supabase-js';
+import Stripe from 'stripe';
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+export async function POST(request: NextRequest) {
+  const body = await request.text();
+  const signature = request.headers.get('stripe-signature');
+
+  if (!signature) {
+    return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
+  }
+
+  let event: Stripe.Event;
+  try {
+    // CRITICAL: Use BILLING-specific secret, not STRIPE_WEBHOOK_SECRET
+    event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      process.env.STRIPE_BILLING_WEBHOOK_SECRET!
+    );
+  } catch {
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+  }
+
+  // Service role client — webhook has no user session
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  switch (event.type) {
+
+    case 'checkout.session.completed': {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const orgId = session.metadata?.org_id;
+      const priceId = session.line_items?.data?.[0]?.price?.id;
+      if (!orgId) break;
+
+      await supabase
+        .from('organizations')
+        .update({
+          stripe_customer_id:     session.customer as string,
+          stripe_subscription_id: session.subscription as string,
+          subscription_tier:      tierFromPriceId(priceId ?? ''),
+          subscription_status:    'active',
+        })
+        .eq('id', orgId);
+      break;
+    }
+
+    case 'customer.subscription.created':
+    case 'customer.subscription.updated': {
+      const sub = event.data.object as Stripe.Subscription;
+      const priceId = sub.items.data[0]?.price?.id;
+
+      await supabase
+        .from('organizations')
+        .update({
+          stripe_subscription_id: sub.id,
+          subscription_tier:      tierFromPriceId(priceId ?? ''),
+          subscription_status:    sub.status as string,
+        })
+        .eq('stripe_customer_id', sub.customer as string);
+      break;
+    }
+
+    case 'customer.subscription.deleted': {
+      const sub = event.data.object as Stripe.Subscription;
+      await supabase
+        .from('organizations')
+        .update({
+          subscription_status:    'canceled',
+          subscription_tier:      'starter',
+          stripe_subscription_id: null,
+        })
+        .eq('stripe_customer_id', sub.customer as string);
+      break;
+    }
+
+    case 'invoice.payment_failed': {
+      const invoice = event.data.object as Stripe.Invoice;
+      await supabase
+        .from('organizations')
+        .update({ subscription_status: 'past_due' })
+        .eq('stripe_customer_id', invoice.customer as string);
+      // TODO: Send email to org admin via Resend
+      break;
+    }
+
+  }
+
+  return NextResponse.json({ received: true });
+}
+```
+
+### 5c. Price ID to tier mapping
+
+```typescript
+// web/lib/stripe/billing-plans.ts (new file)
+
+export const BILLING_PLANS = {
+  starter: {
+    priceId: process.env.STRIPE_PRICE_STARTER!,
+    tier: 'starter' as const,
+    label: 'Starter',
+  },
+  growth: {
+    priceId: process.env.STRIPE_PRICE_GROWTH!,
+    tier: 'growth' as const,
+    label: 'Growth',
+  },
+  enterprise: {
+    priceId: process.env.STRIPE_PRICE_ENTERPRISE!,
+    tier: 'enterprise' as const,
+    label: 'Enterprise',
+  },
+} as const;
+
+export type Tier = 'starter' | 'growth' | 'enterprise';
+
+export function tierFromPriceId(priceId: string): Tier {
+  for (const plan of Object.values(BILLING_PLANS)) {
+    if (plan.priceId === priceId) return plan.tier;
+  }
+  return 'starter';
+}
+```
+
+**New environment variables required:**
+
+```bash
+# Add to Vercel project env vars and .env.local
+STRIPE_BILLING_WEBHOOK_SECRET=whsec_billing_...
+STRIPE_PRICE_STARTER=price_...
+STRIPE_PRICE_GROWTH=price_...
+STRIPE_PRICE_ENTERPRISE=price_...
+NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.com
+```
+
+### 5d. Stripe Dashboard setup for billing webhook
+
+In Stripe Dashboard (Production account, not Connect):
+1. Webhooks → Add endpoint
+2. URL: `https://sitemedic.com/api/stripe/billing-webhooks`
+3. Events to listen for: `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`, `checkout.session.completed`
+4. Do NOT enable "Connect" toggle — this is a platform-level webhook, not a Connect webhook
+5. Copy the signing secret → set as `STRIPE_BILLING_WEBHOOK_SECRET` in Vercel
+
+### 5e. Org onboarding and Stripe Checkout flow
+
+```
+/signup → user creates Supabase account
+  └─ POST /api/billing/checkout (new route)
+       └─ Fetch org_id from user JWT
+       └─ stripe.customers.create({
+            email: user.email,
+            metadata: { org_id }
+          })
+       └─ stripe.checkout.sessions.create({
+            customer: stripeCustomerId,
+            mode: 'subscription',
+            line_items: [{ price: STRIPE_PRICE_GROWTH, quantity: 1 }],
+            metadata: { org_id },
+            success_url: `${origin}/onboarding/complete?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${origin}/pricing`,
+          })
+       └─ Return { url } → redirect browser to Stripe Checkout
+
+Stripe Checkout (hosted page) → user enters card
+  └─ Stripe fires checkout.session.completed
+       └─ Billing webhook updates organizations (tier, status, stripe_customer_id)
+       └─ Platform admin notified to review + activate org
+
+/onboarding/complete
+  └─ Org admin completes profile/branding setup wizard
+  └─ Platform admin activates org in /platform/organizations
+```
+
+---
+
+## 6. Feature Gating
+
+### 6a. Feature gate map (authoritative, server-side)
+
+```typescript
+// web/lib/billing/feature-gates.ts (new file)
+
+export const FEATURE_GATES = {
+  custom_branding:         ['growth', 'enterprise'],
+  subdomain_routing:       ['growth', 'enterprise'],
+  white_label_pdf:         ['growth', 'enterprise'],
+  white_label_email:       ['growth', 'enterprise'],
+  advanced_analytics:      ['enterprise'],
+  api_access:              ['enterprise'],
+  priority_support:        ['growth', 'enterprise'],
+  multi_vertical:          ['growth', 'enterprise'],
+} as const;
+
+export type Feature = keyof typeof FEATURE_GATES;
+
+export function hasFeature(tier: string, feature: Feature): boolean {
+  return (FEATURE_GATES[feature] as readonly string[]).includes(tier);
+}
+```
+
+### 6b. Gating in server components (authoritative enforcement)
+
+```typescript
+// In any server component or API route
+import { headers } from 'next/headers';
+import { hasFeature } from '@/lib/billing/feature-gates';
+
+const headersList = await headers();
+const tier = headersList.get('x-org-tier') ?? 'starter';
+
+// In PDF generation: skip branding if not gated tier
+const useBranding = hasFeature(tier, 'white_label_pdf');
+
+// In API route: return 403 if feature not available
+if (!hasFeature(tier, 'api_access')) {
+  return NextResponse.json({ error: 'API access requires Enterprise tier' }, { status: 403 });
+}
+```
+
+### 6c. Gating in client components (UX only)
+
+```typescript
+// In client components via BrandingContext (which includes tier)
+const { tier } = useBranding();
+const canCustomizeBranding = hasFeature(tier, 'custom_branding');
+
+{!canCustomizeBranding && (
+  <div className="upgrade-prompt">
+    Custom branding requires Growth or Enterprise. <a href="/billing">Upgrade</a>
+  </div>
+)}
+```
+
+**Rule:** Client-side gating is UX only — it can never be the sole enforcement. Always re-validate server-side.
+
+### 6d. RLS and gating
+
+RLS cannot directly read `subscription_tier` from the JWT (tier is not in app_metadata). Do not attempt RLS-based feature gating. Application layer only.
+
+---
+
+## 7. Build Order (Dependency Graph)
+
+```
+STEP 1 — DB Migrations (prerequisite for all code)
+  ├─ Migration 132: org_branding table + RLS + backfill empty rows
+  ├─ Migration 133: organizations ADD COLUMN stripe_customer_id, stripe_subscription_id,
+  │                 subscription_tier, subscription_status
+  └─ Migration 134 (or Dashboard): Supabase Storage bucket 'org-logos' (public)
+
+STEP 2 — Billing infrastructure (no UI; must be live before any org subscribes)
+  ├─ web/lib/stripe/billing-plans.ts — tier→priceId + tierFromPriceId()
+  ├─ web/lib/billing/feature-gates.ts — FEATURE_GATES + hasFeature()
+  ├─ web/app/api/stripe/billing-webhooks/route.ts — new webhook handler
+  ├─ Stripe Dashboard: create billing webhook endpoint → copy secret
+  └─ Environment variables: STRIPE_BILLING_WEBHOOK_SECRET, STRIPE_PRICE_*, NEXT_PUBLIC_ROOT_DOMAIN
+
+STEP 3 — Subdomain routing (middleware changes)
+  ├─ PREREQUISITE: Vercel wildcard DNS must be configured before testing in production
+  ├─ web/lib/supabase/middleware.ts: extractSubdomain() helper
+  ├─ web/lib/supabase/middleware.ts: service role org lookup by slug
+  ├─ web/lib/supabase/middleware.ts: x-org-* header injection
+  └─ web/lib/supabase/middleware.ts: strip incoming x-org-* headers (security)
+
+STEP 4 — Branding data flow: SSR
+  ├─ web/contexts/branding-context.tsx — BrandingProvider + useBranding()
+  ├─ web/app/(dashboard)/layout.tsx — read headers(), pass to BrandingProvider
+  ├─ web/app/admin/layout.tsx — same
+  ├─ Logo in navigation headers (fallback to SiteMedic logo if not set)
+  └─ CSS custom properties: --org-primary from BrandingProvider
+
+STEP 5 — Branding data flow: PDFs
+  ├─ All PDF Edge Functions: add org_branding fetch to index.ts
+  ├─ All PDF header components: accept branding prop, render logo + company name
+  └─ Remove hardcoded 'SiteMedic' placeholders
+
+STEP 6 — Branding data flow: Emails
+  ├─ Add OrgBranding prop to all email template interfaces (required, not optional)
+  ├─ All email-sending API routes: fetch org_branding before resend.emails.send()
+  └─ Remove hardcoded 'Apex Safety Group Ltd' from footers
+
+STEP 7 — Org onboarding flow
+  ├─ web/app/api/billing/checkout/route.ts — create Stripe customer + Checkout session
+  ├─ web/app/(auth)/signup/page.tsx — trigger billing checkout after account creation
+  ├─ web/app/onboarding/* — post-Checkout branding setup wizard
+  └─ web/app/platform/organizations/page.tsx — platform admin activation UI
+
+STEP 8 — Feature gating in UI
+  └─ Upgrade prompts on gated features for starter-tier orgs
+
+STEP 9 — Settings: org branding upload UI
+  └─ web/app/admin/settings/branding/page.tsx — logo upload, color picker, company name
+```
+
+**Critical dependency rules:**
+- Step 1 (migrations) must run before any code that reads new columns or the `org_branding` table
+- Step 2 (billing webhook) must be deployed before Step 7 (onboarding) — webhooks must receive events
+- Step 3 (Vercel DNS) must be live in production before subdomain routing is tested on a real subdomain
+- Steps 4–6 can be parallelised once Step 3 is merged and deployed
+- Step 7 depends on Step 2 (billing infrastructure complete) and Step 4 (branding setup UX available)
+
+---
+
+## 8. RLS and JWT Metadata: What Stays Untouched
+
+| Item | Action | Reason |
+|------|--------|--------|
+| `get_user_org_id()` function | Do not touch | All existing RLS policies depend on it |
+| `is_platform_admin()` function | Do not touch | Platform admin RLS depends on it |
+| JWT shape: `org_id`, `role`, `org_slug` | Do not add new fields | JWT bloat; tier is read from DB, not JWT |
+| All existing RLS policies | Do not touch | Additive only — new table gets its own policies |
+| `STRIPE_WEBHOOK_SECRET` env var | Do not change | Existing Connect webhook still uses it |
+| The Connect webhook handler files | Do not merge | Keep handlers separate |
+
+**Why tier is NOT in the JWT:** JWTs have a 3600-second default TTL. If stored in the JWT:
+- Downgraded orgs retain premium access for up to an hour
+- Upgraded orgs must wait for JWT refresh before features unlock
+- Billing webhooks updating the JWT are complex (require admin API calls)
+
+The middleware reads tier from the DB on every request. This is the correct approach at current scale. It adds one DB column to the existing org slug lookup — effectively free.
+
+---
+
+## 9. Component Boundaries
 
 | Component | Responsibility | Communicates With |
 |-----------|---------------|-------------------|
-| `OrgContext` (mobile) | Provides `orgId`, `industryVerticals`, `primaryVertical` | AuthContext (depends on), all screens (provides to) |
-| `OrgContext` (web, existing) | Same for web, also exposes `role`, `orgSlug` | All web pages via `useOrg()` |
-| `useVerticalLabels()` (mobile + web) | Pure derivation of display labels from vertical | OrgContext (reads), form/UI (provides to) |
-| `new.tsx` treatment form | Captures treatment, adapts UI to vertical | OrgContext, WatermelonDB, SyncContext |
-| `taxonomy/` files | Pure lookup functions (no state, no side effects) | Used by both mobile and web |
-| `incident-report-dispatcher.ts` | Routes to correct PDF Edge Function by framework | Web dashboard, Edge Functions |
-| `NearMissHeatMap` | Renders GPS coordinates as Leaflet heat layer | Leaflet, TanStack Query |
-| `ComplianceScoreChart` | Renders compliance trend as Recharts line chart | Recharts, TanStack Query |
-| PDF Edge Functions | Render vertical-specific PDF, upload to storage | `@react-pdf/renderer`, Supabase Storage |
-| `compliance_score_history` table | Persists weekly scores for trend charts | `generate-weekly-report` (writes), chart queries (reads) |
+| `middleware.ts` (updated) | Subdomain → org resolution, branding header injection, security header strip, auth guard | Supabase service role client, Next.js response headers |
+| `org_branding` table | Persists per-org visual identity | `organizations` (FK), Supabase Storage (logo paths) |
+| `BrandingContext` + `BrandingProvider` | Client-side branding state from SSR headers | Dashboard layouts (server), all client UI components |
+| `feature-gates.ts` | Authoritative tier → feature mapping | API routes, server components, PDF Edge Functions |
+| `/api/stripe/billing-webhooks` | Stripe Billing lifecycle events | `organizations` table (service role), Resend (future) |
+| `/api/stripe/webhooks` | Stripe Connect events (existing — unchanged) | `medics`, `timesheets`, `payments`, `bookings` tables |
+| `supabase/functions/stripe-webhooks` | Stripe Connect Edge Function (existing — unchanged) | `medics`, `timesheets` tables |
+| `/api/billing/checkout` | Create Stripe customer + Checkout session for org signup | Stripe Billing API, `organizations` table |
+| PDF Edge Functions (updated) | Org-branded document generation | `org_branding` (via service role), Supabase Storage |
+| Email templates (updated) | Org-branded transactional email | `org_branding` (from API route fetch), Resend API |
+| `billing-plans.ts` | Price ID ↔ tier mapping constants | Billing webhook handler, checkout route |
 
 ---
 
-## Suggested Build Order
+## 10. Anti-Patterns to Avoid
 
-Ordered by dependency. Schema changes must precede code that uses them. Mobile context must
-precede hooks that use it. Hooks must precede UI that uses them.
+### Anti-Pattern 1: Subscription tier in the JWT
 
-**Phase 1 — Schema Foundation**
+**What goes wrong:** Tier changes (upgrade/downgrade) do not take effect until the user's JWT expires and refreshes. Downgraded orgs keep premium access; upgraded orgs wait.
 
-Prerequisite for all form and chart work. No user-visible output yet.
+**Prevention:** Read tier from DB in middleware on every request. Inject as `x-org-tier` header. Never put tier in JWT app_metadata.
 
-1. WatermelonDB schema v4 migration: `event_vertical` on `treatments`, `gps_lat`/`gps_lng` on `near_misses`, `vertical_extra_fields` on `treatments`
-2. SQL migration: `gps_lat`/`gps_lng` on Supabase `near_misses`, `vertical_extra_fields` on `treatments`
-3. SQL migration: `compliance_score_history` table
+### Anti-Pattern 2: One Stripe webhook handler for both Connect and Billing
 
-**Phase 2 — Mobile Context + Form Cleanup**
+**What goes wrong:** The signing secrets are different. Mixing them means verifying Connect events with the Billing secret or vice versa — both fail. It also creates coupling between completely unrelated payment flows.
 
-Establishes the consistent vertical signal on mobile. Removes the per-render network call.
+**Prevention:** Two separate route handlers, two separate Stripe Dashboard webhook endpoints, two separate env vars (`STRIPE_WEBHOOK_SECRET` for Connect, `STRIPE_BILLING_WEBHOOK_SECRET` for Billing).
 
-4. Mobile `OrgContext` (`src/contexts/OrgContext.tsx`)
-5. Register `OrgProvider` in `app/_layout.tsx`
-6. `useVerticalLabels()` hook (`src/hooks/useVerticalLabels.ts`)
-7. Update `new.tsx` — replace `fetchOrgVertical()` with `useOrg()`, accept `event_vertical` route param
-8. Add vertical-specific conditional sections to `new.tsx`
-9. Capture `vertical_extra_fields` in form and include in sync payload
+### Anti-Pattern 3: Branding via client-side fetch
 
-**Phase 3 — GPS Data Capture**
+**What goes wrong:** Flash of unbranded content on first SSR render. Extra network round-trip. Race condition between auth and branding fetch.
 
-Enables the heat map. Must happen before the heat map page exists.
+**Prevention:** Middleware injects branding into request headers. Server layout components read headers via `next/headers`. `BrandingProvider` hydrates the client from SSR-provided values. Zero client-side branding fetches on page load.
 
-10. GPS capture in `app/safety/near-miss.tsx` (request permission, capture on open)
-11. Include GPS in near-miss sync payload and WatermelonDB model
+### Anti-Pattern 4: Anon RLS policy on org_branding for middleware reads
 
-**Phase 4 — Web Dashboard Vertical Wiring**
+**What goes wrong:** An anon-accessible policy on `org_branding` could leak all orgs' branding data if misconfigured. Middleware reads happen before user authentication, so the user's org RLS context is not yet available.
 
-Lower priority than mobile because the web OrgContext already works. This is polish.
+**Prevention:** Middleware uses the service role client (bypasses RLS) for the org + branding lookup. The service role key is server-only (not `NEXT_PUBLIC_`). This is the correct use case for the service role.
 
-12. `useVerticalLabels()` hook (web)
-13. Cert profile UI: use `getRecommendedCertTypes(vertical)` in admin medic edit form type selector
-14. Update `generate-weekly-report` Edge Function to upsert into `compliance_score_history`
+### Anti-Pattern 5: Hardcoded company names in PDFs and emails
 
-**Phase 5 — PDF Generation for New Verticals**
+**What goes wrong:** "Apex Safety Group Ltd" and "SiteMedic" appear in documents sent to clients of other orgs. This is the opposite of white-label.
 
-Depends on Phase 2 (correct `event_vertical` in treatments) and Phase 4 (stable compliance data).
+**Prevention:** All PDF document components and email templates have a required `branding: OrgBranding` prop. Call sites must pass it. TypeScript's required type makes it impossible to omit accidentally.
 
-15. `event-incident-report-generator` Edge Function (festivals, fairs_shows, private_events)
-16. `motorsport-incident-generator` Edge Function
-17. `fa-incident-generator` Edge Function
-18. `incident-report-dispatcher.ts` web utility
+### Anti-Pattern 6: Single `org-logos` bucket without org_id namespacing
 
-**Phase 6 — Analytics and Visualization**
+**What goes wrong:** `logo.png` for one org overwrites another's. All org logos collide.
 
-Read-only layer. All data it visualizes must be captured first (Phases 1–5).
-
-19. `ComplianceScoreChart` component + TanStack Query wiring
-20. `IncidentFrequencyChart` component
-21. Install `leaflet.heat` + `@types/leaflet.heat` (or write type shim)
-22. `NearMissHeatMap` component
-23. Heat map page in dashboard
+**Prevention:** Enforce path format `org-logos/{org_id}/logo.{ext}`. The upload API route derives the path from the authenticated user's `org_id` in their JWT — not from user input. Storage RLS policy (if using private bucket): `bucket_id = 'org-logos' AND name LIKE auth.uid()::text || '%'` — but since the bucket is public, the path namespacing provides practical isolation.
 
 ---
 
-## Open Gaps Requiring Decisions Before Implementation
+## 11. Scalability Considerations
 
-| Gap | Question | Affects Phase |
-|-----|----------|--------------|
-| Multi-vertical org default | If an org serves both `construction` and `festivals`, which vertical does an ad-hoc treatment form default to? First in `industry_verticals` array is the current assumption — is this right? | Phase 2 |
-| Booking → treatment linkage | Does the mobile app currently pass `booking_id` as a route param to `new.tsx`? If not, the booking vertical override requires adding a booking detail → new treatment navigation path. | Phase 2 |
-| GPS permission UX | The near-miss form should explain why GPS is being requested ("helps identify hazard hotspots"). A denied permission should save the near-miss without coordinates — not block submission. | Phase 3 |
-| Compliance score formula | What is the exact formula for `compliance_score`? The weekly report calculates it but it must be formally defined before `compliance_score_history` values are meaningful for trend analysis. | Phase 4 |
-| `leaflet.heat` version compatibility | Verify `leaflet.heat` is compatible with `react-leaflet ^5.0.0` (which uses Leaflet 1.9.x). The plugin targets Leaflet 1.x so it should work, but confirm before Phase 6. | Phase 6 |
-
----
-
-## Confidence Assessment
-
-| Area | Confidence | Basis |
-|------|------------|-------|
-| Existing code inventory (what's built) | HIGH | Every file read directly from source |
-| Provider tree placement | HIGH | Read `app/_layout.tsx` and `web/app/layout.tsx` |
-| WatermelonDB schema state | HIGH | Read `schema.ts` v3 and `migrations.ts` |
-| No GPS on near_misses | HIGH | Read `00003_health_data_tables.sql` — `location TEXT` only |
-| Recharts availability + usage | HIGH | Confirmed in `package.json` + 4 usage sites found |
-| Leaflet availability + SSR pattern | HIGH | Confirmed in `package.json` + `GeofenceMapPicker.tsx` |
-| `leaflet.heat` recommendation | MEDIUM | Package exists and is in active use on npm; not installed yet — version compatibility with react-leaflet 5 should be verified |
-| `compliance_score_history` table absence | HIGH | Scanned all migration files, table not present |
-| PDF Edge Function pattern | HIGH | Read both existing functions in full |
-| Cert taxonomy completeness | HIGH | Read both certification type files — all 32 types + 7 categories present |
+| Concern | At 1 org (now) | At 20 orgs | At 200 orgs |
+|---------|----------------|------------|-------------|
+| Middleware org lookup | 1 DB query per request on subdomains | Acceptable — indexed on `slug` | Add Vercel KV / Upstash cache (slug → org row), TTL 60s |
+| Middleware branding lookup | 1 additional query per subdomain request | Acceptable | Include in same KV cache entry |
+| Stripe Billing webhooks | Very low volume — plan changes are rare | Still low | Still low — not request-per-second traffic |
+| Logo storage | Single CDN bucket, UUID-namespaced | Same — Supabase Storage CDN scales automatically | Same |
+| Feature gating | Constant map lookup — O(1) | Same | Same |
+| `subscription_tier` staleness | Tier read from DB on every request — always fresh | Same | Consider 30s in-memory Next.js cache (unstable_cache) |
 
 ---
 
 ## Sources
 
-All findings verified against these files (no external web search used for inventory claims):
-
-- `/Users/sabineresoagli/GitHub/sitemedic/app/_layout.tsx`
-- `/Users/sabineresoagli/GitHub/sitemedic/app/treatment/new.tsx`
-- `/Users/sabineresoagli/GitHub/sitemedic/app/(tabs)/settings.tsx`
-- `/Users/sabineresoagli/GitHub/sitemedic/src/contexts/AuthContext.tsx`
-- `/Users/sabineresoagli/GitHub/sitemedic/src/database/schema.ts`
-- `/Users/sabineresoagli/GitHub/sitemedic/src/database/migrations.ts`
-- `/Users/sabineresoagli/GitHub/sitemedic/src/database/models/NearMiss.ts`
-- `/Users/sabineresoagli/GitHub/sitemedic/services/taxonomy/vertical-compliance.ts`
-- `/Users/sabineresoagli/GitHub/sitemedic/services/taxonomy/certification-types.ts`
-- `/Users/sabineresoagli/GitHub/sitemedic/services/taxonomy/mechanism-presets.ts`
-- `/Users/sabineresoagli/GitHub/sitemedic/services/taxonomy/vertical-outcome-labels.ts`
-- `/Users/sabineresoagli/GitHub/sitemedic/web/types/certification.types.ts`
-- `/Users/sabineresoagli/GitHub/sitemedic/web/contexts/org-context.tsx`
-- `/Users/sabineresoagli/GitHub/sitemedic/web/app/layout.tsx`
-- `/Users/sabineresoagli/GitHub/sitemedic/web/app/(dashboard)/riddor/page.tsx`
-- `/Users/sabineresoagli/GitHub/sitemedic/web/app/api/medics/[id]/certifications/route.ts`
-- `/Users/sabineresoagli/GitHub/sitemedic/web/app/medic/profile/page.tsx`
-- `/Users/sabineresoagli/GitHub/sitemedic/web/lib/compliance/vertical-compliance.ts`
-- `/Users/sabineresoagli/GitHub/sitemedic/web/components/admin/GeofenceMapPicker.tsx`
-- `/Users/sabineresoagli/GitHub/sitemedic/web/components/riddor/OverridePatternChart.tsx`
-- `/Users/sabineresoagli/GitHub/sitemedic/web/package.json`
-- `/Users/sabineresoagli/GitHub/sitemedic/supabase/migrations/00003_health_data_tables.sql`
-- `/Users/sabineresoagli/GitHub/sitemedic/supabase/migrations/123_booking_briefs.sql`
-- `/Users/sabineresoagli/GitHub/sitemedic/supabase/functions/generate-weekly-report/index.tsx`
-- `/Users/sabineresoagli/GitHub/sitemedic/supabase/functions/riddor-f2508-generator/index.ts`
+- [Next.js Multi-Tenant Guide](https://nextjs.org/docs/app/guides/multi-tenant) — Official Next.js documentation, HIGH confidence
+- [Vercel Wildcard Domains blog](https://vercel.com/blog/wildcard-domains) — Official Vercel, HIGH confidence
+- [Vercel Multi-Tenant Domain Management](https://vercel.com/docs/multi-tenant/domain-management) — Official Vercel, HIGH confidence
+- [Next.js headers() function](https://nextjs.org/docs/app/api-reference/functions/headers) — Official Next.js, HIGH confidence
+- [Vercel: Modifying Request Headers in Middleware](https://vercel.com/templates/next.js/edge-functions-modify-request-header) — Official Vercel template, HIGH confidence
+- [Stripe Connect Webhooks](https://docs.stripe.com/connect/webhooks) — Official Stripe, HIGH confidence
+- [Stripe Billing Subscription Webhooks](https://docs.stripe.com/billing/subscriptions/webhooks) — Official Stripe, HIGH confidence
+- [Stripe Billing Entitlements](https://docs.stripe.com/billing/entitlements) — Official Stripe, HIGH confidence (Stripe native entitlements are an alternative to the FEATURE_GATES approach — both are valid)
+- [Supabase Storage Access Control](https://supabase.com/docs/guides/storage/security/access-control) — Official Supabase, HIGH confidence
+- [CVE-2025-29927 Next.js middleware header injection](https://www.averlon.ai/blog/nextjs-cve-2025-29927-header-injection) — Third-party analysis, MEDIUM confidence. Mitigation (strip headers at start of middleware) is standard Next.js community practice
+- Codebase reads (all HIGH confidence — files read directly):
+  - `web/middleware.ts`
+  - `web/lib/supabase/middleware.ts`
+  - `web/contexts/org-context.tsx`
+  - `web/app/layout.tsx`
+  - `web/app/api/stripe/webhooks/route.ts`
+  - `web/lib/stripe/server.ts`
+  - `web/lib/email/resend.ts`
+  - `web/lib/email/templates/booking-confirmation-email.tsx`
+  - `web/next.config.ts`
+  - `supabase/functions/stripe-webhooks/index.ts`
+  - `supabase/functions/generate-weekly-report/components/Header.tsx`
+  - `supabase/functions/generate-invoice-pdf/components/InvoiceDocument.tsx`
+  - `supabase/migrations/00001_organizations.sql`
+  - `supabase/migrations/00004_rls_policies.sql`
+  - `supabase/migrations/027_backfill_asg_org_id.sql`
+  - `supabase/migrations/118_org_settings.sql`
+  - `supabase/migrations/100_add_platform_admin_role.sql`
+  - `supabase/migrations/115_referral_and_per_medic_rates.sql`

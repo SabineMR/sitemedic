@@ -9,12 +9,12 @@
 
 Core plumbing that all four new verticals depend on. Must ship before any vertical goes live.
 
-- [ ] **VERT-01**: RIDDOR auto-flagging only triggers when the active vertical has `riddorApplies: true` — festival-goers, motorsport competitors, and football players on-pitch never produce false RIDDOR flags
-- [ ] **VERT-02**: WatermelonDB v4 schema adds `vertical_id`, `booking_id`, `patient_type`, `gps_lat`, `gps_lng` to the treatments table (all nullable, single coordinated migration)
-- [ ] **VERT-03**: Mobile app fetches active vertical once at login via OrgContext — treatment form does not call Supabase on every mount to determine vertical
-- [ ] **VERT-04**: Booking-level vertical override is read by the mobile treatment form — a motorsport booking at a construction org shows motorsport presets, not construction presets
-- [ ] **VERT-05**: Admin can set a default vertical for their organisation in the org settings page
-- [ ] **VERT-06**: Client can select event type / vertical when creating a booking — the booking's `event_vertical` field is set at booking creation
+- [x] **VERT-01**: RIDDOR auto-flagging only triggers when the active vertical has `riddorApplies: true` — festival-goers, motorsport competitors, and football players on-pitch never produce false RIDDOR flags
+- [x] **VERT-02**: WatermelonDB v4 schema adds `vertical_id`, `booking_id`, `patient_type`, `gps_lat`, `gps_lng` to the treatments table (all nullable, single coordinated migration)
+- [x] **VERT-03**: Mobile app fetches active vertical once at login via OrgContext — treatment form does not call Supabase on every mount to determine vertical
+- [x] **VERT-04**: Booking-level vertical override is read by the mobile treatment form — a motorsport booking at a construction org shows motorsport presets, not construction presets
+- [x] **VERT-05**: Admin can set a default vertical for their organisation in the org settings page
+- [x] **VERT-06**: Client can select event type / vertical when creating a booking — the booking's `event_vertical` field is set at booking creation
 
 ### FILM — Film/TV Production Vertical
 
@@ -25,32 +25,32 @@ Core plumbing that all four new verticals depend on. Must ship before any vertic
 
 ### FEST — Festivals & Events Vertical
 
-- [ ] **FEST-01**: Festival incident form captures TST triage category (P1 / P2 / P3 / P4) as a required field replacing standard outcome severity
-- [ ] **FEST-02**: Festival incident form includes Alcohol/Substance flag and Safeguarding concern flag
-- [ ] **FEST-03**: RIDDOR auto-flagging is disabled for festival-goer patients (Purple Guide framework, not HSE RIDDOR)
-- [ ] **FEST-04**: App terminology switches to events context: "Attendee" replaces "Worker", "Venue" replaces "Site", "Organiser" replaces "Client"
-- [ ] **FEST-05**: Medic profile shows events-relevant cert types: FREC 3 (minimum), IHCD Ambulance Aid, EFR
-- [ ] **FEST-06**: Festival incidents generate a Purple Guide–style event incident report PDF for the event organiser
+- [x] **FEST-01**: Festival incident form captures TST triage category (P1 / P2 / P3 / P4) as a required field replacing standard outcome severity
+- [x] **FEST-02**: Festival incident form includes Alcohol/Substance flag and Safeguarding concern flag
+- [x] **FEST-03**: RIDDOR auto-flagging is disabled for festival-goer patients (Purple Guide framework, not HSE RIDDOR)
+- [x] **FEST-04**: App terminology switches to events context: "Attendee" replaces "Worker", "Venue" replaces "Site", "Organiser" replaces "Client"
+- [x] **FEST-05**: Medic profile shows events-relevant cert types: FREC 3 (minimum), IHCD Ambulance Aid, EFR
+- [x] **FEST-06**: Festival incidents generate a Purple Guide–style event incident report PDF for the event organiser
 
 ### MOTO — Motorsport Vertical
 
-- [ ] **MOTO-01**: Motorsport incident form captures Motorsport UK Accident Form fields: GCS score, extrication required, helmet removed, concussion flag, competitor cleared to return to race
-- [ ] **MOTO-02**: Per-event Medical Statistics Sheet is generated automatically at end of event — aggregate of all incident records from that booking
-- [ ] **MOTO-03**: When concussion is flagged, the system triggers a licence suspension notification workflow — admin is alerted and a notification record is created for submission to Motorsport UK
-- [ ] **MOTO-04**: RIDDOR auto-flagging is disabled for motorsport competitor patients
-- [ ] **MOTO-05**: App terminology switches to motorsport context: "Competitor" replaces "Worker", "Circuit / Paddock" replaces "Site", "Organiser" replaces "Client"
-- [ ] **MOTO-06**: Medic profile shows motorsport-relevant cert types: Motorsport UK Medical Official Licence, ATLS, BASM
-- [ ] **MOTO-07**: Motorsport incidents generate a Motorsport UK–style Accident Form PDF per incident
+- [x] **MOTO-01**: Motorsport incident form captures Motorsport UK Accident Form fields: GCS score, extrication required, helmet removed, concussion flag, competitor cleared to return to race
+- [x] **MOTO-02**: Per-event Medical Statistics Sheet is generated automatically at end of event — aggregate of all incident records from that booking
+- [x] **MOTO-03**: When concussion is flagged, the system triggers a licence suspension notification workflow — admin is alerted and a notification record is created for submission to Motorsport UK
+- [x] **MOTO-04**: RIDDOR auto-flagging is disabled for motorsport competitor patients
+- [x] **MOTO-05**: App terminology switches to motorsport context: "Competitor" replaces "Worker", "Circuit / Paddock" replaces "Site", "Organiser" replaces "Client"
+- [x] **MOTO-06**: Medic profile shows motorsport-relevant cert types: Motorsport UK Medical Official Licence, ATLS, BASM
+- [x] **MOTO-07**: Motorsport incidents generate a Motorsport UK–style Accident Form PDF per incident
 
 ### FOOT — Football / Sports Vertical
 
-- [ ] **FOOT-01**: Football incident form prompts medic to select patient type at start: Player or Spectator — form fields then differ based on selection
-- [ ] **FOOT-02**: Player incident form captures FA-aligned fields: Phase of Play, Contact / Non-Contact, HIA Concussion Assessment outcome, FA severity classification
-- [ ] **FOOT-03**: Spectator incident form captures SGSA-aligned fields: stand location, medical referral outcome, safeguarding flag
-- [ ] **FOOT-04**: RIDDOR auto-flagging is disabled for player on-pitch injuries (players are not workers under RIDDOR)
-- [ ] **FOOT-05**: App terminology switches to football context: "Player" replaces "Worker", "Pitch / Ground" replaces "Site", "Club" replaces "Client"
-- [ ] **FOOT-06**: Medic profile shows football-relevant cert types: ATMMiF (FA), ITMMiF (FA), FA Advanced Trauma Management
-- [ ] **FOOT-07**: Football incidents generate the appropriate PDF — FA incident report for player injuries, SGSA medical incident report for spectator injuries
+- [x] **FOOT-01**: Football incident form prompts medic to select patient type at start: Player or Spectator — form fields then differ based on selection
+- [x] **FOOT-02**: Player incident form captures FA-aligned fields: Phase of Play, Contact / Non-Contact, HIA Concussion Assessment outcome, FA severity classification
+- [x] **FOOT-03**: Spectator incident form captures SGSA-aligned fields: stand location, medical referral outcome, safeguarding flag
+- [x] **FOOT-04**: RIDDOR auto-flagging is disabled for player on-pitch injuries (players are not workers under RIDDOR)
+- [x] **FOOT-05**: App terminology switches to football context: "Player" replaces "Worker", "Pitch / Ground" replaces "Site", "Club" replaces "Client"
+- [x] **FOOT-06**: Medic profile shows football-relevant cert types: ATMMiF (FA), ITMMiF (FA), FA Advanced Trauma Management
+- [x] **FOOT-07**: Football incidents generate the appropriate PDF — FA incident report for player injuries, SGSA medical incident report for spectator injuries
 
 ### ANLT — Analytics: Heat Maps & Trend Charts
 
@@ -118,14 +118,14 @@ Core plumbing that all four new verticals depend on. Must ship before any vertic
 | MOTO-04 | Phase 19 | Complete |
 | MOTO-05 | Phase 19 | Complete |
 | MOTO-06 | Phase 19 | Complete |
-| MOTO-07 | Phase 19 | Complete |
-| FOOT-01 | Phase 22 | Pending |
-| FOOT-02 | Phase 22 | Pending |
-| FOOT-03 | Phase 22 | Pending |
-| FOOT-04 | Phase 22 | Pending |
-| FOOT-05 | Phase 22 | Pending |
-| FOOT-06 | Phase 22 | Pending |
-| FOOT-07 | Phase 22 | Pending |
+| MOTO-07 | Phase 19 + Phase 23 (gap closure 23-06) | Complete |
+| FOOT-01 | Phase 22 | Complete |
+| FOOT-02 | Phase 22 | Complete |
+| FOOT-03 | Phase 22 | Complete |
+| FOOT-04 | Phase 22 | Complete |
+| FOOT-05 | Phase 22 | Complete |
+| FOOT-06 | Phase 22 | Complete |
+| FOOT-07 | Phase 22 | Complete |
 | ANLT-01 | Phase 23 | Complete |
 | ANLT-02 | Phase 23 | Complete |
 | ANLT-03 | Phase 23 | Complete |
@@ -136,8 +136,9 @@ Core plumbing that all four new verticals depend on. Must ship before any vertic
 **Coverage:**
 - v2.0 requirements: 36 total
 - Mapped to phases: 36/36 (100%)
+- Complete: 36/36 (100%)
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-17*
-*Last updated: 2026-02-17 — traceability complete, all 36 requirements mapped to phases 18–23*
+*Last updated: 2026-02-18 — FOOT-01 through FOOT-07 marked Complete (Phase 22 verified passed); MOTO-07 updated to include Phase 23 gap-closure plan 23-06; all VERT/FEST/MOTO requirement checkboxes corrected to [x]; 36/36 requirements now Complete*
