@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { EventIncidentReportCard } from '@/components/dashboard/EventIncidentReportCard';
 
 interface TreatmentDetailPageProps {
   params: Promise<{ id: string }>;
@@ -93,10 +94,12 @@ export default async function TreatmentDetailPage({
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Worker Info */}
+        {/* Worker / Attendee Info — label is vertical-aware */}
         <Card>
           <CardHeader>
-            <CardTitle>Worker Information</CardTitle>
+            <CardTitle>
+              {treatment.event_vertical === 'festivals' ? 'Attendee Information' : 'Worker Information'}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div>
