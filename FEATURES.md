@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-17 (Multi-vertical compliance framework: vertical-aware certifications API, RIDDOR page, post-treatment guidance, and certification renewal URLs across all 10 industry verticals)
+**Last Updated**: 2026-02-17 (Auth race-condition fix: getUserProfile() now uses getSession() instead of getUser() to eliminate startup race; belt-and-suspenders orgId fallback added in handleAddContact())
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -16,6 +16,29 @@ SiteMedic is a comprehensive platform combining **mobile medic software** (offli
 - High-value add-ons: Corporate Events, Private Events (weddings/parties/galas), Education & Youth (DBS-checked), Outdoor Adventure & Endurance
 
 **Business Model**: Software bundled with medic staffing service (no separate software charge). Revenue from medic bookings with a configurable platform/medic split (default 60% platform / 40% medic, overridable per employee). Weekly medic payouts via UK Faster Payments, Net 30 invoicing for established corporate clients. Referral bookings (jobs recommended by a third party who cannot take them) trigger a 10% referral payout (configurable) deducted from the platform's share — medic payout is unaffected.
+
+---
+
+## Recent Updates — Auth Race-Condition Fix (2026-02-17)
+
+### Fix: "Could not load org" on Save Contact (online) ✅
+
+**Root cause (Mode A — race condition):** `getUserProfile()` previously called `supabase.auth.getUser()`, which makes a live HTTP request to validate the JWT. On iOS startup, the Supabase JS client loads its session from AsyncStorage asynchronously. If `getUser()` ran before that load completed, the client had no JWT → returned `{ user: null }` → `state.user` was set to null, even though the user is fully authenticated.
+
+**Root cause (Mode B — null `org_id` in DB):** If a user's `profiles` row has `org_id = null` (e.g. created via a legacy signup flow), `fetchUserProfile()` returns a profile object with `orgId = null`. The `if (profile)` check passes (object truthy), but `state.user.orgId` is still null.
+
+**Fix 1 — `src/lib/auth-manager.ts` `getUserProfile()`:**
+- Replaced `supabase.auth.getUser()` (network round-trip) with `supabase.auth.getSession()` (local AsyncStorage read, always fast and available on startup).
+- If DB profile has `orgId = null`, supplemented with `session.user.user_metadata.org_id` (written at signup, embedded in the JWT).
+
+**Fix 2 — `app/(tabs)/settings.tsx` `handleAddContact()`:**
+- Moved `supabase` dynamic import to top of `try` block so it can be used for both the fallback and the DB operations.
+- Added belt-and-suspenders: if `state.user?.orgId` is still null at save time, falls back to `session.user.user_metadata.org_id` via `getSession()` (local, no network).
+- Only throws "Could not load org" if both state and JWT fallback return null (user is genuinely unauthenticated).
+
+**Files modified:**
+- `src/lib/auth-manager.ts` — `getUserProfile()` method
+- `app/(tabs)/settings.tsx` — `handleAddContact()` first block
 
 ---
 
@@ -352,6 +375,27 @@ Multi-site days are handled efficiently: the daily mileage router (`routeDailyMi
 
 ---
 
+## Recent Updates — Offline Auth Cache Fallback Fix (2026-02-17)
+
+### Auth Manager — Three-Stage Profile Fallback Chain ✅
+
+Hardened `getUserProfile()` in `src/lib/auth-manager.ts` to use a three-stage fallback so `state.user` is never null for a previously-authenticated user, regardless of network state.
+
+**Problem (v2 fix — deeper)**: Supabase JS v2's `getUser()` makes a real HTTP request (unlike `getSession()` which reads local storage). In multiple failure scenarios — the device offline, iOS Simulator with Network Link Conditioner, NetInfo reporting "connected" while Supabase is unreachable — the old code gated all cache reads on `!this.isOnline`, which is unreliable. Additionally, when the AsyncStorage cache was empty (fresh install / simulator wipe), there was no fallback at all.
+
+**Fix**: Replaced the ad-hoc fallbacks with a clean three-stage chain via a new `getProfileFromCacheOrJwt()` private helper:
+1. **DB fetch** (`fetchUserProfile`) — requires live network to Supabase
+2. **AsyncStorage cache** — available if the user has ever been online on this device
+3. **JWT `user_metadata`** — `getSession()` reads the locally-stored access token; `org_id` / `role` / `full_name` are embedded in the JWT payload at signup, so this always works even on a fresh install with no cache
+
+`isOnline` is no longer used as a gate for the fallback path, since NetInfo cannot reliably distinguish "connected but Supabase unreachable" from "connected and Supabase reachable".
+
+| File | Change |
+|------|--------|
+| `src/lib/auth-manager.ts` | `getUserProfile()` rewritten with 3-stage fallback; new `getProfileFromCacheOrJwt()` private helper |
+
+---
+
 ## Recent Updates — SOS Transcription Fixes (2026-02-18)
 
 ### SOS Flow & AI Transcription — Bug Fixes ✅
@@ -411,7 +455,7 @@ One-tap emergency alert system for construction site medics. A floating red SOS 
 | `components/ui/EmergencyAlertReceiver.tsx` | **New** — Recipient-side component. Registers foreground + background notification listeners. On `type: 'emergency'` notification: plays `emergency-alert.wav` in a loop, shows full-screen red modal (covers all UI). Only dismissable via "ACKNOWLEDGED" button which calls `acknowledgeAlert()`. Handles both foreground and notification-tap flows. |
 | `supabase/functions/send-emergency-sms/index.ts` | **New** — Supabase Edge Function. Two modes: (1) `action: 'transcribe'` — receives base64 audio, calls OpenAI Whisper API, returns transcript; (2) `action: 'sms_fallback'` (pg_cron) — queries unacknowledged alerts where push was sent >60s ago, sends Twilio SMS to each contact, updates `sms_sent_at`. |
 | `assets/sounds/emergency-alert.wav` | **New** — 3-second loopable pulsing 880Hz alert tone (generated, bundled in app). Used by both push notification and `expo-av` in-app playback. |
-| `app/(tabs)/settings.tsx` | **Updated** — Added "Emergency Contacts" section. Lists all contacts for the org with name, phone, and role. "+ Add" button opens a slide-up modal to enter name (required), phone (required), and role/title (optional). Each contact has a "Remove" button with confirmation. Empty state prompts the user to add a contact before using SOS. **Bug fix (2026-02-17):** Save now performs a proper upsert — if a contact with the same phone number already exists in the org, it is updated (name, role) rather than silently skipped. Uses `source: 'manual'` to distinguish manually-added contacts from booking-seeded ones. Real Supabase errors are now surfaced in the error Alert. **Feature (2026-02-17): Emergency Contact Autocomplete/Recall** — Typing 2+ characters in the Full Name field now shows a live dropdown of matching org-level contacts (up to 5, 300ms debounce, case-insensitive). Tapping a suggestion fills Name, Phone, and Role automatically. `org_id` is fetched once when the modal opens and reused for both autocomplete queries and the save operation (removes a duplicate profile fetch). Gracefully no-ops on network error to support offline use. |
+| `app/(tabs)/settings.tsx` | **Updated** — Added "Emergency Contacts" section. Lists all contacts for the org with name, phone, and role. "+ Add" button opens a slide-up modal to enter name (required), phone (required), and role/title (optional). Each contact has a "Remove" button with confirmation. Empty state prompts the user to add a contact before using SOS. **Bug fix (2026-02-17):** Save now performs a proper upsert — if a contact with the same phone number already exists in the org, it is updated (name, role) rather than silently skipped. Uses `source: 'manual'` to distinguish manually-added contacts from booking-seeded ones. Real Supabase errors are now surfaced in the error Alert. **Feature (2026-02-17): Emergency Contact Autocomplete/Recall** — Typing 2+ characters in the Full Name field now shows a live dropdown of matching org-level contacts (up to 5, 300ms debounce, case-insensitive). Tapping a suggestion fills Name, Phone, and Role automatically. `org_id` is fetched once when the modal opens and reused for both autocomplete queries and the save operation (removes a duplicate profile fetch). Gracefully no-ops on network error to support offline use. **Feature (2026-02-17): UK Phone Auto-Format** — Phone Number field auto-formats input as `+44 XXXX XXXXXX` as the user types. Strips non-digits, removes a leading `0` (trunk prefix) or `44` (country code without `+`) automatically, and limits to 10 national digits. Matches the standard UK international mobile format (e.g. `+44 7700 900000`). |
 | `app/(tabs)/_layout.tsx` | **Modified** — Wrapped tabs in `<View>`, added `<SOSButton />` floating absolutely over all tab screens. |
 | `app/_layout.tsx` | **Modified** — Added `<EmergencyAlertReceiver />` inside `BottomSheetModalProvider`. Added permission + push token registration on DB init (non-fatal if denied). |
 | `app.json` | **Modified** — Added `expo-notifications` plugin with sound config and `#EF4444` color. Added `RECEIVE_BOOT_COMPLETED` and `SCHEDULE_EXACT_ALARM` Android permissions. |

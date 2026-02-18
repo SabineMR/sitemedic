@@ -208,42 +208,87 @@ class AuthManager {
   }
 
   /**
-   * Get user profile (from Supabase profiles table or cache if offline)
+   * Get user profile (from Supabase profiles table, AsyncStorage cache, or JWT metadata)
+   *
+   * Fallback chain (each step only runs if the previous returned null):
+   *   1. Fetch from DB via fetchUserProfile()  — requires network
+   *   2. AsyncStorage cached profile           — always available if previously online
+   *   3. Build from JWT user_metadata          — always available (JWT is local)
+   *
+   * The isOnline flag is intentionally NOT used as a gate here. NetInfo can report
+   * "connected" while the device cannot actually reach Supabase (e.g. iOS Simulator
+   * with Network Link Conditioner, captive portals, etc). We fall back aggressively
+   * so state.user is never null for a previously-authenticated user.
    */
   async getUserProfile(): Promise<UserProfile | null> {
     try {
-      // Get current user from Supabase Auth
-      const { data: { user }, error } = await supabase.auth.getUser();
+      // getSession() reads from AsyncStorage (local, no network call).
+      // Replaces getUser() which makes a live HTTP request — prone to race condition
+      // on startup before Supabase has finished loading the session from storage.
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (error || !user) {
-        // If offline, return cached profile
-        if (!this.isOnline) {
-          console.log('[AuthManager] Offline - using cached profile');
-          return await this.getCachedProfile();
-        }
-        return null;
+      if (!session?.user) {
+        return null; // Not authenticated — no session in storage
       }
 
-      // Fetch profile from database
-      const profile = await this.fetchUserProfile(user.id);
+      const userId = session.user.id;
+      const jwtOrgId: string | undefined = session.user.user_metadata?.org_id;
 
-      // Cache it for offline access
+      // Fetch fresh profile from DB (network call — may fail offline)
+      const profile = await this.fetchUserProfile(userId);
+
       if (profile) {
+        // Supplement null orgId from JWT metadata (handles users whose profiles
+        // row in DB has a null org_id — org_id was stored in JWT at signup)
+        if (!profile.orgId && jwtOrgId) {
+          profile.orgId = jwtOrgId;
+        }
         await this.cacheProfile(profile);
+        return profile;
       }
 
-      return profile;
+      // DB fetch failed — fall back to cache, then JWT metadata
+      return await this.getProfileFromCacheOrJwt();
     } catch (error) {
       console.error('[AuthManager] Get user profile error:', error);
-
-      // If offline, return cached profile
-      if (!this.isOnline) {
-        console.log('[AuthManager] Exception during getUserProfile, offline - using cached profile');
-        return await this.getCachedProfile();
-      }
-
-      return null;
+      return await this.getProfileFromCacheOrJwt();
     }
+  }
+
+  /**
+   * Profile fallback chain used when DB is unavailable:
+   * 1. AsyncStorage cache (populated on last successful DB fetch)
+   * 2. JWT user_metadata from local session (set at signup, always local)
+   */
+  private async getProfileFromCacheOrJwt(): Promise<UserProfile | null> {
+    // Step 1: AsyncStorage cache
+    const cached = await this.getCachedProfile();
+    if (cached) {
+      console.log('[AuthManager] Using cached profile');
+      return cached;
+    }
+
+    // Step 2: JWT user_metadata — getSession() reads local storage, no network needed
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const meta = session.user.user_metadata || {};
+        if (meta.org_id) {
+          console.log('[AuthManager] Building profile from JWT user_metadata');
+          return {
+            id: session.user.id,
+            email: session.user.email || '',
+            fullName: meta.full_name || '',
+            orgId: meta.org_id,
+            role: ((meta.role as UserRole) || 'medic'),
+          };
+        }
+      }
+    } catch (_) {
+      console.error('[AuthManager] Could not read session for JWT metadata fallback');
+    }
+
+    return null;
   }
 
   /**

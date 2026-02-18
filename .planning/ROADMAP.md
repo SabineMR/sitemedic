@@ -67,6 +67,28 @@ Plans:
 
 ---
 
+### Phase 18.5: Construction & Infrastructure Vertical (INSERTED)
+
+**Goal:** Formalize construction as a first-class vertical in the new multi-vertical system. The construction vertical already works end-to-end from v1.0 — this phase wires it into the shared vertical config, cert ordering, and dispatcher so it behaves identically to the new verticals and serves as the reference implementation for Phase 19–22.
+
+**Depends on:** Phase 18 (vertical infrastructure, schema v4, OrgContext, incident-report-dispatcher)
+
+**Requirements:** CONST-01, CONST-02, CONST-03
+
+**Success Criteria** (what must be TRUE when this phase completes):
+1. A `construction` entry exists in the vertical config TypeScript file — `riddorApplies: true`, label "Construction & Infrastructure", terminology: "Worker", "Site", "Client"
+2. `getRecommendedCertTypes('construction')` returns the correct ordered list — CSCS, CPCS, IPAF, Gas Safe, First Aid at Work at the top
+3. The `incident-report-dispatcher` routes construction treatments to the existing F2508 generator — RIDDOR continues to work exactly as in v1.0 with no regression
+4. The construction vertical can be selected in admin org settings and booking form — it behaves identically to a newly added vertical from a UI and data perspective
+
+**Plans:** TBD
+
+Plans:
+- [ ] 18.5-01: Construction vertical config — add `construction` to vertical config TypeScript file; define `riddorApplies: true`, terminology map, cert type ordering; verify existing RIDDOR path untouched
+- [ ] 18.5-02: Construction vertical wiring — `incident-report-dispatcher` construction route; `getRecommendedCertTypes('construction')` ordering (CSCS, CPCS, IPAF, Gas Safe, FAW); smoke-test end-to-end: log treatment → RIDDOR flag still appears → F2508 PDF generates
+
+---
+
 ### Phase 19: Motorsport Vertical
 
 **Goal:** Medics at motorsport events can log incidents in a Motorsport UK-compliant format. A concussed competitor triggers a mandatory clearance workflow that cannot be bypassed. The event ends with an auto-generated Medical Statistics Sheet. The web dashboard shows uncleared concussion cases with a visible warning badge.
@@ -200,7 +222,7 @@ Plans:
 
 ## Progress
 
-**Execution Order:** 18 → 19 → 20 → 21 → 22 → 23
+**Execution Order:** 18 → 18.5 → 19 → 20 → 21 → 22 → 23
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -228,6 +250,7 @@ Plans:
 | 16. Contract Detail | v1.1 | 2/2 | Complete | 2026-02-17 |
 | 17. Geofence Coverage | v1.1 | 1/1 | Complete | 2026-02-17 |
 | 18. Vertical Infrastructure & RIDDOR Fix | v2.0 | 0/5 | Not started | - |
+| 18.5. Construction & Infrastructure Vertical | v2.0 | 0/2 | Not started | - |
 | 19. Motorsport Vertical | v2.0 | 0/5 | Not started | - |
 | 20. Festivals & Events Vertical | v2.0 | 0/4 | Not started | - |
 | 21. Film/TV Production Vertical | v2.0 | 0/2 | Not started | - |

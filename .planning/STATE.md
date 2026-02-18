@@ -40,6 +40,10 @@ Progress: [██████████] v1.1 complete | [███░░░�
 
 ## Accumulated Context
 
+### Roadmap Evolution
+
+- Phase 18.5 inserted after Phase 18: Construction & Infrastructure Vertical — formalizes construction as first-class vertical in multi-vertical system; 2 plans; lightest vertical phase since v1.0 logic already exists
+
 ### Decisions
 
 Key decisions affecting v2.0:

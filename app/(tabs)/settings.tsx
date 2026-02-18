@@ -44,35 +44,23 @@ export default function SettingsScreen() {
   const [saving, setSaving] = useState(false);
   const [suggestions, setSuggestions] = useState<EmergencyContact[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [modalOrgId, setModalOrgId] = useState<string | null>(null);
 
   useEffect(() => {
     loadContacts();
   }, []);
 
-  // Fetch orgId when modal opens; reset suggestions on close
+  // Reset suggestions when modal closes
   useEffect(() => {
     if (!addModalVisible) {
       setSuggestions([]);
       setShowSuggestions(false);
-      return;
     }
-    (async () => {
-      try {
-        const { supabase } = await import('../../src/lib/supabase');
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        const { data: profileData } = await supabase
-          .from('profiles').select('org_id').eq('id', user.id).single();
-        const profile = profileData as { org_id: string } | null;
-        if (profile?.org_id) setModalOrgId(profile.org_id);
-      } catch (_) {}
-    })();
   }, [addModalVisible]);
 
   // Debounced search: fires when newName changes, queries matching org contacts
   useEffect(() => {
-    if (!modalOrgId || newName.trim().length < 2) {
+    const orgId = state.user?.orgId;
+    if (!orgId || newName.trim().length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
@@ -83,7 +71,7 @@ export default function SettingsScreen() {
         const { data } = await supabase
           .from('emergency_contacts')
           .select('id, name, phone, role')
-          .eq('org_id', modalOrgId)
+          .eq('org_id', orgId)
           .ilike('name', `%${newName.trim()}%`)
           .limit(5);
         setSuggestions((data as EmergencyContact[]) ?? []);
@@ -94,7 +82,7 @@ export default function SettingsScreen() {
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [newName, modalOrgId]);
+  }, [newName, state.user?.orgId]);
 
   const loadContacts = useCallback(async () => {
     setContactsLoading(true);
@@ -107,6 +95,25 @@ export default function SettingsScreen() {
       setContactsLoading(false);
     }
   }, []);
+
+  const formatUKPhone = (text: string): string => {
+    // Strip everything except digits
+    let digits = text.replace(/\D/g, '');
+
+    // Remove leading country code (44) or trunk prefix (0)
+    if (digits.startsWith('44')) {
+      digits = digits.slice(2);
+    } else if (digits.startsWith('0')) {
+      digits = digits.slice(1);
+    }
+
+    // UK national number is 10 digits
+    digits = digits.slice(0, 10);
+
+    if (digits.length === 0) return '';
+    if (digits.length <= 4) return `+44 ${digits}`;
+    return `+44 ${digits.slice(0, 4)} ${digits.slice(4)}`;
+  };
 
   const handleSelectSuggestion = (contact: EmergencyContact) => {
     setNewName(contact.name);
@@ -124,10 +131,41 @@ export default function SettingsScreen() {
 
     setSaving(true);
     try {
-      if (!modalOrgId) throw new Error('Could not load org');
-      const orgId: string = modalOrgId;
-
       const { supabase } = await import('../../src/lib/supabase');
+
+      // Fallback 1: auth context state (set at startup by initializeAuth)
+      let orgId: string | null = state.user?.orgId ?? null;
+      console.log('[Settings] handleAddContact: state.user?.orgId =', state.user?.orgId, '| state.user =', state.user ? 'present' : 'null');
+
+      // Fallback 2: JWT user_metadata (local AsyncStorage, no network)
+      // Handles startup race where getSession() returned null before client initialized.
+      let session: any = null;
+      if (!orgId) {
+        const { data } = await supabase.auth.getSession();
+        session = data.session;
+        orgId = session?.user?.user_metadata?.org_id ?? null;
+        console.log('[Settings] Fallback 2 (JWT):', orgId, '| user_metadata:', session?.user?.user_metadata);
+      }
+
+      // Fallback 3: direct profiles table query (works after Supabase client is fully
+      // initialized — by save-time the client has had plenty of time to init, unlike startup)
+      if (!orgId) {
+        if (!session) {
+          const { data } = await supabase.auth.getSession();
+          session = data.session;
+        }
+        if (session?.user?.id) {
+          const { data: profileRow, error: profileErr } = await supabase
+            .from('profiles')
+            .select('org_id')
+            .eq('id', session.user.id)
+            .maybeSingle();
+          orgId = (profileRow as any)?.org_id ?? null;
+          console.log('[Settings] Fallback 3 (DB profiles):', orgId, '| error:', profileErr?.message);
+        }
+      }
+
+      if (!orgId) throw new Error('Could not load org');
 
       // Check for existing contact with same phone in this org
       const { data: existingRaw } = await supabase
@@ -457,11 +495,12 @@ export default function SettingsScreen() {
             <TextInput
               style={styles.input}
               value={newPhone}
-              onChangeText={setNewPhone}
+              onChangeText={(text) => setNewPhone(formatUKPhone(text))}
               placeholder="e.g. +44 7700 900000"
               placeholderTextColor="#9CA3AF"
               keyboardType="phone-pad"
-              returnKeyType="next"
+              returnKeyType="done"
+              maxLength={15}
             />
 
             <Text style={styles.fieldLabel}>Role / Title (optional)</Text>
