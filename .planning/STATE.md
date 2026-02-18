@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 18 of 23 (Vertical Infrastructure & RIDDOR Fix)
-Plan: — (ready to plan)
-Status: Ready to plan — v2.0 roadmap created, Phase 18 is next
-Last activity: 2026-02-17 — v2.0 roadmap created, all 36 requirements mapped to phases 18–23
+Plan: 1 of N in current phase
+Status: In progress
+Last activity: 2026-02-18 — Completed 18-01-PLAN.md (WatermelonDB schema v4 + Supabase migration 124)
 
-Progress: [██████████] v1.1 complete | [░░░░░░░░░░] v2.0 0/6 phases
+Progress: [██████████] v1.1 complete | [█░░░░░░░░░] v2.0 1/25 plans
 
 ## Performance Metrics
 
@@ -29,11 +29,12 @@ Progress: [██████████] v1.1 complete | [░░░░░░�
 |-------|-------|-------|----------|
 | 01–07.5 (v1.0) | 84/84 | ~5.5 hrs | ~4 min |
 | 08–17 (v1.1) | 35/35 | ~2.4 hrs | ~4.1 min |
-| 18–23 (v2.0) | 0/25 | — | — |
+| 18–23 (v2.0) | 1/25 | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: v1.1 complete — geofence coverage analytics, compliance exports, RIDDOR auto-save, contract detail, geofence exit alerts
-- Trend: Stable — consistent 4 min average maintained across v1.1
+- Last plan: 18-01 — WatermelonDB schema v4 + Supabase migration 124 (3 min)
+- v1.1 last 5: geofence coverage analytics, compliance exports, RIDDOR auto-save, contract detail, geofence exit alerts
+- Trend: Stable — consistent 3–4 min average
 
 *Updated after each plan completion*
 
@@ -47,6 +48,9 @@ Key decisions affecting v2.0:
 - RIDDOR gate: `getVerticalCompliance(vertical).riddorApplies` check at top of `riddor-detector/index.ts` — early-return `{ detected: false }` for non-RIDDOR verticals
 - Motorsport concussion protocol: mandatory three-part clearance checklist before form submission — cannot be deferred
 - PDF dispatch: `incident-report-dispatcher.ts` routes to correct Edge Function based on treatment vertical; F2508 validates vertical and returns 400 for non-RIDDOR verticals
+- 18-01: `verticalExtraFields` uses `@text` not `@json` in Treatment model — raw JSON string, parsed at call site; keeps model agnostic of vertical-specific data shapes
+- 18-01: `compliance_score_history` created in migration 124 (not deferred to Phase 23) — table must exist before Phase 23 analytics can write to it
+- 18-01: `booking_id` uses `ON DELETE SET NULL` — treatments survive booking deletion (audit trail preserved)
 
 ### Research Flags (Phase-Blocking)
 
@@ -64,6 +68,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-17T21:10:00Z
-Stopped at: v2.0 roadmap created — all 36 requirements mapped to 6 phases (18–23), REQUIREMENTS.md traceability complete, STATE.md updated
+Last session: 2026-02-18T02:50:07Z
+Stopped at: Completed 18-01-PLAN.md — WatermelonDB schema v4 + Supabase migration 124 + Treatment/NearMiss model updates
 Resume file: None
