@@ -48,6 +48,12 @@ export const CERT_TYPES = [
   'Motorsport UK CMO Letter',
   'MSA First Aider',
 
+  // ── Football / Sporting Events ───────────────────────────────────────────
+  'ATMMiF',
+  'ITMMiF',
+  'FA Advanced Trauma Management',
+  'FA Concussion Module',
+
   // ── Events & Festivals ──────────────────────────────────────────────────
   'SIA Door Supervisor',
   'Purple Guide Certificate',
@@ -77,7 +83,8 @@ export type CertCategory =
   | 'motorsport'
   | 'events'
   | 'education'
-  | 'outdoor';
+  | 'outdoor'
+  | 'sporting_events';
 
 export interface CertTypeInfo {
   label: string;
@@ -114,6 +121,27 @@ export const CERT_TYPE_INFO: Record<CertType, CertTypeInfo> = {
   'Motorsport UK CMO Letter': { label: 'Motorsport UK CMO Letter', category: 'motorsport', description: 'Chief Medical Officer approval letter' },
   'MSA First Aider':          { label: 'MSA First Aider', category: 'motorsport', description: 'Motor Sports Association First Aider' },
 
+  'ATMMiF': {
+    label: 'ATMMiF',
+    category: 'sporting_events',
+    description: 'Advanced Trauma Medical Management in Football (England Football Learning) — highest medical qualification for pitchside football medics',
+  },
+  'ITMMiF': {
+    label: 'ITMMiF',
+    category: 'sporting_events',
+    description: 'Intermediate Trauma Medical Management in Football (England Football Learning)',
+  },
+  'FA Advanced Trauma Management': {
+    label: 'FA Advanced Trauma Mgmt',
+    category: 'sporting_events',
+    description: 'FA Advanced Trauma Management reaccreditation / equivalent pathway (England Football)',
+  },
+  'FA Concussion Module': {
+    label: 'FA Concussion Module',
+    category: 'sporting_events',
+    description: 'England Football concussion guidelines online module — required for all pitchside football medics',
+  },
+
   'SIA Door Supervisor':        { label: 'SIA Door Supervisor', category: 'events', description: 'Security Industry Authority Door Supervisor' },
   'Purple Guide Certificate':   { label: 'Purple Guide Certificate', category: 'events', description: 'Event safety per Purple Guide framework' },
   'Event Safety Awareness':     { label: 'Event Safety Awareness', category: 'events', description: 'Event Safety Awareness certificate' },
@@ -145,7 +173,20 @@ export const VERTICAL_CERT_TYPES: Record<string, CertType[]> = {
   corporate:    ['FREC 3', 'FREC 4', 'PHEC', 'HCPC Paramedic', 'ALS Provider', 'AED Trained', 'NEBOSH General Certificate'],
   festivals:    ['FREC 3', 'FREC 4', 'PHEC', 'HCPC Paramedic', 'ALS Provider', 'PHTLS', 'AED Trained', 'SIA Door Supervisor', 'Purple Guide Certificate', 'Event Safety Awareness'],
   motorsport:   ['FREC 4', 'PHEC', 'HCPC Paramedic', 'ALS Provider', 'ATLS', 'PHTLS', 'FIA Grade 1', 'FIA Grade 2', 'FIA Grade 3', 'Motorsport UK CMO Letter', 'MSA First Aider'],
-  sporting_events: ['FREC 3', 'FREC 4', 'PHEC', 'HCPC Paramedic', 'ALS Provider', 'AED Trained', 'SIA Door Supervisor', 'Event Safety Awareness'],
+  sporting_events: [
+    'ATMMiF',
+    'ITMMiF',
+    'FA Advanced Trauma Management',
+    'FA Concussion Module',
+    'FREC 4',
+    'PHEC',
+    'HCPC Paramedic',
+    'ALS Provider',
+    'FREC 3',
+    'AED Trained',
+    'SIA Door Supervisor',
+    'Event Safety Awareness',
+  ],
   fairs_shows:  ['FREC 3', 'FREC 4', 'PHEC', 'HCPC Paramedic', 'ALS Provider', 'AED Trained', 'SIA Door Supervisor', 'Event Safety Awareness', 'Purple Guide Certificate'],
   private_events: ['FREC 3', 'FREC 4', 'PHEC', 'HCPC Paramedic', 'ALS Provider', 'AED Trained', 'Event Safety Awareness'],
   education:    ['FREC 3', 'FREC 4', 'PHEC', 'HCPC Paramedic', 'ALS Provider', 'PALS Provider', 'AED Trained', 'Paediatric First Aid', 'Enhanced DBS (Children)', 'Enhanced DBS (Barred Lists)', 'Child Safeguarding Level 2', 'Child Safeguarding Level 3'],
