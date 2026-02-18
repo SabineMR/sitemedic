@@ -173,9 +173,15 @@ export const VERTICAL_CERT_TYPES: Record<string, UKCertType[]> = {
     'ALS Provider', 'PHTLS',
   ],
   tv_film: [
-    'FREC 3', 'FREC 4', 'PHEC', 'HCPC Paramedic',
-    'CSCS', 'IPAF',
-    'ALS Provider', 'PHTLS',
+    'HCPC Paramedic',
+    'ScreenSkills Production Safety Passport',
+    'FREC 4',
+    'EFR',
+    'PHEC',
+    'PHTLS',
+    'ALS Provider',
+    'ATLS',
+    'FREC 3',
   ],
   corporate: [
     'FREC 3', 'FREC 4', 'PHEC', 'HCPC Paramedic',

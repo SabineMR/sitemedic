@@ -141,7 +141,7 @@ export const CERT_TYPE_INFO: Record<CertType, CertTypeInfo> = {
 /** Cert types recommended per vertical (ordered by relevance) */
 export const VERTICAL_CERT_TYPES: Record<string, CertType[]> = {
   construction: ['FREC 3', 'FREC 4', 'PHEC', 'HCPC Paramedic', 'CSCS', 'CPCS', 'IPAF', 'PASMA', 'Gas Safe', 'ALS Provider', 'PHTLS'],
-  tv_film:      ['FREC 3', 'FREC 4', 'PHEC', 'HCPC Paramedic', 'CSCS', 'IPAF', 'ALS Provider', 'PHTLS'],
+  tv_film:      ['HCPC Paramedic', 'ScreenSkills Production Safety Passport', 'FREC 4', 'EFR', 'PHEC', 'PHTLS', 'ALS Provider', 'ATLS', 'FREC 3'],
   corporate:    ['FREC 3', 'FREC 4', 'PHEC', 'HCPC Paramedic', 'ALS Provider', 'AED Trained', 'NEBOSH General Certificate'],
   festivals:    ['FREC 3', 'FREC 4', 'PHEC', 'HCPC Paramedic', 'ALS Provider', 'PHTLS', 'AED Trained', 'SIA Door Supervisor', 'Purple Guide Certificate', 'Event Safety Awareness'],
   motorsport:   ['FREC 4', 'PHEC', 'HCPC Paramedic', 'ALS Provider', 'ATLS', 'PHTLS', 'FIA Grade 1', 'FIA Grade 2', 'FIA Grade 3', 'Motorsport UK CMO Letter', 'MSA First Aider'],
