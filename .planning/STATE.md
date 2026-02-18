@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-18)
 ## Current Position
 
 Phase: 29 of 31 (Org Onboarding Flow)
-Plan: 5 of 5 in Phase 29
-Status: In progress — 29-05 complete
-Last activity: 2026-02-18 — Completed 29-05-PLAN.md (welcome email template & sender)
+Plan: 1 of 5 in Phase 29
+Status: In progress — 29-01 complete
+Last activity: 2026-02-18 — Completed 29-01-PLAN.md (Stripe Checkout & org provisioning API)
 
-Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [███████░░░] v3.0 ~55% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4, Phase 27: 3/3, Phase 29: 1/5 done)
+Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [███████░░░] v3.0 ~60% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4, Phase 27: 3/3, Phase 28: 3/3, Phase 29: 2/5 done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 136 (84 v1.0 + 35 v1.1 + 30 v2.0 + 16 v3.0)
+- Total plans completed: 140 (84 v1.0 + 35 v1.1 + 30 v2.0 + 20 v3.0)
 - Average duration: 4.0 min
-- Total execution time: ~8.8 hours
+- Total execution time: ~8.9 hours
 
 **By Phase:**
 
@@ -34,10 +34,11 @@ Progress: [██████████] v1.0 complete | [██████�
 | 25 (v3.0) | 3/3 | ~8 min | ~2.7 min |
 | 26 (v3.0) | 4/4 | ~8 min | ~2 min |
 | 27 (v3.0) | 3/3 | ~6 min | ~2 min |
-| 29 (v3.0) | 1/5 | ~4 min | ~4 min |
+| 28 (v3.0) | 3/3 | ~8 min | ~2.7 min |
+| 29 (v3.0) | 2/5 | ~10 min | ~5 min |
 
 **Recent Trend:**
-- Last plan: 29-05 — welcome email template & sender (~4 min)
+- Last plan: 29-01 — Stripe Checkout & org provisioning API (~6 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -83,6 +84,13 @@ Progress: [██████████] v1.0 complete | [██████�
 - **27-01:** Root layout's generateMetadata() reads x-org-company-name header for dynamic title template with em dash separator
 - **27-02:** Dashboard sidebar reads headers directly (server component) — no useBranding() needed
 - **27-03:** Admin sidebar uses `bg-[color:var(--org-primary)]` pattern for all accent colours; `shadow-black/10` replaces `shadow-blue-500/20` (can't use CSS var in Tailwind shadow)
+- **28-01:** fetchLogoAsDataUri() converts remote Supabase Storage URLs to base64 data URIs — @react-pdf/renderer in Deno Edge cannot reliably fetch remote images; data URI approach validated
+- **28-02:** Invoice HTML template uses standard `<img src>` with remote URL (not data URI) — HTML rendered in browser where remote URLs work fine
+- **28-03:** Two branding type systems: OrgBranding (snake_case, Edge Functions) and EmailBranding (camelCase, Next.js); InvoiceEmailBranding for Edge Function invoice email
+- **29-01:** org_branding INSERT in checkout route is non-fatal — logs warning but does not block checkout flow
+- **29-01:** User app_metadata updated with org_id + role='org_admin' via service-role admin API during checkout
+- **29-01:** Tier-to-price mapping takes FIRST price ID from comma-separated STRIPE_PRICE_* env vars (GBP monthly)
+- **29-01:** checkout-status polling pattern: client polls GET /api/billing/checkout-status until subscriptionStatus != null
 
 ### Pending Todos
 
@@ -96,11 +104,10 @@ Progress: [██████████] v1.0 complete | [██████�
 
 ### Blockers/Concerns
 
-- **Phase 28 research flag:** `@react-pdf/renderer` `<Image>` with remote Supabase Storage URL in Deno Edge is MEDIUM confidence — write one minimal test PDF before updating all 8 functions
-- **Phase 29 onboarding dependency:** Must INSERT org_branding row when creating new org (no auto-trigger) — document in Phase 29 plan
+- **Phase 29 onboarding dependency:** RESOLVED in 29-01 — checkout route explicitly INSERTs org_branding row during org provisioning
 
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 29-05-PLAN.md (welcome email template & sender)
+Stopped at: Completed 29-01-PLAN.md (Stripe Checkout & org provisioning API)
 Resume file: None

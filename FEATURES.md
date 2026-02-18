@@ -2,12 +2,91 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Org Onboarding — Welcome Email)
+**Last Updated**: 2026-02-18 (Org Onboarding — Stripe Checkout API)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
 
-## Recent Updates — Org Onboarding Welcome Email (2026-02-18)
+## Recent Updates — Stripe Checkout & Org Provisioning API (2026-02-18)
+
+### Overview
+
+Backend API routes for the org onboarding flow. When a new org signs up, the checkout endpoint provisions the full org infrastructure (organization record, branding row, membership, user metadata) and creates a Stripe Checkout Session. A separate polling endpoint lets the post-payment page detect when the billing webhook has processed.
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/app/api/billing/checkout/route.ts` | POST handler — accepts tier + org details, creates org (onboarding_completed=false), inserts org_branding row, creates org_membership (org_admin), updates user app_metadata.org_id, creates Stripe Customer, creates Checkout Session with metadata.org_id for webhook association. Returns session URL for redirect |
+| `web/app/api/billing/checkout-status/route.ts` | GET handler — reads user app_metadata.org_id, queries org subscription state (subscription_status, subscription_tier, stripe_customer_id, onboarding_completed). Used by post-payment onboarding page to poll until webhook sets subscription to active |
+
+### Key Features
+
+- **Complete org provisioning chain**: Single API call creates org + org_branding + membership + Stripe Customer + Checkout Session. Org is created BEFORE Stripe redirect so the billing webhook can find it via metadata.org_id
+- **org_branding row insertion**: MANDATORY explicit INSERT — no database trigger exists (documented in Phase 24-05). White-label features depend on this row
+- **Tier-to-price mapping**: Maps `starter|growth|enterprise` to Stripe Price IDs via `STRIPE_PRICE_*` env vars (comma-separated, first = GBP monthly)
+- **User metadata update**: Sets app_metadata.org_id and role via service-role admin API so middleware can associate user with org
+- **Post-payment polling**: checkout-status endpoint returns `isPending` flag so the onboarding UI can poll until webhook fires and sets subscription_status to 'active'
+- **No database migrations**: Uses existing columns — `status`, `onboarding_completed` (migration 027), subscription columns (migration 133)
+
+---
+
+## Previous Updates — PDF & Email Branding (Phase 28) (2026-02-18)
+
+### Overview
+
+All 8 PDF Edge Functions and 4 email templates now dynamically render org branding (company name, logo, primary colour) instead of hardcoded "SiteMedic" or "Apex Safety Group" text. Each function fetches `org_branding` from the database before rendering. Tier-based "Powered by SiteMedic" attribution appears only for Starter-tier orgs.
+
+### New Shared Infrastructure Files
+
+| File | Purpose |
+|------|---------|
+| `supabase/functions/_shared/branding-helpers.ts` | `OrgBranding` interface, `fetchOrgBranding()` (queries org_branding table, constructs logo public URL), `fetchLogoAsDataUri()` (converts remote URL to base64 data URI for @react-pdf), `showPoweredBySiteMedic()` (tier-based attribution gate) |
+| `supabase/functions/_shared/pdf-branding.tsx` | `BrandedPdfHeader` and `BrandedPdfFooter` @react-pdf components — reusable header with logo + company name + document type, footer with conditional "Powered by SiteMedic" |
+| `web/lib/email/types.ts` | `EmailBranding` interface (camelCase for Next.js), `DEFAULT_EMAIL_BRANDING` constant with SiteMedic defaults |
+
+### PDF Functions Updated (8 total)
+
+All 8 PDF Edge Functions now: (1) resolve org_id, (2) call `fetchOrgBranding()`, (3) pass branding to document component:
+
+| Function | Document Component | Branding Approach |
+|----------|--------------------|-------------------|
+| `generate-weekly-report` | WeeklyReportDocument | @react-pdf BrandedPdfHeader/Footer (pilot) |
+| `generate-invoice-pdf` | HTML template | Inline HTML branded header with logo + accent colour |
+| `riddor-f2508-generator` | F2508Document | @react-pdf BrandedPdfHeader/Footer |
+| `generate-payslip-pdf` | PayslipDocument | @react-pdf BrandedPdfHeader/Footer |
+| `fa-incident-generator` | FAPlayerDocument + FASpectatorDocument | @react-pdf BrandedPdfHeader/Footer (both docs) |
+| `motorsport-incident-generator` | MotorsportIncidentDocument | @react-pdf BrandedPdfHeader/Footer |
+| `event-incident-report-generator` | PurpleGuideDocument | @react-pdf BrandedPdfHeader/Footer |
+| `motorsport-stats-sheet-generator` | MotorsportStatsDocument | @react-pdf BrandedPdfHeader/Footer |
+
+### Email Templates Updated (4 total)
+
+| Template | File | Changes |
+|----------|------|---------|
+| Booking Confirmation | `web/lib/email/templates/booking-confirmation-email.tsx` | Accepts `EmailBranding` prop; renders org logo, company name, accent colour |
+| Medic Assignment | `web/lib/email/templates/medic-assignment-email.tsx` | Accepts `EmailBranding` prop; renders org branding |
+| Booking Received | `web/lib/email/templates/booking-received-email.tsx` | Accepts `EmailBranding` prop; renders org branding |
+| Invoice Notification | `supabase/functions/_shared/email-templates.ts` | `InvoiceEmailBranding` interface; branded HTML header, accent button, conditional "Powered by SiteMedic" |
+
+### Email Sending Routes Updated
+
+| Route | Changes |
+|-------|---------|
+| `web/app/api/email/booking-confirmation/route.ts` | Fetches `org_branding` + `organizations` in parallel; passes `EmailBranding` to both BookingConfirmationEmail and MedicAssignmentEmail; dynamic `from` name |
+| `web/lib/email/send-booking-received.ts` | Fetches `org_branding`; passes `EmailBranding` to template; dynamic `from` name |
+
+### Key Technical Decisions
+
+- **Data URI for @react-pdf logos**: `fetchLogoAsDataUri()` converts remote Supabase Storage URLs to base64 data URIs because @react-pdf in Deno Edge cannot reliably fetch remote images
+- **Standard URL for invoice HTML**: The HTML template uses `<img src>` with the remote URL since it's rendered in a browser where remote URLs work
+- **Two branding type systems**: `OrgBranding` (snake_case) for Edge Functions, `EmailBranding` (camelCase) for Next.js React Email templates
+- **Tier-based attribution**: `showPoweredBySiteMedic(tier)` returns true for null/starter, false for growth/enterprise. In Next.js routes: `!hasFeature(tier, 'white_label')`
+- **Platform alert emails excluded**: `payoutFailure` and `cashFlowAlert` are SiteMedic platform alerts — intentionally NOT branded per org
+
+---
+
+## Previous Updates — Org Onboarding Welcome Email (2026-02-18)
 
 ### Overview
 
