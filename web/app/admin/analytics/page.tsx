@@ -36,6 +36,16 @@ const AdminNearMissHeatMapDynamic = dynamic(
   { ssr: false, loading: () => <div className="h-[500px] bg-gray-800 rounded-lg animate-pulse" /> }
 );
 
+const AdminComplianceTrendDynamic = dynamic(
+  () => import('@/components/analytics/AdminComplianceTrend').then(m => ({ default: m.AdminComplianceTrend })),
+  { ssr: false, loading: () => <div className="h-[400px] bg-gray-800 animate-pulse rounded-lg" /> }
+);
+
+const OrgComplianceTableDynamic = dynamic(
+  () => import('@/components/analytics/OrgComplianceTable').then(m => ({ default: m.OrgComplianceTable })),
+  { ssr: false, loading: () => <div className="h-[300px] bg-gray-800 animate-pulse rounded-lg" /> }
+);
+
 interface SystemMetrics {
   period_start: string;
   period_end: string;
@@ -164,7 +174,7 @@ export default function AnalyticsPage() {
   const [geofences, setGeofences] = useState<GeofencePerformance[]>([]);
   const [alerts, setAlerts] = useState<AlertSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'medics' | 'geofences' | 'alerts' | 'territory' | 'assignments' | 'utilisation' | 'heat-map'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'medics' | 'geofences' | 'alerts' | 'territory' | 'assignments' | 'utilisation' | 'heat-map' | 'compliance'>('overview');
 
   useEffect(() => {
     loadAnalytics();
@@ -220,7 +230,7 @@ export default function AnalyticsPage() {
   };
 
   // New tabs render independently of the legacy metrics loading state
-  const isNewTab = activeTab === 'territory' || activeTab === 'assignments' || activeTab === 'utilisation' || activeTab === 'heat-map';
+  const isNewTab = activeTab === 'territory' || activeTab === 'assignments' || activeTab === 'utilisation' || activeTab === 'heat-map' || activeTab === 'compliance';
 
   if (loading && !isNewTab) {
     return (
@@ -252,7 +262,7 @@ export default function AnalyticsPage() {
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6 border-b border-gray-700 flex-wrap">
-        {(['overview', 'medics', 'geofences', 'alerts', 'territory', 'assignments', 'utilisation', 'heat-map'] as const).map((tab) => (
+        {(['overview', 'medics', 'geofences', 'alerts', 'territory', 'assignments', 'utilisation', 'heat-map', 'compliance'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -544,6 +554,23 @@ export default function AnalyticsPage() {
             <div className="h-[500px]">
               <AdminNearMissHeatMapDynamic />
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Compliance Tab */}
+      {activeTab === 'compliance' && (
+        <div className="space-y-6">
+          <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <h2 className="text-xl font-semibold mb-2">Aggregate Compliance Trend</h2>
+            <p className="text-gray-400 text-sm mb-4">
+              Average compliance score across all organisations. Shaded band shows min-max range.
+            </p>
+            <AdminComplianceTrendDynamic />
+          </div>
+          <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <h2 className="text-xl font-semibold mb-4">Organisation Rankings</h2>
+            <OrgComplianceTableDynamic />
           </div>
         </div>
       )}
