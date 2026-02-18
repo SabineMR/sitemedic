@@ -180,13 +180,14 @@ Plans:
 4. A player on-pitch injury never produces a RIDDOR flag — the vertical gate prevents RIDDOR detection before any logic runs for the football vertical
 5. An admin can download the correct PDF for each football incident — the FA Match Day Injury Form for player incidents and the SGSA Medical Incident Report for spectator incidents
 
-**Plans:** 4 plans
+**Plans:** 5 plans
 
 Plans:
 - [x] 22-01-PLAN.md — Football dual patient type form: patient type selector (Player / Spectator) at form start; conditional Player fields (squad number, phase of play, contact/non-contact, HIA performed/outcome, FA severity); conditional Spectator fields (stand location, row/seat, referral outcome, safeguarding flag/notes, alcohol involvement); validation guards; all written to vertical_extra_fields JSONB in sync payload
 - [x] 22-02-PLAN.md — Football RIDDOR gate: verify 'sporting_events' is in NON_RIDDOR_VERTICALS; annotate FOOT-04; Deno-native test asserting gate; confirm F2508 generator 400 guard
 - [x] 22-03-PLAN.md — Football PDF Edge Functions: replace fa-incident-generator 501 stub with full FA Match Day Injury Form (player) and SGSA Medical Incident Report (spectator) PDF generation; FAPlayerDocument.tsx, FASpectatorDocument.tsx, mapping files; fa-incident-reports storage bucket migration 127
 - [x] 22-04-PLAN.md — Football vertical wiring: getPatientLabel('sporting_events') → 'Player'; org-labels.ts sporting_events → Player/Pitch+Ground/Club; 4 new football cert types (ATMMiF, ITMMiF, FA Advanced Trauma Management, FA Concussion Module) + sporting_events CertCategory + VERTICAL_CERT_TYPES update
+- [ ] 22-05-PLAN.md — Gap closure: FAIncidentReportCard component, fa-incidents query, sporting_events branch in treatment detail page, stale dispatcher comment fix
 
 ---
 
@@ -253,5 +254,5 @@ Plans:
 | 19. Motorsport Vertical | v2.0 | 0/5 | Not started | - |
 | 20. Festivals & Events Vertical | v2.0 | 4/4 | Complete | 2026-02-17 |
 | 21. Film/TV Production Vertical | v2.0 | 2/2 | Complete | 2026-02-17 |
-| 22. Football / Sports Vertical | v2.0 | 0/4 | Not started | - |
+| 22. Football / Sports Vertical | v2.0 | 4/5 | Gap closure in progress | - |
 | 23. Analytics — Heat Maps & Trend Charts | v2.0 | 0/5 | Not started | - |
