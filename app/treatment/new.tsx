@@ -75,11 +75,30 @@ export default function NewTreatmentScreen() {
   const [riddorFlagged, setRiddorFlagged] = useState(false);
   const [certValidationError, setCertValidationError] = useState<string | null>(null);
 
+  // Film/TV production fields (FILM-01)
+  const [productionTitle, setProductionTitle] = useState<string>('');
+  const [patientRole, setPatientRole] = useState<string>('');
+  const [sfxInvolved, setSfxInvolved] = useState<boolean>(false);
+  const [sceneContext, setSceneContext] = useState<string>('');
+  const [showPatientRolePicker, setShowPatientRolePicker] = useState(false);
+
   // Booking route params and org vertical — drives mechanism presets, outcome labels, and section headings
   const params = useLocalSearchParams<{ booking_id?: string; event_vertical?: string }>();
   const { primaryVertical } = useOrg();
   const orgVertical = (params.event_vertical as string | undefined) ?? primaryVertical;
   const bookingId = (params.booking_id as string | undefined) ?? null;
+
+  const FILM_TV_PATIENT_ROLES = [
+    { id: 'cast', label: 'Cast' },
+    { id: 'stunt-performer', label: 'Stunt Performer' },
+    { id: 'director', label: 'Director' },
+    { id: 'camera', label: 'Camera' },
+    { id: 'grip', label: 'Grip' },
+    { id: 'lighting', label: 'Lighting' },
+    { id: 'art-dept', label: 'Art Dept' },
+    { id: 'costume', label: 'Costume' },
+    { id: 'other-crew', label: 'Other Crew' },
+  ];
 
   // Initialize treatment record on mount
   useEffect(() => {
@@ -162,6 +181,12 @@ export default function NewTreatmentScreen() {
     outcome: outcomeId,
     signatureUri,
     isRiddorReportable: riddorFlagged,
+    verticalExtraFields: orgVertical === 'tv_film' ? JSON.stringify({
+      production_title: productionTitle,
+      patient_role: patientRole,
+      sfx_involved: sfxInvolved,
+      scene_context: sceneContext,
+    }) : null,
   };
 
   const fieldMapping = {
@@ -175,6 +200,7 @@ export default function NewTreatmentScreen() {
     outcome: 'outcome',
     signatureUri: 'signature_uri',
     isRiddorReportable: 'is_riddor_reportable',
+    verticalExtraFields: 'vertical_extra_fields',
   };
 
   const { isSaving, lastSaved } = useAutoSave(treatment, formValues, fieldMapping, 10000);
@@ -332,6 +358,7 @@ export default function NewTreatmentScreen() {
             updated_at: new Date(treatment.updatedAt).toISOString(),
             last_modified_at: treatment.lastModifiedAt,
             event_vertical: treatment.eventVertical ?? null,
+            vertical_extra_fields: treatment.verticalExtraFields ?? null,
             booking_id: treatment.bookingId ?? null,
           },
           treatment.isRiddorReportable ? 0 : 1 // RIDDOR = priority 0 (immediate)
@@ -416,6 +443,49 @@ export default function NewTreatmentScreen() {
             placeholder={`Search ${patientLabel.toLowerCase()} by name or company`}
           />
         </View>
+
+        {/* Film/TV Production Details — FILM-01 */}
+        {orgVertical === 'tv_film' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Production Details</Text>
+
+            <Text style={styles.fieldLabel}>Production Title</Text>
+            <TextInput
+              style={styles.textArea}
+              placeholder="e.g. The Crown S8"
+              value={productionTitle}
+              onChangeText={setProductionTitle}
+              autoCapitalize="words"
+            />
+
+            <Text style={styles.fieldLabel}>Patient Role *</Text>
+            <Pressable
+              style={styles.pickerButton}
+              onPress={() => setShowPatientRolePicker(true)}
+            >
+              <Text style={styles.pickerButtonText}>{patientRole || 'Select role...'}</Text>
+            </Pressable>
+
+            <Text style={styles.fieldLabel}>SFX / Pyrotechnic Involved</Text>
+            <Pressable
+              style={[styles.pickerButton, sfxInvolved && { borderColor: '#F59E0B', borderWidth: 2 }]}
+              onPress={() => setSfxInvolved(!sfxInvolved)}
+            >
+              <Text style={styles.pickerButtonText}>{sfxInvolved ? 'Yes — SFX/Pyrotechnic involved' : 'No'}</Text>
+            </Pressable>
+
+            <Text style={styles.fieldLabel}>Scene / Shot Context</Text>
+            <TextInput
+              style={styles.textArea}
+              placeholder="e.g. Car chase scene, Stage 4"
+              value={sceneContext}
+              onChangeText={setSceneContext}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+          </View>
+        )}
 
         {/* Section 2: Injury Details */}
         <View style={styles.section}>
@@ -599,6 +669,20 @@ export default function NewTreatmentScreen() {
         onSave={handleSignatureSave}
         title="Patient/Medic Signature"
       />
+
+      {/* Film/TV Patient Role Picker */}
+      {orgVertical === 'tv_film' && showPatientRolePicker && (
+        <BottomSheetPicker
+          visible={showPatientRolePicker}
+          title="Patient Role"
+          items={FILM_TV_PATIENT_ROLES}
+          onSelect={(item) => {
+            setPatientRole(item.label);
+            setShowPatientRolePicker(false);
+          }}
+          onClose={() => setShowPatientRolePicker(false)}
+        />
+      )}
     </View>
   );
 }
