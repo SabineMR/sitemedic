@@ -1,403 +1,508 @@
-# Technology Stack Research
+# Technology Stack — Multi-Vertical Expansion
 
-**Domain:** Medical compliance platform with offline-first mobile app and web dashboard
-**Researched:** 2026-02-15
-**Confidence:** HIGH
-
-## Executive Summary
-
-SiteMedic requires a proven offline-first stack optimized for UK health data compliance, rapid field data capture, and professional PDF reporting. The 2025-2026 standard for this domain is:
-
-- **Mobile**: React Native + Expo SDK 54 (iOS-first with New Architecture enabled)
-- **Offline Storage**: WatermelonDB on SQLite with Supabase sync
-- **Backend**: Supabase (PostgreSQL + Auth + Storage) in UK/EU region
-- **Web Dashboard**: React 19 + Vite + shadcn/ui (Tailwind)
-- **State Management**: Zustand (global) + TanStack Query (server state)
-- **PDF Generation**: pdfmake (server-side via Node.js)
-
-This stack prioritizes speed-to-ship, offline reliability, and GDPR compliance over custom infrastructure.
+**Milestone:** SiteMedic v2.0 multi-vertical support (Film/TV, Festivals, Motorsport, Football/Sports)
+**Researched:** 2026-02-17
+**Mode:** Subsequent milestone — existing stack validated. Focus is ONLY on multi-vertical addition patterns.
+**Overall confidence:** HIGH (based on existing codebase audit + multi-vertical SaaS pattern research)
 
 ---
 
-## Recommended Stack
+## What Is Already Built (Do Not Re-Research)
 
-### Core Technologies
+The core stack is validated and in production:
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| **Expo** | SDK 54 (54.0.33) | React Native development framework | Industry standard for rapid iOS/Android development. SDK 54 (Sept 2025) includes React Native 0.81, React 19, precompiled XCFrameworks (10x faster iOS builds), and New Architecture by default. Expo's managed workflow handles native dependencies and updates. |
-| **React Native** | 0.81 | Cross-platform mobile framework | Included with Expo SDK 54. Shares JavaScript codebase with web dashboard. New Architecture enabled by default provides better performance and concurrent rendering support. |
-| **WatermelonDB** | 0.28.0 | Offline-first reactive database | Built on SQLite, optimized for React Native. Lazy-loads data for instant app launch regardless of dataset size. Fully observable (UI auto-updates on data changes). Handles 10K+ records smoothly. Supabase officially recommends for offline sync pattern. |
-| **Supabase** | Latest | Backend-as-a-Service (PostgreSQL) | PostgreSQL + Auth + Storage + Edge Functions in one managed service. UK/EU region support (eu-west-2 London) ensures GDPR compliance for health data. Auto-generates REST/GraphQL APIs. Proven sync pattern with WatermelonDB. SOC 2 compliant (BAA available for PHI handling). |
-| **React** | 19 | Web dashboard framework | Latest stable (ships with Expo SDK 54). Concurrent rendering improves dashboard performance. Server components not needed (client-side dashboard). |
-| **Vite** | 6.x | Web build tool | Industry standard for React apps in 2026. Fast dev server (instant HMR), optimized production builds. Replaces Create React App (deprecated). |
-| **Node.js** | 20 LTS | Backend runtime for Supabase Edge Functions | Recommended by Expo SDK 54. LTS ensures stability for production. Required for server-side PDF generation. |
-| **TypeScript** | 5.x | Type safety across stack | Standard for React/React Native in 2026. Catches errors at compile-time. Essential for large codebases with offline sync logic. |
-| **Tailwind CSS** | 4.x | Web dashboard styling | Utility-first CSS framework. Industry standard for 2026. Faster than component libraries for custom medical forms. Pairs well with shadcn/ui. |
+| Concern | Solution |
+|---------|----------|
+| Mobile app | React Native + Expo SDK 54 |
+| Offline storage | WatermelonDB on SQLite |
+| Backend | Supabase (PostgreSQL + Auth + Storage + Edge Functions) |
+| Web dashboard | Next.js 15 + shadcn/ui + TanStack Query |
+| PDF generation | @react-pdf/renderer 4.3.2 in Supabase Edge Functions |
+| Payments | Stripe Connect |
 
-### Supporting Libraries
-
-#### Mobile App (iOS)
-
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| **expo-image-picker** | 17.0.10 | Photo capture and gallery access | Treatment photos, near-miss documentation. Handles permissions, EXIF data, compression. |
-| **expo-camera** | Latest (SDK 54) | Direct camera access | Alternative to image-picker for faster capture workflows. |
-| **react-native-signature-canvas** | 5.0.2 | Digital signature capture | Treatment consent, document signing. WebView-based, works with Expo. |
-| **expo-file-system** | Latest (SDK 54) | File I/O and caching | Photo storage before sync, PDF caching for offline viewing. |
-| **expo-document-picker** | 14.0.8 | Document/file selection | Worker certification uploads (PDFs, images). |
-| **expo-secure-store** | Latest (SDK 54) | Encrypted key-value storage | Auth tokens, sensitive user preferences. iOS Keychain / Android EncryptedSharedPreferences. |
-| **react-native-encrypted-storage** | 4.x | Encrypted AsyncStorage alternative | If expo-secure-store is insufficient. Larger storage capacity than Keychain (use for offline encryption keys). |
-| **@tanstack/react-query** | 5.x | Server state management | Network requests, cache management, optimistic updates. Handles offline queue and retry logic. Pairs with WatermelonDB for hybrid local/server state. |
-| **@tanstack/query-async-storage-persister** | 5.x | Persist TanStack Query cache | Offline persistence for server state. Survives app restarts. |
-| **zustand** | 5.x | Global client state | UI state (active tab, filters, form state). Lightweight (2KB), no provider boilerplate. Standard for React Native in 2026. |
-| **react-hook-form** | 7.x | Form validation and state | Treatment forms, near-miss capture, daily safety checklists. Minimal re-renders, TypeScript support. |
-| **zod** | 3.x | Schema validation | Runtime type validation for forms. Pairs with react-hook-form. Validates data before WatermelonDB writes. |
-| **@react-native-community/netinfo** | 11.x | Network status detection | Triggers sync when connectivity returns. Required for offline-first architecture. |
-| **expo-notifications** | Latest (SDK 54) | Push notifications | RIDDOR deadline alerts, certification expiry warnings. |
-| **expo-crypto** | Latest (SDK 54) | Cryptographic functions | AES-256 encryption for health data at rest (special category data under UK GDPR). |
-
-#### Web Dashboard
-
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| **shadcn/ui** | Latest | React component library (Tailwind) | Pre-built accessible components (tables, forms, dialogs). Copy/paste source code (not npm dependency). Replaces heavier UI libraries like Material-UI. |
-| **@tanstack/react-query** | 5.x | Server state management | Dashboard API calls, real-time data fetching, cache invalidation. Same library as mobile app. |
-| **zustand** | 5.x | Global client state | Dashboard filters, user preferences, active project selection. |
-| **react-hook-form** | 7.x | Form validation | Site manager settings, worker profile creation, certification entry. |
-| **zod** | 3.x | Schema validation | Form validation schemas shared with mobile app. |
-| **recharts** | 2.x | Charts and visualizations | Future phase: trend analysis, heat maps. Composable React chart components. |
-| **@supabase/supabase-js** | 2.x | Supabase client library | Auth, real-time subscriptions, Storage access. |
-| **date-fns** | 3.x | Date manipulation | Treatment timestamps, RIDDOR deadline calculations, certification expiry tracking. Tree-shakable, smaller than moment.js. |
-| **react-router** | 7.x | Client-side routing | Dashboard navigation (overview, treatments, near-misses, workers). |
-
-#### PDF Generation (Server-Side)
-
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| **pdfmake** | 0.2.x | Declarative PDF generation | Weekly safety reports, treatment logs for HSE audits. JSON-based templates, supports tables/headers/footers. Server-side via Supabase Edge Functions (Deno runtime). |
-| **@supabase/supabase-js** | 2.x | Supabase client (Edge Functions) | Fetch treatment data, near-miss logs, worker registry for PDF generation. |
-
-### Development Tools
-
-| Tool | Purpose | Notes |
-|------|---------|-------|
-| **Xcode** | iOS compilation | Version 16.1+ required for SDK 54 (Xcode 16.2+ recommended). |
-| **EAS Build** | Cloud builds for iOS/Android | Expo's managed CI/CD. Handles provisioning profiles, certificates. Free tier available. |
-| **EAS Submit** | App Store / Play Store deployment | Automated submission from EAS Build. |
-| **Expo Go** | Development client | Test app on physical device without builds. Limited for WatermelonDB (requires dev build). |
-| **expo-dev-client** | Custom development build | Required for testing WatermelonDB and native modules. Replaces Expo Go for this project. |
-| **ESLint** | Code linting | TypeScript + React rules. Airbnb or Standard config. |
-| **Prettier** | Code formatting | Consistent formatting across team. Integrates with ESLint. |
-| **Supabase CLI** | Local Supabase development | Run PostgreSQL + Auth + Storage locally. Generate TypeScript types from database schema. |
-| **PostgreSQL** | Local database (via Docker) | Supabase CLI includes. Mirrors production schema. |
+This research answers five specific questions about extending that stack for multi-vertical support.
 
 ---
 
-## Installation
+## Q1: How to Store Per-Org "Vertical" Configuration in the DB
 
-### Mobile App (Expo)
+### What Already Exists (Audit Finding)
 
-```bash
-# Initialize Expo project with TypeScript
-npx create-expo-app@latest sitemedic-mobile --template expo-template-blank-typescript
+The schema is already partially implemented. Migration 121 adds:
 
-# Core dependencies
-npm install @nozbe/watermelondb@0.28.0 \
-  @supabase/supabase-js@latest \
-  @tanstack/react-query@latest \
-  @tanstack/query-async-storage-persister@latest \
-  zustand@latest \
-  react-hook-form@latest \
-  zod@latest \
-  date-fns@latest
-
-# Expo modules
-npx expo install expo-image-picker \
-  expo-camera \
-  expo-file-system \
-  expo-document-picker \
-  expo-secure-store \
-  expo-notifications \
-  expo-crypto \
-  @react-native-community/netinfo \
-  @react-native-async-storage/async-storage
-
-# Signature capture
-npm install react-native-signature-canvas@latest
-
-# WatermelonDB Expo plugin (required for native SQLite)
-npm install --save-dev @morrowdigital/watermelondb-expo-plugin@latest
-
-# Encrypted storage (if needed beyond expo-secure-store)
-npm install react-native-encrypted-storage@latest
-
-# Dev dependencies
-npm install --save-dev @types/react @types/react-native \
-  eslint prettier eslint-config-prettier \
-  @typescript-eslint/eslint-plugin @typescript-eslint/parser
+```sql
+-- org_settings.industry_verticals: JSONB array of vertical IDs
+-- e.g. ["construction", "tv_film", "motorsport"]
+ALTER TABLE org_settings
+  ADD COLUMN IF NOT EXISTS industry_verticals JSONB NOT NULL DEFAULT '["construction"]'::jsonb;
+CREATE INDEX IF NOT EXISTS idx_org_settings_industry_verticals
+  ON org_settings USING GIN (industry_verticals);
 ```
 
-**app.json configuration for WatermelonDB:**
+Migration 123 adds booking-level override:
 
-```json
-{
-  "expo": {
-    "plugins": [
-      "@morrowdigital/watermelondb-expo-plugin",
-      [
-        "expo-build-properties",
-        {
-          "ios": {
-            "extraPods": [
-              {
-                "name": "simdjson",
-                "configurations": ["Debug", "Release"]
-              }
-            ]
-          }
-        }
-      ]
-    ]
-  }
+```sql
+-- bookings.event_vertical: TEXT column, per-booking vertical override
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS event_vertical TEXT;
+```
+
+### Pattern Assessment: Hybrid Static Config + DB Vertical Selector
+
+**Recommended pattern: "Vertical ID as key into static TypeScript config."**
+
+Do not store vertical configuration in the database. Store only the vertical ID (a string key) in the database. All configuration for what that vertical means lives in TypeScript config files.
+
+This is already the pattern in the codebase:
+
+- `org_settings.industry_verticals` stores `["construction", "tv_film"]` — IDs only
+- `bookings.event_vertical` stores `"motorsport"` — ID only
+- `services/taxonomy/vertical-compliance.ts` maps ID to compliance config
+- `services/taxonomy/mechanism-presets.ts` maps ID to form presets
+- `services/taxonomy/vertical-outcome-labels.ts` maps ID to label overrides
+- `web/types/certification.types.ts` maps ID to recommended cert types
+
+**Why this pattern is correct for 5 verticals:**
+
+Storing vertical config in the DB would require:
+- A CMS-like admin UI to manage config per vertical
+- Runtime DB queries for config that never changes
+- Version management when config changes
+- Increased RLS complexity
+
+For a known, bounded set of verticals (10 currently, growing slowly), static TypeScript config is faster, type-safe, version-controlled, and requires zero infrastructure.
+
+**Threshold for switching to DB config:** When you exceed ~25 verticals and clients need to self-configure their own. Not applicable to SiteMedic v2.0.
+
+### Org-Level vs Booking-Level Vertical Resolution
+
+The established "waterfall" resolution already in the codebase:
+
+```
+1. bookings.event_vertical          (most specific — overrides everything)
+      ↓ if null
+2. org_settings.industry_verticals[0]  (org default primary vertical)
+      ↓ if empty
+3. "general"                           (safe fallback — RIDDOR defaults)
+```
+
+This is the correct pattern. It mirrors how timezone-aware SaaS platforms handle org defaults with per-record overrides (Calendly, Google Calendar, Linear all use this pattern).
+
+**Nothing new to add to the schema for v2.0.** The columns exist. The TypeScript configs exist. The work is extending those configs for new verticals.
+
+---
+
+## Q2: Runtime Feature Flagging / Content Switching in React Native + Next.js
+
+### What Already Exists (Audit Finding)
+
+Both platforms already implement vertical switching without a feature flag library:
+
+**Next.js web (via OrgProvider):**
+
+```typescript
+// web/contexts/org-context.tsx — already fetches industry_verticals
+const { orgId, industryVerticals } = useOrg();
+const primaryVertical = industryVerticals?.[0] ?? 'general';
+const compliance = getVerticalCompliance(primaryVertical);
+// compliance.incidentPageLabel, compliance.complianceBadgeLabel etc. adapt UI
+```
+
+**React Native mobile (per-screen fetch):**
+
+```typescript
+// app/treatment/new.tsx — fetchOrgVertical() called on mount
+const [orgVertical, setOrgVertical] = useState<string | null>(null);
+// Then:
+const mechanismPresets = getMechanismPresets(orgVertical);
+const patientLabel = getPatientLabel(orgVertical);
+```
+
+### Recommended Pattern: Promote Mobile Vertical to a Shared Context
+
+The mobile app currently fetches `orgVertical` separately on each screen that needs it (`treatment/new.tsx` fetches directly from Supabase). This works but causes duplicate fetches and a loading gap on each screen.
+
+**For v2.0, promote to a shared context on mobile — mirrors the web's OrgProvider pattern:**
+
+```typescript
+// Pattern: vertical-aware context for React Native
+// src/contexts/VerticalContext.tsx (new file for v2.0)
+// - Fetch once on app launch
+// - Cache in context
+// - Read in any screen with useVertical()
+```
+
+This is a standard React Context pattern, no library needed. The web already does this correctly. The mobile should match it.
+
+**Do not use a feature flag SaaS service (LaunchDarkly, Flagsmith, etc.)** for this use case. Those services are for A/B testing or gradual rollouts to users you don't control. Here, the vertical is a deterministic property of the org's config — it does not change dynamically per user. A context provider reading from Supabase is the correct architecture.
+
+### Booking-Level Override in the Mobile App
+
+When a medic opens a booking-specific screen (e.g., completing a treatment within a specific booking), the booking's `event_vertical` overrides the org default:
+
+```typescript
+// Pattern: prefer booking vertical over org vertical
+const effectiveVertical = booking.event_vertical ?? orgVertical ?? 'general';
+```
+
+This cascade is already implemented for the RIDDOR page on web. The mobile needs the same cascade wherever booking context is available.
+
+---
+
+## Q3: Terminology Switching (i18n-Style, Different Labels Per Vertical)
+
+### What Already Exists (Audit Finding)
+
+The codebase has already solved this without an i18n library. Two patterns are in use:
+
+**Pattern A — Direct label overrides (vertical-outcome-labels.ts):**
+
+```typescript
+// Overrides just the display label, keeps DB ID stable
+const OUTCOME_LABEL_OVERRIDES: Record<TreatmentVerticalId, OutcomeLabelOverrides> = {
+  tv_film: {
+    'returned-to-work-same-duties': 'Returned to set',
+    'returned-to-work-light-duties': 'Returned to set — restricted duties',
+  },
+  motorsport: {
+    'returned-to-work-same-duties': 'Returned to race / event',
+    ...
+  },
+};
+```
+
+**Pattern B — Term functions (vertical-outcome-labels.ts):**
+
+```typescript
+// Returns the noun for the person being treated
+export function getPatientLabel(verticalId: string | null | undefined): string {
+  const labels: Partial<Record<TreatmentVerticalId, string>> = {
+    construction: 'Worker',
+    tv_film: 'Crew member',
+    motorsport: 'Driver / Competitor',
+    festivals: 'Attendee',
+    ...
+  };
+  return labels[verticalId as TreatmentVerticalId] ?? 'Patient';
 }
 ```
 
-### Web Dashboard (React + Vite)
+### Recommended Extension Pattern
 
-```bash
-# Initialize Vite project with React + TypeScript
-npm create vite@latest sitemedic-dashboard -- --template react-ts
+**Do not add an i18n library (i18next, next-intl, react-intl).** These libraries solve language/locale problems: pluralization, RTL, date formats, number formats. SiteMedic's terminology problem is simpler: same English language, different domain vocabulary per vertical.
 
-# Core dependencies
-npm install @supabase/supabase-js@latest \
-  @tanstack/react-query@latest \
-  zustand@latest \
-  react-hook-form@latest \
-  zod@latest \
-  date-fns@latest \
-  react-router@latest
+The existing pattern is correct and should be extended. Add a single `services/taxonomy/vertical-terminology.ts` file:
 
-# UI (Tailwind + shadcn/ui)
-npm install -D tailwindcss postcss autoprefixer
-npx tailwindcss init -p
+```typescript
+// Pattern: Extend with all terminology variants in one place
+interface VerticalTerminology {
+  /** The person being treated */
+  patientLabel: string;
+  /** Plural: "Workers on site" / "Attendees" / "Cast & Crew" */
+  patientLabelPlural: string;
+  /** The location of work */
+  locationLabel: string;
+  /** "Site" / "Set" / "Circuit" / "Pitch" / "Venue" */
+  workplaceLabel: string;
+  /** The work being done */
+  activityLabel: string;
+  /** Noun for the incident list page title */
+  incidentListLabel: string;
+  /** "Shift" / "Day" / "Race" / "Match" / "Screening" */
+  bookingUnitLabel: string;
+}
 
-# shadcn/ui (follow official setup: https://ui.shadcn.com/docs/installation/vite)
-npx shadcn-ui@latest init
-
-# Charts (for future phases)
-npm install recharts@latest
-
-# Dev dependencies
-npm install --save-dev @types/react @types/react-dom \
-  eslint prettier eslint-config-prettier \
-  @typescript-eslint/eslint-plugin @typescript-eslint/parser
+const VERTICAL_TERMINOLOGY: Record<string, VerticalTerminology> = {
+  construction: {
+    patientLabel: 'Worker',
+    patientLabelPlural: 'Workers',
+    locationLabel: 'Site',
+    workplaceLabel: 'Site',
+    activityLabel: 'Work',
+    incidentListLabel: 'RIDDOR Incidents',
+    bookingUnitLabel: 'Shift',
+  },
+  tv_film: {
+    patientLabel: 'Crew Member',
+    patientLabelPlural: 'Cast & Crew',
+    locationLabel: 'Location',
+    workplaceLabel: 'Set',
+    activityLabel: 'Production',
+    incidentListLabel: 'Production Incidents',
+    bookingUnitLabel: 'Shoot Day',
+  },
+  // ... all verticals
+};
 ```
 
-### Backend (Supabase)
+**Why this over i18n:**
+- Zero dependency overhead
+- Type-safe (TypeScript union types catch missing vertical configs)
+- Co-located with the other taxonomy files
+- No build step (no .po files, no JSON loading)
+- Survives the Supabase Edge Function Deno runtime without a polyfill
 
-```bash
-# Install Supabase CLI
-npm install -g supabase
+**Confidence:** HIGH — this is the established pattern already in use in the codebase.
 
-# Initialize local Supabase project
-supabase init
+---
 
-# Start local Supabase (PostgreSQL + Auth + Storage + Studio)
-supabase start
+## Q4: Per-Vertical PDF Templates with @react-pdf/renderer
 
-# Generate TypeScript types from database schema
-supabase gen types typescript --local > src/types/database.types.ts
+### What Already Exists (Audit Finding)
 
-# Link to remote Supabase project (production)
-supabase link --project-ref <your-project-ref>
+The existing PDF architecture: one Edge Function per PDF type, each containing a single `*Document.tsx` React component.
 
-# Push migrations to production
-supabase db push
+Current PDF functions:
+- `supabase/functions/riddor-f2508-generator/` — F2508Document.tsx (HSE RIDDOR form)
+- `supabase/functions/generate-invoice-pdf/` — InvoiceDocument.tsx
+- `supabase/functions/generate-contract-pdf/` — ContractDocument.tsx (via components/)
+- `supabase/functions/generate-payslip-pdf/` — payslip PDF
+- `supabase/functions/generate-weekly-report/` — weekly safety report
+
+The existing pattern for each PDF function:
+
+```
+function/
+  index.ts          ← Edge Function entry, fetches data, calls renderToBuffer
+  *Document.tsx     ← React PDF component (Document, Page, View, Text)
+  *-mapping.ts      ← Maps DB data to PDF data shape
+  styles.ts         ← StyleSheet.create() definitions
+  types.ts          ← TypeScript types for the PDF data shape
 ```
 
----
+### Recommended Pattern for Multi-Vertical PDF Reports
 
-## Alternatives Considered
+**Use a vertical-dispatched document strategy inside a single Edge Function per report type.**
 
-| Decision | Recommended | Alternative | When to Use Alternative |
-|----------|-------------|-------------|-------------------------|
-| **Offline Database** | WatermelonDB | Expo SQLite (raw) | Simpler data models with <100 records. WatermelonDB overhead not justified. |
-| **Offline Database** | WatermelonDB | RxDB | Need real-time multi-device sync (WatermelonDB is single-device). RxDB has built-in CouchDB/GraphQL sync but larger bundle size. |
-| **Offline Database** | WatermelonDB | Realm | Legacy projects already using Realm. Realm is MongoDB-owned, less active community for React Native in 2026. |
-| **Backend** | Supabase | Firebase | Already invested in Google ecosystem. Firebase has better offline SDK but vendor lock-in. Supabase is open-source (can self-host). |
-| **Backend** | Supabase | Custom Node.js + PostgreSQL | Need custom business logic that Edge Functions can't handle. Adds DevOps complexity. Only if Supabase limitations proven (none identified for MVP). |
-| **PDF Generation** | pdfmake (server) | jsPDF (client) | Generate PDFs on mobile device. Not recommended—large bundle size (30KB), slow rendering, drains battery. pdfmake server-side is faster and offloads processing. |
-| **PDF Generation** | pdfmake | @react-pdf/renderer | Need React components for PDF templates. More developer-friendly but 3x slower rendering. Use for complex branded PDFs in post-MVP. |
-| **State Management** | Zustand | Redux Toolkit | Large team (5+ developers) needing strict patterns. Redux adds boilerplate and complexity not justified for MVP (2-person team). |
-| **State Management** | Zustand | Jotai | Need atomic state primitives. Jotai is more granular but less popular than Zustand (smaller ecosystem). |
-| **UI Library (Web)** | shadcn/ui (Tailwind) | Material-UI | Prefer Material Design. MUI has larger bundle size (100KB+) and slower performance. shadcn/ui is 2026 standard for custom designs. |
-| **UI Library (Web)** | shadcn/ui | Ant Design | Building enterprise dashboards in Asian markets (Ant Design is Alibaba-backed). More opinionated styling than shadcn/ui. |
-| **Form Library** | react-hook-form + zod | Formik + Yup | Legacy projects using Formik. react-hook-form has better performance (fewer re-renders) and zod has better TypeScript inference. |
+For incident reports, which are the primary per-vertical PDF:
 
----
+```
+supabase/functions/generate-incident-report/
+  index.ts                          ← dispatches to the right Document component
+  documents/
+    F2508Document.tsx               ← HSE RIDDOR / Construction / TV-Film
+    PurpleGuideDocument.tsx         ← Festivals & Events
+    MotorsportUKDocument.tsx        ← Motorsport UK / FIA
+    FAIncidentDocument.tsx          ← Football / Sporting Events
+    GenericIncidentDocument.tsx     ← Fallback for verticals with no mandated form
+  shared/
+    shared-styles.ts                ← Brand colors, fonts, spacing
+    shared-components.tsx           ← Reusable PDF primitives (Section, Field, Header)
+  types.ts                          ← IncidentReportData (superset of all fields)
+```
 
-## What NOT to Use
+**The dispatch in index.ts:**
 
-| Avoid | Why | Use Instead |
-|-------|-----|-------------|
-| **AsyncStorage (unencrypted)** | Stores sensitive health data in plaintext. Violates UK GDPR Article 32 (security of processing) for special category data. | expo-secure-store (iOS Keychain/Android EncryptedSharedPreferences) or react-native-encrypted-storage. |
-| **Expo Managed Workflow (pure)** | WatermelonDB requires native modules (SQLite, simdjson). Managed workflow doesn't support custom native code. | expo-dev-client (custom development build) or bare workflow. |
-| **Firebase Realtime Database** | NoSQL structure awkward for relational treatment/worker/certification data. Poor offline query support compared to local SQLite. | WatermelonDB (local) + Supabase PostgreSQL (server). |
-| **Redux (classic, non-Toolkit)** | Excessive boilerplate for MVP. Steeper learning curve. Slower developer velocity. | Zustand for global state, TanStack Query for server state. Use Redux Toolkit only if team requires Redux patterns. |
-| **Create React App** | Deprecated by React team. Slow builds, outdated dependencies. | Vite (10x faster dev server, modern tooling). |
-| **Moment.js** | 67KB bundle size, deprecated in 2020. | date-fns (tree-shakable, 10KB) or native Intl API for simple cases. |
-| **React Native Paper** | Material Design doesn't fit medical compliance aesthetic. Larger bundle than needed. | Custom components or React Native Elements (more flexible). For web: shadcn/ui. |
-| **WebSQL** | Deprecated web standard. Removed from browsers in 2023. | IndexedDB (not applicable—this is a mobile-first app using WatermelonDB). |
-| **SQLite3 (direct native modules)** | Requires manual Expo config plugin. WatermelonDB abstracts this and adds reactivity. | WatermelonDB (includes SQLite via JSI bindings). |
-| **Axios** | Redundant with native fetch API (React Native 0.60+). fetch has better TypeScript support in 2026. | fetch + TanStack Query (handles retry, caching, offline). |
+```typescript
+// Pattern: vertical-aware PDF dispatch
+function resolveIncidentDocument(
+  vertical: string,
+  data: IncidentReportData
+): JSX.Element {
+  switch (vertical) {
+    case 'festivals': return <PurpleGuideDocument data={data} />;
+    case 'motorsport': return <MotorsportUKDocument data={data} />;
+    case 'sporting_events': return <FAIncidentDocument data={data} />;
+    case 'construction':
+    case 'tv_film':
+    case 'corporate': return <F2508Document data={data} />;
+    default: return <GenericIncidentDocument data={data} />;
+  }
+}
 
----
+// In the Edge Function handler:
+const document = resolveIncidentDocument(vertical, incidentData);
+const pdfBuffer = await renderToBuffer(document);
+```
 
-## Stack Patterns by Variant
+**Why one Edge Function per report type, not one per vertical:**
 
-### Pattern 1: Offline-First Mobile + Server Sync
+Supabase Edge Functions have cold start costs and invocation limits. 5 verticals x 4 report types = 20 Edge Functions would be operationally noisy. Grouping by report category (incident report, booking brief, weekly summary) keeps invocations manageable while dispatch handles per-vertical variation at the document level.
 
-**Trigger:** Construction site with no mobile signal (MVP requirement).
+**Why not a template engine (Handlebars, Mustache, Nunjucks):**
 
-**Architecture:**
-1. **Local writes:** User actions write to WatermelonDB (SQLite) immediately.
-2. **Background sync:** NetInfo detects connectivity, triggers `sync()` function.
-3. **WatermelonDB sync:** Calls Supabase RPC functions (`push`, `pull`).
-   - `push`: Sends local changes (creates, updates, deletes) as JSON.
-   - `pull`: Receives server changes since last sync timestamp.
-4. **Conflict resolution:** Last-write-wins (sufficient for single-medic-per-site MVP). Phase 2: CRDTs for multi-medic.
+`@react-pdf/renderer` is already validated and in production for this project. It runs in Deno via the `npm:@react-pdf/renderer@4.3.2` import pattern (confirmed in `riddor-f2508-generator/index.ts`). Switching to a template-based approach adds no value and breaks the existing patterns.
 
-**Libraries:**
-- WatermelonDB (local state)
-- Supabase (server state)
-- @react-native-community/netinfo (connectivity detection)
-- TanStack Query (optimistic updates for server-dependent actions)
+**@react-pdf/renderer version:** 4.3.2 (verified in `web/package.json` and Supabase Edge Function imports). This is a current stable version as of early 2026. No upgrade needed for v2.0.
 
-**Performance targets met:**
-- Zero data loss (writes always succeed locally).
-- <90s treatment logging (no network blocking).
-- Sync when connectivity available (background, non-blocking).
+**Shared PDF primitives pattern (reduces duplication across templates):**
 
----
+```typescript
+// supabase/functions/generate-incident-report/shared/shared-components.tsx
+// Reusable building blocks shared across all vertical PDF documents
 
-### Pattern 2: Server-Side PDF Generation
+const ReportHeader = ({ title, framework, generatedAt }) => (
+  <View style={styles.header}>
+    <Text style={styles.title}>{title}</Text>
+    <Text style={styles.framework}>{framework}</Text>
+    <Text style={styles.date}>{generatedAt}</Text>
+  </View>
+);
 
-**Trigger:** Site manager clicks "Generate Weekly Report" on dashboard.
+const FormField = ({ label, value }) => (
+  <View style={styles.field}>
+    <Text style={styles.label}>{label}:</Text>
+    <Text style={styles.value}>{value ?? 'Not provided'}</Text>
+  </View>
+);
+```
 
-**Architecture:**
-1. **Dashboard request:** POST to Supabase Edge Function `/generate-weekly-pdf`.
-2. **Edge Function (Deno):**
-   - Query PostgreSQL for treatments, near-misses, worker certifications.
-   - Build pdfmake document definition (JSON template).
-   - Generate PDF binary.
-   - Upload to Supabase Storage (`/reports/{project_id}/{week}.pdf`).
-   - Return signed URL to dashboard.
-3. **Dashboard:** Download PDF or send via email (future phase).
-
-**Libraries:**
-- pdfmake (PDF generation)
-- @supabase/supabase-js (Edge Function client)
-- Supabase Storage (PDF hosting)
-
-**Why server-side:**
-- Faster rendering (Deno V8 vs mobile JavaScript).
-- Smaller mobile app bundle (no PDF library).
-- Professional formatting (access to server fonts, templates).
+All vertical document components import from `./shared/shared-components.tsx`, keeping brand consistency while varying only the section structure and compliance-specific fields.
 
 ---
 
-### Pattern 3: Encrypted Health Data at Rest
+## Q5: Per-Vertical Form Schemas — Dynamic JSONB vs Hardcoded Per-Vertical
 
-**Trigger:** UK GDPR Article 9 (special category data processing).
+### What Already Exists (Audit Finding)
 
-**Architecture:**
-1. **Mobile encryption:**
-   - Treatment data encrypted with AES-256 before WatermelonDB write.
-   - Encryption key stored in expo-secure-store (iOS Keychain).
-   - Key rotates every 90 days (GDPR best practice).
-2. **Server encryption:**
-   - Supabase PostgreSQL has encryption at rest (AWS EBS volumes).
-   - Application-level encryption for worker health profiles (via pgcrypto extension).
-   - Supabase Storage encrypts files (S3 SSE-AES256).
-3. **Transit encryption:**
-   - TLS 1.3 for all network requests (Supabase enforces HTTPS).
+Migration 123 establishes the pattern for booking briefs:
 
-**Libraries:**
-- expo-crypto (AES-256 encryption/decryption)
-- expo-secure-store (key storage)
-- Supabase (server-side encryption)
+```sql
+-- booking_briefs table uses a hybrid approach:
+-- Common fields as explicit columns (all verticals)
+nearest_ae_name TEXT,
+nearest_ae_address TEXT,
+helicopter_lz TEXT,
+emergency_rendezvous TEXT,
+-- Vertical-specific fields in JSONB
+extra_fields JSONB NOT NULL DEFAULT '{}'::jsonb
+```
 
-**Compliance met:**
-- UK GDPR Article 32 (security of processing).
-- ISO 27001 (Supabase is SOC 2 compliant).
-- 3-year data retention (configurable PostgreSQL policies).
+The code comment in the migration explicitly names the pattern:
+> "Common fields are explicit columns; vertical-specific fields live in extra_fields JSONB so the schema stays flexible across all 10 verticals."
+
+### Recommended Pattern: Explicit Columns for Shared Fields + JSONB for Vertical-Specific Fields
+
+**This is the correct pattern for SiteMedic v2.0. Use it consistently across all forms.**
+
+| Form area | Common fields (explicit columns) | Vertical-specific (JSONB extra_fields) |
+|-----------|----------------------------------|---------------------------------------|
+| Booking brief | A&E name/address, heli LZ, hazards | race_control_channel (motorsport), mip_reference (festivals), safeguarding_lead_name (education) |
+| Treatment record | injury_type, body_part, mechanism, outcome | stunt_reference (tv_film), car_number (motorsport), player_squad_number (sporting_events) |
+| Incident report | incident_date, patient_name, org_name | fa_form_number (sporting_events), motorsport_uk_ref (motorsport) |
+
+**Why this over fully-dynamic JSON schema (like a form builder):**
+
+A full dynamic schema system (storing field definitions in DB, rendering generic form builders) would require:
+- A schema definition table with field types, validations, ordering
+- A generic form renderer in both React Native and Next.js
+- Schema versioning when fields change
+- Increased query complexity
+
+For 10 known verticals with stable, well-understood regulatory requirements, hardcoded field definitions per vertical are faster to build, easier to test, and straightforward to audit.
+
+**Threshold for switching to dynamic schemas:** When an org admin can configure their own custom fields without a code deployment. This is not a v2.0 requirement.
+
+### Vertical Form Field Definition Pattern
+
+Each vertical's additional fields are defined in TypeScript, not the DB:
+
+```typescript
+// services/taxonomy/vertical-form-fields.ts (new file for v2.0)
+
+interface VerticalFormField {
+  key: string;             // Maps to JSONB key in extra_fields
+  label: string;           // Display label for the medic
+  type: 'text' | 'number' | 'select' | 'boolean';
+  required: boolean;
+  options?: string[];      // For 'select' type
+  placeholder?: string;
+}
+
+const VERTICAL_EXTRA_FIELDS: Record<string, VerticalFormField[]> = {
+  motorsport: [
+    { key: 'car_number', label: 'Car / Competitor Number', type: 'text', required: true },
+    { key: 'race_control_channel', label: 'Race Control Radio Channel', type: 'text', required: false },
+    { key: 'circuit_section', label: 'Circuit Section', type: 'text', required: false },
+    { key: 'clerk_of_course_notified', label: 'Clerk of Course Notified', type: 'boolean', required: true },
+  ],
+  festivals: [
+    { key: 'mip_reference', label: 'MIP Reference Number', type: 'text', required: false },
+    { key: 'welfare_area_id', label: 'Welfare Area / Medical Post', type: 'text', required: false },
+    { key: 'triage_category', label: 'Triage Category', type: 'select', required: true,
+      options: ['GREEN', 'YELLOW', 'RED', 'BLACK'] },
+  ],
+  tv_film: [
+    { key: 'production_title', label: 'Production Title', type: 'text', required: false },
+    { key: 'stunt_coordinator_notified', label: 'Stunt Coordinator Notified', type: 'boolean', required: false },
+    { key: 'scene_number', label: 'Scene / Shot Number', type: 'text', required: false },
+  ],
+  sporting_events: [
+    { key: 'squad_number', label: 'Player Squad Number', type: 'number', required: false },
+    { key: 'team_name', label: 'Team Name', type: 'text', required: false },
+    { key: 'fa_incident_number', label: 'FA Incident Reference', type: 'text', required: false },
+  ],
+  // construction: []  — no extra fields needed (RIDDOR fields are sufficient)
+};
+
+export function getVerticalExtraFields(verticalId: string): VerticalFormField[] {
+  return VERTICAL_EXTRA_FIELDS[verticalId] ?? [];
+}
+```
+
+**In React Native forms**, iterate `getVerticalExtraFields(vertical)` to render conditional fields. All values write to the JSONB `extra_fields` column.
+
+**In Next.js forms**, same pattern — the field definitions are importable in both environments since they are pure TypeScript with no platform-specific imports.
 
 ---
 
-## Version Compatibility
+## Stack Additions Required for Multi-Vertical v2.0
 
-| Package A | Compatible With | Notes |
-|-----------|-----------------|-------|
-| Expo SDK 54.0.33 | React Native 0.81 | Bundled together. Do not manually upgrade React Native. |
-| Expo SDK 54 | React 19 | Expo SDK 54 ships React 19. Concurrent features enabled. |
-| Expo SDK 54 | Node.js 20 LTS | Recommended for development. Required for Supabase Edge Functions. |
-| Expo SDK 54 | iOS 16+ | Minimum deployment target. Supports iOS 18 features. |
-| Expo SDK 54 | Android 16 | Targets Android 16 (edge-to-edge enforced). |
-| WatermelonDB 0.28.0 | Expo SDK 54 | Requires @morrowdigital/watermelondb-expo-plugin. Confirm compatibility before upgrading Expo. |
-| WatermelonDB 0.28.0 | Supabase | Use RPC-based sync (not Supabase Realtime). Supabase Realtime conflicts with WatermelonDB's local-first model. |
-| TanStack Query 5.x | React 18/19 | Works with both. React 19's concurrent features improve performance. |
-| pdfmake 0.2.x | Supabase Edge Functions (Deno) | Import as ES module. Deno's npm compatibility handles Node.js packages. |
-| shadcn/ui | Tailwind CSS 4.x | Required. shadcn/ui components are Tailwind-based. |
-| react-hook-form 7.x | React 19 | Fully compatible. zod integration via @hookform/resolvers. |
+No new npm packages are required. All patterns use existing stack capabilities.
+
+| Need | Solution | New Dependency? |
+|------|----------|-----------------|
+| Vertical config storage | Extend existing `Record<string, Config>` TypeScript files | No |
+| Runtime vertical switching (web) | Existing `OrgProvider` + `useOrg()` | No |
+| Runtime vertical switching (mobile) | New `VerticalContext` (mirrors web OrgProvider pattern) | No |
+| Terminology switching | Extend `services/taxonomy/vertical-terminology.ts` (new file) | No |
+| Per-vertical PDF templates | Vertical dispatch in new `generate-incident-report` Edge Function | No |
+| Per-vertical form fields | `services/taxonomy/vertical-form-fields.ts` (new file) | No |
+| Booking-level vertical override | `bookings.event_vertical` column (migration 123, already exists) | No |
+
+---
+
+## What NOT to Add
+
+| Temptation | Why to Avoid |
+|------------|--------------|
+| **A feature flag service (LaunchDarkly, Flagsmith)** | Over-engineered for deterministic org config. Adds vendor dependency, cost, and latency for zero benefit over a React Context. |
+| **i18next or next-intl for terminology** | These solve language/locale problems (pluralization, RTL, number formats). SiteMedic's terminology problem is pure vocabulary swapping within English. A TypeScript Record is sufficient and type-safe. |
+| **A dynamic form builder / CMS for field definitions** | 10 known verticals with stable regulatory forms do not need runtime field configuration. Hardcoded TypeScript definitions per vertical are faster, auditable, and type-safe. |
+| **Storing vertical config data in the DB** | Config that doesn't change at runtime (compliance frameworks, terminology, form field definitions) belongs in source code, not the database. Only the vertical *identifier* (a string key) belongs in the DB. |
+| **A separate Edge Function per vertical for PDF generation** | Multiplies infrastructure surface area. One Edge Function per report category with a vertical dispatch is the correct granularity. |
+| **Migrating from @react-pdf/renderer to another PDF library** | @react-pdf/renderer 4.3.2 is already proven in Deno Edge Functions in this codebase. No migration justified. |
+
+---
+
+## File Locations for Multi-Vertical Work
+
+| File | Status | Purpose |
+|------|--------|---------|
+| `services/taxonomy/vertical-compliance.ts` | Exists (10 verticals) | Compliance frameworks, RIDDOR applicability, guidance text |
+| `services/taxonomy/mechanism-presets.ts` | Exists (10 verticals) | Quick-tap mechanism chips in treatment form |
+| `services/taxonomy/vertical-outcome-labels.ts` | Exists (10 verticals) | Per-vertical outcome display labels |
+| `services/taxonomy/certification-types.ts` | Exists (mobile) | Per-vertical recommended cert types |
+| `web/types/certification.types.ts` | Exists (web) | Per-vertical recommended cert types (web mirror) |
+| `web/contexts/org-context.tsx` | Exists | Exposes `industryVerticals` to Next.js components |
+| `web/lib/compliance/vertical-compliance.ts` | Exists (web mirror) | Same as services/ version for web import paths |
+| `supabase/migrations/121_org_industry_verticals.sql` | Exists | `org_settings.industry_verticals` JSONB column |
+| `supabase/migrations/123_booking_briefs.sql` | Exists | `bookings.event_vertical` + `booking_briefs.extra_fields` |
+| `services/taxonomy/vertical-terminology.ts` | **New — create** | Consolidated terminology map (patientLabel, workplaceLabel, etc.) |
+| `services/taxonomy/vertical-form-fields.ts` | **New — create** | Extra form field definitions per vertical |
+| `src/contexts/VerticalContext.tsx` | **New — create** | Mobile vertical context (mirrors web OrgProvider) |
+| `supabase/functions/generate-incident-report/` | **New — create** | Vertical-dispatched incident report PDF Edge Function |
 
 ---
 
 ## Sources
 
-### Context7 & Official Documentation
-- [Expo Local-First Guide](https://docs.expo.dev/guides/local-first/) — Database recommendations, TinyBase, Legend-State, Prisma patterns
-- [Supabase + WatermelonDB Guide](https://supabase.com/blog/react-native-offline-first-watermelon-db) — Official Supabase offline sync architecture
-- [Supabase Regions](https://supabase.com/docs/guides/platform/regions) — UK/EU region codes (eu-west-2 London)
-- [Expo Image Picker Docs](https://docs.expo.dev/versions/latest/sdk/imagepicker/) — Features and configuration
-
-### npm Package Registries
-- [@nozbe/watermelondb](https://www.npmjs.com/package/@nozbe/watermelondb) — Version 0.28.0
-- [react-native-signature-canvas](https://www.npmjs.com/package/react-native-signature-canvas) — Version 5.0.2
-- [expo-document-picker](https://www.npmjs.com/package/expo-document-picker) — Version 14.0.8
-- [expo-image-picker](https://www.npmjs.com/package/expo-image-picker) — Version 17.0.10
-
-### Ecosystem Research (WebSearch - MEDIUM confidence)
-- [Local-first React Native 2025](https://medium.com/@ssshubham660/local-first-apps-why-offline-first-is-becoming-essential-in-2025-and-how-react-native-developers-f03d5cc39e32) — Offline-first trends
-- [WatermelonDB vs SQLite](https://www.powersync.com/blog/react-native-local-database-options) — Performance comparison
-- [Zustand vs Redux 2026](https://veduis.com/blog/state-management-comparing-zustand-signals-redux/) — State management trends
-- [React Admin Dashboards 2026](https://refine.dev/blog/react-admin-dashboard/) — shadcn/ui, Material-UI, Ant Design comparison
-- [PDF Libraries 2025](https://blog.react-pdf.dev/6-open-source-pdf-generation-and-modification-libraries-every-react-dev-should-know-in-2025) — pdfmake vs jsPDF vs @react-pdf/renderer
-- [GDPR Node.js Best Practices](https://blog.stackademic.com/how-to-build-gdpr-hipaa-compliant-backends-with-node-js-e68196740fd7) — Encryption, key management, access control
-- [Expo SDK 54 Release](https://expo.dev/changelog/sdk-54) — React Native 0.81, React 19, XCFrameworks
-- [TanStack Query Offline](https://tanstack.com/query/v4/docs/framework/react/examples/offline) — Persistence and network mode
-- [React Native Security 2025](https://www.fullstack.com/labs/resources/blog/best-practices-for-scalable-secure-react-node-js-apps-in-2025) — Encryption best practices
-
-### GitHub Repositories
-- [WatermelonDB](https://github.com/Nozbe/WatermelonDB) — Reactive database overview
-- [react-hook-form](https://github.com/react-hook-form/react-hook-form) — Form validation library
-- [react-native-encrypted-storage](https://github.com/emeraldsanto/react-native-encrypted-storage) — Keychain wrapper
-
----
-
-**Confidence Assessment:**
-
-| Category | Level | Rationale |
-|----------|-------|-----------|
-| Core Stack (Expo, React, Supabase) | HIGH | Official documentation verified. Industry standard for offline-first React Native in 2026. |
-| Offline Database (WatermelonDB) | HIGH | Supabase official guide confirms sync pattern. npm version verified. |
-| Supporting Libraries (image-picker, signature-canvas, etc.) | HIGH | npm versions verified. Official Expo docs confirm compatibility. |
-| PDF Generation (pdfmake) | MEDIUM | WebSearch-verified as standard for server-side generation. Not tested with Supabase Edge Functions (Deno runtime). |
-| UI Libraries (shadcn/ui, Tailwind) | HIGH | 2026 industry standard verified via multiple sources. Official documentation confirms Vite compatibility. |
-| GDPR Compliance (encryption, regions) | MEDIUM | Supabase DPA and SOC 2 docs verified. Health data patterns from WebSearch (best practices, not legal advice). Recommend legal review. |
-
----
-
-*Stack research for: SiteMedic medical compliance platform*
-*Researched: 2026-02-15*
-*Next step: Create FEATURES.md, ARCHITECTURE.md, PITFALLS.md to complete research phase.*
+| Source | Type | Confidence |
+|--------|------|------------|
+| Codebase audit: `services/taxonomy/`, `supabase/migrations/121`, `123`, `web/contexts/org-context.tsx`, `app/treatment/new.tsx` | Direct code inspection | HIGH |
+| Codebase audit: `supabase/functions/riddor-f2508-generator/`, `generate-contract-pdf/`, `generate-invoice-pdf/` | Direct code inspection | HIGH |
+| `web/package.json` — @react-pdf/renderer 4.3.2, Next.js 15.1.5, @tanstack/react-query 5.90.21 | Direct file read | HIGH |
+| `package.json` — Expo SDK 54, WatermelonDB 0.28.0, @supabase/supabase-js 2.95.3 | Direct file read | HIGH |
+| PostgreSQL JSONB hybrid column pattern (explicit + JSONB) — verified against migration 123 design | MEDIUM (multi-tenant SaaS literature confirms) | MEDIUM |
+| React Context for vertical config — no feature flag library needed | HIGH (existing implementation confirms the pattern works) | HIGH |
+| @react-pdf/renderer dispatch strategy — confirmed by existing multi-PDF-type codebase pattern | HIGH | HIGH |
+| Feature flag SaaS services (LaunchDarkly, Flagsmith) — ruled out for deterministic vertical config | MEDIUM (WebSearch confirmed typical use cases don't match this need) | MEDIUM |

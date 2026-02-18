@@ -67,23 +67,46 @@ export default function SettingsScreen() {
 
     setSaving(true);
     try {
-      const { data: { user } } = await (await import('../../src/lib/supabase')).supabase.auth.getUser();
+      const { supabase } = await import('../../src/lib/supabase');
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { data: profile } = await (await import('../../src/lib/supabase')).supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('org_id')
         .eq('id', user.id)
         .single();
 
-      if (!profile?.org_id) throw new Error('Could not load org');
+      if (profileError || !profile?.org_id) throw new Error('Could not load org');
 
-      await emergencyAlertService.upsertContactFromBooking({
-        orgId: profile.org_id,
-        name: newName.trim(),
-        phone: newPhone.trim(),
-        role: newRole.trim() || undefined,
-      });
+      // Check for existing contact with same phone in this org
+      const { data: existing } = await supabase
+        .from('emergency_contacts')
+        .select('id')
+        .eq('org_id', profile.org_id)
+        .eq('phone', newPhone.trim())
+        .maybeSingle();
+
+      if (existing) {
+        // Update existing contact's name and role
+        const { error } = await supabase
+          .from('emergency_contacts')
+          .update({ name: newName.trim(), role: newRole.trim() || null, source: 'manual' })
+          .eq('id', existing.id);
+        if (error) throw new Error(error.message);
+      } else {
+        // Insert new contact
+        const { error } = await supabase
+          .from('emergency_contacts')
+          .insert({
+            org_id: profile.org_id,
+            name: newName.trim(),
+            phone: newPhone.trim(),
+            role: newRole.trim() || null,
+            source: 'manual',
+          });
+        if (error) throw new Error(error.message);
+      }
 
       setNewName('');
       setNewPhone('');

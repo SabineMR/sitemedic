@@ -1,5 +1,18 @@
 # Feature Research
 
+**Domain:** Medical Compliance & Multi-Vertical Medic Compliance Platform
+**Researched:** 2026-02-17 (v1.1 addendum — four new verticals)
+**Confidence:** MEDIUM–HIGH (regulatory frameworks verified via official sources; specific form field schemas are not publicly standardised for all verticals — noted where LOW confidence)
+
+---
+
+## v1.0 Research (Construction Vertical) — Original File
+
+> See sections below for the original v1.0 feature research on the construction vertical.
+> The v1.1 multi-vertical research starts at the section titled "v1.1 Addendum".
+
+---
+
 **Domain:** Medical Compliance & Construction Safety Management Platforms
 **Researched:** 2026-02-15
 **Confidence:** HIGH
@@ -282,7 +295,601 @@ Features to defer until product-market fit is established.
 
 **Key Insight:** Every P1 feature in SiteMedic's MVP has a regulatory or legal driver. There are no "nice-to-have" features in the launch scope. This validates the feature prioritization—focused on compliance risk reduction and legal requirements.
 
-## Sources
+---
+
+## v1.1 Addendum — Multi-Vertical Compliance Requirements
+
+**Researched:** 2026-02-17
+**Scope:** Four new industry verticals being added to the platform:
+1. Film / TV Production (UK)
+2. Festivals & Events (UK)
+3. Motorsport (UK)
+4. Football / Sports (UK)
+
+**Methodology:** Official regulatory bodies (HSE, Motorsport UK, The FA, SGSA, Events Industry Forum/Purple Guide), academic literature (Glastonbury Festival study, PMC), practitioner websites (BASEM, England Football Learning), and UK medical industry sources. Confidence levels noted per claim.
+
+---
+
+## Vertical 1: Film / TV Production (UK)
+
+### Regulatory Framework
+
+**Primary framework: HSE RIDDOR 2013 (the same as construction)**
+
+Film and TV crew — including actors, stunt performers, directors, camera operators, and all other production crew — are legally classified as workers under the Health and Safety at Work Act 1974. The production company (or broadcaster) is the employer/duty holder. RIDDOR 2013 applies in full to all worker injuries on set. This is confirmed by HSE guidance INDG360 ("Health and Safety in Audio-Visual Production: Your Legal Duties"), which states that H&S legislation applies to all work activities including film and TV production and that employers must assess and manage risks and report and investigate accidents.
+
+**Source:** [HSE INDG360 - Health and safety in audio-visual production](https://www.hse.gov.uk/pubns/indg360.pdf) (HIGH confidence — official HSE guidance); [HSE Film, TV and broadcasting page](https://www.hse.gov.uk/entertainment/theatre-tv/film.htm) (HIGH confidence)
+
+**Cast members (actors) as workers:** Actors engaged under a contract of employment or PACT/Equity contract are workers under RIDDOR. A-list talent on studio agreements are also workers when on set. RIDDOR applies to cast injuries on set. (MEDIUM confidence — inferred from RIDDOR 2013 definition of "worker" and HSE guidance that H&S law applies to "all work activities")
+
+**Members of the public:** Non-workers who attend a set (e.g., extras who are casual workers, background artists) — RIDDOR requires reporting their injuries only if they are taken from the scene to hospital. (HIGH confidence — HSE RIDDOR reportable incidents guidance)
+
+**RIDDOR reporting thresholds (applies in full):**
+- Deaths: Report immediately by phone to HSE
+- Specified injuries (fractures, amputations, loss of sight, etc.): Report within 10 days
+- Over-7-day incapacitation injuries: Report within 15 days
+- Dangerous occurrences (stunt accidents, pyrotechnic incidents, prop vehicle accidents): Report without delay
+
+### Incident Form Fields
+
+There is no single mandated "on-set incident form" distinct from the standard RIDDOR F2508 process. Production companies typically use the standard RIDDOR HSE online form for reportable incidents, supplemented by their own internal incident records. The medic's internal record (the SiteMedic treatment log) must capture:
+
+| Field | Type | Required | Example Values | Notes |
+|-------|------|----------|----------------|-------|
+| Incident date | Date | Required | 2026-03-15 | Date of incident |
+| Incident time | Time | Required | 14:32 | 24-hour format |
+| Production title | Text | Required | "The Crown S7" | The name of the film or TV production |
+| Episode / shoot day | Text | Optional | "Ep 4, Day 12" | For TV series; useful for scheduling context |
+| Location / set name | Text | Required | "Stage 4, Pinewood Studios" / "Location: Whitby Harbour" | Stage number or on-location address |
+| Location type | Select | Required | Studio interior / Location exterior / Remote location | Affects emergency access planning |
+| Patient full name | Text | Required | — | GDPR-compliant; stored encrypted |
+| Patient role | Select | Required | Cast / Stunt performer / Director / Camera / Grip / Lighting / Art dept / Costume / Other crew | Determines RIDDOR worker status |
+| Patient date of birth | Date | Required | — | For medic records; RIDDOR does not require but best practice |
+| Production company | Text | Required | — | The duty holder for RIDDOR |
+| Mechanism of injury | Text + presets | Required | "Stunt incident", "Fall from set structure", "Pyrotechnic/SFX injury", "Prop/equipment laceration", "Manual handling", "Electrical contact", "Vehicle/stunt vehicle incident", "Overexertion" | Presets from mechanism-presets.ts already built |
+| Body part affected | Select (multi) | Required | Standard body part taxonomy | As per existing treatment logger |
+| Nature of injury | Select | Required | Laceration, Fracture, Burns, Contusion, Sprain/strain, Concussion, Inhalation, Other | |
+| Description of incident | Text (long) | Required | Free text | What happened, how it happened, where exactly |
+| Scene / stunt being filmed | Text | Optional | "Car chase scene", "Rooftop sequence" | Context for production's H&S record |
+| SFX / pyrotechnic involved | Boolean | Conditional | Yes / No | If yes, triggers additional fields |
+| Stunt coordinator present | Boolean | Conditional | Yes / No | Relevant if stunt performer is injured |
+| Treatment given | Text + presets | Required | Standard treatment taxonomy | As per existing logger |
+| Medications administered | Text | Optional | Drug name, dose, route | |
+| Outcome | Select | Required | "Returned to set", "Returned to set — restricted duties", "Sent home", "Referred to GP", "Referred to A&E", "Ambulance called", "Hospitalised" | Vertical-specific labels already in vertical-outcome-labels.ts |
+| Witness name(s) | Text | Optional | — | For internal production record |
+| RIDDOR reportable flag | Auto-calculated | Display only | Yes / No / Possible | Auto-flagging already built for construction; same logic applies |
+| Medic name | Auto-populated | Required | — | Logged-in medic |
+| Medic signature | Signature | Required | — | Digital signature |
+
+**Source:** RIDDOR 2013 form F2508 (HIGH confidence); HSE INDG360 (HIGH confidence); premier medics.co.uk article (MEDIUM confidence — practitioner source, not regulatory)
+
+### Certification Types
+
+| Certification | Issuing Body | Typical Expiry | Notes |
+|--------------|--------------|----------------|-------|
+| HCPC Paramedic registration | Health and Care Professions Council (HCPC) | Annual renewal | Mandatory for all HCPC-registered paramedics on set |
+| FREC Level 3 | Qualsafe / RCUK-endorsed providers | 3 years | Minimum qualification for set medics on lower-risk productions |
+| FREC Level 4 | Qualsafe / RCUK-endorsed providers | 3 years | Recommended for productions with stunt sequences |
+| PHEC (Pre-Hospital Emergency Care) | BASICS / Qualsafe | 3 years | Higher-acuity capability; preferred for high-risk productions |
+| PHTLS (Pre-Hospital Trauma Life Support) | NAEMT (National Association of EMTs) | 4 years | Common among film medics; trauma-focused |
+| ALS Provider | Resuscitation Council UK (RCUK) | 4 years | Advanced cardiac arrest management |
+| ATLS (Advanced Trauma Life Support) | American College of Surgeons / Royal College of Surgeons | 5 years (recert every 3-5 years) | Relevant for productions with high trauma risk (stunts) |
+| Enhanced DBS | Disclosure and Barring Service (DBS) | No expiry (updated checks recommended every 3 years) | Required when working with under-18 cast |
+| First Aid at Work (FAW) | Ofqual-regulated providers | 3 years | Minimum for low-risk productions |
+| Production Safety Passport (Level 2) | ScreenSkills / Mark Milsome Foundation | No fixed expiry (CPD-based) | Demonstrates production safety awareness; valued by production companies |
+
+**Which certifications a set medic typically holds:** HCPC Paramedic (or equivalent RGN/NMC) + FREC 4 or PHEC + PHTLS. For stunt-heavy productions: ATLS is strongly preferred. DBS required when under-18s are cast.
+
+**Source:** [ScreenSkills Production Safety Passport](https://www.screenskills.com/training/production-safety-passport/) (HIGH confidence); [Premier Medics UK Film Set Medic Regulations 2025](https://www.premiermedics.co.uk/news/uk-film-set-medic-regulations-legal-must-knows-for-2025/) (MEDIUM confidence); [MEDIREK set medic qualifications](https://www.medirek.co.uk/event-medical-cover-medical-rescue-first-aid/set-medic-unit-nurse-paramedic-film-tv/) (MEDIUM confidence)
+
+### Terminology Mapping
+
+| Platform Generic Term | Film / TV Equivalent | Notes |
+|----------------------|---------------------|-------|
+| Worker | Crew member | Cast = actors; Crew = all other production staff |
+| Site | Set / Location | "Set" for studio; "Location" for on-location shoots |
+| Client | Production company | The commissioning studio or broadcaster |
+| Employer | Production company | Duty holder under RIDDOR |
+| Incident | On-set incident | No specific industry term; "incident" is standard |
+| Incident report | Production incident report | Supplementary to HSE RIDDOR form |
+| Shift | Shoot day | Standard film industry term |
+| Site manager | Production manager / First AD | First Assistant Director manages on-set safety day-to-day |
+
+### Shared Documents Generated
+
+| Document | What Triggers Generation | Who Receives It | Notes |
+|----------|--------------------------|-----------------|-------|
+| HSE RIDDOR F2508 (online) | RIDDOR-reportable injury (fracture, amputation, over-7-day incapacitation, dangerous occurrence) | HSE online portal — automatic | Production company is the reporting party; SiteMedic flags, medic/company submits |
+| On-Set Incident Report (internal) | Any patient contact | Production company / Safety supervisor / Insurance broker | Internal record; not standardised industry-wide; SiteMedic PDF output |
+| End-of-Shift / End-of-Shoot-Day Medical Summary | Daily summary if any treatments occurred | First AD / Production manager | Anonymised count of patient contacts with injury categories; SiteMedic can generate this |
+| Patient handover record | When patient is sent to hospital or GP | Receiving medical facility | Standard ambulance handover format (SBAR / MIST); SiteMedic should generate this |
+| Medication administration record | Any time a drug is administered | Production company's occupational health records | Legal requirement; must be signed |
+
+**Source:** [Premier Medics "What does a set medic do"](https://www.premiermedics.co.uk/news/what-does-a-film-and-tv-set-medic-do/) (MEDIUM confidence); [Location Medical Services unit medics](https://locationmedical.com/film-tv/unit-medics) (MEDIUM confidence — CQC-regulated provider)
+
+### Anti-Features (Things That Would Be Wrong for This Vertical)
+
+- **Do NOT include CSCS / CPCS / IPAF card tracking** as required certs — these are construction site access cards, not relevant to film/TV.
+- **Do NOT use "Site manager" as the primary client contact label** — the correct term is "Production manager" or "First Assistant Director".
+- **Do NOT assume RIDDOR does NOT apply** — a common misunderstanding. Film/TV crew are workers; RIDDOR applies in full. The system should flag RIDDOR incidents the same way it does for construction.
+- **Do NOT classify "dangerous occurrence" differently** — stunt accidents, SFX/pyrotechnic incidents, and prop vehicle accidents are all RIDDOR "dangerous occurrences" and must be reported even if no one is hurt.
+- **Do NOT omit "Stunt performer" as a patient role option** — stunt performers are a distinct category with specific injury patterns and RIDDOR implications.
+
+---
+
+## Vertical 2: Festivals & Events (UK)
+
+### Regulatory Framework
+
+**Primary framework: The Purple Guide to Health, Safety and Welfare at Music and Other Events (Events Industry Forum)**
+
+The Purple Guide is published by the Events Industry Forum and is the definitive industry guidance for UK festivals and live events. It is not statute, but local authority Safety Advisory Groups (SAGs) treat compliance with Purple Guide principles as the benchmark for event licensing. Failure to follow Purple Guide recommendations can result in licence refusal.
+
+**Statutory underpinning:**
+- Health and Safety at Work Act 1974 (general duty of care)
+- Management of Health and Safety at Work Regulations 1999 (risk assessment)
+- Event Licensing Act / Licensing Act 2003 (local authority licensing conditions)
+- There is NO separate "festival incident reporting" statutory form analogous to RIDDOR
+
+**RIDDOR applicability for festivals:**
+- RIDDOR applies to STAFF and CREW at the event (they are workers under their employment contracts)
+- RIDDOR does NOT apply to festival-goers / attendees (members of the public)
+- However, if an attendee is injured on the premises, RIDDOR 2013 Reg 5 requires reporting if they are taken to hospital from the scene
+
+**Purple Guide tiered medical provision (2024 update):**
+The 2024 Purple Guide moved from prescriptive attendance-based tables to a Medical Needs Assessment (MNA) approach. The five tiers (1–5) provide guidance but the actual provision must be determined by a site-specific MNA. The PHEM (Pre-Hospital Emergency Medicine) grading system is used:
+
+| PHEM Grade | Qualification Level | Notes |
+|------------|---------------------|-------|
+| PHEM C or below | Generally unsuitable at licensed events | Exception: under direct supervision |
+| PHEM D | FREC 3 or equivalent Co-Responder level | Minimum for event first aid |
+| PHEM E | FREC 4 or Ambulance Emergency Care Assistant (ECA) | Mid-level event responder |
+| PHEM F | Ambulance Technician | Higher acuity responder |
+| PHEM G | Registered Doctor, Registered Nurse, or HCPC Registered Paramedic | Clinical lead; required at Tier 4-5 events |
+
+**Source:** [The Purple Guide](https://www.thepurpleguide.co.uk/) (HIGH confidence — official publication); [Event First Aid UK — Purple Guide](https://www.eventfirstaiduk.com/event-medical-cover/purple-guide/) (MEDIUM confidence); [Team Medic — Purple Guide updates](https://www.team-medic.com/blog/purple-guide-medical-cover-updates-impact/) (MEDIUM confidence)
+
+### Incident Form Fields
+
+The Purple Guide does not mandate a specific form. The industry standard is a Patient Report Form (PRF) or Patient Contact Log used by event medical teams. There is no single national standard, but the following fields are consistent across UK event medicine providers (confirmed by multiple sources including Glastonbury Festival academic study, UK event PRF suppliers, and Purple Guide principles):
+
+| Field | Type | Required | Example Values | Notes |
+|-------|------|----------|----------------|-------|
+| Patient reference number | Auto-generated | Required | EV-2026-001 | Anonymised ID for event reporting |
+| Date | Date | Required | 2026-06-28 | |
+| Time of contact | Time | Required | 14:47 | When patient presented at medical post |
+| Festival / event name | Text | Required | "Glastonbury 2026" | |
+| Location of incident | Text | Required | "Pyramid Stage area", "Medical Post 2", "Arena North" | Zone/area on site, not precise GPS |
+| Location of medical post | Select | Optional | "Main medical centre", "Mobile unit", "Satellite post" | Where patient was treated |
+| Patient age (approximate) | Integer or range | Required | 24 / "20–30" | Exact DOB not always captured for attendees; approximate age acceptable |
+| Patient sex | Select | Required | Male / Female / Not specified | |
+| Presenting complaint | Text | Required | Free text — chief complaint as stated by patient | |
+| Triage category | Select | Required | P1 — Immediate (Red) / P2 — Urgent (Yellow) / P3 — Delayed (Green) / P4 — Deceased (White/Black) | Ten Second Triage (TST) categories rolled out 2024 by NHS Ambulance Services; prior system used SMART/START |
+| Mechanism / cause | Text + presets | Required | "Crowd crush", "Fall in crowd", "Intoxication (alcohol)", "Substance-related collapse", "Heat exhaustion", "Stage barrier crush", "Assault", "Hypothermia", "Slip/fall", "Medical — pre-existing condition", "Allergic reaction" | Presets already in mechanism-presets.ts |
+| Body part affected | Select (multi) | Optional | Standard body part taxonomy | Not always applicable (e.g., intoxication) |
+| Observations recorded | Boolean | Optional | Yes / No | Whether vital signs (BP, HR, SpO2, RR, GCS) were taken |
+| Vital signs | Structured | Conditional | BP: 120/80, HR: 92, SpO2: 97%, RR: 18, Temp: 37.2°C, GCS: 15/15 | Required if P1 or P2; document time of each observation |
+| Treatment given | Text + presets | Required | Wound dressing, fluid, oxygen, AED, IV access, analgesia, monitoring | |
+| Medications administered | Text | Conditional | Drug, dose, route, time | Required if medication given |
+| Alcohol / substance involvement | Select | Required | None / Alcohol suspected / Drug suspected / Both / Unknown | Key Purple Guide data point for post-event reporting |
+| Safeguarding concern | Boolean | Required | Yes / No | Purple Guide emphasises vulnerable adults and children |
+| Outcome / disposition | Select | Required | "Discharged back to event", "Discharged to welfare area — monitoring", "Transported to hospital (ambulance)", "Self-discharged against advice", "Left before treatment complete" | |
+| Time of discharge | Time | Required | 15:14 | Enables calculation of length of stay |
+| Hospital transported to | Text | Conditional | "Royal United Hospital, Bath" | If transported |
+| Attending medic | Auto-populated | Required | — | Logged-in medic |
+| Medic signature | Signature | Required | — | |
+
+**Source:** Glastonbury Festival EPR study (Prehospital and Disaster Medicine, 2024) (HIGH confidence — peer-reviewed, Glastonbury uses electronic patient records with these fields); [PMC4753976 — Health care at music festivals](https://pmc.ncbi.nlm.nih.gov/articles/PMC4753976/) (MEDIUM confidence); UK PRF suppliers including MediPrintingUK, Reflex Medical (MEDIUM confidence); Purple Guide 2024 (HIGH confidence for field categories)
+
+**Note on Ten Second Triage (TST):** TST was rolled out across NHS Ambulance Services in 2024 as the new mass casualty triage standard for UK events. It replaces START/SMART. Patients are categorised as P1 (Immediate/Red), P2 (Urgent/Yellow), P3 (Delayed/Green), or P4 (Expectant/White). SiteMedic's festivals incident form should use TST categories. (Source: [Nexus Medical — Introduction of Ten Second Triage](https://nexusmedical.uk/introduction-of-ten-second-triage/) — MEDIUM confidence)
+
+### Certification Types
+
+| Certification | Issuing Body | Typical Expiry | Notes |
+|--------------|--------------|----------------|-------|
+| FREC Level 3 | Qualsafe / RCS Edinburgh Faculty of Pre-Hospital Care (FPHC) | 3 years | Minimum standard under Purple Guide (PHEM D); only FPHC-endorsed qualification listed in Purple Guide |
+| FREC Level 4 | Qualsafe / RCS Edinburgh FPHC | 3 years | Recommended for event medical teams (PHEM E) |
+| HCPC Paramedic registration | Health and Care Professions Council (HCPC) | Annual renewal | Required for clinical lead role at Tier 4–5 events (PHEM G) |
+| ALS Provider | Resuscitation Council UK (RCUK) | 4 years | Required for PHEM G staff |
+| PHTLS | NAEMT | 4 years | Trauma capability for festival medical teams |
+| Event Safety Awareness | Various (Qualsafe, CIEH, NCSF) | 3 years | Shows awareness of event H&S; not clinical |
+| SIA Door Supervisor | Security Industry Authority (SIA) | 3 years | Required only for security/door staff who provide first aid; NOT required for dedicated medics |
+| Enhanced DBS | Disclosure and Barring Service | No expiry (3-year refresh recommended) | Required when working with under-18 attendees or vulnerable adults at festivals |
+
+**Note on IHCD:** IHCD qualifications have largely been replaced by FREC. FREC Level 5 is considered equivalent to the previous IHCD Technician course. If a medic holds an older IHCD qualification, verify currency with the Purple Guide PHEM framework.
+
+**Source:** [North West Medical Solutions — FREC 3](https://www.northwestmedicalsolutions.co.uk/shop/level-3-award-in-first-response-emergency-care-frec-3/) (HIGH confidence); [Event First Aid UK — Purple Guide](https://www.eventfirstaiduk.com/event-medical-cover/purple-guide/) (MEDIUM confidence); Purple Guide 2024 (HIGH confidence)
+
+### Terminology Mapping
+
+| Platform Generic Term | Festivals & Events Equivalent | Notes |
+|----------------------|-------------------------------|-------|
+| Worker | Festival-goer / Attendee | Staff/crew are workers; public attendees are not |
+| Site | Site / Venue | "Site" for greenfield festivals; "Venue" for indoor/arena events |
+| Client | Event organiser / Promoter | The festival/event company |
+| Employer | Event organiser (for staff) | Festival-goers have no employer relationship |
+| Incident | Medical contact / Incident | "Patient contact" is standard Purple Guide terminology |
+| Incident report | Event incident report / Patient contact record | No single mandated form name |
+| Shift | Shift / Watch | Medical teams work watches/shifts |
+| Site manager | Event Medical Coordinator (EMC) | EMC is the Purple Guide-specified role |
+
+### Shared Documents Generated
+
+| Document | What Triggers Generation | Who Receives It | Notes |
+|----------|--------------------------|-----------------|-------|
+| Patient Contact Log (event log) | Every patient contact | Event Medical Coordinator (EMC) / Event organiser | Aggregated log of all contacts; submitted to organiser after event |
+| Post-Event Medical Summary Report | End of event | Event organiser / Local authority (SAG) | Purple Guide recommends this; includes total contacts, hospital transports, presenting complaints breakdown |
+| RIDDOR report (HSE F2508) | RIDDOR-reportable staff/crew injury | HSE online portal | Only for staff injuries; not for attendee injuries |
+| Patient Report Form (individual PRF) | Each patient contact | Medical archive | Individual patient record; stored securely |
+| Hospital handover (MIST/SBAR) | Hospital transport | Receiving A&E department | Standard ambulance handover; medic should have template |
+| Major incident log | Mass casualty event | NHS Ambulance Service / Police / Event control | JESIP/METHANE format; rare but must be possible |
+
+### Anti-Features (Things That Would Be Wrong for This Vertical)
+
+- **Do NOT auto-flag RIDDOR for festival-goer (attendee) injuries** — RIDDOR applies only to workers. Attendee injuries are not RIDDOR-reportable unless they die or are taken to hospital.
+- **Do NOT omit alcohol/substance field** — this is a key data point for Purple Guide post-event reporting and local authority review.
+- **Do NOT use "Worker" as the patient label for attendees** — correct label is "Attendee" or "Festival-goer".
+- **Do NOT use "Site manager" for the medical lead** — the correct Purple Guide role is "Event Medical Coordinator" (EMC).
+- **Do NOT omit triage category** — Purple Guide emphasises triage and TST for mass-casualty readiness; every patient contact must be triaged.
+- **Do NOT use START triage terminology** — TST (Ten Second Triage) replaced START/SMART in UK event medicine in 2024.
+- **Do NOT omit safeguarding flag** — Purple Guide 2024 places increased emphasis on safeguarding vulnerable adults and children; this field is mandatory.
+
+---
+
+## Vertical 3: Motorsport (UK)
+
+### Regulatory Framework
+
+**Primary framework: Motorsport UK National Competition Rules (NCR) — Chapter 11 Medical, and FIA Medical Code for international events**
+
+Motorsport UK is the national governing body (ASN) for motorsport in the UK, recognised by the FIA (Federation Internationale de l'Automobile). Their NCR Chapter 11 governs all medical provisions at Motorsport UK-permitted events. FIA medical requirements apply additionally for FIA-grade events (F1, WEC, WRC).
+
+**Statutory basis:**
+- Health and Safety at Work Act 1974 (duty of care on promoter/circuit)
+- Motorsport UK NCR Chapter 11 Medical (regulatory requirement for permitted events)
+- FIA International Sporting Code and Medical Code (for FIA-graded events)
+
+**RIDDOR applicability:**
+- RIDDOR applies to WORKERS at the event (circuit staff, marshals who are employed, event organisation staff)
+- RIDDOR does NOT apply to competitors (drivers), as they are typically not employees of the circuit
+- RIDDOR does NOT apply to spectators
+
+**Key regulatory facts verified:**
+- A Motorsport UK accident form must be completed for each and every incident treated (Source: Motorsport UK NCR, confirmed via multiple official pages — HIGH confidence)
+- The CMO must complete the "Medical Statistics Sheet" for competitor injuries, entering the injury code and updating the Clerk of the Course (Source: Motorsport UK search results — MEDIUM confidence, form not publicly downloadable)
+- If concussion is diagnosed, the CMO must note this on the Medical Statistics Sheet and Motorsport UK will remove the competitor's licence per the Motorsport UK Concussion Policy 2024 (Source: Motorsport UK Concussion Policy 2024 — HIGH confidence)
+- The CMO must pass a report to Motorsport UK (via Motorsport UK Steward) detailing the nature of injuries/medical condition for any significant incident (Source: Motorsport UK official pages — HIGH confidence)
+
+**Source:** [Motorsport UK Medical Officials page](https://www.motorsportuk.org/volunteers/officials/medical-officials/) (HIGH confidence — official); [Motorsport UK NCR 2025 Chapter 11](https://motorsportuk.s3.eu-west-2.amazonaws.com/wp-content/uploads/2024/11/Motorsport-UK_NCR-2025-Chapter-11.pdf) (HIGH confidence — official document, though PDF not readable by tool); [Motorsport UK Concussion Policy 2024](https://motorsportuk.s3.eu-west-2.amazonaws.com/wp-content/uploads/2024/04/Motorsport-UK-Concussion-Policy-2024.pdf) (HIGH confidence)
+
+### Incident Form Fields
+
+Motorsport UK uses two forms that SiteMedic must replicate:
+
+**Form A: Motorsport UK Accident Form** (per-incident; required for every treated incident)
+
+| Field | Type | Required | Example Values | Notes |
+|-------|------|----------|----------------|-------|
+| Event name | Text | Required | "British Touring Car Championship — Brands Hatch" | |
+| Circuit / venue | Text | Required | "Brands Hatch GP Circuit" | |
+| Event date | Date | Required | 2026-08-10 | |
+| Incident time | Time | Required | 13:42 | |
+| Incident location on circuit | Text | Required | "Turn 1 / Paddock Hill", "Pit lane", "Paddock area", "Marshals post 7" | Location within the circuit |
+| Incident number | Auto-generated | Required | MS-2026-001 | Sequential per event |
+| Patient name | Text | Required | — | |
+| Patient role | Select | Required | Driver / Co-driver / Rider / Navigator / Marshal / Pit crew / Spectator / Official / Other | Determines RIDDOR applicability and reporting chain |
+| Competitor licence number | Text | Conditional | — | Required if patient is a licensed competitor |
+| Vehicle number | Text | Conditional | — | If incident involved a vehicle |
+| Discipline | Select | Required | Circuit racing / Rallying / Karting / Hillclimb / Autocross / Motorcycle / Other | |
+| Nature of incident | Select | Required | Vehicle collision / Rollover / Fire / Medical — no vehicle involved / Off-circuit fall | |
+| Mechanism of injury | Text + presets | Required | "Vehicle collision", "Rollover/barrel roll", "Driver extraction", "Circuit/track slip or fall", "Thrown from vehicle", "Burns (fuel/exhaust/friction)", "Head impact/helmet contact", "Motorcycle off" | Presets already in mechanism-presets.ts |
+| Nature of injury | Text | Required | Free text description of injury | |
+| Injury code | Select | Required | Injury code from Motorsport UK injury classification system | MEDIUM confidence — the specific code list is in Motorsport UK Medical Statistics documentation not publicly available |
+| Body part affected | Select (multi) | Required | Standard body part taxonomy | |
+| GCS score | Integer | Required | 3–15 | Glasgow Coma Scale; critical for head injuries |
+| Vital signs at scene | Structured | Required | HR, BP, SpO2, RR | Document time and values |
+| Helmet removed | Boolean | Required | Yes / No | Critical safety note |
+| Extrication required | Boolean | Required | Yes / No | |
+| Treatment given on circuit | Text | Required | Free text | What was done at the scene |
+| Transferred to medical centre | Boolean | Required | Yes / No | |
+| Transferred to hospital | Boolean | Required | Yes / No | |
+| Hospital name | Text | Conditional | — | If transferred |
+| Concussion suspected/diagnosed | Boolean | Required | Yes / No | Triggers licence suspension workflow per Motorsport UK Concussion Policy 2024 |
+| Competitor cleared to return to race | Boolean | Required | Yes / No | CMO decision |
+| CMO / attending medic name | Text | Required | — | |
+| CMO / medic signature | Signature | Required | — | |
+| Clerk of the Course notified | Boolean | Required | Yes / No | Regulatory requirement |
+| Time of notification | Time | Conditional | — | |
+
+**Form B: Medical Statistics Sheet** (per-event aggregate; completed by CMO)
+
+This is the summary document the CMO submits to the Clerk of the Course and ultimately to Motorsport UK. SiteMedic should auto-populate this from individual accident forms.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| Event name | Text | |
+| Circuit | Text | |
+| Date | Date | |
+| Total incidents treated | Integer | Count of accident forms |
+| Competitor incidents (breakdown by injury code) | Structured | Per-injury-code count |
+| Marshal / official incidents | Integer | |
+| Spectator incidents | Integer | |
+| Hospital transports | Integer | |
+| Concussions recorded | Integer | |
+| Licences suspended (concussion) | Integer | |
+| CMO name and signature | Text + Signature | |
+
+**Source:** Search result extracts from Motorsport UK NCR and regulations (MEDIUM confidence for specific field names — the official forms are not publicly downloadable as readable PDFs; field names inferred from regulatory text describing what must be documented); [Motorsport UK Incident Pack V8.0](https://motorsportuk.s3.eu-west-2.amazonaws.com/wp-content/uploads/2025/03/Incident-Pack-V8.0.pdf) (HIGH confidence for the existence of these forms — PDF was not readable by tool but presence confirmed)
+
+### Certification Types
+
+| Certification | Issuing Body | Typical Expiry | Notes |
+|--------------|--------------|----------------|-------|
+| GMC Full Registration | General Medical Council (GMC) | Annual (revalidation 5-yearly) | For doctors acting as CMO or Medical Officer; FY1/FY2 doctors cannot act as Medical Officers |
+| HCPC Paramedic registration | Health and Care Professions Council (HCPC) | Annual renewal | Mandatory for paramedics at Motorsport UK events |
+| Motorsport UK Medical Official Licence | Motorsport UK | Annual | Issued by Motorsport UK; requires GMC or HCPC registration + venue CMO support letter for new applicants |
+| Professional Indemnity Insurance (£15m aggregate) | Any approved insurer | Annual | Mandatory for all Motorsport UK Medical Officials |
+| PHEC (Pre-Hospital Emergency Care) | BASICS Scotland / Qualsafe | 3 years | Specifically listed as recommended for Motorsport UK Medical Assistants |
+| PHTLS | NAEMT | 4 years | Recommended for Motorsport UK Medical Officials and Assistants |
+| ALS Provider | Resuscitation Council UK (RCUK) | 4 years | Recommended |
+| ATLS | Royal College of Surgeons / American College of Surgeons | 3-5 years | Highly valued for CMO role; trauma capability |
+| ATNC (Advanced Trauma Nursing Core) | RCN-endorsed providers | 3 years | Listed as desirable for Medical Assistants |
+| APLS (Advanced Paediatric Life Support) | RCUK / APLS group | 4 years | Recommended qualification |
+| FIA Grade Medical Officer (Grade 1/2/3) | FIA (for international events) / Motorsport UK | Annual | FIA grades apply to events under FIA jurisdiction (F1, WEC, WRC); Grade 1 = F1 circuit doctor; Grade 2 = medical car/track doctor; Grade 3 = national circuit events |
+| Motorsport UK Medical Staff Induction Course | Motorsport UK | N/A — one-time | New medical officials strongly encouraged to attend |
+
+**Source:** [Motorsport UK Medical Officials page](https://www.motorsportuk.org/volunteers/officials/medical-officials/) (HIGH confidence); [SMMC Motorsport Medical Group](https://www.motorsportmedics.org.uk/) (MEDIUM confidence); [D4U Medical — Motorsport Medical](https://d4u.org.uk/motorsport-medical/) (MEDIUM confidence)
+
+### Terminology Mapping
+
+| Platform Generic Term | Motorsport Equivalent | Notes |
+|----------------------|----------------------|-------|
+| Worker | Competitor / Driver | Drivers are not workers; marshals are volunteers or employed |
+| Patient | Competitor / Driver / Marshal / Rider / Co-driver / Navigator | Role matters for regulatory purposes |
+| Site | Circuit / Venue | "Circuit" for tarmac racing; "stage" for rally; "track" for motorcycles |
+| Client | Promoter / Club | The event organiser holding the Motorsport UK permit |
+| Employer | Promoter (for marshals/officials) | Competitors are self-employed or team-contracted |
+| Incident | Race incident / Medical incident | "Race incident" if vehicle-related |
+| Incident report | Motorsport UK Accident Form | Specific mandated form |
+| Aggregate report | Medical Statistics Sheet | Submitted to Clerk of the Course and Motorsport UK |
+| Site manager | Clerk of the Course | The senior official responsible for the event |
+| Medical lead | Chief Medical Officer (CMO) | Specific title used by Motorsport UK |
+| Shift | Race day / Practice / Qualifying | Events are structured around sessions |
+
+### Shared Documents Generated
+
+| Document | What Triggers Generation | Who Receives It | Notes |
+|----------|--------------------------|-----------------|-------|
+| Motorsport UK Accident Form | Every patient contact | Clerk of the Course (CotC) | Regulatory requirement; one per incident |
+| Medical Statistics Sheet | End of event | Clerk of the Course → Motorsport UK Steward → Motorsport UK Medical Dept | CMO completion required |
+| Concussion notification | Concussion diagnosis | Motorsport UK Medical Department | Triggers automatic licence suspension; competitor cannot continue racing or drive any vehicle |
+| Hospital transport report | When patient sent to hospital | Event Steward; Motorsport UK | Immediate notification required |
+| Patient handover (MIST/SBAR) | Hospital transport | Receiving A&E department | |
+
+### Anti-Features (Things That Would Be Wrong for This Vertical)
+
+- **Do NOT omit the GCS field** — Motorsport UK and FIA require GCS documentation for all head/concussion incidents; it is central to return-to-race decisions.
+- **Do NOT omit the concussion flag** — the Motorsport UK 2024 Concussion Policy requires immediate licence suspension; this is a regulatory trigger, not optional.
+- **Do NOT label the patient as "Worker"** — competitors/drivers are not workers in RIDDOR terms; the label should be "Competitor" or by specific role.
+- **Do NOT auto-flag RIDDOR for competitor injuries** — competitors are not employees; RIDDOR does not apply. However, marshal and circuit staff injuries may trigger RIDDOR.
+- **Do NOT omit "Clerk of the Course notified" checkbox** — this is a Motorsport UK regulatory obligation; medics must document that the CotC was informed.
+- **Do NOT omit "Extrication required" and "Helmet removed"** — these are critical motorsport-specific safety fields affecting cervical spine management documentation.
+- **Do NOT use Purple Guide triage categories** — motorsport uses GCS, vital signs, and clinical assessment rather than TST/START triage in individual incidents.
+- **Do NOT use FIA Grade terminology as a certification type visible to grassroots event medics** — FIA grades apply only to FIA-permitted events; most UK circuit events are under Motorsport UK NCR only.
+
+---
+
+## Vertical 4: Football / Sports (UK)
+
+### Regulatory Framework
+
+**Primary framework: The Football Association (FA) medical guidelines + Sports Grounds Safety Authority (SGSA) for spectator incidents at licensed grounds**
+
+Football operates under two distinct regulatory tracks that SiteMedic must support simultaneously:
+
+**Track A — Player incidents (on-pitch injuries):**
+- Governed by: The Football Association (FA), Premier League, EFL, or relevant National Governing Body (NGB)
+- The FA mandates that club medical teams maintain injury records
+- The FA Injury and Illness Surveillance Study collects time-loss injuries across English football
+- No single statutory form is mandated by the FA for grassroots/amateur clubs, but injury report form templates are provided through England Football Learning
+- For professional clubs (Premier League / EFL): the relevant competition rules require detailed injury records and season-end reporting
+
+**Track B — Spectator incidents (crowd medicine at licensed grounds):**
+- Governed by: Sports Grounds Safety Authority (SGSA) under the Safety of Sports Grounds Act 1975
+- Premier League and EFL Championship clubs (and major grounds including Wembley) must report spectator injuries using the SGSA Standard Medical Incident Report Form
+- The SGSA collates and publishes annual spectator injury statistics
+
+**RIDDOR applicability:**
+- RIDDOR applies to MATCH DAY STAFF and STEWARDS (employed by the club)
+- RIDDOR does NOT apply to player injuries (players are workers but player injuries on the pitch are not "workplace accidents" in the RIDDOR sense — they are sports injuries)
+- RIDDSA does apply to spectator hospital transports under RIDDOR 2013 Reg 5 (non-worker hospital transport from premises)
+
+**Note:** This is a nuanced area. A player injuring their knee in a tackle is a sports injury, not a RIDDOR incident. However, if scaffolding collapsed and injured a player, that would be RIDDOR. The medic should not auto-flag player tackle injuries as RIDDOR. (MEDIUM confidence — inferred from RIDDOR 2013 definition and HSE guidance on sporting events)
+
+**Source:** [England Football Learning — Medical courses](https://learn.englandfootball.com/courses/medical) (HIGH confidence — official FA platform); [SGSA medical incident report form](https://sgsa.org.uk/document/medical-incident-report-form/) (HIGH confidence — official SGSA); [SGSA spectator injury statistics](https://sgsa.org.uk/spectator-injuries-at-sports-grounds-data/) (HIGH confidence)
+
+### Incident Form Fields
+
+SiteMedic must support two distinct form types for this vertical:
+
+**Form A: Player / Participant Injury Form** (pitch-side)
+
+| Field | Type | Required | Example Values | Notes |
+|-------|------|----------|----------------|-------|
+| Date of injury | Date | Required | 2026-04-05 | |
+| Time of injury | Time | Required | 78:32 (match time) / 14:47 (clock time) | Both match time and actual clock time useful |
+| Match / fixture | Text | Required | "Arsenal v Chelsea, Premier League GW30" | |
+| Venue / ground | Text | Required | "Emirates Stadium" | |
+| Competition | Select | Required | Premier League / Championship / League 1 / League 2 / National League / Amateur / Youth / Training | |
+| Phase of play | Select | Required | Match — first half / Match — second half / Warm-up / Training / Pre-season | |
+| Patient name | Text | Required | — | |
+| Patient role | Select | Required | Player / Substitute / Manager / Coaching staff / Referee / Physiotherapist | |
+| Player squad number | Integer | Optional | 9 | For professional clubs |
+| Player position | Select | Optional | Goalkeeper / Defender / Midfielder / Forward | |
+| Mechanism of injury | Text + presets | Required | "Contact/collision (sport)", "Head impact/concussion", "Overexertion/muscle strain", "Fall during play or warm-up", "Impact from ball/equipment", "Non-contact — ACL/ligament", "Sudden cardiac event", "Heat exhaustion", "Ligament/joint injury" | Presets already in mechanism-presets.ts for sporting_events |
+| Contact / non-contact | Select | Required | Contact with another player / Contact with ground/post / Non-contact (spontaneous) | FA injury surveillance uses this classification |
+| Body part affected | Select (multi) | Required | Ankle, Knee, Hamstring, Head, Groin, Shoulder, Calf, Lower back, Wrist, Other | FA Injury Surveillance uses body part taxonomy |
+| Diagnosis / nature of injury | Text | Required | Free text or select from taxonomy: Fracture, Ligament sprain, Muscle strain, Tendon injury, Laceration, Concussion, Contusion, Dislocation, Cardiac event, Other | |
+| Concussion assessment performed | Boolean | Required | Yes / No | FA requires concussion assessment (Head Injury Assessment — HIA) for suspected concussion; protocol since 2023 |
+| HIA outcome | Select | Conditional | Player passed HIA — returned to play / Player failed HIA — stood down | Only if concussion assessment performed |
+| Severity (time loss) | Select | Required | Minimal (1–3 days) / Mild (4–7 days) / Moderate (8–28 days) / Severe (>28 days) / Career-ending | FA Injury Surveillance severity classification |
+| Treatment given on pitch | Text | Required | Free text | |
+| Return to play decision | Select | Required | "Returned to play", "Substituted — fit to continue later", "Stood down from play", "Transported to hospital" | |
+| Referred to — | Select | Optional | Own club medical / A&E / GP / Specialist / None | |
+| Attending medic / physiotherapist | Auto-populated | Required | — | |
+| Medic signature | Signature | Required | — | |
+
+**Form B: Spectator / Crowd Medical Incident Form** (SGSA-aligned, for licensed grounds)
+
+The SGSA Standard Medical Incident Report Form is used by Premier League and EFL clubs. Its fields are defined by the SGSA though the exact PDF is not publicly readable. Based on SGSA published annual statistics and guidance documents, the categories captured include:
+
+| Field | Type | Required | Example Values | Notes |
+|-------|------|----------|----------------|-------|
+| Date | Date | Required | — | |
+| Time of incident | Time | Required | — | |
+| Ground / venue | Text | Required | — | |
+| Fixture | Text | Required | — | |
+| Stand / area | Text | Required | "North Stand Upper", "Away End", "Concourse Level 2" | Location within the ground |
+| Patient age (approximate) | Integer or range | Required | — | |
+| Patient sex | Select | Required | Male / Female / Not specified | |
+| Nature of injury / presenting complaint | Select | Required | Cardiac event / Collapse — non-cardiac / Fracture / Laceration / Medical — existing condition / Alcohol/substance / Fall / Head injury / Crush/crowd / Other | Based on SGSA published statistical categories |
+| Treatment given | Text | Required | Free text | |
+| First aid given by | Select | Required | Trained first aider / Paramedic / Doctor / Ambulance crew | |
+| Outcome | Select | Required | Treated and discharged / Transported to hospital (ambulance) / Self-discharged / No treatment required | |
+| Hospital transported to | Text | Conditional | — | |
+| Safety officer notified | Boolean | Required | Yes / No | SGSA guidance requires safety officer notification |
+| Attending medic | Auto-populated | Required | — | |
+| Medic signature | Signature | Required | — | |
+
+**Source:** [SGSA Medical Incident Report Form page](https://sgsa.org.uk/document/medical-incident-report-form/) (HIGH confidence — official SGSA resource); [SGSA Crowd Medical Incidents guidance](https://sgsa.org.uk/document/guidance-on-crowd-related-medical-incidents/) (HIGH confidence); [England Football Learning — FA injury report template](https://learn.englandfootball.com/articles-and-resources/welfare//resources/2023/What-does-medical-and-first-aid-support-look-like-in-football) (MEDIUM confidence — template referenced but not fully reproduced)
+
+### Certification Types
+
+| Certification | Issuing Body | Typical Expiry | Notes |
+|--------------|--------------|----------------|-------|
+| ATMMiF — Advanced Trauma Medical Management in Football | The Football Association (FA), accredited by RCS Edinburgh FPHC | 3 years | Highest FA medical qualification; required for doctors with primary player management responsibility at professional clubs; mandatory for Premier League/WSL pitch-side doctors |
+| ITMMiF — Intermediate Trauma Medical Management in Football | The Football Association (FA), accredited by RCS Edinburgh FPHC | 3 years | Mid-level qualification; required for physiotherapists at professional clubs and medics attending at a higher level of grassroots football |
+| EFAiF — Emergency First Aid in Football | The Football Association (FA) | 3 years | Required for all coaches and volunteers with first aid responsibility at grassroots clubs |
+| IFAiF — Introduction to First Aid in Football | The Football Association (FA) | 3 years | Entry-level; minimum for grassroots coaches with no dedicated first aider |
+| FREC Level 3 | Qualsafe / RCS Edinburgh FPHC | 3 years | Accepted as equivalent to EFAiF/IFAiF at renewal stage |
+| FREC Level 4 | Qualsafe / RCS Edinburgh FPHC | 3 years | Accepted as equivalent to ITMMiF |
+| ATLS | Royal College of Surgeons / American College of Surgeons | 3-5 years | Accepted as equivalent to ATMMiF-level trauma training; required for professional club doctors |
+| PHTLS | NAEMT | 4 years | Accepted as equivalent for renewal purposes |
+| HCPC Paramedic | Health and Care Professions Council (HCPC) | Annual | For paramedics on club medical teams |
+| GMC Registration | General Medical Council (GMC) | Annual (revalidation 5-yearly) | For club doctors |
+| ALS Provider | Resuscitation Council UK (RCUK) | 4 years | Required for professional medical staff |
+| BASEM / Sports Medicine membership | British Association of Sport and Exercise Medicine (BASEM) | Annual | Professional body membership; indicates specialism but is not a regulatory certification |
+| UEFA Football Doctor Education Programme (UEFA FDEP) | UEFA | — | For doctors at UEFA-regulated competitions |
+| FA Concussion Module (online) | The Football Association (FA) | Annual | Mandatory addition to ATMMiF since August 2024 for Premier League/WSL pitch-side staff |
+| Enhanced DBS | Disclosure and Barring Service | No expiry (3-year refresh recommended) | Required for all medical staff working with under-18 players |
+
+**Source:** [England Football Learning ATMMiF page](https://learn.englandfootball.com/courses/medical/advanced-trauma-medical-management-in-football) (HIGH confidence — official FA); [England Football Learning ITMMiF page](https://learn.englandfootball.com/courses/medical/intermediate-trauma-medical-management-in-football) (HIGH confidence); [England Football Learning accepted non-FA courses](https://learn.englandfootball.com/courses/medical/accepted-non-fa-medical-courses) (HIGH confidence); [BASEM](https://basem.co.uk) (MEDIUM confidence)
+
+### Terminology Mapping
+
+| Platform Generic Term | Football / Sports Equivalent | Notes |
+|----------------------|------------------------------|-------|
+| Worker | Player / Participant | Players are workers in employment law but on-pitch injuries are not RIDDOR incidents |
+| Patient | Player / Athlete | "Player" for football; "Athlete" for other sports |
+| Site | Ground / Pitch | "Ground" = the whole venue; "Pitch" = the playing surface |
+| Client | Club / Football Club | The employing entity |
+| Employer | Club | Players are employed by the club |
+| Incident | Injury / Match day incident | "Injury" for player incidents; "incident" for spectator contacts |
+| Incident report | Match day injury report / FA injury form | Two separate forms needed |
+| Aggregate report | Season injury log / Annual injury audit | Clubs submit to FA for surveillance |
+| Site manager | Safety officer | SGSA-designated role at licensed grounds |
+| Medical lead | Club doctor / Team physician | "Club doctor" is universal; "Team physician" at higher levels |
+| Shift | Match day | "Match day" is universal football terminology |
+
+### Shared Documents Generated
+
+| Document | What Triggers Generation | Who Receives It | Notes |
+|----------|--------------------------|-----------------|-------|
+| Match Day Injury Form | Each player injury | Club medical records / Club doctor / Head of medical | Internal; FA expects records to be kept |
+| SGSA Medical Incident Report | Each spectator/crowd medical contact at licensed ground | Club Safety Officer → SGSA (annual aggregation) | Mandatory for Premier League / EFL Championship clubs |
+| RIDDOR Report | RIDDOR-reportable injury to match day staff/steward | HSE online portal | NOT for player injuries; for employed staff only |
+| Season Injury Log / Audit | End of season | The FA (for clubs in FA surveillance study) | Annual aggregate injury data; submitted to FA research programme |
+| Hospital handover | Any patient transported to hospital | Receiving A&E | SBAR/MIST format |
+| Concussion record / HIA form | Suspected concussion | Club records / Competition medical officer | Must be retained; governs return-to-play protocol |
+
+### Anti-Features (Things That Would Be Wrong for This Vertical)
+
+- **Do NOT auto-flag player on-pitch injuries as RIDDOR** — tackle injuries, sprains, and muscle strains during play are not RIDDOR incidents. RIDDOR applies only to structural/environmental workplace incidents (scaffolding collapse, etc.) affecting workers.
+- **Do NOT merge the player form and the spectator form** — these are fundamentally different documents for different patients with different regulatory frameworks (FA vs SGSA).
+- **Do NOT use "Attendee" as the patient label for players** — correct label is "Player" or "Athlete".
+- **Do NOT omit the Head Injury Assessment (HIA) / concussion field** — the FA's concussion protocol has specific return-to-play rules; documenting the assessment outcome is a regulatory obligation at professional level.
+- **Do NOT omit "phase of play"** — FA injury surveillance specifically distinguishes match injuries from training injuries; this is a required field for clubs participating in FA data.
+- **Do NOT omit "contact/non-contact" classification** — this is a core FA Injury Surveillance field used nationally.
+- **Do NOT call the report form "Purple Guide"** — the Purple Guide does not apply to football. Football uses FA guidelines for players and SGSA standards for spectators.
+
+---
+
+## Cross-Vertical Comparison Table
+
+| Aspect | Film / TV | Festivals & Events | Motorsport | Football / Sports |
+|--------|-----------|-------------------|------------|-------------------|
+| **Regulatory framework** | HSE RIDDOR 2013 | Purple Guide (EIF) | Motorsport UK NCR Ch.11 + FIA | FA guidelines + SGSA |
+| **RIDDOR for patients?** | YES (all crew are workers) | NO (attendees) / YES (staff) | NO (competitors) / YES (marshals) | NO (players) / YES (match staff) |
+| **Incident form name** | Production Incident Report | Event Patient Report Form | Motorsport UK Accident Form | Match Day Injury Form / SGSA MIR |
+| **Aggregate report** | End-of-shoot medical summary | Post-event medical summary | Medical Statistics Sheet | Season injury log / SGSA annual data |
+| **Patient label** | Cast member / Crew member | Attendee / Festival-goer | Competitor / Driver | Player / Athlete |
+| **Location label** | Set / Location | Site / Venue | Circuit / Track | Ground / Pitch |
+| **Client label** | Production company | Event organiser | Promoter / Club | Football club |
+| **Medical lead label** | Production manager / First AD | Event Medical Coordinator (EMC) | Chief Medical Officer (CMO) | Club doctor |
+| **Key unique field** | Stunt coordinator present / SFX involved | Alcohol/substance involvement / Triage (TST) | GCS score / Extrication required / Concussion flag → licence suspension | Phase of play / Contact vs non-contact / HIA outcome |
+| **Triage system** | RIDDOR severity (clinical judgement) | Ten Second Triage (TST) — P1/P2/P3/P4 | GCS + clinical assessment (no population triage) | Clinical assessment (no population triage) |
+| **Minimum medic cert** | FREC 4 / HCPC Paramedic | FREC 3 (PHEM D) | HCPC Paramedic or GMC Doctor + Motorsport UK licence | EFAiF (grassroots) / ATMMiF (professional) |
+| **Unique regulatory trigger** | Dangerous occurrence reporting (stunts, SFX) | Post-event summary to SAG/local authority | CMO report to Motorsport UK; licence suspension for concussion | FA Injury Surveillance submission |
+
+---
+
+## v1.1 Sources
+
+### Film / TV Production
+- [HSE — Film, TV and broadcasting](https://www.hse.gov.uk/entertainment/theatre-tv/film.htm) (HIGH confidence — official HSE)
+- [HSE INDG360 — Health and safety in audio-visual production](https://www.hse.gov.uk/pubns/indg360.pdf) (HIGH confidence — official HSE guidance)
+- [HSE RIDDOR reportable incidents](https://www.hse.gov.uk/riddor/reportable-incidents.htm) (HIGH confidence — official HSE)
+- [Premier Medics — UK Film Set Medic Regulations 2025](https://www.premiermedics.co.uk/news/uk-film-set-medic-regulations-legal-must-knows-for-2025/) (MEDIUM confidence — practitioner source)
+- [Premier Medics — What does a film and TV set medic do](https://www.premiermedics.co.uk/news/what-does-a-film-and-tv-set-medic-do/) (MEDIUM confidence)
+- [MEDIREK — Unit medic for film or TV](https://www.medirek.co.uk/event-medical-cover-medical-rescue-first-aid/set-medic-unit-nurse-paramedic-film-tv/) (MEDIUM confidence — CQC-regulated provider)
+- [Location Medical Services — Unit medics](https://locationmedical.com/film-tv/unit-medics) (MEDIUM confidence — CQC-regulated provider)
+- [ScreenSkills — Production Safety Passport](https://www.screenskills.com/training/production-safety-passport/) (HIGH confidence — official ScreenSkills)
+- [Team Medic — TV Film Medical Support](https://www.team-medic.com/event-patient-medical-services/tv-film-medical-support/) (LOW confidence — marketing content)
+
+### Festivals & Events (Purple Guide)
+- [The Purple Guide — Events Industry Forum](https://www.thepurpleguide.co.uk/) (HIGH confidence — official publication)
+- [Event First Aid UK — Purple Guide](https://www.eventfirstaiduk.com/event-medical-cover/purple-guide/) (MEDIUM confidence)
+- [Team Medic — Purple Guide updates 2024/2025](https://www.team-medic.com/blog/purple-guide-medical-cover-updates-impact/) (MEDIUM confidence)
+- [Nexus Medical — Introduction to Ten Second Triage (TST) 2024](https://nexusmedical.uk/introduction-of-ten-second-triage/) (MEDIUM confidence)
+- [Glastonbury Festival: Medical Care at the World's Largest Greenfield Music Festival — Prehospital and Disaster Medicine 2024 (PMC11035920)](https://pmc.ncbi.nlm.nih.gov/articles/PMC11035920/) (HIGH confidence — peer-reviewed)
+- [Health care in a unique setting: applying emergency medicine at music festivals (PMC4753976)](https://pmc.ncbi.nlm.nih.gov/articles/PMC4753976/) (HIGH confidence — peer-reviewed)
+- [North West Medical Solutions — FREC 3 and Purple Guide](https://www.northwestmedicalsolutions.co.uk/shop/level-3-award-in-first-response-emergency-care-frec-3/) (MEDIUM confidence)
+- [Marches Ambulance — Purple Guide Medical Needs Assessment](https://marchesambulance.co.uk/purple-guide-medical-needs-assessment/) (MEDIUM confidence)
+
+### Motorsport
+- [Motorsport UK — Medical Officials](https://www.motorsportuk.org/volunteers/officials/medical-officials/) (HIGH confidence — official Motorsport UK)
+- [Motorsport UK — NCR 2025 Chapter 11 Medical](https://motorsportuk.s3.eu-west-2.amazonaws.com/wp-content/uploads/2024/11/Motorsport-UK_NCR-2025-Chapter-11.pdf) (HIGH confidence — official document)
+- [Motorsport UK — Concussion Policy 2024](https://motorsportuk.s3.eu-west-2.amazonaws.com/wp-content/uploads/2024/04/Motorsport-UK-Concussion-Policy-2024.pdf) (HIGH confidence — official document)
+- [Motorsport UK — Incident Pack V8.0 (2025)](https://motorsportuk.s3.eu-west-2.amazonaws.com/wp-content/uploads/2025/03/Incident-Pack-V8.0.pdf) (HIGH confidence — existence confirmed; content not extractable from PDF)
+- [Motorsport UK — Chapter 5A Appendix 11 Emergency and Medical Officials (2025)](https://motorsportuk.s3.eu-west-2.amazonaws.com/wp-content/uploads/2025/08/Chapter-5A-Appendix-11-Emergency-and-Medical-Officials.pdf) (HIGH confidence — official document; PDF not extractable)
+- [SMMC Motorsport Medical Group](https://www.motorsportmedics.org.uk/) (MEDIUM confidence)
+- [FIA Medical requirements](https://www.fia.com/medical) (HIGH confidence — official FIA)
+
+### Football / Sports
+- [England Football Learning — Medical courses](https://learn.englandfootball.com/courses/medical) (HIGH confidence — official FA)
+- [England Football Learning — ATMMiF course page](https://learn.englandfootball.com/courses/medical/advanced-trauma-medical-management-in-football) (HIGH confidence — official FA)
+- [England Football Learning — ITMMiF course page](https://learn.englandfootball.com/courses/medical/intermediate-trauma-medical-management-in-football) (HIGH confidence — official FA)
+- [England Football Learning — Accepted non-FA medical courses](https://learn.englandfootball.com/courses/medical/accepted-non-fa-medical-courses) (HIGH confidence — official FA)
+- [England Football Learning — Medical support in football article](https://learn.englandfootball.com/articles-and-resources/welfare//resources/2023/What-does-medical-and-first-aid-support-look-like-in-football) (HIGH confidence — official FA)
+- [SGSA — Medical incident report form](https://sgsa.org.uk/document/medical-incident-report-form/) (HIGH confidence — official SGSA)
+- [SGSA — Guidance on crowd-related medical incidents](https://sgsa.org.uk/document/guidance-on-crowd-related-medical-incidents/) (HIGH confidence — official SGSA)
+- [SGSA — Spectator injury statistics 2024-25](https://sgsa.org.uk/spectator-injuries-at-sports-grounds-data/) (HIGH confidence — official SGSA)
+- [BASEM — Sports Pre-Hospital Immediate Care Courses](https://basem.co.uk/sports-pre-hospital-immediate-care-courses/) (MEDIUM confidence)
+- [Football Medicine and Performance Association (FMPA)](https://www.fmpa.co.uk/) (MEDIUM confidence)
+
+---
+
+## v1.0 Sources (Construction Vertical)
 
 ### Construction Safety Management Software
 - [Procore Construction Management Software](https://www.procore.com/quality-safety)
@@ -311,7 +918,7 @@ Features to defer until product-market fit is established.
 
 ### Offline-First Mobile Apps
 - [Top 5 EHS Apps to Ensure Workplace Safety in 2026](https://goaudits.com/blog/best-ehs-apps/)
-- [Best Safety Inspection App (Updated for 2026)](https://www.compliancequest.com/bloglet/safety-inspection-app/)
+- [Best Safety Inspection App (Updated for 2026)](https://www.compliancequest.com/bloglet/best-construction-safety-software/)
 - [EHS Inspection App - HammerTech Inspect](https://www.hammertech.com/en-us/product/hammertechinspect)
 
 ### Worker Certification Tracking
@@ -330,51 +937,7 @@ Features to defer until product-market fit is established.
 - [5 Costly Digital Mistakes Construction Companies Are Making in 2026 | Sesame Technologies](https://www.sesametechnologies.net/blog/construction-digital-mistakes-2026/)
 - [How Reliable Construction Management Software Prevents Chaos 2026](https://diligentic.com/blog/construction-management-software)
 
-### Mobile UX & Accessibility
-- [Top 7 Healthcare UX/UI Design Trends to Watch in 2026](https://www.excellentwebworld.com/healthcare-ux-ui-design-trends/)
-- [Mobile App Accessibility: A Comprehensive Guide (2026)](https://www.accessibilitychecker.org/guides/mobile-apps-accessibility/)
-
-### Automated PDF Report Generation
-- [Best Compliance Automation Software: Top 12 Tools in 2026 - Cynomi](https://cynomi.com/learn/compliance-automation-tools/)
-- [6 Best Safety Audit Software for OSHA Compliance (2026 Guide)](https://www.v-comply.com/blog/best-osha-compliance-software-safety-audit/)
-- [Automate the Generation of Safety Reports in PDF Format Using imPDF REST API](https://impdf.com/blog/automate-the-generation-of-safety-reports-in-pdf-format-using-impdf-rest-api/)
-
-### AI & Predictive Analytics in Construction Safety
-- [Artificial Intelligence in Construction Health and Safety: Use Cases, Benefits and Barriers](https://www.mdpi.com/2313-576X/12/1/30)
-- [AI Is Transforming Construction Safety, but Implementation May Be the Biggest Risk](https://ohsonline.com/articles/2026/02/10/ai-is-transforming-construction-safety-but-implementation-may-be-the-biggest-risk.aspx)
-- [Top Workplace Safety Trends for 2026: AI, Wearables, Digital Twins, and the Future of Risk Management](https://www.vanguardehs.com/articles/top-new-trends-in-workplace-safety-for-2026-what-leading-programs-are-adopting-now)
-- [Predictive Analytics in Construction: AI's Role in Risk Management](https://www.kwant.ai/blog/ai-predictive-analytics-construction-risk-management)
-
-### Heat Map Visualization & Safety Dashboards
-- [Heat Safety Mapping | Meaning & Definition | Protex AI](https://www.protex.ai/glossary/heat-safety-mapping)
-- [Risk visualizations in EHS | Heatmaps & Pathways](https://www.intenseye.com/products-reporting/safety-heatmaps)
-- [How to Build a Safety KPI Dashboard? 8 Metrics You Should Include | Databox](https://databox.com/safety-kpi-dashboard)
-
-### Toolbox Talks & Pre-Task Planning
-- [Pre-Task Planning Toolbox Talk - Raken](https://www.rakenapp.com/features/toolbox-talks/task-planning)
-- [#1 Safety Toolbox Talk App For Construction](https://safelyio.com/toolbox-talk-app/)
-- [Top 10 construction toolbox talk software in 2026](https://www.getclue.com/blog/construction-toolbox-talk-software)
-
-### Photo Documentation Best Practices
-- [Best Practices for Construction Photo Documentation | OpenSpace](https://www.openspace.ai/blog/best-practices-for-construction-site-photo-documentation-what-to-capture-and-why-it-matters/)
-- [Why Construction Photo Documentation is Important - Raken](https://www.rakenapp.com/blog/importance-photo-documentation-construction)
-- [On-Site to Office: Using Mobile App Photos for Real-Time Reporting](https://buildern.com/resources/blog/mobile-app-photos/)
-
-### Certification Expiry Alerts
-- [Construction Project Management Software | Compliance and Efficiency](https://www.expirationreminder.com/industries/construction-management-software)
-- [Certification Tracking Software: Comparing Top Solutions for Compliance & Automation](https://www.expirationreminder.com/blog/certification-tracking-software-comparing-top-solutions-for-compliance-automation)
-- [Beyond the Filing Cabinet: Professionalizing Construction Through Mobile Certification Management](https://www.skillsignal.com/beyond-the-filing-cabinet-professionalizing-construction-through-mobile-certification-management/)
-
-### Offline vs Real-Time Trade-offs
-- [B2W Mobile Apps: Online & Offline Construction Software](https://www.trimble.com/blog/construction/en-US/article/b2w-apps-keep-mobile-construction-software-working-online-or-offline)
-- [Construction Management Software with Offline Access (2026)](https://www.getapp.com/construction-software/construction-management/f/offline-access/)
-
-### Pricing Models
-- [2026 Construction Management Software Pricing Guide: 7 Platforms Compared](https://softcircles.com/blog/construction-management-software-pricing-guide-2026)
-- [A Complete Guide to Construction Software Pricing Models](https://constructioncoverage.com/construction-software-pricing-models)
-- [Construction Software Pricing Guide for Contractors in 2026](https://www.kynection.com.au/construction-software-pricing-guide-for-contractors-2026/)
-
 ---
-*Feature research for: SiteMedic (Medical Compliance & Construction Safety Management Platform)*
-*Researched: 2026-02-15*
-*Confidence: HIGH (validated against 50+ industry sources, current regulatory requirements, and competitor platforms)*
+*Feature research for: SiteMedic (Medical Compliance & Multi-Vertical Medic Platform)*
+*v1.0 researched: 2026-02-15 | v1.1 multi-vertical addendum: 2026-02-17*
+*v1.0 Confidence: HIGH | v1.1 Confidence: MEDIUM–HIGH (regulatory frameworks HIGH; specific form schemas MEDIUM where not publicly standardised)*

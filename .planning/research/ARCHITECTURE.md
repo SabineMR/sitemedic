@@ -1,773 +1,834 @@
-# Architecture Research: Offline-First Medical Compliance Platform
+# Architecture Patterns: Multi-Vertical Integration
 
-**Domain:** Offline-first mobile + web dashboard for field data capture
-**Researched:** 2026-02-15
-**Confidence:** HIGH
+**Domain:** SiteMedic v2.0 — Multi-vertical expansion (Film/TV, Festivals, Motorsport, Sporting Events)
+**Researched:** 2026-02-17
+**Supersedes:** General offline-first architecture (2026-02-15) for this milestone
+**Confidence:** HIGH — all findings verified against actual source files read during this session
 
-## Standard Architecture
+---
 
-### System Overview
+## What Already Exists vs What Needs to Be Built
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         Client Layer                                 │
-├─────────────────────────────────────────────────────────────────────┤
-│  ┌──────────────────────┐              ┌──────────────────────┐     │
-│  │   iOS Mobile App     │              │   Web Dashboard      │     │
-│  │  (React Native)      │              │   (React.js)         │     │
-│  │                      │              │                      │     │
-│  │  ┌────────────────┐  │              │  ┌────────────────┐  │     │
-│  │  │ Local SQLite   │  │              │  │  State Mgmt    │  │     │
-│  │  │ (WatermelonDB) │  │              │  │  (React Query) │  │     │
-│  │  │ [ENCRYPTED]    │  │              │  └────────────────┘  │     │
-│  │  └────────────────┘  │              │                      │     │
-│  │  ┌────────────────┐  │              │                      │     │
-│  │  │  Sync Queue    │  │              │                      │     │
-│  │  │ (Background)   │  │              │                      │     │
-│  │  └────────────────┘  │              │                      │     │
-│  └──────────┬───────────┘              └──────────┬───────────┘     │
-│             │                                     │                 │
-│             │ HTTPS/TLS 1.3                      │ HTTPS/TLS 1.3   │
-│             │                                     │                 │
-├─────────────┴─────────────────────────────────────┴─────────────────┤
-│                         API Gateway Layer                            │
-├─────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                 │
-│  │   Supabase  │  │   Supabase  │  │   Supabase  │                 │
-│  │    Auth     │  │  REST API   │  │   Storage   │                 │
-│  │ (JWT tokens)│  │ (PostgREST) │  │   (S3-like) │                 │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘                 │
-│         │                │                │                         │
-├─────────┴────────────────┴────────────────┴─────────────────────────┤
-│                      Backend Services Layer                          │
-├─────────────────────────────────────────────────────────────────────┤
-│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐        │
-│  │  Node.js Edge  │  │  PDF Generator │  │ Notification   │        │
-│  │   Functions    │  │  (Serverless)  │  │   Service      │        │
-│  │                │  │                │  │ (Email/Push)   │        │
-│  └────────────────┘  └────────────────┘  └────────────────┘        │
-│                                                                      │
-├─────────────────────────────────────────────────────────────────────┤
-│                       Data Storage Layer                             │
-├─────────────────────────────────────────────────────────────────────┤
-│  ┌──────────────────────────┐  ┌──────────────────────────┐         │
-│  │   PostgreSQL Database    │  │    Object Storage        │         │
-│  │   (Supabase Postgres)    │  │  (Photos, PDFs, Assets)  │         │
-│  │   [ENCRYPTED AT REST]    │  │  [ENCRYPTED AT REST]     │         │
-│  └──────────────────────────┘  └──────────────────────────┘         │
-│                                                                      │
-│  Schema: Multi-tenant with RLS (Row-Level Security)                 │
-│  - organizations (sites)                                             │
-│  - users (medics, managers)                                          │
-│  - treatments (clinical records)                                     │
-│  - workers (health profiles + consent)                               │
-│  - near_misses, safety_checks                                        │
-└─────────────────────────────────────────────────────────────────────┘
-```
+This inventory was produced by reading the actual source files. All "already exists" claims
+are HIGH confidence because they cite a specific file and line range that was read.
 
-### Component Responsibilities
+### Already Exists (Do Not Rebuild)
 
-| Component | Responsibility | Typical Implementation |
-|-----------|----------------|------------------------|
-| **iOS Mobile App** | Offline-first data capture, local storage, sync orchestration | React Native + Expo, WatermelonDB (SQLite + SQLCipher encryption) |
-| **Web Dashboard** | Read-only reporting UI, PDF downloads, compliance monitoring | React.js + React Query for server state, direct Supabase client |
-| **Local SQLite** | Offline persistence, encrypted at rest, sync source of truth | WatermelonDB with SQLCipher (AES-256), stores treatments/workers/photos locally |
-| **Sync Queue** | Background sync job management, conflict resolution, retry logic | React Native Queue, persists operations in AsyncStorage, runs on app resume/network restore |
-| **Supabase Auth** | JWT-based authentication, session management, offline token refresh | Supabase Auth with Secure Storage (Keychain/Keystore), handles offline session expiry gracefully |
-| **Supabase REST API** | Server-side data access, Row-Level Security enforcement | PostgREST auto-generated from Postgres schema, enforces tenant isolation via RLS policies |
-| **Supabase Storage** | Photo upload, compression, CDN delivery | S3-compatible object storage with automatic image optimization and CDN |
-| **PDF Generator** | Weekly safety report generation from template + data | Serverless function (Node.js + Puppeteer or PDFKit), triggered by cron or on-demand |
-| **Notification Service** | RIDDOR deadline alerts, certification expiry warnings | Email (SendGrid/Postmark) + Push notifications (Expo Notifications) |
-| **PostgreSQL** | Multi-tenant relational data, ACID guarantees, RLS policies | Supabase Postgres with Row-Level Security, UK/EU region hosting |
-| **Object Storage** | Blob storage for photos and generated PDFs | Supabase Storage with lifecycle policies for archival |
+| Artifact | Location | Notes |
+|----------|----------|-------|
+| `VERTICAL_COMPLIANCE` record with 10 verticals fully populated | `services/taxonomy/vertical-compliance.ts` | Mirrored identically to `web/lib/compliance/vertical-compliance.ts` |
+| `getVerticalCompliance()`, `getPostTreatmentGuidance()`, `isRIDDORVertical()` | Both mobile and web taxonomy files | Pure functions, no side effects |
+| `MECHANISM_PRESETS_BY_VERTICAL` for all 10 verticals | `services/taxonomy/mechanism-presets.ts` | Used in `new.tsx` line 393 |
+| `getPatientLabel()` — "Worker" / "Crew member" / "Attendee" / etc. | `services/taxonomy/vertical-outcome-labels.ts` line 120 | Used in `new.tsx` line 395 |
+| `getVerticalOutcomeCategories()` — outcome label overrides per vertical | Same file | Used in `new.tsx` line 394 |
+| `CERT_TYPES` / `CERT_TYPE_INFO` (mobile) | `services/taxonomy/certification-types.ts` | 32 cert types across 7 categories |
+| `UK_CERT_TYPES` / `CERT_TYPE_METADATA` (web) | `web/types/certification.types.ts` | Same 32 types, adds `renewalUrl` |
+| `VERTICAL_CERT_TYPES` per-vertical recommended cert lists | Both files | `getRecommendedCertTypes()` function also exists |
+| `VerticalId` TypeScript union type | `web/contexts/org-context.tsx` line 25 | 10 valid vertical strings |
+| `industryVerticals: VerticalId[]` on OrgContext (web) | `web/contexts/org-context.tsx` line 47 | Fetches from `org_settings` on auth |
+| Vertical-aware treatment form in `new.tsx` | `app/treatment/new.tsx` | Already uses presets/labels dynamically |
+| Ad-hoc `fetchOrgVertical()` in treatment form | `app/treatment/new.tsx` lines 93–113 | Works but is per-render, should be replaced by OrgContext |
+| Vertical-aware RIDDOR page | `web/app/(dashboard)/riddor/page.tsx` | Uses `useOrg().industryVerticals[0]` |
+| `bookings.event_vertical` column | `supabase/migrations/123_booking_briefs.sql` | Schema column added |
+| `booking_briefs.extra_fields JSONB` | Same migration | Vertical-specific brief data |
+| Recharts (`^3.7.0`) | `web/package.json` line 53 | Used in 4 existing chart components |
+| Leaflet + react-leaflet | `web/package.json` lines 44, 51 | Used in geofence and tracking maps |
+| `dynamic(..., { ssr: false })` Leaflet pattern | `web/components/admin/GeofenceMapPicker.tsx` line 1 comment | Established pattern |
+| `@react-pdf/renderer@4.3.2` in Edge Functions | `generate-weekly-report/index.tsx` line 14 | Established — `renderToBuffer()` pattern |
+| Existing F2508 PDF Edge Function | `supabase/functions/riddor-f2508-generator/` | Full directory with components/, types.ts |
+| Weekly report PDF Edge Function | `supabase/functions/generate-weekly-report/` | Full directory pattern |
+| `OrgProvider` + `useOrg()` hook (web) | `web/contexts/org-context.tsx` | Complete, wraps app root layout |
+| `AuthProvider` + `useAuth()` hook (mobile) | `src/contexts/AuthContext.tsx` | Established, in `app/_layout.tsx` |
+| Root layout provider tree | `app/_layout.tsx` | GestureHandlerRoot → DatabaseProvider → AuthProvider → SyncProvider |
+| WatermelonDB schema v3 | `src/database/schema.ts` | 6 tables, no `event_vertical` or GPS columns |
+| WatermelonDB migrations to v3 | `src/database/migrations.ts` | v2 (worker columns), v3 (audit_log table) |
+| `near_misses` table has `location TEXT` only — no GPS coords | `supabase/migrations/00003_health_data_tables.sql` line 85 | Free-text description only |
+| `GET/PATCH /api/medics/[id]/certifications` API route | `web/app/api/medics/[id]/certifications/route.ts` | Annotates with status + renewal_url |
 
-## Recommended Project Structure
+### Must Be Built
 
-### Mobile App (React Native + Expo)
+| What | File Path | Depends On |
+|------|-----------|-----------|
+| Mobile `OrgContext` + `useOrg()` hook | `src/contexts/OrgContext.tsx` (new) | AuthContext (user session for org_id) |
+| Register `OrgProvider` in root layout | `app/_layout.tsx` (update) | OrgContext |
+| `useVerticalLabels()` hook (mobile) | `src/hooks/useVerticalLabels.ts` (new) | OrgContext |
+| Replace ad-hoc `fetchOrgVertical()` in `new.tsx` | `app/treatment/new.tsx` (update lines 80–113) | OrgContext |
+| WatermelonDB schema v4 | `src/database/schema.ts` + `migrations.ts` | None (prerequisite for everything below) |
+| `event_vertical` column in WatermelonDB `treatments` | Schema v4 migration | Schema v4 |
+| GPS columns (`gps_lat`, `gps_lng`) in WatermelonDB `near_misses` | Schema v4 migration | Schema v4 |
+| GPS columns on Supabase `near_misses` table | New SQL migration | Schema v4 |
+| GPS capture in near-miss form | `app/safety/near-miss.tsx` (update) | expo-location (already in Expo SDK) |
+| Vertical-specific conditional sections in treatment form | `app/treatment/new.tsx` (update) | OrgContext, schema v4 |
+| `vertical_extra_fields` column on Supabase `treatments` | New SQL migration | None |
+| `vertical_extra_fields` WatermelonDB column | Schema v4 | Above |
+| `useVerticalLabels()` hook (web) | `web/hooks/useVerticalLabels.ts` (new) | Existing OrgContext |
+| Cert profile UI ordering by vertical | `web/app/medic/profile/page.tsx` (update) | `VERTICAL_CERT_TYPES` (exists) |
+| `compliance_score_history` table + migration | New SQL migration | None |
+| Update `generate-weekly-report` to upsert score history | `supabase/functions/generate-weekly-report/index.tsx` | Above |
+| `event-incident-report-generator` Edge Function | `supabase/functions/event-incident-report-generator/` | `@react-pdf/renderer` (exists) |
+| `motorsport-incident-generator` Edge Function | `supabase/functions/motorsport-incident-generator/` | Same |
+| `fa-incident-generator` Edge Function | `supabase/functions/fa-incident-generator/` | Same |
+| `incident-report-dispatcher.ts` web utility | `web/lib/pdf/incident-report-dispatcher.ts` | Above 3 Edge Functions |
+| `ComplianceScoreChart` component | `web/components/compliance/ComplianceScoreChart.tsx` | Recharts (exists), score history table |
+| `IncidentFrequencyChart` component | `web/components/incidents/IncidentFrequencyChart.tsx` | Recharts (exists) |
+| `NearMissHeatMap` component | `web/components/incidents/NearMissHeatMap.tsx` | Leaflet (exists), GPS data |
+| `leaflet.heat` plugin install | `web/package.json` | Leaflet v1.9.4 (exists) |
 
-```
-mobile-app/
-├── src/
-│   ├── core/                    # Core business logic (domain layer)
-│   │   ├── models/              # WatermelonDB models (Treatment, Worker, etc.)
-│   │   ├── repositories/        # Data access layer (abstracts WatermelonDB)
-│   │   ├── services/            # Business logic (TreatmentService, SyncService)
-│   │   └── validators/          # Input validation, RIDDOR rules
-│   ├── sync/                    # Offline sync engine
-│   │   ├── SyncQueue.ts         # Queue manager (priority, retry, persistence)
-│   │   ├── ConflictResolver.ts  # Conflict resolution strategies
-│   │   ├── NetworkMonitor.ts    # Network state detection
-│   │   └── BackgroundSync.ts    # Background task orchestration
-│   ├── screens/                 # UI screens (TreatmentLogger, NearMiss, etc.)
-│   │   ├── TreatmentLoggerScreen.tsx
-│   │   ├── WorkerProfileScreen.tsx
-│   │   └── SafetyCheckScreen.tsx
-│   ├── components/              # Reusable UI components
-│   │   ├── forms/               # Form inputs, validation
-│   │   ├── common/              # Buttons, cards, lists
-│   │   └── offline/             # Offline indicators, sync status
-│   ├── api/                     # Backend integration
-│   │   ├── supabase.ts          # Supabase client setup
-│   │   ├── auth.ts              # Auth flows (login, token refresh)
-│   │   └── storage.ts           # Photo upload with compression
-│   ├── storage/                 # Local storage & encryption
-│   │   ├── database.ts          # WatermelonDB schema & migrations
-│   │   ├── encryption.ts        # SQLCipher key management
-│   │   └── secure-storage.ts    # Keychain wrapper for sensitive data
-│   └── utils/                   # Helpers, constants, types
-│       ├── photo-compression.ts # Image optimization before upload
-│       ├── riddor-detector.ts   # RIDDOR auto-flagging logic
-│       └── constants.ts         # Config, enums
-├── app/                         # Expo Router file-based routing
-└── assets/                      # Static assets (images, fonts)
-```
+---
 
-### Web Dashboard (React.js)
+## Architecture Decisions (Per Question)
+
+### 1. Data Layer: Vertical Propagation to Mobile App
+
+**Current state confirmed from source:**
+
+`app/treatment/new.tsx` lines 93–113 fetch `org_settings.industry_verticals` fresh on every form
+open via a direct Supabase query. This produces a network call per treatment session and stores
+the result in local `useState` — lost when the component unmounts.
+
+WatermelonDB schema v3 (`src/database/schema.ts`) has no `event_vertical` column on `treatments`
+and no GPS columns on `near_misses`. The `bookings.event_vertical` PostgreSQL column exists but
+has no mobile path.
+
+**Decision: OrgContext on mobile; `event_vertical` in WatermelonDB treatments.**
+
+The org-level vertical (what industry the org primarily serves) changes rarely. It should be
+loaded once at auth time and held in React context — not refetched per form. This mirrors
+exactly how the web `org-context.tsx` works.
+
+The booking-level vertical should be stored in WatermelonDB `treatments.event_vertical` (added
+in schema v4) so the treatment PDF can carry the correct vertical without a network call at
+submission time. It is populated from navigation params when a treatment is opened from a
+booking, and falls back to `OrgContext.primaryVertical` for ad-hoc treatments.
+
+**The vertical should NOT be stored in WatermelonDB as org data.** It is session/configuration
+data, not a document. React context is the correct layer.
+
+---
+
+### 2. Mobile App Context: VerticalContext Placement
+
+**Decision: Extend OrgContext. No separate VerticalContext.**
+
+A dedicated `VerticalContext` wrapping `OrgContext` adds an indirection layer with no benefit.
+The vertical is a property of the org. One context provides both.
+
+**Provider tree after change:**
 
 ```
-web-dashboard/
-├── src/
-│   ├── features/                # Feature-based organization
-│   │   ├── treatments/          # Treatment log & detail views
-│   │   │   ├── TreatmentList.tsx
-│   │   │   ├── TreatmentDetail.tsx
-│   │   │   └── useTreatments.ts # React Query hook
-│   │   ├── compliance/          # Compliance score, RIDDOR tracking
-│   │   ├── workers/             # Worker registry, certifications
-│   │   ├── reports/             # PDF download, weekly reports
-│   │   └── dashboard/           # Overview screen, traffic-light score
-│   ├── api/                     # API client layer
-│   │   ├── supabase.ts          # Supabase client
-│   │   ├── treatments.ts        # Treatment API calls
-│   │   └── reports.ts           # Report generation API
-│   ├── components/              # Shared UI components
-│   │   ├── layout/              # Header, sidebar, layout
-│   │   ├── charts/              # Compliance score visualization
-│   │   └── common/              # Buttons, tables, modals
-│   ├── hooks/                   # Shared React hooks
-│   ├── utils/                   # Helpers, formatters
-│   └── types/                   # TypeScript types (shared with mobile)
-├── public/                      # Static assets
-└── package.json
+app/_layout.tsx:
+
+GestureHandlerRootView
+  DatabaseProvider (WatermelonDB)
+    AuthProvider             <- existing, src/contexts/AuthContext.tsx
+      OrgProvider            <- NEW, src/contexts/OrgContext.tsx
+        SyncProvider         <- existing
+          BottomSheetModalProvider
+            Stack (Expo Router)
 ```
 
-### Backend (Supabase + Serverless Functions)
+`OrgProvider` must be inside `AuthProvider` because it reads `user.app_metadata.org_id` from
+the auth session. It must be outside `SyncProvider` because the sync system can use the org
+context to scope payloads (include `event_vertical` in treatment sync).
 
-```
-backend/
-├── supabase/
-│   ├── migrations/              # SQL schema migrations
-│   │   ├── 001_initial_schema.sql
-│   │   ├── 002_rls_policies.sql
-│   │   └── 003_functions.sql
-│   ├── functions/               # Edge Functions (Deno)
-│   │   ├── generate-pdf/        # Weekly report generator
-│   │   │   └── index.ts
-│   │   ├── sync-endpoint/       # Custom sync logic (if needed)
-│   │   │   └── index.ts
-│   │   └── riddor-alerts/       # RIDDOR deadline notifications
-│   │       └── index.ts
-│   └── seed.sql                 # Dev/test data seed
-└── README.md
-```
+**Mobile `OrgContext` shape:**
 
-### Structure Rationale
-
-- **Mobile: Core-first architecture** — Business logic in `core/` is framework-agnostic, making it testable and portable. UI screens are thin, delegating to services.
-- **Mobile: Sync isolation** — All sync logic lives in `sync/` module, making it easy to test offline scenarios and swap sync strategies.
-- **Web: Feature-based** — Dashboard is organized by features (treatments, workers, reports) rather than technical layers, improving discoverability.
-- **Shared types** — TypeScript types are shared between mobile and web via a shared npm package or monorepo to ensure API contract consistency.
-- **Backend: Migration-driven** — Database schema lives in SQL migrations, ensuring version control and easy rollback.
-
-## Architectural Patterns
-
-### Pattern 1: Offline-First with Optimistic UI
-
-**What:** All data writes happen to local SQLite first, UI updates immediately (optimistic), then sync happens in background.
-
-**When to use:** For every user interaction that modifies data (treatment logs, near-miss captures, worker edits).
-
-**Trade-offs:**
-- **Pro:** Instant UI response, works without network, better UX
-- **Pro:** Zero data loss during offline periods
-- **Con:** Complexity in conflict resolution when server rejects changes
-- **Con:** Must handle failed syncs gracefully (show retry UI)
-
-**Example:**
 ```typescript
-// TreatmentService.ts
-async createTreatment(data: TreatmentInput): Promise<Treatment> {
-  // 1. Write to local database immediately (optimistic)
-  const treatment = await this.repository.createLocal(data);
+// src/contexts/OrgContext.tsx  (NEW FILE)
+interface OrgContextValue {
+  orgId: string | null;
+  industryVerticals: string[];
+  primaryVertical: string;   // industryVerticals[0] ?? 'general'
+  loading: boolean;
+}
 
-  // 2. Update UI immediately
-  this.eventBus.emit('treatment:created', treatment);
+export function OrgProvider({ children }: { children: ReactNode }) {
+  // On auth state: read user.app_metadata.org_id
+  // Fetch org_settings.industry_verticals once
+  // Store in state
+}
 
-  // 3. Queue for background sync
-  await this.syncQueue.enqueue({
-    operation: 'CREATE',
-    entity: 'treatment',
-    localId: treatment.id,
-    data: treatment,
-    priority: 'HIGH', // Treatments are high-priority
+export function useOrg(): OrgContextValue { ... }
+```
+
+**The `fetchOrgVertical()` function in `new.tsx` is deleted** and replaced with
+`const { primaryVertical } = useOrg()`.
+
+---
+
+### 3. Incident Form Architecture: One Form with Conditional Sections
+
+**Current state confirmed from source:**
+
+`app/treatment/new.tsx` is already a single adaptive form. Lines 392–395 derive
+`mechanismPresets`, `verticalOutcomes`, and `patientLabel` from `orgVertical`. Line 434 uses
+`patientLabel` in the section heading. Line 438 uses it in placeholder text. The RIDDOR banner
+(lines 415–421) is already conditional on `riddorFlagged`.
+
+**Decision: One form with conditional sections. Do not create separate files per vertical.**
+
+Separate form files per vertical would create 10 near-identical files that diverge over time.
+The existing single-form approach is correct and scales to 10 verticals without structural change.
+
+**Vertical-specific section pattern:**
+
+```typescript
+// Motorsport: race event details
+{primaryVertical === 'motorsport' && (
+  <View style={styles.section}>
+    <Text style={styles.sectionTitle}>Race Event Details</Text>
+    <TextInput placeholder="Car / race number" ... />
+    <TextInput placeholder="Circuit zone (e.g. Turn 3 hairpin)" ... />
+    <TextInput placeholder="Clerk of Course name" ... />
+  </View>
+)}
+
+// Festivals: triage details
+{primaryVertical === 'festivals' && (
+  <View style={styles.section}>
+    <Text style={styles.sectionTitle}>Triage Details</Text>
+    {/* Triage category, wristband colour picker */}
+  </View>
+)}
+
+// Education: patient classification
+{primaryVertical === 'education' && (
+  <View style={styles.section}>
+    <Text style={styles.fieldLabel}>Patient is a:</Text>
+    {/* Student / Staff / Visitor radio buttons */}
+  </View>
+)}
+
+// TV/Film: stunt/pyro flag
+{primaryVertical === 'tv_film' && (
+  <View style={styles.section}>
+    <Text style={styles.fieldLabel}>Incident context</Text>
+    {/* Stunt, pyrotechnic, practical fire toggle */}
+  </View>
+)}
+```
+
+**Vertical-specific data storage pattern:**
+
+Vertical-specific fields (car number, triage category, student/staff classification) must persist.
+Use a `vertical_extra_fields JSONB` column on the Supabase `treatments` table — the same pattern
+already used in `booking_briefs.extra_fields` (migration 123). Add a matching optional string column
+to WatermelonDB `treatments` in schema v4 (stored as JSON string, matching the existing `treatment_types`
+pattern in the schema).
+
+**Section visibility map:**
+
+| Section | Condition | What it controls |
+|---------|-----------|-----------------|
+| Patient information | Always | Label from `getPatientLabel()` |
+| Injury details | Always | Mechanism presets from `getMechanismPresets()` |
+| RIDDOR warning banner | `compliance.riddorApplies && riddorFlagged` | Existing |
+| Non-RIDDOR framework info | `!compliance.riddorApplies` | "Purple Guide logged" style note |
+| Race / motorsport details | `primaryVertical === 'motorsport'` | Car, zone, COC |
+| Triage details | `primaryVertical === 'festivals'` | Category, wristband |
+| Student/staff classification | `primaryVertical === 'education'` | Patient role |
+| Stunt/production context | `primaryVertical === 'tv_film'` | Stunt flag, pyro flag |
+| Treatment given | Always | Multi-select, unchanged |
+| Photos | Always | Unchanged |
+| Outcome | Always | Labels from `getVerticalOutcomeCategories()` |
+| Signature | Always | Unchanged |
+
+---
+
+### 4. PDF Generation Architecture: One Edge Function per Report Type
+
+**Current state confirmed from source:**
+
+The codebase has two PDF Edge Function patterns:
+- `riddor-f2508-generator/index.ts` — dedicated function, `components/` directory, `types.ts`
+- `generate-weekly-report/index.tsx` — same pattern
+
+Both use `renderToBuffer()` from `@react-pdf/renderer@4.3.2`.
+
+**Decision: One Edge Function per report type. Not a monolithic switch function.**
+
+Reason: Supabase Edge Functions have cold-start costs. A monolithic function importing all PDF
+templates is slower and harder to maintain. The established pattern is one function per report
+type — follow it.
+
+Verticals cluster by report type:
+- **RIDDOR F2508** — `construction`, `tv_film`, `corporate`, `education`, `outdoor_adventure` → `riddor-f2508-generator` (EXISTING)
+- **Event Incident Report** — `festivals`, `fairs_shows`, `private_events` → `event-incident-report-generator` (NEW)
+- **Motorsport UK Report** — `motorsport` → `motorsport-incident-generator` (NEW)
+- **FA/NGB Report** — `sporting_events` → `fa-incident-generator` (NEW)
+
+**New Edge Function structure mirrors existing:**
+
+```
+supabase/functions/event-incident-report-generator/
+  index.ts                      <- Deno.serve, fetches incident, calls renderToBuffer
+  EventIncidentDocument.tsx     <- @react-pdf/renderer React component
+  event-incident-mapping.ts     <- Maps treatment data to Purple Guide fields
+  types.ts                      <- TypeScript interfaces for incident data
+
+supabase/functions/motorsport-incident-generator/
+  index.ts
+  MotorsportIncidentDocument.tsx
+  motorsport-mapping.ts
+  types.ts
+
+supabase/functions/fa-incident-generator/
+  index.ts
+  FAIncidentDocument.tsx
+  fa-mapping.ts
+  types.ts
+```
+
+**Web-side dispatch utility:**
+
+```typescript
+// web/lib/pdf/incident-report-dispatcher.ts
+import { getVerticalCompliance } from '@/lib/compliance/vertical-compliance';
+
+const FUNCTION_BY_FRAMEWORK: Record<string, string> = {
+  'RIDDOR':           'riddor-f2508-generator',
+  'riddor_plus_ofsted': 'riddor-f2508-generator',
+  'purple_guide':     'event-incident-report-generator',
+  'event_incident':   'event-incident-report-generator',
+  'motorsport_uk':    'motorsport-incident-generator',
+  'fa_incident':      'fa-incident-generator',
+};
+
+export async function generateIncidentReportPDF(
+  incidentId: string,
+  vertical: string,
+  supabase: SupabaseClient
+): Promise<{ signedUrl: string }> {
+  const { primaryFramework } = getVerticalCompliance(vertical);
+  const functionName = FUNCTION_BY_FRAMEWORK[primaryFramework];
+
+  const { data, error } = await supabase.functions.invoke(functionName, {
+    body: { incident_id: incidentId },
   });
 
-  return treatment;
+  if (error) throw error;
+  return data;
 }
 ```
 
-### Pattern 2: Last-Write-Wins with Timestamp Conflict Resolution
+The `getVerticalCompliance()` function already exists in `web/lib/compliance/vertical-compliance.ts`
+and the `primaryFramework` field is already defined on `VerticalComplianceConfig`. The dispatch
+utility is purely glue code.
 
-**What:** When syncing conflicts (same record edited offline on multiple devices), the most recent timestamp wins.
+---
 
-**When to use:** For non-collaborative data where one medic owns the treatment record. Acceptable for SiteMedic because medics work on separate sites.
+### 5. Certification Tracking Architecture
 
-**Trade-offs:**
-- **Pro:** Simple to implement, no manual conflict resolution UI needed
-- **Pro:** Works well for single-user-per-site scenarios
-- **Con:** Data loss if two medics edit the same worker profile (rare in MVP)
-- **Con:** Not suitable for collaborative editing (defer to Phase 2)
+**Current state confirmed from source:**
 
-**Example:**
-```typescript
-// ConflictResolver.ts
-async resolveConflict(local: Record, remote: Record): Promise<Record> {
-  // Compare timestamps
-  const localTimestamp = new Date(local.updated_at);
-  const remoteTimestamp = new Date(remote.updated_at);
+`medics.certifications` is JSONB. `UK_CERT_TYPES` (32 types), `CERT_TYPE_METADATA`,
+`VERTICAL_CERT_TYPES`, and `getRecommendedCertTypes()` all exist and are complete. The API
+route at `web/app/api/medics/[id]/certifications/route.ts` annotates each cert with `status`
+and `renewal_url`.
 
-  if (localTimestamp > remoteTimestamp) {
-    // Local is newer, push to server
-    return { action: 'PUSH', record: local };
-  } else {
-    // Remote is newer, pull from server
-    return { action: 'PULL', record: remote };
-  }
-}
-```
+**The taxonomy is complete. What is missing is UI wiring.**
 
-### Pattern 3: Delta Sync with Change Tracking
+**Decision: No new tables. Wire existing taxonomy functions to UI.**
 
-**What:** Only sync changes (deltas) since last successful sync, not full database. Track `created_at`, `updated_at`, `deleted_at` timestamps on all records.
+The `JSONB` approach for cert storage is correct. The cert types are stable configuration —
+they belong in code as typed constants, not in a database table.
 
-**When to use:** For efficient sync after app resume or network reconnection. Critical for minimizing bandwidth on construction sites with poor signal.
+**What to build:**
 
-**Trade-offs:**
-- **Pro:** Minimal bandwidth usage, fast sync
-- **Pro:** Scales to large datasets (thousands of treatment records)
-- **Con:** Requires server-side "last sync" tracking per device
-- **Con:** Must handle schema migrations during sync
+1. The cert type selector in the admin medic edit form should call `getRecommendedCertTypes(vertical)`
+   to order options — the function exists, it just needs wiring. The current `medic/profile/page.tsx`
+   displays certs but the edit form type dropdown does not use vertical ordering.
 
-**Example:**
-```typescript
-// SyncService.ts
-async performSync(): Promise<SyncResult> {
-  const lastSyncTime = await this.getLastSyncTimestamp();
+2. The admin medic list should show compliance gap indicators per vertical: which medics assigned
+   to motorsport bookings lack an FIA Grade cert. This is a query-layer feature, not a schema change.
 
-  // 1. Pull changes from server (only records updated since last sync)
-  const serverChanges = await this.api.fetchChangesSince(lastSyncTime);
-  await this.applyRemoteChanges(serverChanges);
+3. Optional: a PostgreSQL view for compliance gap queries (avoids application-layer filtering of
+   JSONB):
 
-  // 2. Push local changes to server
-  const localChanges = await this.repository.getChangesSince(lastSyncTime);
-  const conflicts = await this.api.pushChanges(localChanges);
-
-  // 3. Resolve conflicts
-  for (const conflict of conflicts) {
-    await this.conflictResolver.resolve(conflict);
-  }
-
-  // 4. Update last sync timestamp
-  await this.setLastSyncTimestamp(new Date());
-
-  return { success: true, conflicts: conflicts.length };
-}
-```
-
-### Pattern 4: Photo Upload with Progressive Compression
-
-**What:** Compress photos on-device before upload, with multiple quality tiers. Low-quality preview syncs first, full-quality later.
-
-**When to use:** For photo-heavy workflows (injury documentation, near-miss evidence) where bandwidth is limited.
-
-**Trade-offs:**
-- **Pro:** Faster sync on slow networks, better UX
-- **Pro:** Reduces storage costs (compressed photos are smaller)
-- **Con:** Image quality trade-offs (document this in compliance requirements)
-- **Con:** CPU overhead for compression on mobile device
-
-**Example:**
-```typescript
-// photo-compression.ts
-async compressAndUpload(photo: Photo): Promise<string> {
-  // 1. Compress to low-quality preview (immediate sync)
-  const preview = await ImageManipulator.manipulateAsync(
-    photo.uri,
-    [{ resize: { width: 800 } }],
-    { compress: 0.5, format: SaveFormat.JPEG }
-  );
-
-  const previewUrl = await this.uploadToStorage(preview, 'preview');
-
-  // 2. Queue full-quality upload for later (background task)
-  await this.syncQueue.enqueue({
-    operation: 'UPLOAD_PHOTO',
-    data: { uri: photo.uri, previewUrl },
-    priority: 'LOW', // Full-quality is low priority
-  });
-
-  return previewUrl;
-}
-```
-
-### Pattern 5: Multi-Tenant with Row-Level Security (RLS)
-
-**What:** Single database with all tenants (sites/organizations), enforced data isolation via PostgreSQL Row-Level Security policies.
-
-**When to use:** For SaaS applications where tenant data must be strictly isolated. Mandatory for GDPR compliance (prevent cross-site data leakage).
-
-**Trade-offs:**
-- **Pro:** Simpler infrastructure (one database, not N databases)
-- **Pro:** Easier to query cross-tenant analytics (when needed)
-- **Pro:** Built-in Supabase support, no custom auth middleware needed
-- **Con:** RLS policies can be complex, must test thoroughly
-- **Con:** Performance overhead (RLS adds WHERE clauses to every query)
-
-**Example:**
 ```sql
--- RLS Policy for treatments table
-CREATE POLICY "Users can only access their organization's treatments"
-ON treatments
-FOR ALL
-USING (organization_id = (
-  SELECT organization_id FROM users WHERE id = auth.uid()
-));
-
--- RLS Policy for workers table
-CREATE POLICY "Users can only access their organization's workers"
-ON workers
-FOR ALL
-USING (organization_id = (
-  SELECT organization_id FROM users WHERE id = auth.uid()
-));
+-- Optional view for compliance gap reporting
+CREATE OR REPLACE VIEW medic_cert_gaps AS
+SELECT
+  m.id         AS medic_id,
+  m.first_name || ' ' || m.last_name AS medic_name,
+  required.vertical_id,
+  required.required_cert,
+  NOT EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(m.certifications) c
+    WHERE c->>'type' = required.required_cert
+      AND (c->>'expiry_date')::date > CURRENT_DATE
+  ) AS has_gap
+FROM medics m
+CROSS JOIN (VALUES
+  ('motorsport',  'FIA Grade 3'),
+  ('motorsport',  'Motorsport UK CMO Letter'),
+  ('education',   'Paediatric First Aid'),
+  ('education',   'Enhanced DBS (Children)')
+) AS required(vertical_id, required_cert);
 ```
 
-## Data Flow
+**What NOT to change:**
 
-### Request Flow: Treatment Logging (Offline → Sync → Dashboard)
+- Do not create separate cert type tables per vertical.
+- Do not make `UK_CERT_TYPES` a DB table.
+- The existing CSCS/CPCS construction cert tracking in the workers table (`workers.cscs_card_number`,
+  `workers.cscs_expiry_date`) remains unchanged. It predates the taxonomy expansion and is only used
+  for construction sites.
 
-```
-[Medic logs treatment in mobile app]
-    ↓
-[TreatmentLoggerScreen] → [TreatmentService.createTreatment()]
-    ↓
-[Write to WatermelonDB (local SQLite)] → [Return immediately to UI]
-    ↓
-[Queue in SyncQueue] → [Persist queue to AsyncStorage]
-    ↓
---- App resumes or network detected ---
-    ↓
-[BackgroundSync.start()] → [Process SyncQueue]
-    ↓
-[POST /treatments via Supabase API] → [Server validates & inserts]
-    ↓
-[Server returns success/conflict] → [Update local record with server ID]
-    ↓
-[Dashboard polls Supabase] → [React Query refetch]
-    ↓
-[Manager sees treatment in dashboard within 60 seconds]
-```
+---
 
-### State Management: Mobile App
+### 6. Terminology/Label Architecture: `useVerticalLabels()` Hook
 
-```
-[Local SQLite (WatermelonDB)]
-    ↓ (observeWithColumns)
-[React Native Components] ←→ [Business Logic Services] → [Sync Queue]
-    ↑                               ↓
-    └─── UI updates automatically via WatermelonDB observables
-```
+**Decision: A `useVerticalLabels()` hook. Not React context, not CSS custom properties, not i18n.**
 
-### State Management: Web Dashboard
+CSS custom properties are for visual theming, not domain terminology. i18n systems (react-i18next,
+next-intl) solve locale/language differences, not business-domain terminology differences. The
+vertical terminology is driven by which vertical an org serves — a business logic concern, not a
+localization concern. Using i18n for this would be architectural overreach.
 
-```
-[Supabase REST API]
-    ↓ (React Query)
-[React Components] ←→ [useQuery hooks] → [Cache (React Query)]
-    ↑                      ↓
-    └─── UI updates on cache invalidation
-```
+A dedicated context for labels is unnecessary because `getPatientLabel()` and related functions are
+pure lookups that run in microseconds. There is nothing to memoize or subscribe to. A hook that
+reads from OrgContext and calls the pure functions is the right layer.
 
-### Key Data Flows
-
-1. **Treatment Logging (Mobile → Server):**
-   - Medic fills form → Local SQLite write → UI updates immediately → Background sync pushes to Supabase → Dashboard pulls via React Query
-
-2. **Photo Upload (Mobile → Storage → Dashboard):**
-   - Medic takes photo → Compress on-device → Upload preview to Supabase Storage → Queue full-quality upload → Dashboard displays preview URL
-
-3. **Worker Consent (Mobile → Server → Compliance):**
-   - Medic captures signature → Local SQLite write with consent timestamp → Sync to server → Dashboard shows consent status → GDPR compliance enforced via RLS
-
-4. **PDF Generation (Server → Dashboard):**
-   - Weekly cron job triggers Edge Function → Fetch treatments from Postgres → Generate PDF via Puppeteer → Upload to Supabase Storage → Email download link to manager
-
-5. **RIDDOR Alert (Server → Notification):**
-   - Treatment synced with RIDDOR flag → Edge Function checks deadline → Send email alert if <48 hours remain → Dashboard shows alert banner
-
-## Scaling Considerations
-
-| Scale | Architecture Adjustments |
-|-------|--------------------------|
-| **0-100 users (MVP)** | Single Supabase instance, shared database, basic RLS policies. Monolithic deployment. No caching needed. |
-| **100-1,000 users** | Add Redis caching layer for read-heavy queries (worker registry, compliance scores). Enable Supabase CDN for photo delivery. Optimize database indexes. |
-| **1,000-10,000 users** | Separate read replicas for dashboard queries. Move PDF generation to dedicated serverless workers (AWS Lambda). Implement database connection pooling (PgBouncer). |
-| **10,000+ users** | Consider sharding by region (UK North, UK South). Move heavy analytics to separate data warehouse (ClickHouse). Implement GraphQL federation for API scalability. |
-
-### Scaling Priorities
-
-1. **First bottleneck: Photo storage costs**
-   - **When it breaks:** 1,000+ medics uploading 10+ photos/day = 10k photos/day = 300k/month
-   - **How to fix:** Implement lifecycle policies (archive to Glacier after 90 days), aggressive compression (WebP format), CDN caching
-
-2. **Second bottleneck: Database connection limits**
-   - **When it breaks:** 1,000+ concurrent mobile app connections to Postgres
-   - **How to fix:** Enable Supabase connection pooling (PgBouncer), reduce connection timeout, implement database read replicas
-
-3. **Third bottleneck: PDF generation CPU**
-   - **When it breaks:** Weekly PDF generation for 1,000+ sites overwhelms single Edge Function
-   - **How to fix:** Move to AWS Lambda with auto-scaling, pre-generate PDFs nightly, cache generated PDFs for 7 days
-
-## Anti-Patterns
-
-### Anti-Pattern 1: Real-Time Sync Instead of Offline-First
-
-**What people do:** Use WebSockets or Firebase Realtime Database for "live updates" instead of offline-first architecture.
-
-**Why it's wrong:**
-- Construction sites have zero mobile signal for hours — WebSockets fail immediately
-- Battery drain from maintaining persistent connections
-- Complexity in reconnection logic
-- Data loss when connection drops mid-transaction
-
-**Do this instead:** Offline-first with delta sync. Write to local SQLite, sync in background when network available. UI updates from local database, not server.
-
-### Anti-Pattern 2: Storing Encryption Keys in Code or AsyncStorage
-
-**What people do:** Hard-code SQLCipher encryption key or store it in AsyncStorage (not secure).
-
-**Why it's wrong:**
-- AsyncStorage is not encrypted, keys can be extracted via device backup or jailbreak
-- Hard-coded keys in source code are visible in decompiled APK/IPA
-- GDPR violation for health data (special category data requires encryption at rest with secure key management)
-
-**Do this instead:** Generate encryption key on first launch, store in iOS Keychain (react-native-keychain) or Android Keystore. Never store keys in AsyncStorage or code.
+**Mobile hook:**
 
 ```typescript
-// Good: Secure key storage
-import * as Keychain from 'react-native-keychain';
+// src/hooks/useVerticalLabels.ts  (NEW FILE)
+import { useOrg } from '../contexts/OrgContext';
+import { getPatientLabel, getVerticalOutcomeCategories } from '../../services/taxonomy/vertical-outcome-labels';
+import { getMechanismPresets } from '../../services/taxonomy/mechanism-presets';
+import { getVerticalCompliance } from '../../services/taxonomy/vertical-compliance';
+import { OUTCOME_CATEGORIES } from '../../services/taxonomy/outcome-categories';
 
-async function getEncryptionKey(): Promise<string> {
-  const credentials = await Keychain.getGenericPassword({ service: 'sitemedic-db' });
-  if (credentials) {
-    return credentials.password;
-  } else {
-    // First launch: generate new key
-    const newKey = generateRandomKey(); // 256-bit random
-    await Keychain.setGenericPassword('db-key', newKey, { service: 'sitemedic-db' });
-    return newKey;
-  }
+export function useVerticalLabels() {
+  const { primaryVertical } = useOrg();
+  const compliance = getVerticalCompliance(primaryVertical);
+
+  return {
+    patientLabel:         getPatientLabel(primaryVertical),
+    mechanismPresets:     getMechanismPresets(primaryVertical),
+    outcomeCategories:    getVerticalOutcomeCategories(OUTCOME_CATEGORIES, primaryVertical),
+    vertical:             primaryVertical,
+    riddorApplies:        compliance.riddorApplies,
+    frameworkLabel:       compliance.frameworkLabel,
+    incidentPageLabel:    compliance.incidentPageLabel,
+    reportFormLabel:      compliance.reportFormLabel,
+    postTreatmentMsg:     compliance.postTreatmentGuidance,
+    complianceBadgeLabel: compliance.complianceBadgeLabel,
+  };
 }
 ```
 
-### Anti-Pattern 3: Server-Side PDF Generation in Synchronous API Calls
-
-**What people do:** Generate PDF on-demand in API endpoint (POST /generate-pdf), blocking until complete.
-
-**Why it's wrong:**
-- PDF generation with Puppeteer can take 5-15 seconds for complex reports
-- Blocks HTTP connection, risks timeout on slow networks
-- Doesn't scale — 100 concurrent PDF requests overwhelm server
-- Poor UX (user waits 15 seconds for download)
-
-**Do this instead:** Async job queue pattern. API enqueues job, returns immediately. Background worker generates PDF, stores in S3, sends email notification when ready.
+**Web hook:**
 
 ```typescript
-// Good: Async PDF generation
-async function requestWeeklyReport(siteId: string): Promise<{ jobId: string }> {
-  const job = await pdfQueue.enqueue({
-    type: 'WEEKLY_REPORT',
-    siteId,
-    requestedBy: auth.user.id,
-  });
+// web/hooks/useVerticalLabels.ts  (NEW FILE)
+import { useOrg } from '@/contexts/org-context';
+import { getVerticalCompliance } from '@/lib/compliance/vertical-compliance';
+import { getPatientLabel } from '@/lib/taxonomy/vertical-outcome-labels';
 
-  return { jobId: job.id, status: 'PROCESSING' };
+export function useVerticalLabels() {
+  const { industryVerticals } = useOrg();
+  const primaryVertical = industryVerticals[0] ?? 'general';
+  const compliance = getVerticalCompliance(primaryVertical);
+
+  return {
+    patientLabel:         getPatientLabel(primaryVertical),
+    primaryVertical,
+    compliance,
+    riddorApplies:        compliance.riddorApplies,
+    frameworkLabel:       compliance.frameworkLabel,
+    incidentPageLabel:    compliance.incidentPageLabel,
+  };
 }
-
-// Background worker picks up job
-async function processPdfJob(job: PdfJob) {
-  const pdf = await generatePdf(job.siteId);
-  const url = await uploadToStorage(pdf);
-  await sendEmail(job.requestedBy, url);
-  await updateJobStatus(job.id, 'COMPLETED', url);
-}
 ```
 
-### Anti-Pattern 4: Syncing Entire Database on Every Reconnection
+**Key fact:** "Cast & Crew" for tv_film and "Attendee" for festivals are already returned by
+`getPatientLabel()` (confirmed from `vertical-outcome-labels.ts` lines 122–135). The function
+is complete. Only the hook wrapper and consistent usage need to be built.
 
-**What people do:** On network restore, fetch all records from server and replace local database.
+---
 
-**Why it's wrong:**
-- Wastes bandwidth (re-downloading unchanged records)
-- Slow sync (10,000 treatment records = 5+ MB download)
-- Overwrites local changes made offline
-- Doesn't scale beyond MVP
+### 7. Heat Map Architecture: Leaflet + `leaflet.heat`
 
-**Do this instead:** Delta sync with `updated_at` timestamps. Only fetch records modified since last successful sync. Push local changes first, then pull remote changes.
+**Current state confirmed from source:**
 
-### Anti-Pattern 5: No Conflict Resolution Strategy
+- `near_misses` table has `location TEXT` — free-text only. No GPS columns exist anywhere in
+  the schema (confirmed by reading `00003_health_data_tables.sql`).
+- `leaflet ^1.9.4` and `react-leaflet ^5.0.0` are installed (`web/package.json` lines 44, 51).
+- The `dynamic(..., { ssr: false })` SSR bypass pattern is established in `GeofenceMapPicker.tsx`.
+- `@types/leaflet` is already in devDependencies.
 
-**What people do:** Assume conflicts won't happen, or silently overwrite local with remote (data loss).
+**GPS capture is a prerequisite.** Before any heat map can be built:
 
-**Why it's wrong:**
-- Data loss when medic edits worker profile offline, then syncs
-- No audit trail of what changed
-- Violates GDPR principle of data accuracy
+1. **New SQL migration:** `ALTER TABLE near_misses ADD COLUMN gps_lat FLOAT8, ADD COLUMN gps_lng FLOAT8;`
+2. **WatermelonDB schema v4:** Add `{ name: 'gps_lat', type: 'number', isOptional: true }` and
+   `{ name: 'gps_lng', type: 'number', isOptional: true }` to `near_misses` table
+3. **Mobile near-miss form:** Capture GPS on form open via `expo-location.getCurrentPositionAsync()`.
+   Request permission gracefully — if denied, save near-miss without GPS coordinates.
+4. **Sync payload:** Include `gps_lat` and `gps_lng` in the near-miss sync payload.
 
-**Do this instead:** Implement Last-Write-Wins with timestamp comparison (simple, works for SiteMedic). For Phase 2, consider CRDT (Conflict-Free Replicated Data Types) if collaborative editing is needed.
+**Heat map implementation: `leaflet.heat` plugin (no new mapping library).**
 
-## Integration Points
+Since `leaflet` is already installed and actively used, `leaflet.heat` is the correct choice.
+It is a 3KB plugin that adds heat layer rendering to any Leaflet map instance. Adding Mapbox or
+Google Maps would introduce a second mapping library, API key dependency, and per-request billing.
 
-### External Services
+**Install:**
 
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| **Supabase Auth** | JWT tokens via Supabase client SDK | Store tokens in Secure Storage, handle offline token refresh gracefully (don't log out user if offline) |
-| **Supabase Storage** | S3-compatible REST API | Use pre-signed URLs for uploads (bypass CORS), enable CDN for photo delivery |
-| **SendGrid/Postmark** | Email API via Edge Function | RIDDOR alerts, weekly report delivery, certification expiry warnings |
-| **Expo Notifications** | Push notification service | Optional: alert medics when sync fails, notify managers of RIDDOR incidents |
-| **Sentry** | Error tracking SDK | Capture sync failures, offline exceptions, performance monitoring |
-
-### Internal Boundaries
-
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| **Mobile App ↔ Supabase API** | HTTPS REST (PostgREST) | Mobile app uses Supabase client SDK, authenticated via JWT tokens. RLS policies enforce tenant isolation. |
-| **Mobile App ↔ Local Database** | WatermelonDB ORM | All data access via repositories pattern, abstracts SQLite queries. Never write raw SQL in UI components. |
-| **Sync Queue ↔ Backend API** | HTTPS REST (batch operations) | Sync queue batches operations (max 50 per request) to reduce HTTP overhead. Server validates batch atomically. |
-| **Web Dashboard ↔ Supabase API** | HTTPS REST + React Query | Dashboard is read-only (no writes). Uses React Query for caching and optimistic updates. |
-| **Edge Functions ↔ Postgres** | Supabase client (server-side) | Edge Functions bypass RLS (use service role key), allowing cross-tenant queries for admin tasks. |
-| **PDF Generator ↔ Storage** | Supabase Storage SDK | Generated PDFs stored with org-scoped paths (`/{org_id}/reports/{report_id}.pdf`). Public URLs with signed tokens. |
-
-## Security & GDPR Architecture
-
-### Data Classification
-
-| Data Type | Classification | Encryption | Retention |
-|-----------|----------------|------------|-----------|
-| **Treatment records** | Special category (health data) | AES-256 at rest (SQLite + Postgres), TLS 1.3 in transit | 3 years minimum (HSE requirement) |
-| **Worker health profiles** | Special category (health data) | AES-256 at rest, TLS 1.3 in transit | While employed + 3 years post-employment |
-| **Photos (injury evidence)** | Special category (biometric/health) | Encrypted at rest (Supabase Storage), TLS 1.3 in transit | 3 years minimum |
-| **Consent records** | Personal data | AES-256 at rest, TLS 1.3 in transit | Lifetime (proof of lawful processing) |
-| **Near-miss reports** | Non-personal data (unless names included) | Standard encryption | 3 years |
-
-### Consent Management Architecture
-
-```
-[Worker onboarding in mobile app]
-    ↓
-[Medic presents consent form] → [Worker reviews terms]
-    ↓
-[Digital signature capture] → [Timestamp + medic signature]
-    ↓
-[Store consent record locally] → [Flag worker as "consented"]
-    ↓
-[Sync consent to server] → [Enable data processing via RLS]
-    ↓
-[Dashboard enforces consent] → [Only show consented workers in reports]
+```bash
+pnpm add leaflet.heat
+pnpm add -D @types/leaflet.heat
 ```
 
-**RLS Policy for Consent:**
-```sql
--- Only process data for workers who have given consent
-CREATE POLICY "Only access consented workers"
-ON workers
-FOR SELECT
-USING (
-  consent_given = true
-  AND consent_timestamp IS NOT NULL
-  AND organization_id = (SELECT organization_id FROM users WHERE id = auth.uid())
+**Component structure (follows existing `GeofenceMapPicker.tsx` pattern):**
+
+```typescript
+// web/components/incidents/NearMissHeatMap.tsx  (import wrapper)
+import dynamic from 'next/dynamic';
+
+export const NearMissHeatMap = dynamic(
+  () => import('./NearMissHeatMapInner'),
+  { ssr: false }
 );
 ```
 
-### Data Sovereignty (UK GDPR)
+```typescript
+// web/components/incidents/NearMissHeatMapInner.tsx  (actual component)
+'use client';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import { useEffect } from 'react';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet.heat';
 
-- **Server location:** Supabase EU West (London) region for all databases and storage
-- **Backup location:** Backups must remain in UK/EEA (configure Supabase region)
-- **Data transfer:** No data leaves UK/EEA (disable Supabase global CDN, use EU-only CDN)
-- **Vendor compliance:** Supabase is GDPR-compliant (Data Processing Agreement in place)
+type SeverityWeight = { low: number; medium: number; high: number; critical: number };
+const SEVERITY_WEIGHT: SeverityWeight = { low: 0.3, medium: 0.5, high: 0.8, critical: 1.0 };
 
-## Build Order Implications
+function HeatLayer({ points }: { points: [number, number, number][] }) {
+  const map = useMap();
+  useEffect(() => {
+    const layer = (window.L as any).heatLayer(points, {
+      radius: 25,
+      blur: 15,
+      gradient: { 0.4: '#3b82f6', 0.65: '#f59e0b', 1.0: '#ef4444' },
+    }).addTo(map);
+    return () => { map.removeLayer(layer); };
+  }, [map, points]);
+  return null;
+}
 
-### Phase 1: Foundation (Backend + Auth)
-**Why first:** Mobile app and web dashboard both depend on backend API and auth.
+interface NearMissPoint { gps_lat: number; gps_lng: number; severity: string; }
 
-**Components:**
-1. Supabase project setup (UK region)
-2. Database schema + RLS policies
-3. Auth flows (login, JWT refresh)
-4. Basic API endpoints (treatments, workers)
+export default function NearMissHeatMapInner({ incidents }: { incidents: NearMissPoint[] }) {
+  const points: [number, number, number][] = incidents
+    .filter(i => i.gps_lat != null && i.gps_lng != null)
+    .map(i => [i.gps_lat, i.gps_lng, SEVERITY_WEIGHT[i.severity as keyof SeverityWeight] ?? 0.5]);
 
-**Deliverable:** Working API with RLS, testable via Postman/Insomnia
+  return (
+    <MapContainer center={[51.5, -0.1]} zoom={12} style={{ height: '400px', width: '100%' }}>
+      <TileLayer
+        attribution='&copy; OpenStreetMap contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      {points.length > 0 && <HeatLayer points={points} />}
+    </MapContainer>
+  );
+}
+```
 
----
+**Note on `@types/leaflet.heat`:** The types package exists on npm but has historically had
+maintenance gaps. If it is missing or incomplete, a local declaration shim is sufficient:
 
-### Phase 2: Mobile App Core (Offline Storage)
-**Why second:** Core value is offline-first mobile app. Must work without backend.
+```typescript
+// web/types/leaflet-heat.d.ts
+declare module 'leaflet.heat' {}
+```
 
-**Components:**
-1. WatermelonDB schema + migrations
-2. Encryption setup (SQLCipher + Keychain)
-3. Treatment logging screen (local-only)
-4. Worker profile screen (local-only)
-
-**Deliverable:** Mobile app works 100% offline, stores encrypted data locally
-
----
-
-### Phase 3: Sync Engine
-**Why third:** Connects mobile app to backend, enables data flow to dashboard.
-
-**Components:**
-1. Sync queue implementation
-2. Delta sync with conflict resolution
-3. Background sync orchestration
-4. Network monitoring
-
-**Deliverable:** Mobile app syncs data to backend when online
-
----
-
-### Phase 4: Photo Upload + Compression
-**Why fourth:** Builds on sync engine, adds photo handling.
-
-**Components:**
-1. On-device compression
-2. Supabase Storage integration
-3. Progressive upload (preview + full-quality)
-
-**Deliverable:** Photos sync reliably on slow networks
+**Alternative with zero new packages:** Use Leaflet `CircleMarker` components scaled by severity
+(radius = severity × 20, opacity = 0.4). Less visually "heat map" but zero new dependencies and
+works today with existing installed packages.
 
 ---
 
-### Phase 5: Web Dashboard
-**Why fifth:** Depends on backend API having data from mobile app.
+### 8. Trend Charts Architecture: Recharts (Already Installed)
 
-**Components:**
-1. Treatment log view
-2. Worker registry
-3. Compliance score calculation
-4. Real-time updates (React Query polling)
+**Confirmed from source:**
 
-**Deliverable:** Managers can view treatment data in browser
+`recharts ^3.7.0` is in `web/package.json` line 53. Recharts is in active use across 4 existing
+components: `OverridePatternChart.tsx` (BarChart), `revenue-charts.tsx`, `medic-utilisation-charts.tsx`,
+`assignment-analytics-charts.tsx`. All follow the `<ResponsiveContainer>` wrapping pattern.
+
+**Decision: Recharts with TanStack Query. No new chart library.**
+
+Adding Chart.js, Victory, or Nivo would create inconsistency for zero benefit. The existing
+Recharts pattern is mature and consistent — follow it.
+
+**Compliance score history chart:**
+
+```typescript
+// web/components/compliance/ComplianceScoreChart.tsx
+'use client';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip, ReferenceLine, ResponsiveContainer
+} from 'recharts';
+
+interface WeeklyScore { week_ending: string; compliance_score: number; }
+
+export function ComplianceScoreChart({ data }: { data: WeeklyScore[] }) {
+  return (
+    <ResponsiveContainer width="100%" height={250}>
+      <LineChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="week_ending" />
+        <YAxis domain={[0, 100]} unit="%" />
+        <ReferenceLine y={80} stroke="#10b981" strokeDasharray="4 4" label="Target" />
+        <Tooltip formatter={(value: number) => `${value}%`} />
+        <Line type="monotone" dataKey="compliance_score" stroke="#3b82f6"
+              strokeWidth={2} dot={false} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+```
+
+**Incident frequency chart:**
+
+```typescript
+// web/components/incidents/IncidentFrequencyChart.tsx
+'use client';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+// data shape: [{ week: 'YYYY-MM-DD', riddor: 2, event_incident: 5, near_miss: 3 }]
+```
+
+**TanStack Query data fetching (follows existing codebase pattern):**
+
+```typescript
+// In dashboard page component
+const { data: scoreHistory = [] } = useQuery({
+  queryKey: ['compliance-score-history', orgId],
+  queryFn: () => fetchComplianceScoreHistory(orgId!),
+  enabled: !!orgId,
+  staleTime: 5 * 60 * 1000,  // 5 minutes — score history is not real-time
+});
+```
+
+**Compliance score history table — required DB addition:**
+
+No `compliance_score_history` table currently exists (confirmed by checking the migration files).
+The `generate-weekly-report` Edge Function computes a score but does not persist it in a
+queryable format. A new migration and Edge Function update are required:
+
+```sql
+-- New migration: compliance_score_history
+CREATE TABLE compliance_score_history (
+  id               UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  org_id           UUID        NOT NULL REFERENCES organizations(id),
+  week_ending      DATE        NOT NULL,
+  compliance_score INTEGER     NOT NULL CHECK (compliance_score BETWEEN 0 AND 100),
+  treatment_count  INTEGER     DEFAULT 0,
+  near_miss_count  INTEGER     DEFAULT 0,
+  riddor_count     INTEGER     DEFAULT 0,
+  created_at       TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(org_id, week_ending)
+);
+
+CREATE INDEX idx_compliance_score_history_org_week
+  ON compliance_score_history (org_id, week_ending DESC);
+
+ALTER TABLE compliance_score_history ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "org_read_score_history"
+  ON compliance_score_history FOR SELECT
+  USING (org_id = get_user_org_id());
+```
+
+The `generate-weekly-report` Edge Function `index.tsx` should upsert into this table after
+computing the weekly score, using `ON CONFLICT (org_id, week_ending) DO UPDATE`.
 
 ---
 
-### Phase 6: PDF Generation
-**Why sixth:** Depends on dashboard having mature data model.
+## Data Flow: Vertical from `org_settings` to PDF
 
-**Components:**
-1. PDF template design
-2. Serverless function (Puppeteer/PDFKit)
-3. Weekly report logic
-4. Email delivery
+```
+org_settings.industry_verticals (JSONB array in PostgreSQL)
+  │
+  ├── WEB PATH:
+  │   OrgProvider (web/app/layout.tsx wraps entire app)
+  │     fetches org_settings once on auth
+  │     → industryVerticals in OrgContext
+  │     → useOrg().industryVerticals[0] = primaryVertical
+  │     → getVerticalCompliance(primaryVertical) = compliance config
+  │         → RIDDOR page header, cert recommendations, PDF dispatch
+  │
+  └── MOBILE PATH:
+      OrgProvider (NEW, app/_layout.tsx inside AuthProvider)
+        fetches org_settings once on auth
+        → primaryVertical in OrgContext
+        → useVerticalLabels() hook
+            → patientLabel, mechanismPresets, outcomeCategories
+            → new.tsx treatment form (replaces fetchOrgVertical())
+                → Treatment record with event_vertical saved to WatermelonDB
+                    → Sync to Supabase treatments table
+                        → Web dashboard reads treatment
+                            → incident-report-dispatcher selects PDF Edge Function
+                                → Edge Function renders PDF
+                                    → Signed URL → download button
+```
 
-**Deliverable:** Auto-generated weekly safety PDFs
+**Booking context override:**
+
+When a treatment is opened from a specific booking, the booking's `event_vertical` takes
+precedence over the org's default vertical. This is passed as a route param:
+
+```
+/treatment/new?booking_id=xxx&event_vertical=motorsport
+```
+
+The treatment form reads the param first, falls back to `useOrg().primaryVertical`:
+
+```typescript
+const params = useLocalSearchParams();
+const { primaryVertical } = useOrg();
+const vertical = (params.event_vertical as string) ?? primaryVertical;
+```
 
 ---
 
-### Phase 7: Compliance Features
-**Why seventh:** Polish layer on top of working system.
+## Component Boundaries
 
-**Components:**
-1. RIDDOR auto-flagging
-2. Certification expiry tracking
-3. Email alerts
-4. Consent management UI
-
-**Deliverable:** Full GDPR + RIDDOR compliance
+| Component | Responsibility | Communicates With |
+|-----------|---------------|-------------------|
+| `OrgContext` (mobile) | Provides `orgId`, `industryVerticals`, `primaryVertical` | AuthContext (depends on), all screens (provides to) |
+| `OrgContext` (web, existing) | Same for web, also exposes `role`, `orgSlug` | All web pages via `useOrg()` |
+| `useVerticalLabels()` (mobile + web) | Pure derivation of display labels from vertical | OrgContext (reads), form/UI (provides to) |
+| `new.tsx` treatment form | Captures treatment, adapts UI to vertical | OrgContext, WatermelonDB, SyncContext |
+| `taxonomy/` files | Pure lookup functions (no state, no side effects) | Used by both mobile and web |
+| `incident-report-dispatcher.ts` | Routes to correct PDF Edge Function by framework | Web dashboard, Edge Functions |
+| `NearMissHeatMap` | Renders GPS coordinates as Leaflet heat layer | Leaflet, TanStack Query |
+| `ComplianceScoreChart` | Renders compliance trend as Recharts line chart | Recharts, TanStack Query |
+| PDF Edge Functions | Render vertical-specific PDF, upload to storage | `@react-pdf/renderer`, Supabase Storage |
+| `compliance_score_history` table | Persists weekly scores for trend charts | `generate-weekly-report` (writes), chart queries (reads) |
 
 ---
 
-## Technology Recommendations (Context-Specific)
+## Suggested Build Order
 
-Based on SiteMedic's constraints and requirements:
+Ordered by dependency. Schema changes must precede code that uses them. Mobile context must
+precede hooks that use it. Hooks must precede UI that uses them.
 
-### Validated Choices
+**Phase 1 — Schema Foundation**
 
-| Technology | Reason | Alternative Considered |
-|-----------|--------|------------------------|
-| **WatermelonDB** | Best offline-first SQLite ORM for React Native, mature sync support, built-in observable pattern | Realm (sunset in 2023), SQLite direct (too low-level) |
-| **Supabase** | PostgreSQL + Auth + Storage + UK hosting in one service, excellent RLS support, fast to ship | Firebase (US-only hosting, GDPR concerns), custom Node.js API (slower MVP) |
-| **React Query** | Industry-standard server state management for React, excellent caching, TypeScript support | Redux (overkill for read-only dashboard), SWR (less mature) |
-| **Expo** | Fastest React Native DX, handles native builds, OTA updates, great offline testing tools | Bare React Native (slower setup, manual native code), Flutter (non-JavaScript) |
-| **SQLCipher** | Industry-standard SQLite encryption (AES-256), FIPS 140-2 validated, GDPR-compliant | Custom encryption (reinventing wheel), Realm Encryption (Realm deprecated) |
+Prerequisite for all form and chart work. No user-visible output yet.
 
-### Open Questions (Defer to Implementation Phase)
+1. WatermelonDB schema v4 migration: `event_vertical` on `treatments`, `gps_lat`/`gps_lng` on `near_misses`, `vertical_extra_fields` on `treatments`
+2. SQL migration: `gps_lat`/`gps_lng` on Supabase `near_misses`, `vertical_extra_fields` on `treatments`
+3. SQL migration: `compliance_score_history` table
 
-- **PDF Library:** Puppeteer (headless Chrome, heavy) vs PDFKit (lightweight, manual layout) — test both for performance
-- **Push Notifications:** Expo Notifications (simpler) vs Firebase Cloud Messaging (more control) — depends on alert complexity
-- **Background Sync:** React Native Background Task (limited to 15-min intervals) vs WorkManager (Android-only) — test iOS background constraints
+**Phase 2 — Mobile Context + Form Cleanup**
+
+Establishes the consistent vertical signal on mobile. Removes the per-render network call.
+
+4. Mobile `OrgContext` (`src/contexts/OrgContext.tsx`)
+5. Register `OrgProvider` in `app/_layout.tsx`
+6. `useVerticalLabels()` hook (`src/hooks/useVerticalLabels.ts`)
+7. Update `new.tsx` — replace `fetchOrgVertical()` with `useOrg()`, accept `event_vertical` route param
+8. Add vertical-specific conditional sections to `new.tsx`
+9. Capture `vertical_extra_fields` in form and include in sync payload
+
+**Phase 3 — GPS Data Capture**
+
+Enables the heat map. Must happen before the heat map page exists.
+
+10. GPS capture in `app/safety/near-miss.tsx` (request permission, capture on open)
+11. Include GPS in near-miss sync payload and WatermelonDB model
+
+**Phase 4 — Web Dashboard Vertical Wiring**
+
+Lower priority than mobile because the web OrgContext already works. This is polish.
+
+12. `useVerticalLabels()` hook (web)
+13. Cert profile UI: use `getRecommendedCertTypes(vertical)` in admin medic edit form type selector
+14. Update `generate-weekly-report` Edge Function to upsert into `compliance_score_history`
+
+**Phase 5 — PDF Generation for New Verticals**
+
+Depends on Phase 2 (correct `event_vertical` in treatments) and Phase 4 (stable compliance data).
+
+15. `event-incident-report-generator` Edge Function (festivals, fairs_shows, private_events)
+16. `motorsport-incident-generator` Edge Function
+17. `fa-incident-generator` Edge Function
+18. `incident-report-dispatcher.ts` web utility
+
+**Phase 6 — Analytics and Visualization**
+
+Read-only layer. All data it visualizes must be captured first (Phases 1–5).
+
+19. `ComplianceScoreChart` component + TanStack Query wiring
+20. `IncidentFrequencyChart` component
+21. Install `leaflet.heat` + `@types/leaflet.heat` (or write type shim)
+22. `NearMissHeatMap` component
+23. Heat map page in dashboard
+
+---
+
+## Open Gaps Requiring Decisions Before Implementation
+
+| Gap | Question | Affects Phase |
+|-----|----------|--------------|
+| Multi-vertical org default | If an org serves both `construction` and `festivals`, which vertical does an ad-hoc treatment form default to? First in `industry_verticals` array is the current assumption — is this right? | Phase 2 |
+| Booking → treatment linkage | Does the mobile app currently pass `booking_id` as a route param to `new.tsx`? If not, the booking vertical override requires adding a booking detail → new treatment navigation path. | Phase 2 |
+| GPS permission UX | The near-miss form should explain why GPS is being requested ("helps identify hazard hotspots"). A denied permission should save the near-miss without coordinates — not block submission. | Phase 3 |
+| Compliance score formula | What is the exact formula for `compliance_score`? The weekly report calculates it but it must be formally defined before `compliance_score_history` values are meaningful for trend analysis. | Phase 4 |
+| `leaflet.heat` version compatibility | Verify `leaflet.heat` is compatible with `react-leaflet ^5.0.0` (which uses Leaflet 1.9.x). The plugin targets Leaflet 1.x so it should work, but confirm before Phase 6. | Phase 6 |
+
+---
+
+## Confidence Assessment
+
+| Area | Confidence | Basis |
+|------|------------|-------|
+| Existing code inventory (what's built) | HIGH | Every file read directly from source |
+| Provider tree placement | HIGH | Read `app/_layout.tsx` and `web/app/layout.tsx` |
+| WatermelonDB schema state | HIGH | Read `schema.ts` v3 and `migrations.ts` |
+| No GPS on near_misses | HIGH | Read `00003_health_data_tables.sql` — `location TEXT` only |
+| Recharts availability + usage | HIGH | Confirmed in `package.json` + 4 usage sites found |
+| Leaflet availability + SSR pattern | HIGH | Confirmed in `package.json` + `GeofenceMapPicker.tsx` |
+| `leaflet.heat` recommendation | MEDIUM | Package exists and is in active use on npm; not installed yet — version compatibility with react-leaflet 5 should be verified |
+| `compliance_score_history` table absence | HIGH | Scanned all migration files, table not present |
+| PDF Edge Function pattern | HIGH | Read both existing functions in full |
+| Cert taxonomy completeness | HIGH | Read both certification type files — all 32 types + 7 categories present |
+
+---
 
 ## Sources
 
-**Offline-First Architecture:**
-- [Offline-First Architecture: Designing for Reality, Not Just the Cloud](https://medium.com/@jusuftopic/offline-first-architecture-designing-for-reality-not-just-the-cloud-e5fd18e50a79)
-- [React Native 2026: Mastering Offline-First Architecture](https://javascript.plainenglish.io/react-native-2026-mastering-offline-first-architecture-ad9df4cb61ae)
-- [5 Critical Components for Implementing Offline-First Strategy](https://medium.com/@therahulpahuja/5-critical-components-for-implementing-a-successful-offline-first-strategy-in-mobile-applications-849a6e1c5d57)
+All findings verified against these files (no external web search used for inventory claims):
 
-**React Native Sync Patterns:**
-- [How to Implement Data Sync Between Local and Remote in React Native](https://oneuptime.com/blog/post/2026-01-15-react-native-data-sync/view)
-- [Building Offline-First React Native Apps: The Complete Guide (2026)](https://javascript.plainenglish.io/building-offline-first-react-native-apps-the-complete-guide-2026-68ff77c7bb06)
-
-**Conflict Resolution:**
-- [How to Build Offline Capabilities](https://oneuptime.com/blog/post/2026-01-30-offline-capabilities/view)
-- [Offline-First Done Right: Sync Patterns for Real-World Mobile Networks](https://developersvoice.com/blog/mobile/offline-first-sync-patterns/)
-
-**Supabase + React Native:**
-- [Offline-first React Native Apps with Expo, WatermelonDB, and Supabase](https://supabase.com/blog/react-native-offline-first-watermelon-db)
-- [PowerSync: Bringing Offline-First To Supabase](https://www.powersync.com/blog/bringing-offline-first-to-supabase)
-
-**Photo Upload & Compression:**
-- [Offline File Sync: Developer Guide 2024](https://daily.dev/blog/offline-file-sync-developer-guide-2024)
-- [The Future of Image Optimization](https://medium.com/@kocsis.david89/the-future-of-image-optimization-37bc8e390735)
-
-**PDF Generation:**
-- [6 Best PDF Generation APIs in 2026](https://craftmypdf.com/blog/best-pdf-generation-apis/)
-- [Why Generating PDF Documents Server-Side](https://www.textcontrol.com/blog/2021/12/30/generating-pdf-documents-in-the-browser/)
-
-**GDPR Compliance:**
-- [GDPR Mobile App Compliance: Development Guide](https://complydog.com/blog/gdpr-mobile-app-compliance-development-guide)
-- [GDPR Compliance for Developers: Practical Implementation in 2026](https://dasroot.net/posts/2026/02/gdpr-compliance-developers-practical-implementation-2026/)
-- [Mobile App Consent Management SDK: What You Need to Know in 2025](https://secureprivacy.ai/blog/mobile-app-sdk-consent-management)
-
-**Background Sync:**
-- [How to Implement Background Sync in React Native](https://oneuptime.com/blog/post/2026-01-15-react-native-background-sync/view)
-- [React Native Queue (GitHub)](https://github.com/billmalarky/react-native-queue)
-
-**Encryption:**
-- [React Native Encryption and Encrypted Database/Storage](https://rxdb.info/articles/react-native-encryption.html)
-- [Best SQLite Solutions for React Native App Development in 2026](https://vibe.forem.com/eira-wexford/best-sqlite-solutions-for-react-native-app-development-in-2026-3b5l)
-
-**WatermelonDB:**
-- [WatermelonDB GitHub](https://github.com/Nozbe/WatermelonDB)
-- [Sync Data Offline with WatermelonDB](https://www.somethingsblog.com/2024/10/21/sync-data-offline-with-watermelondb/)
-- [Using WatermelonDB for offline data sync](https://blog.logrocket.com/watermelondb-offline-data-sync/)
-
-**Multi-Tenant Architecture:**
-- [Multi-Tenant Mobile Architecture](https://medium.com/@ranvirpawar08/multi-tenant-mobile-architecture-c950e793efb7)
-- [Architecting Secure Multi-Tenant Data Isolation](https://medium.com/@justhamade/architecting-secure-multi-tenant-data-isolation-d8f36cb0d25e)
-
----
-*Architecture research for: SiteMedic offline-first medical compliance platform*
-*Researched: 2026-02-15*
+- `/Users/sabineresoagli/GitHub/sitemedic/app/_layout.tsx`
+- `/Users/sabineresoagli/GitHub/sitemedic/app/treatment/new.tsx`
+- `/Users/sabineresoagli/GitHub/sitemedic/app/(tabs)/settings.tsx`
+- `/Users/sabineresoagli/GitHub/sitemedic/src/contexts/AuthContext.tsx`
+- `/Users/sabineresoagli/GitHub/sitemedic/src/database/schema.ts`
+- `/Users/sabineresoagli/GitHub/sitemedic/src/database/migrations.ts`
+- `/Users/sabineresoagli/GitHub/sitemedic/src/database/models/NearMiss.ts`
+- `/Users/sabineresoagli/GitHub/sitemedic/services/taxonomy/vertical-compliance.ts`
+- `/Users/sabineresoagli/GitHub/sitemedic/services/taxonomy/certification-types.ts`
+- `/Users/sabineresoagli/GitHub/sitemedic/services/taxonomy/mechanism-presets.ts`
+- `/Users/sabineresoagli/GitHub/sitemedic/services/taxonomy/vertical-outcome-labels.ts`
+- `/Users/sabineresoagli/GitHub/sitemedic/web/types/certification.types.ts`
+- `/Users/sabineresoagli/GitHub/sitemedic/web/contexts/org-context.tsx`
+- `/Users/sabineresoagli/GitHub/sitemedic/web/app/layout.tsx`
+- `/Users/sabineresoagli/GitHub/sitemedic/web/app/(dashboard)/riddor/page.tsx`
+- `/Users/sabineresoagli/GitHub/sitemedic/web/app/api/medics/[id]/certifications/route.ts`
+- `/Users/sabineresoagli/GitHub/sitemedic/web/app/medic/profile/page.tsx`
+- `/Users/sabineresoagli/GitHub/sitemedic/web/lib/compliance/vertical-compliance.ts`
+- `/Users/sabineresoagli/GitHub/sitemedic/web/components/admin/GeofenceMapPicker.tsx`
+- `/Users/sabineresoagli/GitHub/sitemedic/web/components/riddor/OverridePatternChart.tsx`
+- `/Users/sabineresoagli/GitHub/sitemedic/web/package.json`
+- `/Users/sabineresoagli/GitHub/sitemedic/supabase/migrations/00003_health_data_tables.sql`
+- `/Users/sabineresoagli/GitHub/sitemedic/supabase/migrations/123_booking_briefs.sql`
+- `/Users/sabineresoagli/GitHub/sitemedic/supabase/functions/generate-weekly-report/index.tsx`
+- `/Users/sabineresoagli/GitHub/sitemedic/supabase/functions/riddor-f2508-generator/index.ts`
