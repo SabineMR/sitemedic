@@ -13,7 +13,7 @@ interface Booking {
   site_name: string;
   shift_date: string;
   shift_hours: number;
-  total_amount: number;
+  total: number;
   status: string;
   medic_id: string;
   site_postcode: string;
@@ -216,7 +216,7 @@ export function OutOfTerritoryApproval({ bookingId }: OutOfTerritoryApprovalProp
           </div>
           <div>
             <p className="text-gray-500">Total Amount</p>
-            <p className="font-medium text-gray-900">£{booking.total_amount.toFixed(2)}</p>
+            <p className="font-medium text-gray-900">£{booking.total.toFixed(2)}</p>
           </div>
         </div>
       </div>

@@ -60,7 +60,7 @@ export default function RevenuePage() {
       const supabase = createClient();
       const { data: bookings } = await supabase
         .from('bookings')
-        .select('shift_date, site_postcode, total_amount, platform_fee, medic_payout, status, clients(company_name)')
+        .select('shift_date, site_postcode, total, platform_fee, medic_payout, status, clients(company_name)')
         .eq('org_id', orgId)
         .eq('status', 'completed')
         .gte('shift_date', startDate.toISOString().split('T')[0])

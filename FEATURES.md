@@ -7850,6 +7850,25 @@ The system supports four primary user roles:
   - **Verification**: Added DO block to verify role is set correctly and raise notice/warning
   - **Impact**: JWT tokens now reliably include `app_metadata.role = 'platform_admin'` for authentication flow
 
+**Org Admin Account Setup** (Added 2026-02-18):
+- **Script**: `web/web/create-org-admin.mjs` — Creates `sabine@joinour.build` as `org_admin` for Apex Safety Solutions
+- **How to run**: `cd web && node web/create-org-admin.mjs` (requires `.env.local` with `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`)
+- **Account details**:
+  - Email: `sabine@joinour.build`
+  - Password: `password123`
+  - Role: `org_admin`
+  - Organization: Apex Safety Solutions (slug: `apex`)
+- **What this account can do**: Manage Apex Safety Solutions data (clients, medics, bookings, timesheets, invoices, territories, org settings) via `/admin` routes
+- **What this account cannot do**: Access other organizations' data or platform-level settings (`/platform` routes)
+- **JWT metadata**: `app_metadata` contains `role: "org_admin"`, `org_id`, and `org_slug: "apex"` — used by RLS policies and `useOrg()` context hook
+- **Difference from platform admin**: Platform admin (`sabineresoagli@gmail.com`) has cross-org access with `org_id = NULL`; org admin (`sabine@joinour.build`) is scoped to Apex Safety Solutions only
+
+**Admin Accounts Summary**:
+| Email | Role | Org | Routes | Purpose |
+|-------|------|-----|--------|---------|
+| `sabineresoagli@gmail.com` | `platform_admin` | None (cross-org) | `/platform` | Manage entire SiteMedic platform |
+| `sabine@joinour.build` | `org_admin` | Apex Safety Solutions | `/admin` | Manage Apex Safety Solutions org |
+
 **Error Handling**: `web/app/admin/error.tsx`
 - Catches "not assigned to an organization" errors
 - Redirects platform admins to `/platform` if they somehow reach `/admin`
@@ -7874,6 +7893,9 @@ The system supports four primary user roles:
 - **Routes**:
   - `web/app/admin/` (organization admin UI)
   - `web/app/platform/` (platform admin UI)
+- **Setup Scripts**:
+  - `web/web/create-admin.mjs` (creates platform admin user via Supabase Admin API)
+  - `web/web/create-org-admin.mjs` (creates org admin `sabine@joinour.build` for Apex Safety Solutions)
 - **Error Handling**:
   - `web/app/admin/error.tsx` (catches org assignment errors and redirects)
 

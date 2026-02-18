@@ -93,16 +93,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Calculate totals
+    // Calculate totals from actual booking columns (not reverse-calculated)
     let subtotal = 0;
+    let vat = 0;
+    let total = 0;
     for (const booking of bookings) {
-      // Total is already inclusive of VAT, so we need to extract the pre-VAT amount
-      const preVatAmount = booking.total_amount / 1.2;
-      subtotal += preVatAmount;
+      subtotal += Number(booking.subtotal) || 0;
+      vat += Number(booking.vat) || 0;
+      total += Number(booking.total) || 0;
     }
-
-    const vat = subtotal * 0.2;
-    const total = subtotal + vat;
 
     // Generate invoice number (using sequence)
     const { data: seqData, error: seqError } = await supabase.rpc('get_next_invoice_number');
@@ -151,8 +150,8 @@ export async function POST(req: NextRequest) {
       booking_id: booking.id,
       description: `Medic service - ${booking.site_name} on ${new Date(booking.shift_date).toLocaleDateString('en-GB')}`,
       quantity: booking.shift_hours,
-      unit_price: Number((booking.total_amount / booking.shift_hours).toFixed(2)),
-      amount: Number(booking.total_amount.toFixed(2)),
+      unit_price: Number((booking.total / booking.shift_hours).toFixed(2)),
+      amount: Number(booking.total.toFixed(2)),
     }));
 
     const { error: lineItemsError } = await supabase
@@ -188,7 +187,7 @@ export async function POST(req: NextRequest) {
 
     const emailResult = await resend.emails.send({
       from: 'invoices@sitemedic.co.uk',
-      to: client.email,
+      to: client.contact_email,
       subject: `Invoice ${invoice.invoice_number} from SiteMedic — ${totalFormatted}`,
       html: `
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#111">
@@ -196,7 +195,7 @@ export async function POST(req: NextRequest) {
             <h1 style="color:#fff;margin:0;font-size:22px">SiteMedic Invoice</h1>
           </div>
           <div style="border:1px solid #e5e7eb;border-top:none;padding:32px;border-radius:0 0 8px 8px">
-            <p style="margin-top:0">Dear ${client.name},</p>
+            <p style="margin-top:0">Dear ${client.contact_name || client.company_name},</p>
             <p>Please find your invoice details below.</p>
             <table style="width:100%;border-collapse:collapse;margin:20px 0">
               <tr style="background:#f9fafb">

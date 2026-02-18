@@ -64,6 +64,14 @@ interface OrgSettings {
   mileage_enabled: boolean;
   mileage_rate_pence: number;
   referral_commission_percent: number;
+  // Notification preferences
+  notification_preferences: {
+    booking_confirmations: boolean;
+    riddor_alerts: boolean;
+    cert_expiry: boolean;
+    payout_summaries: boolean;
+    cashflow_alerts: boolean;
+  } | null;
 }
 
 export default function SettingsPage() {

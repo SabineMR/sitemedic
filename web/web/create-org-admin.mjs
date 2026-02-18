@@ -37,7 +37,9 @@ async function createOrgAdmin() {
 
     console.log(`Found org: ${org.name} (${org.id})`)
 
-    // Step 2: Create auth user with org_admin role in metadata
+    // Step 2: Create or update auth user with org_admin role in metadata
+    let userId
+
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: 'sabine@joinour.build',
       password: 'password123',
@@ -56,18 +58,58 @@ async function createOrgAdmin() {
       }
     })
 
-    if (authError) {
+    if (authError && authError.code === 'email_exists') {
+      // User already exists — find them and update their metadata
+      console.log('User already exists, updating role and metadata...')
+
+      const { data: { users }, error: listError } = await supabase.auth.admin.listUsers()
+      if (listError) {
+        console.error('List users error:', listError)
+        return
+      }
+
+      const existingUser = users.find(u => u.email === 'sabine@joinour.build')
+      if (!existingUser) {
+        console.error('Could not find existing user sabine@joinour.build')
+        return
+      }
+
+      userId = existingUser.id
+
+      const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+        app_metadata: {
+          provider: 'email',
+          providers: ['email'],
+          role: 'org_admin',
+          org_id: org.id,
+          org_slug: org.slug
+        },
+        user_metadata: {
+          role: 'org_admin',
+          full_name: 'Sabine Resoagli',
+          org_id: org.id
+        }
+      })
+
+      if (updateError) {
+        console.error('Update error:', updateError)
+        return
+      }
+
+      console.log('Auth user updated:', userId)
+    } else if (authError) {
       console.error('Auth error:', authError)
       return
+    } else {
+      userId = authData.user.id
+      console.log('Auth user created:', userId)
     }
-
-    console.log('Auth user created:', authData.user.id)
 
     // Step 3: Upsert profile with org_admin role linked to Apex org
     const { error: profileError } = await supabase
       .from('profiles')
       .upsert({
-        id: authData.user.id,
+        id: userId,
         org_id: org.id,
         email: 'sabine@joinour.build',
         full_name: 'Sabine Resoagli',
@@ -80,7 +122,7 @@ async function createOrgAdmin() {
       return
     }
 
-    console.log('Profile created')
+    console.log('Profile updated')
     console.log('')
     console.log('Org Admin user ready:')
     console.log('  Email:    sabine@joinour.build')
