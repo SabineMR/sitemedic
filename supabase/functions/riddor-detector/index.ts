@@ -72,7 +72,13 @@ serve(async (req: Request) => {
     }
 
     // Vertical gate — RIDDOR only applies to specific workplace verticals.
-    const NON_RIDDOR_VERTICALS = ['festivals', 'motorsport', 'sporting_events', 'fairs_shows', 'private_events'];
+    const NON_RIDDOR_VERTICALS = [
+      'festivals',
+      'motorsport',
+      'sporting_events',  // FOOT-04: players are not workers under RIDDOR; spectator incidents are also non-RIDDOR
+      'fairs_shows',
+      'private_events',
+    ];
 
     // Resolve effective vertical: prefer booking-level event_vertical on treatment,
     // fall back to org primary vertical from org_settings.
