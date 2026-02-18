@@ -42,6 +42,8 @@ export const CERT_TYPES = [
   'Enhanced DBS (Barred Lists)',
 
   // ── Motorsport ──────────────────────────────────────────────────────────
+  'Motorsport UK Medical Official Licence',
+  'BASM Diploma',
   'FIA Grade 1',
   'FIA Grade 2',
   'FIA Grade 3',
@@ -115,6 +117,8 @@ export const CERT_TYPE_INFO: Record<CertType, CertTypeInfo> = {
   'Enhanced DBS (Adults)':       { label: 'Enhanced DBS (Adults)', category: 'dbs', description: 'DBS Enhanced — working with vulnerable adults' },
   'Enhanced DBS (Barred Lists)': { label: 'Enhanced DBS + Barred Lists', category: 'dbs', description: 'DBS Enhanced including barred lists' },
 
+  'Motorsport UK Medical Official Licence': { label: 'Motorsport UK Medical Official Licence', category: 'motorsport', description: 'Motorsport UK official medical registration (Doctor / Paramedic / Medical Assistant)' },
+  'BASM Diploma':             { label: 'BASM Diploma', category: 'motorsport', description: 'British Association of Sport and Exercise Medicine diploma' },
   'FIA Grade 1':              { label: 'FIA Grade 1', category: 'motorsport', description: 'Circuit Medical Officer (F1/WEC)' },
   'FIA Grade 2':              { label: 'FIA Grade 2', category: 'motorsport', description: 'Medical Car / Track Doctor' },
   'FIA Grade 3':              { label: 'FIA Grade 3', category: 'motorsport', description: 'First Responder — national circuit events' },
@@ -172,7 +176,7 @@ export const VERTICAL_CERT_TYPES: Record<string, CertType[]> = {
   tv_film:      ['HCPC Paramedic', 'ScreenSkills Production Safety Passport', 'FREC 4', 'EFR', 'PHEC', 'PHTLS', 'ALS Provider', 'ATLS', 'FREC 3'],
   corporate:    ['FREC 3', 'FREC 4', 'PHEC', 'HCPC Paramedic', 'ALS Provider', 'AED Trained', 'NEBOSH General Certificate'],
   festivals:    ['FREC 3', 'FREC 4', 'PHEC', 'HCPC Paramedic', 'ALS Provider', 'PHTLS', 'AED Trained', 'SIA Door Supervisor', 'Purple Guide Certificate', 'Event Safety Awareness'],
-  motorsport:   ['FREC 4', 'PHEC', 'HCPC Paramedic', 'ALS Provider', 'ATLS', 'PHTLS', 'FIA Grade 1', 'FIA Grade 2', 'FIA Grade 3', 'Motorsport UK CMO Letter', 'MSA First Aider'],
+  motorsport:   ['Motorsport UK Medical Official Licence', 'HCPC Paramedic', 'PHTLS', 'FREC 4', 'PHEC', 'ALS Provider', 'ATLS', 'BASM Diploma', 'FIA Grade 1', 'FIA Grade 2', 'FIA Grade 3', 'Motorsport UK CMO Letter', 'MSA First Aider'],
   sporting_events: [
     'ATMMiF',
     'ITMMiF',

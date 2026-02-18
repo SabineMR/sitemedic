@@ -50,6 +50,8 @@ export const UK_CERT_TYPES = [
   'Enhanced DBS (Barred Lists)',     // DBS Enhanced check including barred lists
 
   // ── Motorsport ──────────────────────────────────────────────────────────
+  'Motorsport UK Medical Official Licence',  // Official Motorsport UK medical registration (Doctor, Paramedic, or Medical Assistant)
+  'BASM Diploma',               // British Association of Sport and Exercise Medicine diploma
   'FIA Grade 1',                // Circuit Medical Officer (highest grade — F1/WEC)
   'FIA Grade 2',                // Medical Car / Track Doctor (international events)
   'FIA Grade 3',                // First Responder (national circuit events)
@@ -125,6 +127,8 @@ export const CERT_TYPE_METADATA: Record<UKCertType, CertTypeMetadata> = {
   'Enhanced DBS (Adults)':       { label: 'Enhanced DBS (Adults)', category: 'dbs', description: 'DBS Enhanced check for working with vulnerable adults', renewalUrl: 'https://www.gov.uk/request-copy-criminal-record' },
   'Enhanced DBS (Barred Lists)': { label: 'Enhanced DBS + Barred Lists', category: 'dbs', description: 'DBS Enhanced check including barred lists check', renewalUrl: 'https://www.gov.uk/request-copy-criminal-record' },
 
+  'Motorsport UK Medical Official Licence': { label: 'Motorsport UK Medical Official Licence', category: 'motorsport', description: 'Official Motorsport UK medical registration (Registered Doctor, Paramedic, or Medical Assistant)', renewalUrl: 'https://www.motorsportuk.org/volunteers/officials/medical-officials/' },
+  'BASM Diploma':             { label: 'BASM Diploma', category: 'motorsport', description: 'British Association of Sport and Exercise Medicine diploma', renewalUrl: 'https://www.basem.co.uk/' },
   'FIA Grade 1':              { label: 'FIA Grade 1', category: 'motorsport', description: 'Circuit Medical Officer — highest FIA grade (F1/WEC)', renewalUrl: 'https://www.fia.com/' },
   'FIA Grade 2':              { label: 'FIA Grade 2', category: 'motorsport', description: 'Medical Car / Track Doctor — international events', renewalUrl: 'https://www.fia.com/' },
   'FIA Grade 3':              { label: 'FIA Grade 3', category: 'motorsport', description: 'First Responder — national circuit events', renewalUrl: 'https://www.fia.com/' },
@@ -194,10 +198,19 @@ export const VERTICAL_CERT_TYPES: Record<string, UKCertType[]> = {
     'SIA Door Supervisor', 'Purple Guide Certificate', 'Event Safety Awareness',
   ],
   motorsport: [
-    'FREC 4', 'PHEC', 'HCPC Paramedic',
-    'ALS Provider', 'ATLS', 'PHTLS',
-    'FIA Grade 1', 'FIA Grade 2', 'FIA Grade 3',
-    'Motorsport UK CMO Letter', 'MSA First Aider',
+    'Motorsport UK Medical Official Licence',
+    'HCPC Paramedic',
+    'PHTLS',
+    'FREC 4',
+    'PHEC',
+    'ALS Provider',
+    'ATLS',
+    'BASM Diploma',
+    'FIA Grade 1',
+    'FIA Grade 2',
+    'FIA Grade 3',
+    'Motorsport UK CMO Letter',
+    'MSA First Aider',
   ],
   sporting_events: [
     'FREC 3', 'FREC 4', 'PHEC', 'HCPC Paramedic',
