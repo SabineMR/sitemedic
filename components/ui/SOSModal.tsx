@@ -29,7 +29,7 @@ import {
 import { emergencyAlertService, EmergencyContact } from '../../services/EmergencyAlertService';
 import { supabase } from '../../src/lib/supabase';
 
-type Step = 'choose' | 'record' | 'text' | 'sending' | 'success' | 'error';
+type Step = 'record' | 'text' | 'sending' | 'success' | 'error';
 
 interface Props {
   visible: boolean;
@@ -39,7 +39,7 @@ interface Props {
 const MAX_RECORDING_SECONDS = 90;
 
 export default function SOSModal({ visible, onClose }: Props) {
-  const [step, setStep] = useState<Step>('choose');
+  const [step, setStep] = useState<Step>('record');
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [selectedContact, setSelectedContact] = useState<EmergencyContact | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -54,11 +54,12 @@ export default function SOSModal({ visible, onClose }: Props) {
   const audioUriRef = useRef<string | null>(null);
   const waveAnim = useRef(new Animated.Value(0.3)).current;
 
-  // Load contacts and medic info when modal opens. Show the choose step first
-  // so the medic can decide between voice and text — don't auto-start recording.
+  // When the modal opens: load contacts/medic info AND immediately start recording.
+  // No choose step — voice recording begins the moment SOS is confirmed.
   useEffect(() => {
     if (visible) {
       loadData();
+      startRecording();
     } else {
       resetState();
     }
@@ -112,7 +113,7 @@ export default function SOSModal({ visible, onClose }: Props) {
   };
 
   const resetState = () => {
-    setStep('choose');
+    setStep('record');
     setIsRecording(false);
     setSecondsLeft(MAX_RECORDING_SECONDS);
     setTranscript('');
@@ -221,13 +222,9 @@ export default function SOSModal({ visible, onClose }: Props) {
     await handleSend();
   };
 
-  const renderChooseStep = () => (
+  const renderRecordStep = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>Choose Alert Type</Text>
-      <Text style={styles.stepSubtitle}>
-        Select how to send your emergency message
-      </Text>
-
+      {/* Who will receive the alert */}
       {contacts.length === 0 ? (
         <View style={styles.noContactWarning}>
           <Text style={styles.noContactText}>
@@ -236,40 +233,14 @@ export default function SOSModal({ visible, onClose }: Props) {
         </View>
       ) : (
         <View style={styles.contactSelector}>
-          <Text style={styles.contactLabel}>Alerting:</Text>
-          <Text style={styles.contactName}>
-            {selectedContact?.name || 'No contact selected'}
-          </Text>
+          <Text style={styles.contactLabel}>ALERTING</Text>
+          <Text style={styles.contactName}>{selectedContact?.name || 'No contact selected'}</Text>
           <Text style={styles.contactPhone}>{selectedContact?.phone}</Text>
         </View>
       )}
 
-      <TouchableOpacity
-        style={[styles.typeButton, styles.typeButtonVoice]}
-        onPress={startRecording}
-        disabled={contacts.length === 0}
-      >
-        <Text style={styles.typeButtonIcon}>🎙️</Text>
-        <Text style={styles.typeButtonTitle}>Record Voice Message</Text>
-        <Text style={styles.typeButtonDesc}>Up to 90 seconds — auto-transcribed by AI</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.typeButton, styles.typeButtonText]}
-        onPress={() => setStep('text')}
-        disabled={contacts.length === 0}
-      >
-        <Text style={styles.typeButtonIcon}>✏️</Text>
-        <Text style={styles.typeButtonTitle}>Type Quick Message</Text>
-        <Text style={styles.typeButtonDesc}>Send a pre-filled emergency text</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderRecordStep = () => (
-    <View style={styles.stepContainer}>
       <Text style={styles.stepTitle}>
-        {isRecording ? 'Recording...' : 'Recording Stopped'}
+        {isRecording ? '🎙️ Recording...' : 'Recording Stopped'}
       </Text>
 
       {/* Countdown timer */}
@@ -321,14 +292,26 @@ export default function SOSModal({ visible, onClose }: Props) {
         </ScrollView>
       </View>
 
-      {/* Send button (active when not recording or recording stopped) */}
+      {/* Send button */}
       <TouchableOpacity
-        style={styles.sendButton}
+        style={[styles.sendButton, contacts.length === 0 && styles.sendButtonDisabled]}
         onPress={handleSendFromRecord}
+        disabled={contacts.length === 0}
       >
         <Text style={styles.sendButtonText}>
           {isRecording ? 'Stop & Send Emergency Alert' : 'Send Emergency Alert'}
         </Text>
+      </TouchableOpacity>
+
+      {/* Fallback: switch to typed message */}
+      <TouchableOpacity
+        style={styles.switchToTextButton}
+        onPress={async () => {
+          if (isRecording) await stopRecording();
+          setStep('text');
+        }}
+      >
+        <Text style={styles.switchToTextText}>Type a message instead</Text>
       </TouchableOpacity>
     </View>
   );
@@ -415,7 +398,7 @@ export default function SOSModal({ visible, onClose }: Props) {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>🚨 EMERGENCY ALERT</Text>
-          {(step === 'choose' || step === 'record' || step === 'text') && (
+          {(step === 'record' || step === 'text') && (
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <Text style={styles.closeButtonText}>✕</Text>
             </TouchableOpacity>
@@ -428,7 +411,6 @@ export default function SOSModal({ visible, onClose }: Props) {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          {step === 'choose' && renderChooseStep()}
           {step === 'record' && renderRecordStep()}
           {step === 'text' && renderTextStep()}
           {step === 'sending' && renderSendingStep()}
@@ -532,34 +514,6 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     fontSize: 14,
     marginTop: 2,
-  },
-  typeButton: {
-    borderRadius: 14,
-    padding: 20,
-    marginBottom: 14,
-    borderWidth: 2,
-  },
-  typeButtonVoice: {
-    backgroundColor: 'rgba(220, 38, 38, 0.15)',
-    borderColor: RED,
-  },
-  typeButtonText: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderColor: '#374151',
-  },
-  typeButtonIcon: {
-    fontSize: 28,
-    marginBottom: 8,
-  },
-  typeButtonTitle: {
-    color: '#F9FAFB',
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  typeButtonDesc: {
-    color: '#9CA3AF',
-    fontSize: 13,
   },
   countdown: {
     color: '#F9FAFB',
@@ -728,5 +682,15 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     fontWeight: '600',
     fontSize: 16,
+  },
+  switchToTextButton: {
+    marginTop: 14,
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  switchToTextText: {
+    color: '#6B7280',
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
 });
