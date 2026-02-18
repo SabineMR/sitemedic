@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Phase: 19 of 23 (Motorsport Vertical) — Phase 18 complete
+Phase: 19 of 23 (Motorsport Vertical) — Phase 18.5 complete
 Plan: — (ready to plan)
-Status: Phase 18 complete — all 5/5 plans executed and verified (18/18 must-haves passed)
-Last activity: 2026-02-18 — Phase 18 complete: vertical infrastructure, RIDDOR gate, OrgContext, booking override, booking API
+Status: Phase 18.5 complete — all 2/2 plans executed and verified; construction vertical fully confirmed
+Last activity: 2026-02-18 — Phase 18.5 plan 02 complete: construction vertical smoke test (RIDDOR gate, dispatcher, cert types, compliance config, patient label all verified)
 
-Progress: [██████████] v1.1 complete | [████░░░░░░] v2.0 5/25 plans (Phase 18 complete)
+Progress: [██████████] v1.1 complete | [█████░░░░░] v2.0 8/27 plans (Phase 18 + 18.5 complete)
 
 ## Performance Metrics
 
@@ -32,9 +32,9 @@ Progress: [██████████] v1.1 complete | [████░░�
 | 18–23 (v2.0) | 6/25 | ~7 min | ~1 min |
 
 **Recent Trend:**
-- Last plan: 18-04 — OrgContext wiring + booking vertical override in treatment form (2 min)
-- v1.1 last 5: geofence coverage analytics, compliance exports, RIDDOR auto-save, contract detail, geofence exit alerts
-- Trend: Stable — consistent 1–2 min for Phase 18 surgical refactors
+- Last plan: 18.5-02 — construction vertical smoke test, read-only verification (1 min)
+- Phase 18.5 plans: 18.5-01 (schema/model/migration updates), 18.5-02 (smoke test)
+- Trend: Stable — consistent 1–2 min for Phase 18/18.5 surgical refactors
 
 *Updated after each plan completion*
 
@@ -77,6 +77,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T03:00:23Z
-Stopped at: Completed 18-04-PLAN.md — OrgContext wiring + booking vertical override in treatment form
+Last session: 2026-02-18T03:42:47Z
+Stopped at: Completed 18.5-02-PLAN.md — construction vertical smoke test (Phase 18.5 complete)
 Resume file: None
