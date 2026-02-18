@@ -65,6 +65,15 @@ Documentation happens automatically as the medic does their job, not as separate
 - ✓ Critical bug fixes — payslip medic_id FK corrected, RIDDOR draft inputs wired — v1.1
 - ✓ Geofence coverage analytics — "X of Y active sites covered" stat card with 60s polling — v1.1
 
+**Multi-Vertical Platform Expansion (Added during v2.0):**
+- ✓ Vertical infrastructure — RIDDOR gate per vertical, WatermelonDB v4 schema (event_vertical, vertical_extra_fields, booking_id, GPS columns), OrgContext caching, booking-level vertical override, org/client vertical settings — v2.0
+- ✓ Construction vertical formalized — canonical VERTICAL_CONFIG TypeScript file, CSCS-first cert ordering, construction as reference implementation for all new verticals — v2.0
+- ✓ Motorsport vertical — GCS score, extrication required, helmet removed, mandatory concussion clearance gate (HIA/stood down/CMO), Motorsport UK Accident Form PDF (DRAFT), Medical Statistics Sheet aggregate PDF, dashboard concussion clearance badge — v2.0
+- ✓ Festivals & Events vertical — TST triage (P1/P2/P3/P4) required field, alcohol/substance + safeguarding flags, Purple Guide–style incident report PDF, Attendee/Venue/Organiser terminology, FREC 3/EFR cert types — v2.0
+- ✓ Film/TV Production vertical — Production Title, Patient Role (9 roles), SFX/Pyrotechnic toggle, Cast & Crew/Set/Production terminology, ScreenSkills/HCPC/FREC 4 cert types, RIDDOR unchanged for crew — v2.0
+- ✓ Football / Sports vertical — Player + Spectator dual-form, FA Match Day Injury Form + SGSA Medical Incident Report PDFs, HIA concussion assessment, ATMMiF/ITMMiF cert types, RIDDOR disabled for on-pitch players — v2.0
+- ✓ Analytics — near-miss heat maps (org + platform admin, Leaflet CircleMarker severity-coded), compliance score trend charts (12-month weekly, Recharts), incident frequency charts, admin aggregate compliance trend with org ranking table — v2.0
+
 ### Active (v3.0 — White-Label Platform & Subscription Engine)
 
 **White-Label Branding:**
@@ -93,19 +102,19 @@ Documentation happens automatically as the medic does their job, not as separate
 
 ## Current State
 
-**v1.1 Shipped:** 2026-02-17
+**v2.0 Shipped:** 2026-02-18
 
-- **Codebase:** ~142,000 lines (TypeScript, TSX, SQL) — 58,000 lines added in v1.1
-- **Tech Stack:** Expo (iOS), Next.js 15 (web), Supabase (backend), WatermelonDB (offline storage), Stripe (payments)
-- **Phases:** 23 phases complete (119 plans executed — 84 in v1.0, 35 in v1.1)
-- **Status:** 100% production-ready — 33/33 requirements satisfied, all E2E flows verified
+- **Codebase:** ~171,000 lines (TypeScript, TSX, SQL) — 29,300 lines added in v2.0
+- **Tech Stack:** Expo (iOS), Next.js 15 (web), Supabase (backend), WatermelonDB v4 (offline storage), Stripe (payments), Recharts (analytics), react-leaflet (maps)
+- **Phases:** 30 phases complete (149 plans executed — 84 in v1.0, 35 in v1.1, 30 in v2.0)
+- **Status:** 100% production-ready — 36/36 v2.0 requirements satisfied, all E2E flows verified
 - **Integration:** All cross-phase connections verified, 5/5 E2E flows complete
-- **Known Issues:** None critical. Minor tech debt deferred: analytics overview tab DB views lack org_id filter (single-tenant, acceptable)
+- **Known Issues:** Minor tech debt deferred: `getLocationLabel`/`getEventLabel` orphaned exports; `incident-report-dispatcher.ts` dead code; Motorsport PDF has DRAFT watermark pending Motorsport UK Incident Pack V8.0 field validation
 
 **Next Steps:**
 - Deploy to production (configure external services per DEPLOYMENT.md)
-- Begin user testing with Kai and initial clients
-- Plan v2.0 milestone with `/gsd:new-milestone`
+- Begin v3.0 milestone: White-Label Platform & Subscription Engine (Apex Safety Solutions is first live deployment target)
+- Run `/gsd:new-milestone` to define v3.0 requirements and roadmap
 
 ## Context
 
