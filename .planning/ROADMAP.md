@@ -191,14 +191,14 @@ Plans:
 4. The new org admin receives a welcome email containing their login URL (including subdomain), their chosen plan, and a getting-started guide — the email uses the org's branding if already configured, or SiteMedic defaults
 5. The post-payment setup wizard allows the new org admin to upload their logo, pick a primary colour, and set their company name before platform admin activation — branding data is persisted to `org_branding` even in the pending state
 
-**Plans:** TBD
+**Plans:** 5 plans
 
 Plans:
-- [ ] 29-01: Checkout route — create `web/app/api/billing/checkout/route.ts`; create Stripe Customer for new org; create Checkout Session with `metadata: { org_id }` and price ID from plan selection; `success_url` built dynamically from `request.headers.get('origin')` (not hardcoded — works in Vercel preview deployments and subdomain contexts)
-- [ ] 29-02: Signup page — create `web/app/(public)/signup/page.tsx`; plan selector (Starter/Growth/Enterprise with pricing); account creation form; calls checkout route; redirects to Stripe Checkout
-- [ ] 29-03: Onboarding wizard — create `web/app/onboarding/` pages: post-payment success page (explicit "pending review" state with activation SLA), branding setup step (logo upload, colour picker, company name, first medic invite); wizard is accessible to new org admin before platform admin activation
-- [ ] 29-04: Platform admin activation queue — update `web/app/platform/organizations/` with pending-activation table (org name, plan, Stripe invoice link, signup timestamp); Activate button writes `activation_status = 'active'`, assigns slug, fires welcome email via Resend
-- [ ] 29-05: Welcome email — create welcome email template in `web/lib/email/templates/`; called by platform admin activation route; includes login URL with subdomain, plan name, getting-started guide; uses org branding if set
+- [ ] 29-01-PLAN.md — Checkout route + org provisioning: create Stripe Checkout Session with org + org_branding + membership creation; checkout-status polling endpoint; uses existing onboarding_completed column (no migration)
+- [ ] 29-02-PLAN.md — Signup page with plan selection: replace existing signup with multi-step flow (plan cards, account + org details, magic link, auto-checkout on return)
+- [ ] 29-03-PLAN.md — Onboarding wizard + middleware: post-payment success page, branding setup step (logo upload, colour picker, company name); middleware routes pending orgs to /onboarding
+- [ ] 29-04-PLAN.md — Platform admin activation queue: pending activation section on organizations page; Activate endpoint assigns slug (Growth+), sets onboarding_completed=true, sends welcome email
+- [ ] 29-05-PLAN.md — Welcome email template + sender: React Email template with org branding support; sender function with subdomain login URL
 
 ---
 
