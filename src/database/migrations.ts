@@ -38,5 +38,29 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      // v4: Vertical infrastructure schema (Phase 18)
+      // - treatments: event_vertical, vertical_extra_fields, booking_id
+      // - near_misses: gps_lat, gps_lng
+      // All columns isOptional: true — required for safe migration of existing device installs
+      toVersion: 4,
+      steps: [
+        addColumns({
+          table: 'treatments',
+          columns: [
+            { name: 'event_vertical', type: 'string', isOptional: true },
+            { name: 'vertical_extra_fields', type: 'string', isOptional: true },
+            { name: 'booking_id', type: 'string', isOptional: true },
+          ],
+        }),
+        addColumns({
+          table: 'near_misses',
+          columns: [
+            { name: 'gps_lat', type: 'number', isOptional: true },
+            { name: 'gps_lng', type: 'number', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 })

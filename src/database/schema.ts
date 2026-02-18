@@ -5,7 +5,7 @@ import { appSchema, tableSchema } from '@nozbe/watermelondb'
 // See: https://nozbe.github.io/WatermelonDB/Advanced/Migrations.html
 
 export const schema = appSchema({
-  version: 3,
+  version: 4,
   tables: [
     tableSchema({
       name: 'treatments',
@@ -29,6 +29,10 @@ export const schema = appSchema({
         { name: 'created_at', type: 'number' }, // epoch milliseconds
         { name: 'updated_at', type: 'number' },
         { name: 'last_modified_at', type: 'number' }, // for sync conflict resolution
+        // v4: vertical infrastructure columns (Phase 18)
+        { name: 'event_vertical', type: 'string', isOptional: true },
+        { name: 'vertical_extra_fields', type: 'string', isOptional: true }, // raw JSON; parse with JSON.parse() at call site
+        { name: 'booking_id', type: 'string', isOptional: true },
       ],
     }),
     tableSchema({
@@ -75,6 +79,9 @@ export const schema = appSchema({
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
         { name: 'last_modified_at', type: 'number' },
+        // v4: GPS coordinates for location precision (Phase 18)
+        { name: 'gps_lat', type: 'number', isOptional: true },
+        { name: 'gps_lng', type: 'number', isOptional: true },
       ],
     }),
     tableSchema({
