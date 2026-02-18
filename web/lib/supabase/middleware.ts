@@ -1,16 +1,121 @@
 /**
- * Supabase middleware client for session refresh and auth protection
+ * Supabase middleware client for session refresh, auth protection, and subdomain routing
  *
  * Uses @supabase/ssr with request/response cookie handling.
  * This client should ONLY be used in middleware.ts.
+ *
+ * Subdomain routing (Phase 26):
+ * - Extracts subdomain from host header (e.g., apex.sitemedic.co.uk → 'apex')
+ * - Looks up org by slug using service-role client (bypasses RLS)
+ * - Injects x-org-* headers for downstream SSR pages to consume
+ * - Strips incoming x-org-* headers to prevent header injection (CVE-2025-29927)
+ *
+ * Cookie scope: @supabase/ssr does NOT set explicit cookie domain.
+ * Browser defaults to the exact hostname (e.g., apex.sitemedic.co.uk).
+ * This ensures session isolation between org subdomains — a session on
+ * apex.sitemedic.co.uk is NOT accessible from another.sitemedic.co.uk.
+ * NEVER add domain: '.sitemedic.co.uk' to cookie options.
  */
 
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+/**
+ * Extract subdomain from the request host header.
+ * Returns the subdomain string (e.g., 'apex') or null for apex/www/preview domains.
+ */
+function extractSubdomain(request: NextRequest): string | null {
+  const hostname = request.headers.get('host') ?? '';
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? 'sitemedic.co.uk';
+
+  // Apex domain and www — no subdomain
+  if (hostname === rootDomain || hostname === `www.${rootDomain}`) {
+    return null;
+  }
+
+  // Vercel preview deployments — skip subdomain logic
+  if (hostname.endsWith('.vercel.app')) {
+    return null;
+  }
+
+  // Strip port for comparison (handles localhost:30500 and sitemedic.co.uk:443)
+  const hostnameWithoutPort = hostname.split(':')[0];
+  const rootWithoutPort = rootDomain.split(':')[0];
+
+  // Match: tenant.sitemedic.co.uk or tenant.localhost
+  if (hostnameWithoutPort.endsWith(`.${rootWithoutPort}`)) {
+    const subdomain = hostnameWithoutPort.replace(`.${rootWithoutPort}`, '');
+    return subdomain || null;
+  }
+
+  return null;
+}
+
+/** Headers injected by middleware for org context — stripped from incoming requests */
+const ORG_HEADERS = [
+  'x-org-id', 'x-org-slug', 'x-org-tier',
+  'x-org-company-name', 'x-org-primary-colour',
+  'x-org-logo-url', 'x-org-tagline',
+] as const;
+
 export async function updateSession(request: NextRequest) {
+  // SECURITY: Strip any externally-injected x-org-* headers (CVE-2025-29927 mitigation)
+  // These headers are set by OUR middleware only — never trust incoming values
+  const requestHeaders = new Headers(request.headers);
+  ORG_HEADERS.forEach(h => requestHeaders.delete(h));
+
+  // Subdomain resolution — resolve org from slug
+  const subdomain = extractSubdomain(request);
+
+  if (subdomain) {
+    // Service-role client for org lookup (bypasses RLS, server-only)
+    const { createClient: createAdminClient } = await import('@supabase/supabase-js');
+    const adminClient = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Single query: org + branding via join
+    const { data: orgData } = await adminClient
+      .from('organizations')
+      .select(`
+        id, slug, subscription_tier, subscription_status,
+        org_branding ( company_name, primary_colour_hex, logo_path, tagline )
+      `)
+      .eq('slug', subdomain)
+      .maybeSingle();
+
+    if (!orgData) {
+      // Unknown subdomain — redirect to apex domain root
+      const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? 'sitemedic.co.uk';
+      const protocol = request.nextUrl.protocol;
+      return NextResponse.redirect(new URL(`${protocol}//${rootDomain}/`));
+    }
+
+    // Inject org context headers for downstream SSR pages
+    requestHeaders.set('x-org-id', orgData.id);
+    requestHeaders.set('x-org-slug', orgData.slug);
+    requestHeaders.set('x-org-tier', orgData.subscription_tier ?? 'starter');
+
+    // Branding headers (org_branding is returned as object or array from join)
+    const branding = Array.isArray(orgData.org_branding)
+      ? orgData.org_branding[0]
+      : orgData.org_branding;
+
+    if (branding) {
+      requestHeaders.set('x-org-company-name', branding.company_name ?? '');
+      requestHeaders.set('x-org-primary-colour', branding.primary_colour_hex ?? '');
+      // Construct public logo URL from storage path
+      if (branding.logo_path) {
+        const logoUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/org-logos/${branding.logo_path}`;
+        requestHeaders.set('x-org-logo-url', logoUrl);
+      }
+      requestHeaders.set('x-org-tagline', branding.tagline ?? '');
+    }
+  }
+
   let supabaseResponse = NextResponse.next({
-    request,
+    request: { headers: requestHeaders },
   });
 
   const supabase = createServerClient(
@@ -22,11 +127,11 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({
-            request,
+            request: { headers: requestHeaders },
           });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
