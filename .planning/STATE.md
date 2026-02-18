@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 22: Football / Sports Vertical (active) + Phase 20 remaining
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 20: Festivals / Events Vertical complete; Phase 23 next
 
 ## Current Position
 
-Phase: 22 of 23 (Football / Sports Vertical) — 22-03 complete
-Plan: 22-01, 22-02, 22-03, 22-04 all complete — Phase 22 complete
-Status: Phase 22 complete — fa-incident-generator 501 stub replaced; FA player + SGSA spectator PDFs wired
-Last activity: 2026-02-18 — Completed 22-03-PLAN.md: FA/SGSA PDF routing, storage bucket migration 127, 4 new files
+Phase: 20 of 23 (Festivals / Events Vertical) — 20-04 complete; Phase 20 complete
+Plan: 20-01, 20-02, 20-03, 20-04 all complete — Phase 20 complete
+Status: Phase 20 complete — FEST-04 (terminology), FEST-05 (cert types), FEST-06 frontend (EventIncidentReportCard) done
+Last activity: 2026-02-18 — Completed 20-04-PLAN.md: EventIncidentReportCard, festivals terminology, recommended certs on profile
 
-Progress: [██████████] v1.1 complete | [████████░░] v2.0 17/27 plans (Phase 18 + 18.5 + 19-01 + 19-02 + 20-01 + 20-02 + 20-03 + 21 + 22-01 + 22-02 + 22-03 + 22-04 complete)
+Progress: [██████████] v1.1 complete | [████████░░] v2.0 18/27 plans (Phase 18 + 18.5 + 19-01 + 19-02 + 20-01 + 20-02 + 20-03 + 20-04 + 21 + 22-01 + 22-02 + 22-03 + 22-04 complete)
 
 ## Performance Metrics
 
@@ -32,10 +32,10 @@ Progress: [██████████] v1.1 complete | [██████�
 | 18–23 (v2.0) | 8/25 | ~10 min | ~1 min |
 
 **Recent Trend:**
-- Last plan: 22-03 — FA/SGSA incident PDF (FAPlayerDocument + FASpectatorDocument + mapping files + storage + 501 stub replaced) (8 min)
+- Last plan: 20-04 — EventIncidentReportCard + festivals terminology + recommended certs (3 min)
+- Phase 20 plans: 20-01 (FEST-01/02 form fields), 20-02 (RIDDOR gate), 20-03 (Purple Guide PDF backend), 20-04 (compliance frontend) — ALL COMPLETE
 - Phase 22 plans: 22-01 (football dual patient type form + HIA + FA severity), 22-02 (RIDDOR gate FOOT-04), 22-03 (FA/SGSA PDF), 22-04 (cert types + terminology) — ALL COMPLETE
-- Phase 20 plans so far: 20-01 (FEST-01/02 form fields), 20-02 (previously complete), 20-03 (FEST-06 Purple Guide PDF backend)
-- Phase 19 plans so far: 19-01 (MOTO-01/02/03 form + gate + alert), 19-02 (cert taxonomy + TreatmentWithWorker)
+- Phase 19 plans: 19-01 (MOTO-01/02/03 form + gate + alert), 19-02 (cert taxonomy + TreatmentWithWorker) — COMPLETE
 - Trend: Stable — consistent 1–8 min for vertical surgical additions
 
 *Updated after each plan completion*
@@ -90,6 +90,9 @@ Key decisions affecting v2.0:
 - 22-03: Migration numbering gap — fa-incident-reports uses migration 127 (125 = event-incident-reports Phase 20, 126 = motorsport concussion Phase 19)
 - 22-03: React.createElement() used in fa-incident-generator index.ts (not JSX) — avoids JSX pragma in .ts Edge Function files
 - 22-03: fa-incident-generator routes patient_type='player' to FA Match Day Injury Form, 'spectator' to SGSA Medical Incident Report; missing patient_type returns 400
+- 20-04: EventIncidentReportCard uses useMutation pattern matching RIDDOR F2508 card — consistent across all vertical PDF generation
+- 20-04: useOrg() used in medic profile for industryVerticals — avoids extra Supabase fetch since OrgContext already caches org_settings
+- 20-04: Venue/Site displayed from vertical_extra_fields.venue_name / site_name — no new query or schema change needed
 
 ### Research Flags (Phase-Blocking)
 
@@ -107,6 +110,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T04:26:40Z
-Stopped at: Completed 22-03-PLAN.md (FA/SGSA incident PDF routing + storage bucket migration 127 + 501 stub replaced)
+Last session: 2026-02-18T04:28:16Z
+Stopped at: Completed 20-04-PLAN.md (EventIncidentReportCard + festivals terminology + recommended certs on medic profile)
 Resume file: None

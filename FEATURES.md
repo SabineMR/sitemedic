@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Phase 22-03: FA/SGSA incident PDF generation for football vertical; fa-incident-generator Edge Function fully implemented — FA Match Day Injury Form for players, SGSA Medical Incident Report for spectators, routed by patient_type, with fa-incident-reports storage bucket and 7-day signed URL)
+**Last Updated**: 2026-02-18 (Phase 20-04: Festivals vertical compliance frontend complete — EventIncidentReportCard for Purple Guide PDF download on treatment detail, Attendee/Venue/Event Organiser vertical-aware terminology, Recommended Certifications section on medic profile)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -16,6 +16,50 @@ SiteMedic is a comprehensive platform combining **mobile medic software** (offli
 - High-value add-ons: Corporate Events, Private Events (weddings/parties/galas), Education & Youth (DBS-checked), Outdoor Adventure & Endurance
 
 **Business Model**: Software bundled with medic staffing service (no separate software charge). Revenue from medic bookings with a configurable platform/medic split (default 60% platform / 40% medic, overridable per employee). Weekly medic payouts via UK Faster Payments, Net 30 invoicing for established corporate clients. Referral bookings (jobs recommended by a third party who cannot take them) trigger a 10% referral payout (configurable) deducted from the platform's share — medic payout is unaffected.
+
+---
+
+## Recent Updates — Festivals Vertical: Compliance Frontend Complete (2026-02-18)
+
+### Phase 20-04: Purple Guide PDF Download Card, Vertical Terminology, and Recommended Certs (FEST-04, FEST-05, FEST-06 Frontend) ✅
+
+The festivals vertical compliance frontend is now complete. The treatment detail page shows festival-specific terminology and a Purple Guide PDF download card; the medic profile surfaces recommended certifications for the org's primary vertical.
+
+**EventIncidentReportCard (`web/components/dashboard/EventIncidentReportCard.tsx`):**
+- `'use client'` card component using `useMutation` from `@tanstack/react-query`
+- Card title: "Purple Guide — Event Incident Report"
+- Button: "Generate Event Incident Report" with FileText icon
+- On click: POSTs to `event-incident-report-generator` Edge Function via `generateEventIncidentPDF(treatmentId)`
+- On success: opens `signed_url` in a new browser tab
+- On error: shows alert "Failed to generate Event Incident Report. Please try again."
+- Loading state: "Generating PDF..." during mutation
+
+**`generateEventIncidentPDF` query function (`web/lib/queries/event-incidents.ts`):**
+- POSTs to `/functions/v1/event-incident-report-generator`
+- Body: `{ incident_id: treatmentId, event_vertical: 'festivals' }`
+- Auth: Bearer session `access_token` (fallback to ANON key)
+- Returns: `{ success: boolean; pdf_path: string; signed_url: string }`
+- Pattern matches RIDDOR `generateF2508PDF` in `web/lib/queries/riddor.ts`
+
+**Treatment Detail Page Terminology (FEST-04) (`web/app/(dashboard)/treatments/[id]/page.tsx`):**
+- Card title: `'Attendee Information'` (festivals) / `'Worker Information'` (all other verticals)
+- Company field label: `'Event Organiser'` (festivals) / `'Client'` (all other verticals)
+- Venue shown when `vertical_extra_fields.venue_name` exists (festivals); Site shown when `vertical_extra_fields.site_name` exists (non-festivals)
+- `EventIncidentReportCard` rendered conditionally when `treatment.event_vertical === 'festivals'`
+- Page remains a **server component** — client card renders inside server parent (valid Next.js pattern)
+- Non-festival treatments: unchanged labels, no download card
+
+**Recommended Certifications on Medic Profile (FEST-05) (`web/app/medic/profile/page.tsx`):**
+- Uses `useOrg()` hook to access `industryVerticals` (already in OrgContext — no extra Supabase fetch)
+- `primaryVertical = industryVerticals[0] ?? 'general'`
+- "Recommended Certifications" section shown when `primaryVertical !== 'general'`
+- Subtitle: "Priority certifications for your organisation's vertical"
+- Shows top 6 from `getRecommendedCertTypes(primaryVertical)` as badge chips
+- Green badge with checkmark: cert is held by this medic
+- Gray badge: cert not yet held
+- Tooltip (title attr): cert description from `CERT_TYPE_METADATA`
+- For festivals vertical top 6: FREC Level 3, FREC Level 4, PHEC, HCPC Paramedic, ALS Provider, PHTLS
+- Section hidden for general vertical (avoids showing irrelevant generic recommendations)
 
 ---
 
