@@ -183,10 +183,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 22-01-PLAN.md — Football dual patient type form: patient type selector (Player / Spectator) at form start; conditional Player fields (squad number, phase of play, contact/non-contact, HIA performed/outcome, FA severity); conditional Spectator fields (stand location, row/seat, referral outcome, safeguarding flag/notes, alcohol involvement); validation guards; all written to vertical_extra_fields JSONB in sync payload
-- [ ] 22-02-PLAN.md — Football RIDDOR gate: verify 'sporting_events' is in NON_RIDDOR_VERTICALS; export const for testability; annotate FOOT-04; write Jest test asserting gate; confirm F2508 generator 400 guard
-- [ ] 22-03-PLAN.md — Football PDF Edge Functions: replace fa-incident-generator 501 stub with full FA Match Day Injury Form (player) and SGSA Medical Incident Report (spectator) PDF generation; FAPlayerDocument.tsx, FASpectatorDocument.tsx, mapping files; fa-incident-reports storage bucket migration 125
-- [ ] 22-04-PLAN.md — Football vertical wiring: getPatientLabel('sporting_events') → 'Player'; org-labels.ts sporting_events → Player/Pitch+Ground/Club; 4 new football cert types (ATMMiF, ITMMiF, FA Advanced Trauma Management, FA Concussion Module) + sporting_events CertCategory + VERTICAL_CERT_TYPES update
+- [x] 22-01-PLAN.md — Football dual patient type form: patient type selector (Player / Spectator) at form start; conditional Player fields (squad number, phase of play, contact/non-contact, HIA performed/outcome, FA severity); conditional Spectator fields (stand location, row/seat, referral outcome, safeguarding flag/notes, alcohol involvement); validation guards; all written to vertical_extra_fields JSONB in sync payload
+- [x] 22-02-PLAN.md — Football RIDDOR gate: verify 'sporting_events' is in NON_RIDDOR_VERTICALS; annotate FOOT-04; Deno-native test asserting gate; confirm F2508 generator 400 guard
+- [x] 22-03-PLAN.md — Football PDF Edge Functions: replace fa-incident-generator 501 stub with full FA Match Day Injury Form (player) and SGSA Medical Incident Report (spectator) PDF generation; FAPlayerDocument.tsx, FASpectatorDocument.tsx, mapping files; fa-incident-reports storage bucket migration 127
+- [x] 22-04-PLAN.md — Football vertical wiring: getPatientLabel('sporting_events') → 'Player'; org-labels.ts sporting_events → Player/Pitch+Ground/Club; 4 new football cert types (ATMMiF, ITMMiF, FA Advanced Trauma Management, FA Concussion Module) + sporting_events CertCategory + VERTICAL_CERT_TYPES update
 
 ---
 

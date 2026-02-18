@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 20: Festivals & Events Vertical COMPLETE (16/16 verified); Phase 19: Motorsport Vertical 19-03 complete, 19-04 next
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 22: Football / Sports Vertical — 4/4 plans executed, 1 gap pending (admin PDF download card for sporting_events)
 
 ## Current Position
 
-Phase: 20 of 23 (Festivals & Events Vertical) — COMPLETE and VERIFIED
-Plan: 20-01, 20-02, 20-03, 20-04 all complete (16/16 must-haves verified)
-Status: Phase 20 complete — Festivals vertical fully wired (triage form fields, RIDDOR gate, Purple Guide PDF, dashboard download, Attendee/Venue/Organiser terminology, cert profile)
-Last activity: 2026-02-17 — Phase 20 complete: festival form fields, RIDDOR gate verified, Purple Guide PDF Edge Function, EventIncidentReportCard, Attendee/Venue/Organiser terminology, FREC 3 cert ordering on medic profile
+Phase: 22 of 23 (Football / Sports Vertical) — plans complete, 1 gap pending
+Plan: 22-01, 22-02, 22-03, 22-04 all complete; 1 gap: FAIncidentReportCard missing from web admin treatment detail page
+Status: Phase 22 plans complete — verifier found gap: admin UI trigger for fa-incident-generator not present on sporting_events treatment detail page; gap closure plan needed
+Last activity: 2026-02-18 — Phase 22 executed; 4/5 must-haves pass; gap: no FAIncidentReportCard in web/app/(dashboard)/treatments/[id]/page.tsx for sporting_events
 
 Progress: [██████████] v1.1 complete | [████████░░] v2.0 19/27 plans (Phase 18 + 18.5 + 19-01 + 19-02 + 19-03 + 20-01 + 20-02 + 20-03 + 20-04 + 21 + 22-01 + 22-02 + 22-03 + 22-04 complete)
 
