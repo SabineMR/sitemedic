@@ -39,6 +39,7 @@ interface BookingRequest {
   recurrencePattern: 'weekly' | 'biweekly' | null;
   recurringWeeks: number;
   clientId: string;
+  eventVertical?: string;
   pricing: {
     baseRate: number;
     shiftHours: number;
@@ -126,6 +127,7 @@ export async function POST(request: NextRequest) {
         total: body.pricing.total,
         platform_fee: body.pricing.platformFee,
         medic_payout: body.pricing.medicPayout,
+        event_vertical: body.eventVertical ?? null,
       })
       .select()
       .single();
