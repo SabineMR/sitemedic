@@ -35,6 +35,7 @@ import {
   FileSignature,
 } from 'lucide-react';
 import { QueryProvider } from '@/components/providers/query-provider';
+import { useBranding } from '@/contexts/branding-context';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -53,6 +54,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const { loading, orgId } = useOrg();
   const isPlatformAdmin = useIsPlatformAdmin();
+  const branding = useBranding();
   const [userEmail, setUserEmail] = useState<string>('');
   const [userName, setUserName] = useState<string>('Admin');
   const [activeAlerts, setActiveAlerts] = useState<number | null>(null);
@@ -102,7 +104,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return (
       <div className="flex h-screen items-center justify-center bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-[color:var(--org-primary)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-lg font-medium">Loading...</p>
         </div>
       </div>
@@ -114,7 +116,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return (
       <div className="flex h-screen items-center justify-center bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-[color:var(--org-primary)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-lg font-medium">Redirecting to Platform Admin...</p>
         </div>
       </div>
@@ -241,12 +243,23 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {/* Logo/Brand */}
         <div className="p-6 border-b border-gray-700/50">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg transition-transform duration-200 group-hover:scale-110">
-              <span className="text-white font-bold text-xl">SM</span>
-            </div>
+            {branding.logoUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={branding.logoUrl}
+                alt={branding.companyName}
+                className="max-h-10 w-auto object-contain"
+              />
+            ) : (
+              <div className="w-10 h-10 bg-[color:var(--org-primary)] rounded-xl flex items-center justify-center shadow-lg transition-transform duration-200 group-hover:scale-110">
+                <span className="text-white font-bold text-xl">
+                  {branding.companyName.slice(0, 2).toUpperCase()}
+                </span>
+              </div>
+            )}
             <div>
-              <h1 className="text-white font-bold text-lg tracking-tight">SiteMedic</h1>
-              <p className="text-gray-400 text-xs">Admin Panel</p>
+              <h1 className="text-white font-bold text-lg tracking-tight">{branding.companyName}</h1>
+              <p className="text-gray-400 text-xs">{branding.tagline || 'Admin Panel'}</p>
             </div>
           </Link>
         </div>
@@ -262,7 +275,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     href={item.href}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative ${
                       active
-                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/20'
+                        ? 'bg-[color:var(--org-primary)] text-white shadow-lg shadow-black/10'
                         : 'text-gray-300 hover:bg-gray-700/50 hover:text-white hover:scale-105'
                     }`}
                   >
@@ -279,7 +292,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                             ? 'bg-red-500 text-white'
                             : item.badgeColor === 'yellow'
                             ? 'bg-yellow-500 text-gray-900'
-                            : 'bg-blue-500 text-white'
+                            : 'bg-[color:var(--org-primary)] text-white'
                         }`}
                       >
                         {item.badge}
@@ -300,7 +313,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {/* User info / logout (bottom of sidebar) */}
         <div className="p-4 border-t border-gray-700/50">
           <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-700/50 backdrop-blur-sm hover:bg-gray-700/70 transition-all duration-200 cursor-pointer group">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 group-hover:scale-110">
+            <div className="w-8 h-8 bg-[color:var(--org-primary)] rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 group-hover:scale-110">
               <span className="text-white text-sm font-bold">
                 {userName.slice(0, 2).toUpperCase()}
               </span>
