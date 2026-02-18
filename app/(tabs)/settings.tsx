@@ -333,6 +333,15 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Organisation</Text>
+              <Text style={styles.infoValue}>
+                {state.user?.orgName || 'Not available'}
+              </Text>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Role</Text>
               <Text style={styles.infoValue}>
                 {state.user?.role ? state.user.role.replace('_', ' ').toUpperCase() : 'Medic'}

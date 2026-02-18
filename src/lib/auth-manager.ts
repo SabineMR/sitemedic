@@ -312,7 +312,7 @@ class AuthManager {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, email, full_name, org_id, role')
+        .select('id, email, full_name, org_id, role, organizations(name)')
         .eq('id', userId)
         .single();
 
@@ -329,6 +329,7 @@ class AuthManager {
         full_name: string;
         org_id: string;
         role: string;
+        organizations: { name: string } | null;
       };
 
       return {
@@ -336,6 +337,7 @@ class AuthManager {
         email: profile.email,
         fullName: profile.full_name,
         orgId: profile.org_id,
+        orgName: profile.organizations?.name,
         role: profile.role as UserRole,
       };
     } catch (error) {

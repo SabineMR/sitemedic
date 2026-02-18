@@ -12,6 +12,7 @@ export interface UserProfile {
   email: string;
   fullName: string;
   orgId: string;
+  orgName?: string;
   role: UserRole;
 }
 
