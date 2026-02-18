@@ -6,6 +6,8 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { fetchOrgBranding } from '../_shared/branding-helpers.ts';
+import type { OrgBranding } from '../_shared/branding-helpers.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -118,9 +120,12 @@ serve(async (req: Request) => {
       late_fee_charged: Number(invoice.late_fee_charged || 0),
     };
 
+    // Fetch org branding
+    const branding = await fetchOrgBranding(supabase, userOrgId);
+
     // Generate PDF using a simple HTML-to-PDF approach
     // Note: @react-pdf/renderer is complex to set up in Deno, so we'll use a simpler approach
-    const htmlContent = generateInvoiceHTML(invoiceData);
+    const htmlContent = generateInvoiceHTML(invoiceData, branding);
     
     // For production, you'd use a proper PDF generation service
     // For now, we'll store the HTML as a placeholder
@@ -175,7 +180,10 @@ serve(async (req: Request) => {
   }
 });
 
-function generateInvoiceHTML(data: any): string {
+function generateInvoiceHTML(data: any, branding: OrgBranding): string {
+  const accentColour = branding.primary_colour_hex || '#003366';
+  const showPoweredBy = !branding.subscription_tier || branding.subscription_tier === 'starter';
+
   return `
 <!DOCTYPE html>
 <html>
@@ -184,8 +192,11 @@ function generateInvoiceHTML(data: any): string {
   <title>Invoice ${data.invoice_number}</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 40px; font-size: 12px; }
-    .header { margin-bottom: 30px; }
-    .title { font-size: 32px; font-weight: bold; }
+    .header { margin-bottom: 30px; border-bottom: 2px solid ${accentColour}; padding-bottom: 15px; }
+    .header-top { display: flex; align-items: center; gap: 12px; }
+    .header-logo { max-height: 60px; max-width: 200px; }
+    .company-name { font-size: 22px; font-weight: bold; color: ${accentColour}; }
+    .title { font-size: 14px; color: #666; margin-top: 4px; }
     .invoice-number { font-size: 14px; color: #666; margin-top: 5px; }
     .section { margin: 20px 0; }
     .section-title { font-size: 14px; font-weight: bold; margin-bottom: 10px; }
@@ -195,11 +206,18 @@ function generateInvoiceHTML(data: any): string {
     .text-right { text-align: right; }
     .total-row { font-size: 16px; font-weight: bold; background: #f3f4f6; }
     .footer { margin-top: 40px; font-size: 10px; color: #666; }
+    .powered-by { margin-top: 10px; font-size: 9px; color: #999; }
   </style>
 </head>
 <body>
   <div class="header">
-    <div class="title">INVOICE</div>
+    <div class="header-top">
+      ${branding.logo_url ? `<img src="${branding.logo_url}" class="header-logo" alt="${branding.company_name}" />` : ''}
+      <div>
+        <div class="company-name">${branding.company_name}</div>
+        <div class="title">Invoice</div>
+      </div>
+    </div>
     <div class="invoice-number">${data.invoice_number}</div>
   </div>
 
@@ -279,6 +297,7 @@ function generateInvoiceHTML(data: any): string {
     <p>Payment is due within 30 days of invoice date.</p>
     <p>Late payments subject to statutory late fees under the Late Payment of Commercial Debts (Interest) Act 1998.</p>
     <p>Bank details: Sort Code 12-34-56, Account 12345678</p>
+    ${showPoweredBy ? '<p class="powered-by">Powered by <a href="https://sitemedic.co.uk" style="color: #999;">SiteMedic</a></p>' : ''}
   </div>
 </body>
 </html>
