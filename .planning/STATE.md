@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 23: Analytics — Heat Maps & Trend Charts (in progress, plan 23-03 complete)
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 23: Analytics — Heat Maps & Trend Charts (in progress, plan 23-04 complete)
 
 ## Current Position
 
-Phase: 23 of 23 (Analytics — Heat Maps & Trend Charts) — In progress (3/5 plans)
-Plan: 23-03 complete (admin near-miss heat map: AdminNearMissHeatMap + useAdminNearMissGeoData + Heat Map tab in /admin/analytics)
-Status: In progress — admin heat map at /admin/analytics (Heat Map tab) live
-Last activity: 2026-02-18 — Completed 23-03-PLAN.md: cross-org admin near-miss heat map
+Phase: 23 of 23 (Analytics — Heat Maps & Trend Charts) — In progress (4/5 plans)
+Plan: 23-04 complete (compliance trend charts: ComplianceScoreChart + IncidentFrequencyChart + useComplianceHistory + useIncidentFrequency + /analytics/compliance page)
+Status: In progress — compliance chart page at /analytics/compliance live; both charts lazy-loaded ssr:false
+Last activity: 2026-02-18 — Completed 23-04-PLAN.md: LineChart compliance score trend with amber/red thresholds, AreaChart incident frequency, two TanStack Query hooks, compliance page with AnalyticsSubNav
 
-Progress: [██████████] v1.1 complete | [█████████░] v2.0 25/27 plans (Phase 18 + 18.5 + 19-01…05 + 20-01…04 + 21 + 22-01…05 + 23-01 + 23-02 + 23-03 complete)
+Progress: [██████████] v1.1 complete | [█████████░] v2.0 26/27 plans (Phase 18 + 18.5 + 19-01…05 + 20-01…04 + 21 + 22-01…05 + 23-01 + 23-02 + 23-03 + 23-04 complete)
 
 ## Performance Metrics
 
@@ -115,6 +115,11 @@ Key decisions affecting v2.0:
 - 23-03: Limit 1000 for admin hook vs 500 for org hook — platform admin aggregate view needs more data points for cross-org clustering
 - 23-03: 'Heat Map' tab label rendered as literal string (not generic charAt(0).toUpperCase()) — handles hyphen in 'heat-map' slug correctly
 
+- 23-04: chart hooks fetch data internally (no props) — consistent with NearMissHeatMap self-contained pattern from 23-02
+- 23-04: IncidentFrequencyChart queries near_misses with .is('deleted_at', null) — all non-deleted rows count regardless of GPS coordinates
+- 23-04: week_label uses format(weekDate, "'W'I MMM") from date-fns — gives 'W7 Feb' style, compact for chart X-axis
+- 23-04: compliance page dynamic import uses .then(m => ({ default: m.NamedExport })) — unwraps named exports for ssr:false compatibility
+
 ### Research Flags (Phase-Blocking)
 
 - **Phase 19 (Motorsport PDF) — DRAFT APPROACH:** `motorsport-incident-generator` built with inferred MOTO-01 fields and DRAFT watermark (user approved "proceed with draft" in 19-03 checkpoint). Obtain physical Motorsport UK Accident Form from Incident Pack V8.0 before regulatory submission to validate field layout.
@@ -132,5 +137,5 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 ## Session Continuity
 
 Last session: 2026-02-18T05:33:01Z
-Stopped at: Completed 23-03-PLAN.md (admin near-miss heat map — AdminNearMissHeatMap CircleMarker component, useAdminNearMissGeoData hook with org enrichment, Heat Map tab (8th) in /admin/analytics; admin heat map live)
+Stopped at: Completed 23-04-PLAN.md (compliance trend charts — ComplianceScoreChart LineChart with amber/red ReferenceLine, IncidentFrequencyChart AreaChart two-series, useComplianceHistory + useIncidentFrequency hooks, /analytics/compliance page with AnalyticsSubNav)
 Resume file: None
