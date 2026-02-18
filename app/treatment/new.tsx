@@ -1108,6 +1108,23 @@ export default function NewTreatmentScreen() {
                 </Pressable>
               </View>
             )}
+
+            {/* MOTO-07: Competitor clearance — outside concussion gate */}
+            <Pressable
+              style={[
+                styles.clearanceCheckbox,
+                motorsportFields.competitor_cleared_to_return && styles.clearanceCheckboxChecked,
+              ]}
+              onPress={() => toggleMotorsportBool('competitor_cleared_to_return')}
+            >
+              <Text style={[
+                styles.clearanceCheckboxText,
+                motorsportFields.competitor_cleared_to_return && styles.clearanceCheckboxTextChecked,
+              ]}>
+                {motorsportFields.competitor_cleared_to_return ? '[X] ' : '[ ] '}
+                Competitor cleared to return to race
+              </Text>
+            </Pressable>
           </View>
         )}
 
