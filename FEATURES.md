@@ -2,12 +2,64 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Phase 26: Subdomain routing — middleware subdomain extraction, org header injection, branded login page, cookie scope isolation)
+**Last Updated**: 2026-02-18 (Phase 25: Billing Infrastructure — feature gates, billing webhook handler, webhook_events migration)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
 
-## Recent Updates — Phase 26: Subdomain Routing (2026-02-18)
+## Recent Updates — Phase 25: Billing Infrastructure (2026-02-18)
+
+### Subscription billing plumbing for three-tier model
+
+Phase 25 delivers the core billing infrastructure: a feature gates module for tier-based access control, a Stripe billing webhook handler for subscription lifecycle events, and a migration for webhook event logging and idempotency.
+
+**Feature Gates Module (`web/lib/billing/feature-gates.ts`):**
+- `FEATURE_GATES` constant — sole source of truth mapping subscription tiers to feature sets
+- 3 tiers: Starter (6 features), Growth (9 features), Enterprise (12 features)
+- Starter: `dashboard`, `treatment_logs`, `worker_registry`, `weekly_reports`, `compliance`, `basic_analytics`
+- Growth adds: `white_label`, `subdomain`, `advanced_analytics`
+- Enterprise adds: `custom_domain`, `api_access`, `priority_support`
+- `hasFeature(tier, feature)` — checks if a tier includes a feature; NULL tier defaults to 'starter' (legacy orgs)
+- `isAtLeastTier(currentTier, minimumTier)` — tier comparison (starter=0, growth=1, enterprise=2)
+- `getTierFeatures(tier)` — returns full feature set for a tier
+- Development-only superset invariant validation (Starter subset of Growth subset of Enterprise)
+- `SubscriptionTier` and `FeatureKey` types enforce compile-time safety
+
+**Billing Webhook Handler (`web/app/api/stripe/billing-webhooks/route.ts`):**
+- Separate endpoint from existing Connect webhook at `/api/stripe/webhooks`
+- Uses `STRIPE_BILLING_WEBHOOK_SECRET` (distinct from `STRIPE_WEBHOOK_SECRET`)
+- `request.text()` for raw body (required for Stripe signature verification via `constructEvent()`)
+- **checkout.session.completed**: Writes `stripe_customer_id`, `stripe_subscription_id`, `subscription_tier`, `subscription_status='active'` to organizations table
+- **customer.subscription.updated**: Updates tier and status with out-of-order protection (timestamp comparison) and spelling normalization (`canceled` -> `cancelled`)
+- **customer.subscription.deleted**: Sets status to `'cancelled'`, preserves `subscription_tier` (data hidden, not deleted)
+- **invoice.payment_failed**: Logs warning only — does NOT change `subscription_status` (waits for Stripe to fire subscription.updated)
+- Idempotency: INSERT to `webhook_events` table, skip on PostgreSQL error 23505 (unique violation)
+- `priceIdToTier()`: Maps Stripe Price IDs from comma-separated env vars to tier names
+- `normalizeSubscriptionStatus()`: Maps Stripe's 'canceled' (American) to database's 'cancelled' (British) per CHECK constraint
+- Service-role Supabase client (same pattern as contracts/webhooks)
+
+**Webhook Events Migration (`supabase/migrations/135_webhook_events.sql`):**
+- `webhook_events` table: `id`, `stripe_event_id` (UNIQUE), `event_type`, `event_data` (JSONB), `processing_error`, `created_at`, `processed_at`
+- Indexes on `event_type` and `created_at`
+- RLS: Platform admin SELECT only; webhook handler uses service-role (bypasses RLS)
+- Added `subscription_status_updated_at` column to `organizations` for out-of-order webhook protection
+
+**Environment Variables (`.env.example` updated):**
+- `STRIPE_PRICE_STARTER` — comma-separated Price IDs (GBP-mo, GBP-yr, EUR-mo, EUR-yr, USD-mo, USD-yr)
+- `STRIPE_PRICE_GROWTH` — same format
+- `STRIPE_PRICE_ENTERPRISE` — same format
+- `STRIPE_BILLING_WEBHOOK_SECRET` — billing webhook signing secret (SEPARATE from Connect)
+
+| File | Change |
+|---|---|
+| `web/lib/billing/feature-gates.ts` | **New** — FEATURE_GATES constant, hasFeature(), getTierFeatures(), isAtLeastTier(), SubscriptionTier/FeatureKey types |
+| `web/app/api/stripe/billing-webhooks/route.ts` | **New** — POST handler for 4 Stripe billing event types with idempotency and out-of-order protection |
+| `supabase/migrations/135_webhook_events.sql` | **New** — webhook_events table + subscription_status_updated_at on organizations |
+| `web/.env.example` | Added 4 billing env vars (STRIPE_PRICE_STARTER/GROWTH/ENTERPRISE, STRIPE_BILLING_WEBHOOK_SECRET) |
+
+---
+
+## Phase 26: Subdomain Routing (2026-02-18)
 
 ### White-label subdomain infrastructure for multi-tenant org portals
 
@@ -46,6 +98,104 @@ Each subscribing org on Growth or Enterprise tier gets their own subdomain at `s
 | `web/app/(auth)/layout.tsx` | Reads x-org-primary-colour, injects CSS custom property |
 | `web/app/api/auth/signout/route.ts` | Fixed to use request origin for subdomain redirect |
 | `web/.env.local.example` | Added `NEXT_PUBLIC_ROOT_DOMAIN` documentation |
+
+---
+
+## Recent Updates — Client Portal & Admin Contract Management (2026-02-18)
+
+### Client Self-Service Portal (Task #14)
+
+New `(client)` route group providing a self-service portal for clients (site_manager role). Clients can view their bookings, see pricing breakdowns, track medic assignments, and manage their account. Built on the same sidebar layout pattern as the dashboard.
+
+**Client Layout (`web/app/(client)/layout.tsx`):**
+- Server component with auth protection (redirects to `/login` if unauthenticated)
+- SidebarProvider with ClientNav, user info footer, sign-out button
+- "New Booking" CTA in header linking to `/book`
+- QueryProvider wrapper for React Query data fetching
+
+**Client Navigation (`web/components/client/ClientNav.tsx`):**
+- Three-item sidebar: My Bookings, Invoices, Account
+- Active state highlighting using `usePathname()`
+- Uses shared SidebarMenu/SidebarMenuButton components
+
+**My Bookings Page (`web/app/(client)/client/bookings/page.tsx`):**
+- Summary cards: Upcoming, Pending, Completed counts
+- Status filter buttons (All, Pending, Confirmed, In Progress, Completed, Cancelled)
+- Booking cards showing: site name, date, time, postcode, medic name + rating, total price
+- Recurring badge for recurring bookings
+- Empty state with "Book a Medic" CTA
+- 60-second polling via React Query
+
+**Booking Detail Page (`web/app/(client)/client/bookings/[id]/page.tsx`):**
+- Full shift details: date, time range, hours, location
+- Assigned medic card with initials avatar, name, star rating
+- Complete pricing breakdown: base rate calculation, subtotal, VAT, total
+- Special notes section
+- "Contact support" card for modifications/cancellations
+
+**Invoices Page (`web/app/(client)/client/invoices/page.tsx`):**
+- Lists completed bookings as invoice items with Paid badge
+- Shows site name, date, hours, and total per invoice
+- Running total at bottom
+- Empty state when no completed bookings exist
+
+**Account Page (`web/app/(client)/client/account/page.tsx`):**
+- Company information: company name, contact name
+- Contact details: email, phone, billing address
+- Payment information: terms (Net 30 / Prepay), credit limit, member since date
+- Read-only with "Contact support" link for changes
+
+**Client Booking Queries (`web/lib/queries/client/bookings.ts`):**
+- `fetchClientBookings(orgId)` — finds client record by user_id, fetches bookings with medic joins
+- `useClientBookings()` — React Query hook with 60s polling
+- `fetchClientBookingDetail(orgId, bookingId)` — single booking fetch with client_id + org_id filtering
+- `useClientBookingDetail(bookingId)` — React Query hook for detail view
+- All queries are double-filtered: `client_id` (from user's client record) + `org_id` (from org context)
+
+| File | Change |
+|---|---|
+| `web/app/(client)/layout.tsx` | **New** — Client portal layout with sidebar, auth protection |
+| `web/components/client/ClientNav.tsx` | **New** — Client-specific sidebar navigation |
+| `web/app/(client)/client/bookings/page.tsx` | **New** — My Bookings list with filters and stats |
+| `web/app/(client)/client/bookings/[id]/page.tsx` | **New** — Booking detail with pricing breakdown |
+| `web/app/(client)/client/invoices/page.tsx` | **New** — Invoice list from completed bookings |
+| `web/app/(client)/client/account/page.tsx` | **New** — Client account profile (read-only) |
+| `web/lib/queries/client/bookings.ts` | **New** — Client-scoped booking query hooks |
+
+### Admin Contract Management UI (Task #15)
+
+Added contract management to the admin panel. All contract components and API routes were pre-built but not wired to admin pages. Created 4 admin pages and added "Contracts" to the admin sidebar navigation.
+
+**Admin Sidebar Update (`web/app/admin/layout.tsx`):**
+- Added `FileSignature` icon import
+- Added "Contracts" nav item at `/admin/contracts` (positioned after Bookings group, before Customers)
+
+**Contracts List Page (`web/app/admin/contracts/page.tsx`):**
+- Server component with parallel data fetching (`getContracts()` + `getContractStats()`)
+- Renders `ContractsTable` component with status summary cards, filters, search, and action dropdowns
+- Dark admin theme wrapper (white card on dark background)
+
+**Contract Detail Page (`web/app/admin/contracts/[id]/page.tsx`):**
+- Server component fetching contract by ID with all relations (versions, events, client, booking, template)
+- Breadcrumb navigation: Admin > Contracts > [contract number]
+- Renders `ContractDetail` component: two-column layout with payment schedule, status timeline, version history, signature display
+
+**Contract Creation Page (`web/app/admin/contracts/create/page.tsx`):**
+- Fetches eligible bookings (pending/confirmed without existing contracts) and active templates
+- Renders `CreateContractForm`: 4-step flow (select booking → template → payment terms → preview)
+- Empty states for no eligible bookings or no templates
+
+**Template Management Page (`web/app/admin/contracts/templates/page.tsx`):**
+- Fetches active templates via `getContractTemplates()`
+- Renders `TemplateManager`: inline CRUD for templates with clause ordering, T&Cs, cancellation policy
+
+| File | Change |
+|---|---|
+| `web/app/admin/layout.tsx` | Added FileSignature import + Contracts nav item |
+| `web/app/admin/contracts/page.tsx` | **New** — Contracts list with status cards and filters |
+| `web/app/admin/contracts/[id]/page.tsx` | **New** — Contract detail with timeline and payment schedule |
+| `web/app/admin/contracts/create/page.tsx` | **New** — Multi-step contract creation form |
+| `web/app/admin/contracts/templates/page.tsx` | **New** — Template CRUD management |
 
 ---
 

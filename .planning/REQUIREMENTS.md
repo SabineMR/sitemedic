@@ -33,9 +33,9 @@ Foundation work that all subsequent phases depend on. No user-visible output —
 
 ### SUB — Subscription Engine
 
-- [ ] **SUB-01**: Three Stripe Products/Prices exist in Stripe Dashboard: Starter £149/mo, Growth £299/mo, Enterprise £599/mo — price IDs stored as env vars (`STRIPE_PRICE_STARTER`, `STRIPE_PRICE_GROWTH`, `STRIPE_PRICE_ENTERPRISE`)
+- [x] **SUB-01**: Three Stripe Products/Prices exist in Stripe Dashboard: Starter £149/mo, Growth £299/mo, Enterprise £599/mo — price IDs stored as env vars (`STRIPE_PRICE_STARTER`, `STRIPE_PRICE_GROWTH`, `STRIPE_PRICE_ENTERPRISE`)
 - [ ] **SUB-02**: A new medic business can sign up at `sitemedic.co.uk/signup`, select a plan, and complete payment via Stripe Checkout — flow works end-to-end in test mode
-- [ ] **SUB-03**: A dedicated `/api/stripe/billing-webhooks` endpoint (separate signing secret from Connect webhooks) handles subscription lifecycle events: `checkout.session.completed` creates the org record; `customer.subscription.updated` updates tier; `customer.subscription.deleted` suspends org access
+- [x] **SUB-03**: A dedicated `/api/stripe/billing-webhooks` endpoint (separate signing secret from Connect webhooks) handles subscription lifecycle events: `checkout.session.completed` creates the org record; `customer.subscription.updated` updates tier; `customer.subscription.deleted` suspends org access
 - [ ] **SUB-04**: Platform admin receives a notification and sees a pending activation queue when a new org signs up — can activate the org, assign slug, and trigger branding setup
 - [ ] **SUB-05**: Org admin can access the Stripe Customer Portal from their settings page to manage billing (upgrade plan, update payment method, view invoices, cancel)
 - [ ] **SUB-06**: Platform admin dashboard shows all org subscriptions with plan, status, MRR summary, and churn indicators
@@ -43,7 +43,7 @@ Foundation work that all subsequent phases depend on. No user-visible output —
 
 ### GATE — Feature Gating
 
-- [ ] **GATE-01**: A single server-side `FEATURE_GATES` map defines which features are available per tier — tier is read from `organizations.subscription_tier` on each middleware request (never from JWT)
+- [x] **GATE-01**: A single server-side `FEATURE_GATES` map defines which features are available per tier — tier is read from `organizations.subscription_tier` on each middleware request (never from JWT)
 - [ ] **GATE-02**: White-label branding (BRAND-01 through BRAND-05) and subdomain access (ROUTE-01) are gated to Growth and Enterprise tiers — Starter orgs use SiteMedic default branding
 - [ ] **GATE-03**: Feature gates are enforced at both the API route layer and the UI layer simultaneously — UI gates alone are not sufficient (prevents bypass-by-URL)
 - [ ] **GATE-04**: Starter tier org admins see contextual upgrade prompts when they encounter Growth-gated features (e.g. "Upgrade to Growth to white-label your portal")
@@ -90,9 +90,9 @@ Foundation work that all subsequent phases depend on. No user-visible output —
 | INFRA-03 | Phase 24 | Complete |
 | INFRA-04 | Phase 24 | Complete |
 | INFRA-05 | Phase 24 | Complete |
-| SUB-01 | Phase 25 | Pending |
-| SUB-03 | Phase 25 | Pending |
-| GATE-01 | Phase 25 | Pending |
+| SUB-01 | Phase 25 | Complete |
+| SUB-03 | Phase 25 | Complete |
+| GATE-01 | Phase 25 | Complete |
 | ROUTE-01 | Phase 26 | Complete |
 | ROUTE-02 | Phase 26 | Complete |
 | ROUTE-03 | Phase 26 | Complete |

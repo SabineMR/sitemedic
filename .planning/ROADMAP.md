@@ -41,7 +41,7 @@ See: `.planning/milestones/v2.0-ROADMAP.md`
 **Phase list:**
 
 - [x] **Phase 24: DB Foundation** — Next.js CVE patch, migrations 132/133/134, org backfill ✓ 2026-02-18
-- [ ] **Phase 25: Billing Infrastructure** — Stripe Products, billing webhook handler, feature gates map
+- [x] **Phase 25: Billing Infrastructure** — Stripe Products, billing webhook handler, feature gates map ✓ 2026-02-18
 - [x] **Phase 26: Subdomain Routing** — Middleware wildcard DNS, subdomain extraction, security headers, branded login ✓ 2026-02-18
 - [ ] **Phase 27: Branding — Web Portal** — BrandingProvider, SSR header injection, CSS custom properties, portal rebrand
 - [ ] **Phase 28: Branding — PDFs & Emails** — Org logo in all 8 PDF Edge Functions + all 3 email templates
@@ -94,9 +94,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 25-01-PLAN.md — Stripe Products setup: env var template for billing Price IDs and webhook secret; user creates 3 Products with 18 Prices in Stripe Dashboard (test mode)
-- [ ] 25-02-PLAN.md — Feature gates: create web/lib/billing/feature-gates.ts with FEATURE_GATES constant, hasFeature() helper, isAtLeastTier() helper, SubscriptionTier and FeatureKey types
-- [ ] 25-03-PLAN.md — Billing webhook handler: migration 135 (webhook_events table + subscription_status_updated_at column); create web/app/api/stripe/billing-webhooks/route.ts handling checkout.session.completed, customer.subscription.updated, customer.subscription.deleted, invoice.payment_failed
+- [x] 25-01-PLAN.md — Stripe Products setup: env var template for billing Price IDs and webhook secret; user creates 3 Products with 18 Prices in Stripe Dashboard (test mode)
+- [x] 25-02-PLAN.md — Feature gates: create web/lib/billing/feature-gates.ts with FEATURE_GATES constant, hasFeature() helper, isAtLeastTier() helper, SubscriptionTier and FeatureKey types
+- [x] 25-03-PLAN.md — Billing webhook handler: migration 135 (webhook_events table + subscription_status_updated_at column); create web/app/api/stripe/billing-webhooks/route.ts handling checkout.session.completed, customer.subscription.updated, customer.subscription.deleted, invoice.payment_failed
 
 ---
 

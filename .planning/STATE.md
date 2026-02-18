@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v3.0 White-Label Platform & Subscription Engine — Phase 26 complete; Phase 27 next (Branding — Web Portal)
+**Current focus:** v3.0 White-Label Platform & Subscription Engine — Phase 25 complete; Phase 27 next (Branding — Web Portal)
 
 ## Current Position
 
-Phase: 26 of 31 (Subdomain Routing — COMPLETE)
-Plan: 4 of 4 in Phase 26
-Status: Phase 26 complete — all 4 plans done (26-01 through 26-04)
-Last activity: 2026-02-18 — Completed 26-04-PLAN.md (auth cookie scope verification and signout fix)
+Phase: 25 of 31 (Billing Infrastructure — COMPLETE)
+Plan: 3 of 3 in Phase 25
+Status: Phase 25 complete — all 3 plans done (25-01 through 25-03)
+Last activity: 2026-02-18 — Completed 25-03-PLAN.md (billing webhook handler and webhook_events migration)
 
-Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [████░░░░░░] v3.0 ~28% (Phase 24: 5/5, Phase 26: 4/4 done)
+Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [█████░░░░░] v3.0 ~38% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4 done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 129 (84 v1.0 + 35 v1.1 + 30 v2.0 + 9 v3.0)
+- Total plans completed: 132 (84 v1.0 + 35 v1.1 + 30 v2.0 + 12 v3.0)
 - Average duration: 4.0 min
 - Total execution time: ~8.5 hours
 
@@ -31,10 +31,11 @@ Progress: [██████████] v1.0 complete | [██████�
 | 08–17 (v1.1) | 35/35 | ~2.4 hrs | ~4.1 min |
 | 18–23 (v2.0) | 30/30 | ~22 min | ~1.8 min |
 | 24 (v3.0) | 5/5 | ~6 min | ~1.2 min |
+| 25 (v3.0) | 3/3 | ~8 min | ~2.7 min |
 | 26 (v3.0) | 4/4 | ~8 min | ~2 min |
 
 **Recent Trend:**
-- Last plan: 26-04 — fixed signout route for subdomain origin; verified cookie scope isolation (~2 min)
+- Last plan: 25-03 — billing webhook handler + webhook_events migration (~4 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -71,6 +72,11 @@ Progress: [██████████] v1.0 complete | [██████�
 - **26-02:** Logo URL constructed from logo_path: `${SUPABASE_URL}/storage/v1/object/public/org-logos/${logo_path}`
 - **26-03:** Login page split: server component (page.tsx) reads headers → client component (login-form.tsx) handles interactivity
 - **26-04:** Signout route uses request origin (not hardcoded NEXT_PUBLIC_SITE_URL) for subdomain support
+- **25-02:** FEATURE_GATES is sole source of truth — 12 features across 3 tiers, hasFeature() defaults NULL tier to 'starter'
+- **25-03:** normalizeSubscriptionStatus maps Stripe 'canceled' (US) to database 'cancelled' (UK) per migration 133 CHECK constraint
+- **25-03:** handlePaymentFailed does NOT change subscription_status — waits for customer.subscription.updated with 'past_due'
+- **25-03:** Out-of-order webhook protection via subscription_status_updated_at timestamp comparison
+- **25-03:** priceIdToTier() parses comma-separated STRIPE_PRICE_* env vars with .trim() for whitespace tolerance
 
 ### Pending Todos
 
@@ -79,6 +85,8 @@ Progress: [██████████] v1.0 complete | [██████�
 - **Configure Vercel wildcard `*.sitemedic.co.uk` and DNS CNAME** — checkpoint from 26-01; 72h propagation
 - **Apply Phase 24 migrations (132, 133, 134) to Supabase production** — verified correct, ready to apply
 - **Add `NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.co.uk` to Vercel env vars** — needed for production subdomain routing
+- **Create Stripe Products/Prices and register billing webhook** — checkpoint from 25-01; user must create 3 Products with 18 Prices in Stripe Dashboard and populate .env.local
+- **Apply migration 135 (webhook_events) to Supabase production** — ready to apply after Phase 24 migrations
 
 ### Blockers/Concerns
 
@@ -88,5 +96,5 @@ Progress: [██████████] v1.0 complete | [██████�
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed Phase 26 Subdomain Routing — all 4 plans done; verification passed (human testing needed for DNS)
+Stopped at: Completed Phase 25 Billing Infrastructure — all 3 plans done; feature gates verified, webhook handler deployed
 Resume file: None
