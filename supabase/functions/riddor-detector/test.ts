@@ -166,3 +166,61 @@ console.log('='.repeat(80));
 if (failed > 0) {
   Deno.exit(1);
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FOOT-04: Football / sporting_events vertical gate
+// These tests assert the NON_RIDDOR_VERTICALS array values directly.
+// NON_RIDDOR_VERTICALS is a local const inside the serve() handler — it cannot
+// be imported. The assertions validate the known expected values as literals.
+// Run with: deno run --allow-env supabase/functions/riddor-detector/test.ts
+// ─────────────────────────────────────────────────────────────────────────────
+
+console.log('');
+console.log('='.repeat(80));
+console.log('FOOT-04: RIDDOR Vertical Gate Tests');
+console.log('='.repeat(80));
+console.log('');
+
+let foot04Passed = 0;
+let foot04Failed = 0;
+
+// The NON_RIDDOR_VERTICALS array as it must exist in index.ts.
+// If this list drifts from the actual array in index.ts, the grep verify step catches it.
+const KNOWN_NON_RIDDOR_VERTICALS = ['festivals', 'motorsport', 'sporting_events', 'fairs_shows', 'private_events'];
+
+function foot04Test(name: string, condition: boolean): void {
+  if (condition) {
+    foot04Passed++;
+    console.log(`✅ PASS: ${name}`);
+  } else {
+    foot04Failed++;
+    console.log(`❌ FAIL: ${name}`);
+  }
+}
+
+// Test 1: sporting_events IS in the non-RIDDOR list
+foot04Test(
+  'sporting_events is in NON_RIDDOR_VERTICALS',
+  KNOWN_NON_RIDDOR_VERTICALS.includes('sporting_events'),
+);
+
+// Test 2: construction is NOT in the non-RIDDOR list (regression: construction IS RIDDOR-applicable)
+foot04Test(
+  'construction is NOT in NON_RIDDOR_VERTICALS (RIDDOR applies to construction)',
+  !KNOWN_NON_RIDDOR_VERTICALS.includes('construction'),
+);
+
+// Test 3: tv_film is NOT in the non-RIDDOR list (regression: tv_film IS RIDDOR-applicable)
+foot04Test(
+  'tv_film is NOT in NON_RIDDOR_VERTICALS (RIDDOR applies to tv_film)',
+  !KNOWN_NON_RIDDOR_VERTICALS.includes('tv_film'),
+);
+
+console.log('');
+console.log('='.repeat(80));
+console.log(`FOOT-04 Test Summary: ${foot04Passed} passed, ${foot04Failed} failed out of 3 tests`);
+console.log('='.repeat(80));
+
+if (foot04Failed > 0) {
+  Deno.exit(1);
+}

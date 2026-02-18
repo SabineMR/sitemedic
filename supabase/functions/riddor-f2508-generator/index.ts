@@ -100,6 +100,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Validate vertical — F2508 only applies to RIDDOR verticals.
+    // FOOT-04: football treatments never reach F2508 generation
     const NON_RIDDOR_VERTICALS = ['festivals', 'motorsport', 'sporting_events', 'fairs_shows', 'private_events'];
     const treatmentVertical = (incident.treatments as unknown as { event_vertical?: string })?.event_vertical;
     if (treatmentVertical && NON_RIDDOR_VERTICALS.includes(treatmentVertical)) {
