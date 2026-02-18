@@ -2,12 +2,42 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Phase 19-04: Motorsport Medical Statistics Sheet PDF generator Edge Function + concussion clearance badge in treatments table + Generate Medical Statistics Sheet button on motorsport booking detail page)
+**Last Updated**: 2026-02-18 (Phase 19-05: RIDDOR UI gate fix — motorsport and all non-RIDDOR verticals now correctly suppressed in mobile form banner and web dashboard badge; Phase 19 Motorsport Vertical complete)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
 
-## Recent Updates — Motorsport Vertical: Medical Statistics Sheet (2026-02-18)
+## Recent Updates — Motorsport Vertical: Integration Fix & Phase Complete (2026-02-18)
+
+### Phase 19-05: RIDDOR Gate Fix — Non-RIDDOR Verticals Correctly Suppressed (MOTO-04) ✅
+
+Integration verification revealed that two RIDDOR UI surfaces were not guarded by the vertical compliance registry. Both were fixed as orchestrator corrections and committed.
+
+**`app/treatment/new.tsx` — RIDDOR banner gate fix:**
+- **Before (wrong):** `if (injuryType?.isRiddorReportable && orgVertical !== 'festivals')`
+  - Only excluded festivals; motorsport still showed RIDDOR banner
+- **After (correct):** `if (injuryType?.isRiddorReportable && getVerticalCompliance(orgVertical).riddorApplies)`
+  - Uses the authoritative vertical compliance registry (`services/taxonomy/vertical-compliance.ts`)
+  - Future-proof: any new non-RIDDOR vertical automatically suppresses the banner with no code change
+
+**`web/components/dashboard/treatments-columns.tsx` — RIDDOR badge guard fix:**
+- **Before (wrong):** RIDDOR badge column had no vertical guard — would show "RIDDOR" for any treatment with `is_riddor_reportable = true` regardless of vertical
+- **After (correct):** Added `nonRiddorVerticals = ['motorsport', 'festivals', 'sporting_events']` check; badge returns `null` for any non-RIDDOR vertical
+- Prevents false RIDDOR badges on motorsport, festival, and football treatment rows
+
+**Commit:** `fix(19): use riddorApplies gate for RIDDOR UI in form and dashboard badge`
+
+**Integration Verification Results (Phase 19-05 Task 1):**
+All 5 success criteria passed automated code inspection:
+- SC-1 ✅ Motorsport form fields present + concussion gate blocks submission (`handleCompleteTreatment` hard return)
+- SC-2 ✅ RIDDOR disabled: `'motorsport'` in `NON_RIDDOR_VERTICALS` + `riddorApplies: false` in compliance registry
+- SC-3 ✅ Concussion badge renders only for `event_vertical === 'motorsport'` + `competitor_cleared_to_return !== true`
+- SC-4 ✅ `motorsport-stats-sheet-generator` Edge Function exists + booking detail has conditional stats button
+- SC-5 ✅ Cert ordering: Motorsport UK Medical Official Licence, HCPC Paramedic, PHTLS at top of motorsport cert profile
+
+**Human verification:** User approved all 5 criteria after live-app testing.
+
+---
 
 ### Phase 19-04: Medical Statistics Sheet PDF Generator and Concussion Clearance Badge (MOTO-02, MOTO-03) ✅
 
@@ -6932,6 +6962,72 @@ Phase 21 adds Film/TV-specific capabilities to the platform. All infrastructure 
 ---
 
 ### Recent Changes (2026-02-17)
+
+#### Hourly Pay Model + 4-Way Profit Split (Migration 129)
+Replaces the percentage-based payout model (junior/senior/lead tiers) with a flexible hourly rate system and introduces a structured 4-way profit split for SiteMedic's founders.
+
+**What changed:**
+- **Medic pay** is now calculated as `hourly_rate × hours_worked` (rate set manually per medic by admin)
+- **Classification**: Each medic can be assigned a UK medical classification (10 levels from First Aider to Doctor) for categorisation and reporting — does not affect pay
+- **Backward compatibility**: Old bookings keep `pay_model = 'percentage'`; all legacy % columns preserved
+- **4-way profit split**: After medic pay, mileage, and referral commission are deducted, the net revenue is split equally: ¼ Sabine / ¼ Kai / ¼ operational costs / ¼ equipment/emergency reserve
+
+**Business rules:**
+- Client pricing formula is **unchanged** — clients see the same price regardless of pay model
+- VAT, urgency premiums, mileage (HMRC 45p/mile), and referral 10% commission are all unchanged
+- Hourly rate is set manually by admin — no auto-calculation from classification or experience
+- The 4-way split is calculated at payment time and recorded in `profit_splits` table
+- Same 4-way split logic applies to SiteMedic app revenue (operational / ads/marketing buckets)
+
+**New database tables:**
+
+| Table | Purpose |
+|-------|---------|
+| `apex_partners` | Tracks Sabine and Kai's cumulative earned/paid balances and `balance` (generated column) |
+| `expense_buckets` | Running totals for operational and reserve buckets (apex + app revenue sources) |
+| `profit_splits` | Per-booking record of the 4-way split — created when booking is paid |
+
+**New columns on `medics`:**
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `classification` | TEXT | UK medical classification (10 options) |
+| `years_experience` | INT | Years of medical experience (0+) |
+| `hourly_rate` | DECIMAL(10,2) | Admin-set hourly rate in GBP (NULL = not yet set) |
+| `hourly_rate_override` | BOOLEAN | Whether rate has been manually overridden |
+
+**New columns on `bookings`:**
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `pay_model` | TEXT | `'percentage'` (legacy) or `'hourly'` (new) |
+| `medic_hourly_rate` | DECIMAL(10,2) | Snapshot of rate at booking time |
+| `medic_pay` | DECIMAL(10,2) | Hourly rate × hours worked |
+| `net_after_costs` | DECIMAL(10,2) | Total − medic_pay − mileage − referral |
+| `sabine_share` | DECIMAL(10,2) | Net / 4 |
+| `kai_share` | DECIMAL(10,2) | Net / 4 |
+| `operational_bucket_amount` | DECIMAL(10,2) | Net / 4 |
+| `reserve_bucket_amount` | DECIMAL(10,2) | Net / 4 |
+| `split_calculated_at` | TIMESTAMPTZ | When the split was last calculated |
+
+**UK medical classifications (10 levels):**
+`first_aider` → `eca` → `efr` → `emt` → `aap` → `paramedic` → `specialist_paramedic` → `critical_care_paramedic` → `registered_nurse` → `doctor`
+
+**New files:**
+| File | Description |
+|------|-------------|
+| `supabase/migrations/129_hourly_pay_and_profit_split.sql` | All DB schema changes: new columns, new tables, RLS policies |
+
+**Modified files:**
+| File | Change |
+|------|--------|
+| `web/lib/medics/experience.ts` | Added `MedicClassification` type, `CLASSIFICATION_LABELS` record, and `CLASSIFICATION_LIST` array. Existing tier constants preserved. |
+| `web/lib/payouts/calculator.ts` | Added `FourWaySplit` interface and `calculateFourWaySplit()` function. Old `calculatePayout()` preserved for legacy bookings. |
+| `web/lib/booking/types.ts` | Added `MedicClassification` type, `PayModel` type, and `FourWaySplit` interface. |
+| `web/components/medics/compensation-settings.tsx` | Fully updated: pay model toggle (hourly/percentage), classification dropdown (10 UK levels), years of experience input, hourly rate input, live payout preview for both models. |
+| `supabase/functions/calculate-pricing/index.ts` | Added `pay_model` field awareness. When `pay_model='hourly'`: validates `medic_hourly_rate`, computes `medic_pay`, `net_after_costs`, and 4-way split preview. All existing % fields preserved for backward compat. |
+
+---
 
 #### Treatment Form — Vertical-Aware Presets & Labels (Tier 1B)
 The mobile treatment logging form now adapts to the org's industry vertical. On mount it fetches `org_settings.industry_verticals` for the current medic's org and applies vertical-specific terminology throughout the form. The DB outcome IDs are unchanged — only display labels adapt.

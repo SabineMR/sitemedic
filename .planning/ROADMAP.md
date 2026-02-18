@@ -33,10 +33,10 @@ See: `.planning/milestones/v1.1-ROADMAP.md`
 **Phase list:**
 
 - [x] **Phase 18: Vertical Infrastructure & RIDDOR Fix** — Schema v4, RIDDOR detector vertical gate, mobile OrgContext, booking override wiring, admin vertical settings
-- [ ] **Phase 19: Motorsport Vertical** — GCS/concussion form, mandatory licence suspension workflow, Medical Statistics Sheet, Motorsport UK PDF
+- [x] **Phase 19: Motorsport Vertical** — GCS/concussion form, mandatory licence suspension workflow, Medical Statistics Sheet, Motorsport UK PDF
 - [x] **Phase 20: Festivals & Events Vertical** — TST triage, Purple Guide PDF, RIDDOR disabled for attendees, safeguarding + substance flags
 - [x] **Phase 21: Film/TV Production Vertical** — Production-specific form fields, Film/TV terminology, cert profile, existing RIDDOR pipeline reused
-- [ ] **Phase 22: Football / Sports Vertical** — Dual patient type (player/spectator), FA + SGSA forms and PDFs, RIDDOR disabled for players
+- [x] **Phase 22: Football / Sports Vertical** — Dual patient type (player/spectator), FA + SGSA forms and PDFs, RIDDOR disabled for players
 - [ ] **Phase 23: Analytics — Heat Maps & Trend Charts** — Near-miss heat maps (org + platform), compliance score history, trend charts
 
 ---
@@ -108,11 +108,11 @@ Plans:
 
 **Plans:** 5 plans
 
-- [ ] 19-01-PLAN.md — Motorsport form fields + concussion gate: MotorsportExtraFields interface, conditional form section in app/treatment/new.tsx with GCS score, extrication, helmet, circuit section, Clerk of Course, car number; mandatory three-step concussion clearance gate blocking form submission
-- [ ] 19-02-PLAN.md — Cert types + RIDDOR verification: add Motorsport UK Medical Official Licence and BASM Diploma to both cert registries; reorder motorsport cert priority; extend TreatmentWithWorker type; verify RIDDOR gate
-- [ ] 19-03-PLAN.md — Motorsport PDF Edge Function: replace 501 stub in motorsport-incident-generator with full PDF generation; motorsport-reports storage bucket migration 125; checkpoint for Incident Pack V8.0 download
-- [ ] 19-04-PLAN.md — Medical Statistics Sheet + dashboard badge: motorsport-stats-sheet-generator Edge Function for per-booking aggregate PDF; concussion clearance badge on treatments table; Generate Stats Sheet button on booking detail
-- [ ] 19-05-PLAN.md — Integration verification: automated check of all 5 success criteria across all plans; human-verify checkpoint for end-to-end flow
+- [x] 19-01-PLAN.md — Motorsport form fields + concussion gate: MotorsportExtraFields interface, conditional form section in app/treatment/new.tsx with GCS score, extrication, helmet, circuit section, Clerk of Course, car number; mandatory three-step concussion clearance gate blocking form submission
+- [x] 19-02-PLAN.md — Cert types + RIDDOR verification: add Motorsport UK Medical Official Licence and BASM Diploma to both cert registries; reorder motorsport cert priority; extend TreatmentWithWorker type; verify RIDDOR gate
+- [x] 19-03-PLAN.md — Motorsport PDF Edge Function: replace 501 stub in motorsport-incident-generator with full PDF generation; motorsport-reports storage bucket migration 125; checkpoint for Incident Pack V8.0 download
+- [x] 19-04-PLAN.md — Medical Statistics Sheet + dashboard badge: motorsport-stats-sheet-generator Edge Function for per-booking aggregate PDF; concussion clearance badge on treatments table; Generate Stats Sheet button on booking detail
+- [x] 19-05-PLAN.md — Integration verification: automated check of all 5 success criteria across all plans; human-verify checkpoint for end-to-end flow
 
 ---
 
@@ -187,7 +187,7 @@ Plans:
 - [x] 22-02-PLAN.md — Football RIDDOR gate: verify 'sporting_events' is in NON_RIDDOR_VERTICALS; annotate FOOT-04; Deno-native test asserting gate; confirm F2508 generator 400 guard
 - [x] 22-03-PLAN.md — Football PDF Edge Functions: replace fa-incident-generator 501 stub with full FA Match Day Injury Form (player) and SGSA Medical Incident Report (spectator) PDF generation; FAPlayerDocument.tsx, FASpectatorDocument.tsx, mapping files; fa-incident-reports storage bucket migration 127
 - [x] 22-04-PLAN.md — Football vertical wiring: getPatientLabel('sporting_events') → 'Player'; org-labels.ts sporting_events → Player/Pitch+Ground/Club; 4 new football cert types (ATMMiF, ITMMiF, FA Advanced Trauma Management, FA Concussion Module) + sporting_events CertCategory + VERTICAL_CERT_TYPES update
-- [ ] 22-05-PLAN.md — Gap closure: FAIncidentReportCard component, fa-incidents query, sporting_events branch in treatment detail page, stale dispatcher comment fix
+- [x] 22-05-PLAN.md — Gap closure: FAIncidentReportCard component, fa-incidents query, sporting_events branch in treatment detail page, stale dispatcher comment fix
 
 ---
 
@@ -251,8 +251,8 @@ Plans:
 | 17. Geofence Coverage | v1.1 | 1/1 | Complete | 2026-02-17 |
 | 18. Vertical Infrastructure & RIDDOR Fix | v2.0 | 5/5 | Complete | 2026-02-18 |
 | 18.5. Construction & Infrastructure Vertical | v2.0 | 2/2 | Complete | 2026-02-18 |
-| 19. Motorsport Vertical | v2.0 | 0/5 | Not started | - |
+| 19. Motorsport Vertical | v2.0 | 5/5 | Complete | 2026-02-18 |
 | 20. Festivals & Events Vertical | v2.0 | 4/4 | Complete | 2026-02-17 |
 | 21. Film/TV Production Vertical | v2.0 | 2/2 | Complete | 2026-02-17 |
-| 22. Football / Sports Vertical | v2.0 | 4/5 | Gap closure in progress | - |
+| 22. Football / Sports Vertical | v2.0 | 5/5 | Complete | 2026-02-18 |
 | 23. Analytics — Heat Maps & Trend Charts | v2.0 | 0/5 | Not started | - |
