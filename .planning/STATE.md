@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-18)
 ## Current Position
 
 Phase: 29 of 31 (Org Onboarding Flow)
-Plan: 3 of 5 in Phase 29
-Status: In progress — 29-01, 29-02, 29-03 complete (Waves 1+2 done)
-Last activity: 2026-02-18 — Completed 29-03-PLAN.md (Post-payment onboarding wizard & middleware)
+Plan: 5 of 5 in Phase 29
+Status: Phase 29 complete — all 5 plans delivered
+Last activity: 2026-02-18 — Completed 29-04-PLAN.md (Platform admin activation queue)
 
-Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [████████░░] v3.0 ~65% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4, Phase 27: 3/3, Phase 28: 3/3, Phase 29: 4/5 done)
+Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [████████░░] v3.0 ~74% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4, Phase 27: 3/3, Phase 28: 3/3, Phase 29: 5/5 done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 142 (84 v1.0 + 35 v1.1 + 30 v2.0 + 22 v3.0)
+- Total plans completed: 143 (84 v1.0 + 35 v1.1 + 30 v2.0 + 23 v3.0)
 - Average duration: 4.0 min
-- Total execution time: ~8.9 hours
+- Total execution time: ~9.0 hours
 
 **By Phase:**
 
@@ -35,10 +35,10 @@ Progress: [██████████] v1.0 complete | [██████�
 | 26 (v3.0) | 4/4 | ~8 min | ~2 min |
 | 27 (v3.0) | 3/3 | ~6 min | ~2 min |
 | 28 (v3.0) | 3/3 | ~8 min | ~2.7 min |
-| 29 (v3.0) | 4/5 | ~19 min | ~4.8 min |
+| 29 (v3.0) | 5/5 | ~25 min | ~5 min |
 
 **Recent Trend:**
-- Last plan: 29-03 — Post-payment onboarding wizard & middleware (~4 min)
+- Last plan: 29-04 — Platform admin activation queue (~6 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -98,6 +98,9 @@ Progress: [██████████] v1.0 complete | [██████�
 - **29-03:** Legacy orgs (NULL onboarding_completed) treated as completed via ?? true — prevents breaking existing users
 - **29-03:** Branding page only UPDATEs org_branding row (never INSERTs) — row created by checkout route (29-01)
 - **29-03:** Logo upload uses Supabase Storage upsert: true to allow replacing without deletion
+- **29-04:** Slug format validation: /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/ — 3-30 chars, no leading/trailing hyphens
+- **29-04:** Starter-tier orgs skip slug assignment entirely; Growth/Enterprise require slug before activation
+- **29-04:** Welcome email sent fire-and-forget after activation — activation succeeds regardless of email delivery
 
 ### Pending Todos
 
@@ -116,5 +119,5 @@ Progress: [██████████] v1.0 complete | [██████�
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 29-03-PLAN.md (Post-payment onboarding wizard & middleware)
+Stopped at: Completed 29-04-PLAN.md (Platform admin activation queue) — Phase 29 fully complete
 Resume file: None
