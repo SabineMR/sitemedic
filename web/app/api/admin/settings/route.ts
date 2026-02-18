@@ -54,6 +54,10 @@ export async function PUT(request: NextRequest) {
       cqc_registered?: unknown;
       cqc_registration_number?: unknown;
       cqc_registration_date?: unknown;
+      // Payout configuration
+      mileage_enabled?: unknown;
+      mileage_rate_pence?: unknown;
+      referral_commission_percent?: unknown;
     };
 
     try {
@@ -144,6 +148,38 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    // Validate mileage_enabled: must be boolean
+    if (body.mileage_enabled !== undefined) {
+      if (typeof body.mileage_enabled !== 'boolean') {
+        return NextResponse.json(
+          { error: 'mileage_enabled must be a boolean' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate mileage_rate_pence: must be integer 0-200
+    if (body.mileage_rate_pence !== undefined) {
+      const rate = Number(body.mileage_rate_pence);
+      if (!Number.isInteger(rate) || rate < 0 || rate > 200) {
+        return NextResponse.json(
+          { error: 'mileage_rate_pence must be an integer between 0 and 200' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate referral_commission_percent: must be number 0-100
+    if (body.referral_commission_percent !== undefined) {
+      const pct = Number(body.referral_commission_percent);
+      if (isNaN(pct) || pct < 0 || pct > 100) {
+        return NextResponse.json(
+          { error: 'referral_commission_percent must be a number between 0 and 100' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Validate industry_verticals: must be non-empty array of known vertical IDs
     if (body.industry_verticals !== undefined) {
       if (!Array.isArray(body.industry_verticals) || body.industry_verticals.length === 0) {
@@ -181,6 +217,9 @@ export async function PUT(request: NextRequest) {
       updatePayload.cqc_registration_number = body.cqc_registration_number === '' ? null : body.cqc_registration_number;
     if (body.cqc_registration_date !== undefined)
       updatePayload.cqc_registration_date = body.cqc_registration_date === '' ? null : body.cqc_registration_date;
+    if (body.mileage_enabled !== undefined) updatePayload.mileage_enabled = Boolean(body.mileage_enabled);
+    if (body.mileage_rate_pence !== undefined) updatePayload.mileage_rate_pence = Number(body.mileage_rate_pence);
+    if (body.referral_commission_percent !== undefined) updatePayload.referral_commission_percent = Number(body.referral_commission_percent);
 
     const { data, error } = await supabase
       .from('org_settings')

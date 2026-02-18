@@ -35,6 +35,9 @@ interface BookingRequest {
   recurringWeeks: number;
   clientId: string;
   eventVertical?: string;
+  // Referral fields
+  isReferral?: boolean;
+  referredBy?: string | null;
   pricing: {
     baseRate: number;
     shiftHours: number;
@@ -47,6 +50,10 @@ interface BookingRequest {
     total: number;
     platformFee: number;
     medicPayout: number;
+    // Referral pricing fields
+    referralPayoutPercent?: number;
+    referralPayoutAmount?: number;
+    platformNet?: number;
   };
 }
 
@@ -157,6 +164,12 @@ export async function POST(request: NextRequest) {
         platform_fee: body.pricing.platformFee,
         medic_payout: body.pricing.medicPayout,
         event_vertical: body.eventVertical ?? null,
+        // Referral fields
+        is_referral: body.isReferral || false,
+        referred_by: body.referredBy || null,
+        referral_payout_percent: body.pricing?.referralPayoutPercent || 0,
+        referral_payout_amount: body.pricing?.referralPayoutAmount || 0,
+        platform_net: body.pricing?.platformNet || body.pricing?.platformFee || 0,
       })
       .select()
       .single();

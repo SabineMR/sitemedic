@@ -2,12 +2,60 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Profit Split Dashboard — Platform Admin combined ASG + SiteMedic profit view)
+**Last Updated**: 2026-02-18 (Org Admin Payout Configuration — mileage, referral, pay guidelines)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
 
-## Recent Updates — Profit Split Dashboard (2026-02-18)
+## Recent Updates — Org Admin Payout Configuration (2026-02-18)
+
+### Configurable Payout Settings for Org Admins
+
+Org admins can now configure mileage reimbursement and referral commission settings per organisation, replacing previously hardcoded values. Adds pay guideline banners when setting medic hourly rates, and fixes a critical bug where referral fields were not saved during booking creation.
+
+**New Files:**
+
+| File | Purpose |
+|------|---------|
+| `supabase/migrations/136_org_payout_settings.sql` | Adds 3 columns to `org_settings`: `mileage_enabled` (boolean, default true), `mileage_rate_pence` (integer 0-200, default 45), `referral_commission_percent` (decimal 0-100, default 10.00) |
+| `web/lib/medics/pay-guidelines.ts` | Platform reference table of suggested hourly rates by UK medical classification and experience band (0-2yr / 3-5yr / 6+yr). Exports `getSuggestedRate(classification, yearsExperience)` returning range string and band label |
+
+**Modified Files:**
+
+| File | Change |
+|------|--------|
+| `web/app/admin/settings/page.tsx` | Added "Payout Configuration" section between Business Configuration and CQC Compliance with: mileage toggle + rate input (p/mile), referral commission % input. New state: `mileageEnabled`, `mileageRatePence`, `referralCommissionPercent`. New save handler: `handleSavePayout()` |
+| `web/app/api/admin/settings/route.ts` | Added server-side validation for 3 new fields in PUT handler: `mileage_enabled` (boolean), `mileage_rate_pence` (integer 0-200), `referral_commission_percent` (number 0-100). Fields added to update payload builder |
+| `web/components/medics/compensation-settings.tsx` | New props: `orgMileageEnabled`, `orgMileageRatePence`. Shows pay guideline banner when hourly model + classification + years are set (e.g. "Guideline for Paramedic (3-5 years): £16-20/hr"). Mileage info box and preview calculations now use org-configured rate instead of hardcoded HMRC 45p. Shows "Mileage disabled" when org has mileage_enabled=false |
+| `web/lib/payouts/mileage-router.ts` | `routeDailyMileage()` now fetches `org_settings` for the booking's org to get `mileage_enabled` + `mileage_rate_pence`. When mileage disabled: reimbursement set to £0 but miles still recorded for reporting. Uses org's rate instead of `HMRC_MILEAGE_RATE_PENCE` constant |
+| `web/app/api/bookings/create/route.ts` | **Bug fix**: Added missing referral fields to booking insert: `is_referral`, `referred_by`, `referral_payout_percent`, `referral_payout_amount`, `platform_net`. Also added `isReferral`, `referredBy` to BookingRequest interface and referral pricing fields to the pricing sub-interface |
+
+**Key Features:**
+- **Mileage toggle**: Org admins can enable/disable mileage reimbursement entirely — when disabled, miles are still tracked for reporting but £0 is paid
+- **Configurable mileage rate**: Default 45p/mile (HMRC), adjustable 0-200p per org. HMRC label shown when rate matches 45p
+- **Referral commission %**: Default 10%, adjustable 0-100%. Set to 0 to disable referral payouts. Calculated on pre-VAT subtotal
+- **Pay guidelines**: Non-intrusive informational banner showing suggested rate ranges by classification and experience band when admin sets hourly rate
+- **Downstream integration**: Mileage router reads org settings at runtime; compensation preview reflects org's actual mileage config
+- **Bug fix**: Referral fields (`is_referral`, `referred_by`, `referral_payout_percent`, `referral_payout_amount`, `platform_net`) now correctly persisted when creating Net 30 bookings
+
+**Pay Guideline Reference Table (from `pay-guidelines.ts`):**
+
+| Classification | 0-2 years | 3-5 years | 6+ years |
+|---|---|---|---|
+| First Aider | £10-12/hr | £12-14/hr | £14+/hr |
+| ECA | £11-13/hr | £13-15/hr | £15+/hr |
+| EFR | £12-14/hr | £14-16/hr | £16+/hr |
+| EMT | £13-15/hr | £15-18/hr | £18+/hr |
+| AAP | £14-17/hr | £17-20/hr | £20+/hr |
+| Paramedic | £16-20/hr | £20-24/hr | £24+/hr |
+| Specialist Paramedic | £20-25/hr | £25-30/hr | £30+/hr |
+| Critical Care Paramedic | £25-30/hr | £30-38/hr | £38+/hr |
+| Registered Nurse | £18-22/hr | £22-28/hr | £28+/hr |
+| Doctor | £35-50/hr | £50-75/hr | £75+/hr |
+
+---
+
+## Previous Updates — Profit Split Dashboard (2026-02-18)
 
 ### Platform Admin Profit Split Dashboard (`/platform/profit-split`)
 

@@ -26,6 +26,7 @@ import {
   CLASSIFICATION_LABELS,
   CLASSIFICATION_LIST,
 } from '@/lib/medics/experience';
+import { getSuggestedRate } from '@/lib/medics/pay-guidelines';
 
 type PayModel = 'hourly' | 'percentage';
 
@@ -37,6 +38,9 @@ interface CompensationSettingsProps {
   initialClassification?: MedicClassification | null;
   initialYearsExperience?: number;
   initialHourlyRate?: number | null;
+  // Org payout settings (from org_settings table)
+  orgMileageEnabled?: boolean;
+  orgMileageRatePence?: number;
 }
 
 /** Example shift for the preview panels */
@@ -52,6 +56,8 @@ export function CompensationSettings({
   initialClassification = null,
   initialYearsExperience = 0,
   initialHourlyRate = null,
+  orgMileageEnabled = true,
+  orgMileageRatePence,
 }: CompensationSettingsProps) {
   const firstName = medicName.split(' ')[0];
 
@@ -75,18 +81,27 @@ export function CompensationSettings({
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Use org's configured mileage rate, falling back to HMRC default
+  const effectiveMileageRate = orgMileageRatePence ?? HMRC_MILEAGE_RATE_PENCE;
+  const effectiveMileageForPreview = orgMileageEnabled ? effectiveMileageRate : 0;
+
+  // Pay guideline lookup
+  const guideline = (classification && payModel === 'hourly')
+    ? getSuggestedRate(classification as MedicClassification, yearsExperience)
+    : null;
+
   // Preview calculations
   const selectedTier = EXPERIENCE_TIER_LIST.find(t => t.level === selectedLevel)!;
   const percentagePreview = calculateTotalMedicPayout({
     bookingTotal: EXAMPLE_BOOKING_TOTAL,
     medicPayoutPercent: selectedTier.medicPayoutPercent,
     legMiles: EXAMPLE_ROUND_TRIP_MILES,
-    mileageRatePence: HMRC_MILEAGE_RATE_PENCE,
+    mileageRatePence: effectiveMileageForPreview,
   });
 
   const parsedHourlyRate = parseFloat(hourlyRate) || 0;
   const hourlyShiftPay = parseFloat((parsedHourlyRate * EXAMPLE_HOURS).toFixed(2));
-  const hourlyMileage = parseFloat((EXAMPLE_ROUND_TRIP_MILES * HMRC_MILEAGE_RATE_PENCE / 100).toFixed(2));
+  const hourlyMileage = parseFloat((EXAMPLE_ROUND_TRIP_MILES * effectiveMileageForPreview / 100).toFixed(2));
   const hourlyTotal = parseFloat((hourlyShiftPay + hourlyMileage).toFixed(2));
 
   const isDirty =
@@ -243,6 +258,19 @@ export function CompensationSettings({
             </p>
           </div>
 
+          {/* Pay guideline banner */}
+          {guideline && (
+            <div className="flex items-start gap-3 px-4 py-3 bg-blue-900/20 border border-blue-700/30 rounded-xl">
+              <TrendingUp className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-blue-300 leading-relaxed">
+                <span className="font-medium">
+                  Guideline for {CLASSIFICATION_LABELS[classification as MedicClassification]} ({guideline.band}):
+                </span>
+                {' '}{guideline.range}
+              </div>
+            </div>
+          )}
+
           {/* Hourly payout preview */}
           {parsedHourlyRate > 0 && (
             <div className="bg-gray-700/20 border border-gray-700/40 rounded-xl p-4">
@@ -262,15 +290,19 @@ export function CompensationSettings({
                 </div>
                 <div>
                   <p className="text-gray-500 text-xs mb-0.5">Mileage</p>
-                  <p className="text-white font-semibold text-lg">£{hourlyMileage.toFixed(2)}</p>
+                  <p className="text-white font-semibold text-lg">
+                    {orgMileageEnabled ? `£${hourlyMileage.toFixed(2)}` : '—'}
+                  </p>
                   <p className="text-gray-500 text-xs">
-                    {EXAMPLE_ROUND_TRIP_MILES} mi × {HMRC_MILEAGE_RATE_PENCE}p
+                    {orgMileageEnabled
+                      ? `${EXAMPLE_ROUND_TRIP_MILES} mi × ${effectiveMileageRate}p`
+                      : 'Mileage disabled'}
                   </p>
                 </div>
                 <div className="border-l border-gray-700/50 pl-4">
                   <p className="text-gray-500 text-xs mb-0.5">Total to medic</p>
                   <p className="text-green-400 font-bold text-lg">£{hourlyTotal.toFixed(2)}</p>
-                  <p className="text-gray-500 text-xs">shift + mileage</p>
+                  <p className="text-gray-500 text-xs">shift{orgMileageEnabled ? ' + mileage' : ' only'}</p>
                 </div>
               </div>
             </div>
@@ -332,9 +364,13 @@ export function CompensationSettings({
               </div>
               <div>
                 <p className="text-gray-500 text-xs mb-0.5">Mileage</p>
-                <p className="text-white font-semibold text-lg">£{percentagePreview.mileageReimbursement.toFixed(2)}</p>
+                <p className="text-white font-semibold text-lg">
+                  {orgMileageEnabled ? `£${percentagePreview.mileageReimbursement.toFixed(2)}` : '—'}
+                </p>
                 <p className="text-gray-500 text-xs">
-                  {EXAMPLE_ROUND_TRIP_MILES} mi × {HMRC_MILEAGE_RATE_PENCE}p (round trip)
+                  {orgMileageEnabled
+                    ? `${EXAMPLE_ROUND_TRIP_MILES} mi × ${effectiveMileageRate}p (round trip)`
+                    : 'Mileage disabled'}
                 </p>
               </div>
               <div className="border-l border-gray-700/50 pl-4">
@@ -351,9 +387,20 @@ export function CompensationSettings({
       <div className="flex items-start gap-3 px-4 py-3 bg-gray-700/20 border border-gray-700/40 rounded-xl">
         <Car className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
         <div className="text-xs text-gray-400 leading-relaxed">
-          <span className="text-gray-200 font-medium">Mileage: {HMRC_MILEAGE_RATE_PENCE}p/mile (HMRC rate)</span>
-          {' '}— Auto-calculated from medic home postcode to job site on every shift.
-          Added on top of shift pay — not deducted from the platform fee.
+          {orgMileageEnabled ? (
+            <>
+              <span className="text-gray-200 font-medium">
+                Mileage: {effectiveMileageRate}p/mile
+                {effectiveMileageRate === HMRC_MILEAGE_RATE_PENCE ? ' (HMRC rate)' : ''}
+              </span>
+              {' '}— Auto-calculated from medic home postcode to job site on every shift.
+              Added on top of shift pay — not deducted from the platform fee.
+            </>
+          ) : (
+            <span className="text-gray-200 font-medium">
+              Mileage reimbursement is disabled for this organisation.
+            </span>
+          )}
         </div>
       </div>
 

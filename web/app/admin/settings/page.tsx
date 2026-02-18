@@ -8,7 +8,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Settings, Building2, Bell, CreditCard, Shield, Mail, Phone, Loader2, Sliders, Layers, Clapperboard, Gauge, HardHat, Music2, Trophy, FerrisWheel, Briefcase, Star, GraduationCap, Tent, ShieldCheck, Palette, Upload } from 'lucide-react';
+import { Settings, Building2, Bell, CreditCard, Shield, Mail, Phone, Loader2, Sliders, Layers, Clapperboard, Gauge, HardHat, Music2, Trophy, FerrisWheel, Briefcase, Star, GraduationCap, Tent, ShieldCheck, Palette, Upload, Banknote, Car, Percent } from 'lucide-react';
 import { useOrg } from '@/contexts/org-context';
 import { toast } from 'sonner';
 
@@ -60,6 +60,10 @@ interface OrgSettings {
   cqc_registered: boolean;
   cqc_registration_number: string | null;
   cqc_registration_date: string | null;
+  // Payout configuration
+  mileage_enabled: boolean;
+  mileage_rate_pence: number;
+  referral_commission_percent: number;
 }
 
 export default function SettingsPage() {
@@ -74,6 +78,10 @@ export default function SettingsPage() {
   const [savingContact, setSavingContact] = useState(false);
   const [billingEmail, setBillingEmail] = useState('');
   const [emergencyContact, setEmergencyContact] = useState('');
+  const [savingPayout, setSavingPayout] = useState(false);
+  const [mileageEnabled, setMileageEnabled] = useState(true);
+  const [mileageRatePence, setMileageRatePence] = useState(45);
+  const [referralCommissionPercent, setReferralCommissionPercent] = useState(10);
 
   // Notification preferences — persisted to localStorage until DB columns are added
   const NOTIF_STORAGE_KEY = 'sitemedic_notification_prefs';
@@ -115,6 +123,10 @@ export default function SettingsPage() {
         setSettings(data);
         setUrgencyInput((data.urgency_premiums ?? []).join(', '));
         setBillingEmail(data.admin_email ?? '');
+        // Payout configuration defaults
+        setMileageEnabled(data.mileage_enabled ?? true);
+        setMileageRatePence(data.mileage_rate_pence ?? 45);
+        setReferralCommissionPercent(data.referral_commission_percent ?? 10);
       } catch (err) {
         console.error('Error fetching settings:', err);
         toast.error('Could not load business configuration');
@@ -338,6 +350,35 @@ export default function SettingsPage() {
       toast.error('Failed to save contact details');
     } finally {
       setSavingContact(false);
+    }
+  }
+
+  async function handleSavePayout() {
+    setSavingPayout(true);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mileage_enabled: mileageEnabled,
+          mileage_rate_pence: mileageRatePence,
+          referral_commission_percent: referralCommissionPercent,
+        }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        toast.error(errorData.error ?? 'Failed to save payout settings');
+        return;
+      }
+      const updated: OrgSettings = await res.json();
+      setMileageEnabled(updated.mileage_enabled ?? true);
+      setMileageRatePence(updated.mileage_rate_pence ?? 45);
+      setReferralCommissionPercent(updated.referral_commission_percent ?? 10);
+      toast.success('Payout configuration saved');
+    } catch {
+      toast.error('Failed to save payout settings');
+    } finally {
+      setSavingPayout(false);
     }
   }
 
@@ -715,6 +756,125 @@ export default function SettingsPage() {
                       </>
                     ) : (
                       'Save Configuration'
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+
+        {/* Payout Configuration */}
+        <section>
+          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <Banknote className="w-5 h-5 text-emerald-400" />
+            Payout Configuration
+          </h2>
+          <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 shadow-2xl p-6 space-y-5">
+            {settingsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+                <span className="ml-3 text-gray-400 text-sm">Loading payout settings...</span>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-gray-400">
+                  Configure how medics are reimbursed for mileage and how referral commissions are calculated.
+                </p>
+
+                {/* Mileage Reimbursement */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                    <Car className="w-4 h-4 text-gray-400" />
+                    Mileage Reimbursement
+                  </h3>
+
+                  {/* Mileage toggle */}
+                  <div className="flex items-center justify-between py-3 border-b border-gray-700/50">
+                    <div>
+                      <p className="text-sm font-medium text-white">Reimburse medics for mileage</p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        When enabled, mileage is auto-calculated from medic home postcode to job site
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={mileageEnabled}
+                        onChange={(e) => setMileageEnabled(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                  </div>
+
+                  {/* Mileage rate input — only shown when mileage is enabled */}
+                  {mileageEnabled && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Rate per mile
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min={0}
+                          max={200}
+                          step={1}
+                          value={mileageRatePence}
+                          onChange={(e) => setMileageRatePence(Math.max(0, Math.min(200, parseInt(e.target.value) || 0)))}
+                          className="w-28 bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                        <span className="text-gray-400 text-sm">p/mile</span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        HMRC approved rate: 45p/mile. Auto-calculated from medic home postcode to job site.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Referral Commission */}
+                <div className="space-y-4 pt-2 border-t border-gray-700/50">
+                  <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                    <Percent className="w-4 h-4 text-gray-400" />
+                    Referral Commission
+                  </h3>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Referral commission %
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={0.5}
+                        value={referralCommissionPercent}
+                        onChange={(e) => setReferralCommissionPercent(Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+                        className="w-28 bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <span className="text-gray-400 text-sm">%</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Percentage of pre-VAT subtotal paid to referrers. Set to 0 to disable referral payouts.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Save Button */}
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={handleSavePayout}
+                    disabled={savingPayout}
+                    className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-2"
+                  >
+                    {savingPayout ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Payout Settings'
                     )}
                   </button>
                 </div>

@@ -182,6 +182,7 @@ export async function routeDailyMileage(
     .from('bookings')
     .select(`
       id,
+      org_id,
       site_postcode,
       shift_start_time,
       timesheets ( id )
@@ -205,6 +206,25 @@ export async function routeDailyMileage(
       bookings: [],
       errors: [],
     };
+  }
+
+  // 2b. Fetch org settings for mileage configuration
+  //     Use the org_id from the first booking (all bookings for a medic on a day are same org)
+  const bookingOrgId = (bookings[0] as any).org_id;
+  let orgMileageEnabled = true;
+  let orgMileageRatePence = HMRC_MILEAGE_RATE_PENCE;
+
+  if (bookingOrgId) {
+    const { data: orgSettings } = await supabase
+      .from('org_settings')
+      .select('mileage_enabled, mileage_rate_pence')
+      .eq('org_id', bookingOrgId)
+      .single();
+
+    if (orgSettings) {
+      orgMileageEnabled = orgSettings.mileage_enabled ?? true;
+      orgMileageRatePence = orgSettings.mileage_rate_pence ?? HMRC_MILEAGE_RATE_PENCE;
+    }
   }
 
   // 3. Build the ordered list of postcodes for the day's route
@@ -254,7 +274,10 @@ export async function routeDailyMileage(
     const legMiles = contributingLegs.reduce((sum, l) => sum + l.miles, 0);
     const legMilesRounded = parseFloat(legMiles.toFixed(2));
 
-    const mileageReimbursement = calculateMileageReimbursement(legMilesRounded);
+    // If mileage is disabled for this org, still record miles but set reimbursement to 0
+    const mileageReimbursement = orgMileageEnabled
+      ? calculateMileageReimbursement(legMilesRounded, orgMileageRatePence)
+      : 0;
 
     // 6. Update the timesheet
     const timesheetRaw = (booking.timesheets as any);
@@ -268,7 +291,7 @@ export async function routeDailyMileage(
         .from('timesheets')
         .update({
           mileage_miles: legMilesRounded,
-          mileage_rate_pence: HMRC_MILEAGE_RATE_PENCE,
+          mileage_rate_pence: orgMileageEnabled ? orgMileageRatePence : 0,
           mileage_reimbursement: mileageReimbursement,
         })
         .eq('id', timesheetId);
@@ -286,7 +309,7 @@ export async function routeDailyMileage(
       sitePostcode: booking.site_postcode,
       legMiles: legMilesRounded,
       mileageReimbursement,
-      mileageRatePence: HMRC_MILEAGE_RATE_PENCE,
+      mileageRatePence: orgMileageEnabled ? orgMileageRatePence : 0,
       legs: contributingLegs,
       updated,
     });
