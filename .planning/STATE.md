@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v3.0 White-Label Platform & Subscription Engine — Phase 24 next (DB Foundation)
+**Current focus:** v3.0 White-Label Platform & Subscription Engine — Phase 24 in progress (DB Foundation)
 
 ## Current Position
 
 Phase: 24 of 31 (DB Foundation — in progress)
-Plan: 2 of 5 in Phase 24
-Status: In progress — 24-02 complete (migration 132_org_branding.sql created)
-Last activity: 2026-02-18 — Completed 24-02-PLAN.md (org_branding table, backfill, RLS)
+Plan: 3 of 5 in Phase 24
+Status: In progress — 24-01, 24-02, 24-03 complete; 24-04, 24-05 remaining
+Last activity: 2026-02-18 — Completed 24-03-PLAN.md (migration 133: subscription columns on organizations)
 
-Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [░░░░░░░░░░] v3.0 ~8% (Phase 24: 2/5 plans done)
+Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [█░░░░░░░░░] v3.0 ~10% (Phase 24: 3/5 plans done)
 
 ## Performance Metrics
 
@@ -32,7 +32,7 @@ Progress: [██████████] v1.0 complete | [██████�
 | 18–23 (v2.0) | 30/30 | ~22 min | ~1.8 min |
 
 **Recent Trend:**
-- Last plan: 24-02 — migration 132_org_branding.sql; org_branding table with backfill and RLS (~1 min)
+- Last plan: 24-03 — migration 133_subscription_columns.sql; 4 columns + backfill on organizations (~1 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -50,6 +50,10 @@ Progress: [██████████] v1.0 complete | [██████�
 - **24-02:** org_branding UPDATE is self-service (is_org_admin()) unlike org_settings (platform-admin-only write) — branding doesn't need platform intervention
 - **24-02:** primary_colour_hex CHECK uses `IS NULL OR regex` pattern — allows NULL initial state without constraint violation
 - **24-02:** company_name pre-populated from organizations.name at migration time — no empty-state problem for existing orgs
+- **24-03:** All 4 subscription columns DEFAULT NULL — safe ALTER TABLE for existing rows, no downtime
+- **24-03:** Apex identified by slug = 'apex' for backfill; second UPDATE uses AND subscription_tier IS NULL for idempotency
+- **24-03:** No new RLS policies needed — migration 102 FOR ALL + migration 00004 SELECT cover the new columns automatically
+- **24-03:** Tier values: 'starter' | 'growth' | 'enterprise'; Status values: 'active' | 'past_due' | 'cancelled'
 
 ### Pending Todos
 
@@ -65,5 +69,5 @@ Progress: [██████████] v1.0 complete | [██████�
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 24-02-PLAN.md — migration 132_org_branding.sql committed (712c3b6)
+Stopped at: Completed 24-03-PLAN.md — migration 133_subscription_columns.sql committed (ab3c1b9)
 Resume file: None
