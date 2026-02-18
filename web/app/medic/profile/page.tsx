@@ -14,7 +14,8 @@ import { StripeOnboardingStatus } from '@/components/medics/stripe-onboarding-st
 import { User, CheckCircle2, XCircle, ToggleLeft, ToggleRight, AlertTriangle, ExternalLink, FileDown, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { CERT_TYPE_METADATA } from '@/types/certification.types';
+import { CERT_TYPE_METADATA, getRecommendedCertTypes } from '@/types/certification.types';
+import { useOrg } from '@/contexts/org-context';
 
 interface CertExpiry {
   type: string;
@@ -71,6 +72,10 @@ export default function MedicProfilePage() {
   const [medic, setMedic] = useState<MedicData | null>(null);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
+
+  // Org context for vertical-aware recommended certs
+  const { industryVerticals } = useOrg();
+  const primaryVertical = industryVerticals[0] ?? 'general';
 
   useEffect(() => {
     async function fetchProfile() {
@@ -275,6 +280,34 @@ export default function MedicProfilePage() {
                     {isExpired ? 'Expired' : `Expires ${format(expiry, 'dd MMM yyyy')}`}
                   </span>
                 </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Recommended Certifications — shown for non-general verticals */}
+      {primaryVertical !== 'general' && (
+        <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
+          <h2 className="text-white font-semibold text-lg mb-1">Recommended Certifications</h2>
+          <p className="text-gray-400 text-sm mb-4">Priority certifications for your organisation&apos;s vertical</p>
+          <div className="flex flex-wrap gap-2">
+            {getRecommendedCertTypes(primaryVertical).slice(0, 6).map((certType) => {
+              const held = (medic.certifications || []).some((c) => c.type === certType);
+              const meta = CERT_TYPE_METADATA[certType as keyof typeof CERT_TYPE_METADATA];
+              return (
+                <span
+                  key={certType}
+                  title={meta?.description}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border ${
+                    held
+                      ? 'bg-green-900/50 border-green-700/50 text-green-300'
+                      : 'bg-gray-700/50 border-gray-600/50 text-gray-400'
+                  }`}
+                >
+                  {held && <CheckCircle2 className="w-3.5 h-3.5" />}
+                  {meta?.label ?? certType}
+                </span>
               );
             })}
           </div>
