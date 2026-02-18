@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 22: Football / Sports Vertical
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 19: Motorsport Vertical (active) + Phase 22: Football / Sports Vertical (parallel)
 
 ## Current Position
 
-Phase: 22 of 23 (Football / Sports Vertical)
-Plan: 22-02 of 4 in current phase complete
-Status: In progress — 22-01 (UI) and 22-02 (FOOT-04 RIDDOR gate) complete; 22-03 and 22-04 remain
-Last activity: 2026-02-18 — Completed 22-02-PLAN.md: FOOT-04 RIDDOR gate verified, annotated, and test-locked
+Phase: 19 of 23 (Motorsport Vertical) — Plan 19-02 complete; 22 (Football) also in progress
+Plan: 19-02 complete; 22-02 complete
+Status: Phase 19 plans 19-01 and 19-02 complete; 19-03 through 19-05 remain; Phase 22 plans 22-01 and 22-02 complete; 22-03 and 22-04 remain
+Last activity: 2026-02-18 — Completed 19-02-PLAN.md: Motorsport UK cert types added, TreatmentWithWorker extended, RIDDOR gate verified
 
-Progress: [██████████] v1.1 complete | [██████░░░░] v2.0 11/27 plans (Phase 18 + 18.5 + 21 + 22-02 complete)
+Progress: [██████████] v1.1 complete | [███████░░░] v2.0 12/27 plans (Phase 18 + 18.5 + 21 + 22-02 + 19-02 complete)
 
 ## Performance Metrics
 
@@ -32,7 +32,8 @@ Progress: [██████████] v1.1 complete | [██████�
 | 18–23 (v2.0) | 7/25 | ~8 min | ~1 min |
 
 **Recent Trend:**
-- Last plan: 22-02 — FOOT-04 RIDDOR gate verify + annotate + Deno test block (1 min)
+- Last plan: 19-02 — Motorsport UK cert types + TreatmentWithWorker vertical fields + RIDDOR gate verify (2 min)
+- Phase 19 plans so far: 19-01 (pending), 19-02 (cert taxonomy + TreatmentWithWorker)
 - Phase 22 plans so far: 22-01 (football patient type UI), 22-02 (RIDDOR gate FOOT-04)
 - Trend: Stable — consistent 1–4 min for vertical surgical additions
 
@@ -69,6 +70,9 @@ Key decisions affecting v2.0:
 - 21-02: CSCS + IPAF removed from tv_film VERTICAL_CERT_TYPES ordering only — remain in master CERT_TYPES arrays
 - 21-02: FILM-04 confirmed — incident-report-dispatcher.ts already routes tv_film to riddor-f2508-generator; no code change needed
 - 22-02: FOOT-04 confirmed — 'sporting_events' is in NON_RIDDOR_VERTICALS at index.ts:78; KNOWN_NON_RIDDOR_VERTICALS literal used in test.ts (cannot import local const from serve() handler; grep verify catches drift)
+- 19-02: Motorsport UK Medical Official Licence and BASM Diploma use 'motorsport' category — Motorsport UK Official Licence is administrative registration (not clinical); BASM Diploma is sport medicine diploma with motorsport-specific relevance
+- 19-02: vertical_extra_fields typed as Record<string, unknown> | null in web/types/database.types.ts (not string | null) — web layer parses JSON before type use; mobile WatermelonDB uses @text raw string per 18-01 decision
+- 19-02: All three Phase 18 Treatment columns (booking_id, event_vertical, vertical_extra_fields) added together to database.types.ts — one cohesive Phase 18 schema column set; TreatmentWithWorker inherits via extends Treatment
 
 ### Research Flags (Phase-Blocking)
 
@@ -86,6 +90,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T04:12:12Z
-Stopped at: Completed 22-02-PLAN.md — FOOT-04 RIDDOR gate verified, annotated, and test-locked
+Last session: 2026-02-18T04:14:21Z
+Stopped at: Completed 19-02-PLAN.md — Motorsport UK cert types added, TreatmentWithWorker extended, RIDDOR gate verified
 Resume file: None
