@@ -106,14 +106,13 @@ Plans:
 4. At the end of a motorsport booking, an admin can generate a Medical Statistics Sheet PDF that aggregates all incident records from that booking (competitor count, injury types, GCS range, extrication count) — the document matches the Motorsport UK submission format
 5. A medic's certification profile when the motorsport vertical is active shows Motorsport UK Medical Official Licence, HCPC Paramedic, and PHTLS at the top of the cert selector
 
-**Plans:** TBD
+**Plans:** 5 plans
 
-Plans:
-- [ ] 19-01: Motorsport form fields — conditional form section in `app/treatment/new.tsx` with GCS score, extrication, helmet removed, circuit section, Clerk of Course notified, car/competitor number; all written to `vertical_extra_fields` JSONB
-- [ ] 19-02: Concussion clearance gate — mandatory post-treatment checklist when concussion flag set; `licence_suspension_flag` + `cmo_notified_at` stored on treatment record; form blocks submission until all three steps confirmed
-- [ ] 19-03: Motorsport PDF Edge Function — `motorsport-incident-generator` producing Motorsport UK Accident Form per incident; `incident-report-dispatcher` routes to it for motorsport treatments
-- [ ] 19-04: Medical Statistics Sheet — per-booking aggregate PDF Edge Function; admin trigger from booking detail; web dashboard "Concussion clearance required" badge for uncleared head injuries
-- [ ] 19-05: Motorsport vertical wiring — RIDDOR disabled via Phase 18 gate (verify); terminology: "Competitor", "Circuit / Paddock", "Organiser"; cert profile `getRecommendedCertTypes('motorsport')` ordering
+- [ ] 19-01-PLAN.md — Motorsport form fields + concussion gate: MotorsportExtraFields interface, conditional form section in app/treatment/new.tsx with GCS score, extrication, helmet, circuit section, Clerk of Course, car number; mandatory three-step concussion clearance gate blocking form submission
+- [ ] 19-02-PLAN.md — Cert types + RIDDOR verification: add Motorsport UK Medical Official Licence and BASM Diploma to both cert registries; reorder motorsport cert priority; extend TreatmentWithWorker type; verify RIDDOR gate
+- [ ] 19-03-PLAN.md — Motorsport PDF Edge Function: replace 501 stub in motorsport-incident-generator with full PDF generation; motorsport-reports storage bucket migration 125; checkpoint for Incident Pack V8.0 download
+- [ ] 19-04-PLAN.md — Medical Statistics Sheet + dashboard badge: motorsport-stats-sheet-generator Edge Function for per-booking aggregate PDF; concussion clearance badge on treatments table; Generate Stats Sheet button on booking detail
+- [ ] 19-05-PLAN.md — Integration verification: automated check of all 5 success criteria across all plans; human-verify checkpoint for end-to-end flow
 
 ---
 
