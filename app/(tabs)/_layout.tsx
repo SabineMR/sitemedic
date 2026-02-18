@@ -11,12 +11,15 @@
  * - Sync status indicator in header (phone) or sidebar footer (iPad)
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { useSync } from '../../src/contexts/SyncContext';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { useOrg } from '../../src/contexts/OrgContext';
 import { useIsTablet } from '../../hooks/useIsTablet';
 import TabletSidebar from '../../components/ui/TabletSidebar';
+import { getPatientLabel } from '../../services/taxonomy/vertical-outcome-labels';
 
 
 function SyncStatusIndicator() {
@@ -50,6 +53,31 @@ function SyncStatusIndicator() {
 
 export default function TabsLayout() {
   const isTablet = useIsTablet();
+  const { state } = useAuth();
+  const router = useRouter();
+  const { primaryVertical } = useOrg();
+  const personPluralLabel = primaryVertical === 'tv_film' ? 'Cast & Crew' : getPatientLabel(primaryVertical) + 's';
+  const registryLabel = primaryVertical === 'tv_film' ? 'Cast & Crew Registry' : `${getPatientLabel(primaryVertical)} Registry`;
+
+  // Standard auth guard: fires whenever isAuthenticated changes (e.g. SIGNED_OUT event)
+  useEffect(() => {
+    if (!state.isLoading && !state.isAuthenticated) {
+      console.log('[TabsLayout] Not authenticated — redirecting to login');
+      router.replace('/(auth)/login');
+    }
+  }, [state.isLoading, state.isAuthenticated]);
+
+  // Direct session check on mount — catches Fast Refresh stale isAuthenticated=true
+  useEffect(() => {
+    (async () => {
+      const { supabase } = await import('../../src/lib/supabase');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.log('[TabsLayout] No Supabase session on mount — redirecting to login');
+        router.replace('/(auth)/login');
+      }
+    })();
+  }, []);
 
   return (
     <View style={{ flex: 1 }}>

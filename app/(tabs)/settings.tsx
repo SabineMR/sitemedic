@@ -133,21 +133,53 @@ export default function SettingsScreen() {
     setSaving(true);
     try {
       const { supabase } = await import('../../src/lib/supabase');
+      const { authManager } = await import('../../src/lib/auth-manager');
 
-      // Get org_id using the same pattern as EmergencyAlertService.sendAlert():
-      // ask Supabase directly rather than relying on auth context state, which can
-      // be null if initializeAuth() hit a startup race or the JWT had no org_id.
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      // --- Resolve userId ---
+      // Step 1: getUser() validates the JWT with the server (works when session is fresh)
+      let userId: string | null = null;
+      const { data: { user }, error: getUserError } = await supabase.auth.getUser();
+      userId = user?.id ?? null;
+      console.log('[Settings] getUser:', userId ? 'ok' : 'null', '| error:', getUserError?.message);
 
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('org_id')
-        .eq('id', user.id)
-        .single();
+      // Step 2: getUser failed — JWT may have been cleared by a failed token refresh.
+      // Try restoring the session from our AsyncStorage cache (set at INITIAL_SESSION /
+      // SIGNED_IN). setSession() will attempt a token refresh if the access_token is expired
+      // but the refresh_token is still valid. If internet is accessible this will succeed.
+      if (!userId) {
+        const cachedSession = await authManager.getCachedSession();
+        if (cachedSession) {
+          const { data: { session: restored } } = await supabase.auth.setSession({
+            access_token: cachedSession.access_token,
+            refresh_token: cachedSession.refresh_token,
+          });
+          userId = restored?.user?.id ?? null;
+          console.log('[Settings] setSession restore:', userId ? 'ok' : 'null');
+        }
+      }
 
-      if (profileError || !profile?.org_id) throw new Error('Could not load org');
-      const orgId = (profile as any).org_id as string;
+      // --- Resolve orgId ---
+      let orgId: string | null = null;
+
+      // Step 3: cached profile (works offline, populated on last successful DB fetch)
+      if (!userId) {
+        const cachedProfile = await authManager.getCachedProfile();
+        orgId = cachedProfile?.orgId ?? null;
+        console.log('[Settings] cached profile orgId:', orgId);
+      }
+
+      // Step 4: query profiles table (requires network + valid session from steps 1-2)
+      if (!orgId && userId) {
+        const { data: profileRow, error: profileErr } = await supabase
+          .from('profiles')
+          .select('org_id')
+          .eq('id', userId)
+          .single();
+        orgId = (profileRow as any)?.org_id ?? null;
+        console.log('[Settings] profiles query: org_id =', orgId, '| error:', profileErr?.message);
+      }
+
+      if (!orgId) throw new Error('Could not load org');
 
       // Check for existing contact with same phone in this org
       const { data: existingRaw } = await supabase
@@ -481,12 +513,14 @@ export default function SettingsScreen() {
               placeholder="e.g. +44 7700 900000"
               placeholderTextColor="#9CA3AF"
               keyboardType="phone-pad"
-              returnKeyType="done"
+              returnKeyType="next"
               maxLength={15}
+              onSubmitEditing={() => roleInputRef.current?.focus()}
             />
 
             <Text style={styles.fieldLabel}>Role / Title (optional)</Text>
             <TextInput
+              ref={roleInputRef}
               style={styles.input}
               value={newRole}
               onChangeText={setNewRole}

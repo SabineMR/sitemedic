@@ -77,10 +77,11 @@ export default function LoginScreen() {
   }
 
   // If already authenticated, redirect to main app
-  if (state.isAuthenticated && !state.isLoading) {
-    router.replace('/(tabs)');
-    return null;
-  }
+  useEffect(() => {
+    if (state.isAuthenticated && !state.isLoading) {
+      router.replace('/(tabs)');
+    }
+  }, [state.isAuthenticated, state.isLoading]);
 
   return (
     <KeyboardAvoidingView

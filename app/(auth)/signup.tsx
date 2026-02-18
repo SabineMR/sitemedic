@@ -11,7 +11,7 @@
  * - Link to login screen
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -84,10 +84,11 @@ export default function SignupScreen() {
   }
 
   // If already authenticated, redirect to main app
-  if (state.isAuthenticated && !state.isLoading) {
-    router.replace('/(tabs)');
-    return null;
-  }
+  useEffect(() => {
+    if (state.isAuthenticated && !state.isLoading) {
+      router.replace('/(tabs)');
+    }
+  }, [state.isAuthenticated, state.isLoading]);
 
   return (
     <KeyboardAvoidingView

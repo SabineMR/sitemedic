@@ -15,8 +15,10 @@
  * 4. Check state.isOfflineSession to show offline indicator in UI
  */
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import NetInfo from '@react-native-community/netinfo';
+import { router } from 'expo-router';
+import { supabase } from '../lib/supabase';
 import { authManager } from '../lib/auth-manager';
 import {
   checkBiometricSupport,
@@ -57,6 +59,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isSupported: false,
     isEnrolled: false,
   });
+
+  // Ref so the SIGNED_OUT listener below can read current online state without
+  // a stale closure (listeners are registered once in the [] useEffect).
+  const isOnlineRef = useRef(true);
 
   // Initialize auth on mount
   useEffect(() => {
@@ -108,11 +114,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Set up network status listener
       NetInfo.addEventListener((state) => {
+        const online = state.isConnected ?? false;
+        isOnlineRef.current = online;
         setAuthState((prev) => ({
           ...prev,
-          isOnline: state.isConnected ?? false,
-          isOfflineSession: prev.isAuthenticated && !(state.isConnected ?? false),
+          isOnline: online,
+          isOfflineSession: prev.isAuthenticated && !online,
         }));
+      });
+
+      // Detect when Supabase clears the session (token refresh failed while online).
+      // Without this, the user stays stuck on app screens with "Auth session missing!"
+      // errors because AuthContext.isAuthenticated is never updated.
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_OUT' && !session && isOnlineRef.current) {
+          console.log('[AuthContext] SIGNED_OUT while online — redirecting to login');
+          setAuthState({
+            isAuthenticated: false,
+            isLoading: false,
+            user: null,
+            session: null,
+            isOnline: isOnlineRef.current,
+            isOfflineSession: false,
+          });
+          router.replace('/(auth)/login');
+        }
       });
     } catch (error) {
       console.error('[AuthContext] Initialization error:', error);
