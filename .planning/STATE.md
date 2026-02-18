@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 19: Motorsport Vertical (active) + Phase 22: Football / Sports Vertical (parallel)
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 20: Festivals / Events Vertical (active) + Phase 19 + 22 in progress
 
 ## Current Position
 
-Phase: 19 of 23 (Motorsport Vertical) — Plan 19-02 complete; 22 (Football) also in progress
-Plan: 19-02 complete; 22-02 complete
-Status: Phase 19 plans 19-01 and 19-02 complete; 19-03 through 19-05 remain; Phase 22 plans 22-01 and 22-02 complete; 22-03 and 22-04 remain
-Last activity: 2026-02-18 — Completed 19-02-PLAN.md: Motorsport UK cert types added, TreatmentWithWorker extended, RIDDOR gate verified
+Phase: 20 of 23 (Festivals / Events Vertical) — also 19 and 22 in progress
+Plan: 20-01 and 20-02 complete; 20-03 and 20-04 remain; 19-02 complete; 22-01 and 22-02 complete
+Status: In progress — 20-01 (FEST-01/02 form fields) just completed; festival Purple Guide PDF (20-03) and compliance (20-04) remain
+Last activity: 2026-02-18 — Completed 20-01-PLAN.md: TST triage priority picker, alcohol/substance + safeguarding flags, disposition picker, RIDDOR suppression for festivals
 
-Progress: [██████████] v1.1 complete | [███████░░░] v2.0 12/27 plans (Phase 18 + 18.5 + 21 + 22-02 + 19-02 complete)
+Progress: [██████████] v1.1 complete | [████████░░] v2.0 13/27 plans (Phase 18 + 18.5 + 20-01 + 20-02 + 21 + 22-01 + 22-02 + 19-01 + 19-02 complete)
 
 ## Performance Metrics
 
@@ -29,10 +29,11 @@ Progress: [██████████] v1.1 complete | [██████�
 |-------|-------|-------|----------|
 | 01–07.5 (v1.0) | 84/84 | ~5.5 hrs | ~4 min |
 | 08–17 (v1.1) | 35/35 | ~2.4 hrs | ~4.1 min |
-| 18–23 (v2.0) | 7/25 | ~8 min | ~1 min |
+| 18–23 (v2.0) | 8/25 | ~10 min | ~1 min |
 
 **Recent Trend:**
-- Last plan: 19-02 — Motorsport UK cert types + TreatmentWithWorker vertical fields + RIDDOR gate verify (2 min)
+- Last plan: 20-01 — Festival form fields (TST triage, flags, disposition, RIDDOR suppression) (2 min)
+- Phase 20 plans so far: 20-01 (FEST-01/02 form fields), 20-02 (previously complete)
 - Phase 19 plans so far: 19-01 (pending), 19-02 (cert taxonomy + TreatmentWithWorker)
 - Phase 22 plans so far: 22-01 (football patient type UI), 22-02 (RIDDOR gate FOOT-04)
 - Trend: Stable — consistent 1–4 min for vertical surgical additions
@@ -73,6 +74,7 @@ Key decisions affecting v2.0:
 - 19-02: Motorsport UK Medical Official Licence and BASM Diploma use 'motorsport' category — Motorsport UK Official Licence is administrative registration (not clinical); BASM Diploma is sport medicine diploma with motorsport-specific relevance
 - 19-02: vertical_extra_fields typed as Record<string, unknown> | null in web/types/database.types.ts (not string | null) — web layer parses JSON before type use; mobile WatermelonDB uses @text raw string per 18-01 decision
 - 19-02: All three Phase 18 Treatment columns (booking_id, event_vertical, vertical_extra_fields) added together to database.types.ts — one cohesive Phase 18 schema column set; TreatmentWithWorker inherits via extends Treatment
+- 20-01: Festival state vars prefixed with 'festival' (festivalAlcoholSubstanceFlag, festivalSafeguardingFlag) to avoid collision with football spectator flags (alcoholInvolvement, safeguardingFlag); RIDDOR suppression applied at form level in handleInjuryTypeSelect via orgVertical !== 'festivals' guard
 
 ### Research Flags (Phase-Blocking)
 
@@ -90,6 +92,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T04:14:21Z
-Stopped at: Completed 19-02-PLAN.md — Motorsport UK cert types added, TreatmentWithWorker extended, RIDDOR gate verified
+Last session: 2026-02-18T04:14:13Z
+Stopped at: Completed 20-01-PLAN.md — Festival form fields (FEST-01/02): triage priority, alcohol/substance + safeguarding flags, disposition picker, RIDDOR suppression
 Resume file: None
