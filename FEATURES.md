@@ -2,8 +2,83 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Org Onboarding — Signup Page with Plan Selection)
+**Last Updated**: 2026-02-18 (Org Onboarding — Post-Payment Wizard & Middleware)
 **Audience**: Web developers, technical reviewers, product team
+
+---
+
+## Recent Updates — Post-Payment Onboarding Wizard (2026-02-18)
+
+### Overview
+
+Post-payment onboarding flow consisting of a success page that polls for Stripe webhook confirmation, a branding setup wizard for pre-activation customisation, and middleware routing that gates pending-activation orgs away from the dashboard.
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/app/onboarding/layout.tsx` | Minimal wizard layout — dark gradient, SiteMedic logo header, centered content column (max-w-2xl), no sidebar |
+| `web/app/onboarding/page.tsx` | Post-payment success page — polls `GET /api/billing/checkout-status` every 3s until webhook confirms subscription. Shows processing spinner or green checkmark + "Payment Confirmed". Links to branding setup. Redirects to `/admin` if `onboardingCompleted=true` |
+| `web/app/onboarding/branding/page.tsx` | Branding setup wizard — company name, hex colour picker (with XSS regex validation), tagline, logo upload (PNG/JPEG/SVG, max 2MB). Uploads logo to `org-logos` Supabase Storage bucket. Updates existing `org_branding` row (created by checkout route in 29-01) |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/lib/supabase/middleware.ts` | Added onboarding routing: orgs with `onboarding_completed=false` redirected from `/admin`, `/dashboard`, `/medic` to `/onboarding`; orgs with `onboarding_completed=true` redirected from `/onboarding` to `/admin`; legacy orgs (NULL) treated as completed via `?? true` fallback |
+| `FEATURES.md` | Updated with onboarding wizard documentation |
+
+### Key Features
+
+- **Payment Status Polling**: Success page polls `/api/billing/checkout-status` every 3s. Shows animated spinner during processing, green checkmark after confirmation. Clears interval when status confirmed
+- **Branding Pre-Configuration**: While waiting for platform admin activation, org admins can set company name, primary colour, tagline, and upload logo. Settings persist immediately to `org_branding` table and are ready when account is activated
+- **Colour Validation**: Same `^#[0-9a-fA-F]{6}$` regex as BrandingProvider (Phase 27-01) — prevents XSS via CSS injection
+- **Logo Upload**: Accepts PNG/JPEG/SVG up to 2MB. Stored at `{org_id}/logo.{ext}` in `org-logos` bucket with upsert. Shows preview thumbnail
+- **Middleware Gating**: Separate from the `!isPublicRoute` block because `/admin` is in `publicRoutes`. Onboarding check fires for all authenticated users with `org_id` on `/admin`, `/dashboard`, `/medic`, and `/onboarding` routes
+- **Legacy Org Safety**: `onboarding_completed ?? true` ensures orgs created before onboarding feature (with NULL value) are not affected
+- **Activation SLA**: Success page displays "Most accounts activated within a few hours during UK business hours (Mon-Fri 9am-5pm)"
+
+### Middleware Flow (Updated)
+
+```
+Request -> Strip x-org-* headers -> Subdomain resolution -> Supabase session
+-> Public route check -> Auth redirect -> Org setup redirect
+-> Onboarding gate: if onboarding_completed=false, redirect to /onboarding
+-> If onboarding_completed=true and on /onboarding, redirect to /admin
+-> Continue to page
+```
+
+---
+
+## Recent Updates — Critical Bug Fixes (2026-02-18)
+
+### Overview
+
+Sprint 1 of the gap analysis: fixes 4 critical/high-severity bugs discovered during a comprehensive codebase audit. These bugs affected the client invoice page, the Net 30 booking flow, and recurring booking creation.
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/app/(client)/client/invoices/page.tsx` | **Complete rewrite** — now queries actual `invoices` table instead of `bookings` table. Shows real invoice status (draft/sent/paid/overdue/cancelled) with colour-coded badges, invoice numbers, issue/due dates, paid dates, and PDF download buttons. Previously hardcoded all items as "Paid" |
+| `web/components/booking/net30-confirmation.tsx` | **Bug fix** — corrected sessionStorage key from `pricingBreakdown` to `bookingPricing` to match what booking form stores. Net 30 flow was silently failing to load pricing data |
+| `web/app/api/bookings/recurring/route.ts` | **Bug fix** — removed references to non-existent `payment_terms` column on bookings table. Now looks up client's payment_terms from `clients` table. Fixed child booking status (was `undefined`, now correctly `confirmed` for Net 30 or `pending` for prepay). Added `org_id` and all pricing columns to child bookings. Sets `recurring_until` on parent booking after children created |
+
+### Key Fixes
+
+1. **Invoice Page (CRITICAL)**: Was querying `bookings` table filtered by `status='completed'` and displaying them as fake invoices with hardcoded "Paid" badge. Now queries the real `invoices` table with proper columns: `invoice_number`, `status`, `invoice_date`, `due_date`, `paid_at`, `pdf_url`. Shows colour-coded status badges (Draft=grey, Awaiting Payment=blue, Paid=green, Overdue=red, Cancelled=grey). PDF download button renders when `pdf_url` is available. Overdue invoices show a warning indicator.
+
+2. **Net 30 Session Key (CRITICAL)**: The booking form (`booking-form.tsx`) stores pricing under `sessionStorage.setItem('bookingPricing', ...)` but `Net30Confirmation` was reading `sessionStorage.getItem('pricingBreakdown')`. This key mismatch meant Net 30 clients could never see their pricing breakdown and the confirm button was effectively dead. One-character fix: `pricingBreakdown` → `bookingPricing`.
+
+3. **Recurring Booking Status (CRITICAL)**: The recurring bookings API referenced `parentBooking.payment_terms` but bookings have no `payment_terms` column (it's on the `clients` table). This meant `childStatus` was always set based on `undefined` comparisons, giving child bookings an incorrect status. Fix: query the client's `payment_terms` and use that. Also removed the non-existent `payment_terms` and `total_price` columns from child inserts, replaced with actual booking pricing columns (`base_rate`, `subtotal`, `vat`, `total`, `platform_fee`, `medic_payout`, etc.). Added `org_id` to child bookings for multi-tenant consistency.
+
+4. **recurring_until (HIGH)**: Parent bookings never had `recurring_until` set, making it impossible to know when a recurring series ends. Now set to the last child's `shift_date` after all children are inserted.
+
+### Technical Notes
+
+- Invoice page now uses inline `useQuery` with `@tanstack/react-query` + `useRequireOrg()` for multi-tenant scoping (same pattern as other client portal pages)
+- Invoices with status `draft` are excluded from client view (only shown: sent, paid, overdue, cancelled)
+- Calendar picker date validation was verified as correct (+1 day minimum) — no fix needed despite initial report
 
 ---
 

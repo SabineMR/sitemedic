@@ -204,8 +204,9 @@ export async function updateSession(request: NextRequest) {
   if (user && !isPublicRoute) {
     const orgId = user.app_metadata?.org_id;
 
-    // Allow access to setup pages even without org_id
-    const isSetupRoute = request.nextUrl.pathname.startsWith('/setup/');
+    // Allow access to setup and onboarding pages even without org_id
+    const isSetupRoute = request.nextUrl.pathname.startsWith('/setup/') ||
+                         request.nextUrl.pathname.startsWith('/onboarding');
 
     if (!orgId && !isSetupRoute) {
       console.warn(
@@ -215,6 +216,47 @@ export async function updateSession(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = '/setup/organization';
       return NextResponse.redirect(url);
+    }
+  }
+
+  // Onboarding routing: orgs with onboarding_completed=false go to /onboarding
+  // Separate from the !isPublicRoute block above because /admin is in publicRoutes
+  // (existing admin pages need public access), but we still need to intercept
+  // pending-onboarding orgs trying to access /admin.
+  // Legacy orgs (null onboarding_completed) are treated as completed (?? true)
+  if (user) {
+    const orgId = user.app_metadata?.org_id;
+
+    if (orgId) {
+      const isOnboardingRoute = request.nextUrl.pathname.startsWith('/onboarding');
+      const isDashboardRoute = request.nextUrl.pathname.startsWith('/admin') ||
+                               request.nextUrl.pathname.startsWith('/dashboard') ||
+                               request.nextUrl.pathname.startsWith('/medic');
+
+      // Only query DB for dashboard or onboarding routes to avoid unnecessary calls
+      if (isDashboardRoute || isOnboardingRoute) {
+        const { data: orgStatus } = await supabase
+          .from('organizations')
+          .select('onboarding_completed')
+          .eq('id', orgId)
+          .single();
+
+        const onboardingCompleted = orgStatus?.onboarding_completed ?? true;
+
+        if (!onboardingCompleted && !isOnboardingRoute) {
+          // Org hasn't completed onboarding — redirect to onboarding wizard
+          const url = request.nextUrl.clone();
+          url.pathname = '/onboarding';
+          return NextResponse.redirect(url);
+        }
+
+        if (onboardingCompleted && isOnboardingRoute) {
+          // Org already completed onboarding — redirect to admin
+          const url = request.nextUrl.clone();
+          url.pathname = '/admin';
+          return NextResponse.redirect(url);
+        }
+      }
     }
   }
 
