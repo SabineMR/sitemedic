@@ -86,7 +86,7 @@ export default async function TreatmentDetailPage({
           <h1 className="text-3xl font-bold">Treatment Details</h1>
           <p className="text-muted-foreground">
             <DateDisplay date={treatment.created_at} />
-            {treatment.is_riddor_reportable && (
+            {treatment.is_riddor_reportable && !['motorsport', 'festivals', 'sporting_events', 'fairs_shows', 'private_events'].includes(treatment.event_vertical ?? '') && (
               <Badge variant="destructive" className="ml-2">
                 RIDDOR
               </Badge>
