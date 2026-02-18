@@ -62,8 +62,9 @@ export default function SettingsScreen() {
         const { supabase } = await import('../../src/lib/supabase');
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
-        const { data: profile } = await supabase
+        const { data: profileData } = await supabase
           .from('profiles').select('org_id').eq('id', user.id).single();
+        const profile = profileData as { org_id: string } | null;
         if (profile?.org_id) setModalOrgId(profile.org_id);
       } catch (_) {}
     })();
@@ -124,22 +125,24 @@ export default function SettingsScreen() {
     setSaving(true);
     try {
       if (!modalOrgId) throw new Error('Could not load org');
+      const orgId: string = modalOrgId;
 
       const { supabase } = await import('../../src/lib/supabase');
 
       // Check for existing contact with same phone in this org
-      const { data: existing } = await supabase
+      const { data: existingRaw } = await supabase
         .from('emergency_contacts')
         .select('id')
-        .eq('org_id', modalOrgId)
+        .eq('org_id', orgId)
         .eq('phone', newPhone.trim())
         .maybeSingle();
+      const existing = existingRaw as { id: string } | null;
 
       if (existing) {
         // Update existing contact's name and role
         const { error } = await supabase
           .from('emergency_contacts')
-          .update({ name: newName.trim(), role: newRole.trim() || null, source: 'manual' })
+          .update({ name: newName.trim(), role: newRole.trim() || null, source: 'manual' } as any)
           .eq('id', existing.id);
         if (error) throw new Error(error.message);
       } else {
@@ -147,12 +150,12 @@ export default function SettingsScreen() {
         const { error } = await supabase
           .from('emergency_contacts')
           .insert({
-            org_id: modalOrgId,
+            org_id: orgId,
             name: newName.trim(),
             phone: newPhone.trim(),
             role: newRole.trim() || null,
             source: 'manual',
-          });
+          } as any);
         if (error) throw new Error(error.message);
       }
 
@@ -270,8 +273,7 @@ export default function SettingsScreen() {
               <Text style={styles.infoLabel}>Name</Text>
               <Text style={styles.infoValue}>
                 {state.user
-                  ? `${state.user.first_name || ''} ${state.user.last_name || ''}`.trim() ||
-                    'Not set'
+                  ? state.user.fullName || 'Not set'
                   : 'Not available'}
               </Text>
             </View>
