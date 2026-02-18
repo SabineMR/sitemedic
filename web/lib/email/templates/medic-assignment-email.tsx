@@ -1,6 +1,6 @@
 /**
  * Medic Assignment Email Template
- * Phase 4.5: Medic-facing notification when assigned to a booking
+ * Phase 28: Branding — PDFs & Emails
  */
 
 import {
@@ -11,8 +11,11 @@ import {
   Heading,
   Hr,
   Html,
+  Img,
+  Link,
   Text,
 } from '@react-email/components';
+import type { EmailBranding } from '@/lib/email/types';
 
 interface MedicAssignmentEmailProps {
   booking: {
@@ -32,18 +35,31 @@ interface MedicAssignmentEmailProps {
     name: string;
   };
   dashboardUrl?: string;
+  branding: EmailBranding;
 }
 
 export default function MedicAssignmentEmail({
   booking,
   medic,
   dashboardUrl,
+  branding,
 }: MedicAssignmentEmailProps) {
+  const accentColour = branding.primaryColourHex || '#2563eb';
+
   return (
     <Html>
       <Head />
       <Body style={main}>
         <Container style={container}>
+          {/* Branded header */}
+          <Container style={brandHeader}>
+            {branding.logoUrl ? (
+              <Img src={branding.logoUrl} alt={branding.companyName} width="150" style={logoImg} />
+            ) : (
+              <Text style={{ ...companyNameText, color: accentColour }}>{branding.companyName}</Text>
+            )}
+          </Container>
+
           <Heading style={heading}>New Booking Assignment</Heading>
 
           <Text style={text}>
@@ -72,7 +88,7 @@ export default function MedicAssignmentEmail({
                   <strong>Precise Location (what3words):</strong>{' '}
                   <a
                     href={`https://what3words.com/${booking.what3wordsAddress.replace(/^\/+/, '')}`}
-                    style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 'bold' }}
+                    style={{ color: accentColour, textDecoration: 'underline', fontWeight: 'bold' }}
                   >
                     {booking.what3wordsAddress}
                   </a>
@@ -94,9 +110,9 @@ export default function MedicAssignmentEmail({
               <>
                 <Text style={detailLabel}>Special Requirements</Text>
                 <Text style={detailValue}>
-                  {booking.confinedSpaceRequired && '✓ Confined Space Certification Required'}
+                  {booking.confinedSpaceRequired && '\u2713 Confined Space Certification Required'}
                   {booking.confinedSpaceRequired && booking.traumaSpecialistRequired && <br />}
-                  {booking.traumaSpecialistRequired && '✓ Trauma Specialist Required'}
+                  {booking.traumaSpecialistRequired && '\u2713 Trauma Specialist Required'}
                 </Text>
               </>
             )}
@@ -114,7 +130,7 @@ export default function MedicAssignmentEmail({
           </Text>
 
           {dashboardUrl && (
-            <Button style={button} href={dashboardUrl}>
+            <Button style={{ ...button, backgroundColor: accentColour }} href={dashboardUrl}>
               View in Dashboard
             </Button>
           )}
@@ -122,7 +138,13 @@ export default function MedicAssignmentEmail({
           <Hr style={hr} />
 
           <Text style={footer}>
-            Apex Safety Group - You have been assigned to this booking. Please confirm your availability.
+            {branding.companyName} - You have been assigned to this booking. Please confirm your availability.
+            {branding.showPoweredBy && (
+              <>
+                {' | Powered by '}
+                <Link href="https://sitemedic.co.uk" style={{ color: '#64748b' }}>SiteMedic</Link>
+              </>
+            )}
           </Text>
         </Container>
       </Body>
@@ -142,6 +164,23 @@ const container = {
   padding: '20px 0 48px',
   marginBottom: '64px',
   maxWidth: '600px',
+};
+
+const brandHeader = {
+  textAlign: 'center' as const,
+  padding: '24px 48px 0',
+  margin: '0 0 8px',
+};
+
+const logoImg = {
+  margin: '0 auto',
+  maxHeight: '60px',
+};
+
+const companyNameText = {
+  fontSize: '24px',
+  fontWeight: '700',
+  margin: '0',
 };
 
 const heading = {
@@ -185,7 +224,6 @@ const detailValue = {
 };
 
 const button = {
-  backgroundColor: '#2563eb',
   borderRadius: '6px',
   color: '#ffffff',
   fontSize: '16px',

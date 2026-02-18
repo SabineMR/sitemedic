@@ -1,6 +1,6 @@
 /**
  * Booking Confirmation Email Template
- * Phase 4.5: Client-facing confirmation email with booking details
+ * Phase 28: Branding — PDFs & Emails
  */
 
 import {
@@ -11,8 +11,11 @@ import {
   Heading,
   Hr,
   Html,
+  Img,
+  Link,
   Text,
 } from '@react-email/components';
+import type { EmailBranding } from '@/lib/email/types';
 
 interface BookingConfirmationEmailProps {
   booking: {
@@ -33,6 +36,7 @@ interface BookingConfirmationEmailProps {
     total: number;
   };
   confirmationUrl?: string;
+  branding: EmailBranding;
 }
 
 export default function BookingConfirmationEmail({
@@ -41,12 +45,24 @@ export default function BookingConfirmationEmail({
   medic,
   pricing,
   confirmationUrl,
+  branding,
 }: BookingConfirmationEmailProps) {
+  const accentColour = branding.primaryColourHex || '#2563eb';
+
   return (
     <Html>
       <Head />
       <Body style={main}>
         <Container style={container}>
+          {/* Branded header */}
+          <Container style={brandHeader}>
+            {branding.logoUrl ? (
+              <Img src={branding.logoUrl} alt={branding.companyName} width="150" style={logoImg} />
+            ) : (
+              <Text style={{ ...companyNameText, color: accentColour }}>{branding.companyName}</Text>
+            )}
+          </Container>
+
           <Heading style={heading}>Booking Confirmed</Heading>
 
           <Text style={text}>
@@ -74,7 +90,7 @@ export default function BookingConfirmationEmail({
                   <strong>what3words:</strong>{' '}
                   <a
                     href={`https://what3words.com/${booking.what3wordsAddress.replace(/^\/+/, '')}`}
-                    style={{ color: '#2563eb', textDecoration: 'underline' }}
+                    style={{ color: accentColour, textDecoration: 'underline' }}
                   >
                     {booking.what3wordsAddress}
                   </a>
@@ -86,7 +102,7 @@ export default function BookingConfirmationEmail({
             <Text style={detailValue}>{medic.name}</Text>
 
             <Text style={detailLabel}>Total</Text>
-            <Text style={detailValue}>£{pricing.total.toFixed(2)}</Text>
+            <Text style={detailValue}>{'\u00A3'}{pricing.total.toFixed(2)}</Text>
           </Container>
 
           <Text style={text}>
@@ -94,7 +110,7 @@ export default function BookingConfirmationEmail({
           </Text>
 
           {confirmationUrl && (
-            <Button style={button} href={confirmationUrl}>
+            <Button style={{ ...button, backgroundColor: accentColour }} href={confirmationUrl}>
               View Booking
             </Button>
           )}
@@ -102,7 +118,13 @@ export default function BookingConfirmationEmail({
           <Hr style={hr} />
 
           <Text style={footer}>
-            Apex Safety Group Ltd - UK paramedic staffing with built-in compliance
+            {branding.companyName}{branding.tagline ? ` - ${branding.tagline}` : ''}
+            {branding.showPoweredBy && (
+              <>
+                {' | Powered by '}
+                <Link href="https://sitemedic.co.uk" style={{ color: '#64748b' }}>SiteMedic</Link>
+              </>
+            )}
           </Text>
         </Container>
       </Body>
@@ -122,6 +144,23 @@ const container = {
   padding: '20px 0 48px',
   marginBottom: '64px',
   maxWidth: '600px',
+};
+
+const brandHeader = {
+  textAlign: 'center' as const,
+  padding: '24px 48px 0',
+  margin: '0 0 8px',
+};
+
+const logoImg = {
+  margin: '0 auto',
+  maxHeight: '60px',
+};
+
+const companyNameText = {
+  fontSize: '24px',
+  fontWeight: '700',
+  margin: '0',
 };
 
 const heading = {
@@ -165,7 +204,6 @@ const detailValue = {
 };
 
 const button = {
-  backgroundColor: '#2563eb',
   borderRadius: '6px',
   color: '#ffffff',
   fontSize: '16px',
