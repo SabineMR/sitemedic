@@ -82,6 +82,26 @@ export default function NewTreatmentScreen() {
   const [sceneContext, setSceneContext] = useState<string>('');
   const [showPatientRolePicker, setShowPatientRolePicker] = useState(false);
 
+  // Football (sporting_events) vertical state
+  const isFootball = orgVertical === 'sporting_events';
+  const [footballPatientType, setFootballPatientType] = useState<'player' | 'spectator' | null>(null);
+
+  // Player-specific field states
+  const [squadNumber, setSquadNumber] = useState<string>('');
+  const [phaseOfPlay, setPhaseOfPlay] = useState<string>('');
+  const [contactType, setContactType] = useState<string>('');
+  const [hiaPerformed, setHiaPerformed] = useState<boolean>(false);
+  const [hiaOutcome, setHiaOutcome] = useState<string>('');
+  const [faSeverity, setFaSeverity] = useState<string>('');
+
+  // Spectator-specific field states
+  const [standLocation, setStandLocation] = useState<string>('');
+  const [standRowSeat, setStandRowSeat] = useState<string>('');
+  const [referralOutcome, setReferralOutcome] = useState<string>('');
+  const [safeguardingFlag, setSafeguardingFlag] = useState<boolean>(false);
+  const [safeguardingNotes, setSafeguardingNotes] = useState<string>('');
+  const [alcoholInvolvement, setAlcoholInvolvement] = useState<boolean>(false);
+
   // Booking route params and org vertical — drives mechanism presets, outcome labels, and section headings
   const params = useLocalSearchParams<{ booking_id?: string; event_vertical?: string }>();
   const { primaryVertical } = useOrg();
@@ -434,6 +454,44 @@ export default function NewTreatmentScreen() {
           </View>
         )}
 
+        {/* Football: Patient Type Selector */}
+        {isFootball && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Patient Type *</Text>
+            <Text style={styles.fieldLabel}>Select who you are treating</Text>
+            <View style={styles.patientTypeRow}>
+              <Pressable
+                style={[
+                  styles.patientTypeButton,
+                  footballPatientType === 'player' && styles.patientTypeButtonSelected,
+                ]}
+                onPress={() => setFootballPatientType('player')}
+              >
+                <Text style={[
+                  styles.patientTypeText,
+                  footballPatientType === 'player' && styles.patientTypeTextSelected,
+                ]}>
+                  Player
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.patientTypeButton,
+                  footballPatientType === 'spectator' && styles.patientTypeButtonSelected,
+                ]}
+                onPress={() => setFootballPatientType('spectator')}
+              >
+                <Text style={[
+                  styles.patientTypeText,
+                  footballPatientType === 'spectator' && styles.patientTypeTextSelected,
+                ]}>
+                  Spectator
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+
         {/* Section 1: Patient / Worker / Attendee Selection */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>1. {patientLabel} Information</Text>
@@ -744,6 +802,32 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#991B1B',
     textAlign: 'center',
+  },
+  patientTypeRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  patientTypeButton: {
+    flex: 1,
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    paddingVertical: 16,
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  patientTypeButtonSelected: {
+    borderColor: '#2563EB',
+    backgroundColor: '#EFF6FF',
+  },
+  patientTypeText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  patientTypeTextSelected: {
+    color: '#2563EB',
   },
   section: {
     backgroundColor: '#FFFFFF',
