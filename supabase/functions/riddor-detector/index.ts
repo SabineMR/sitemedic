@@ -71,6 +71,34 @@ serve(async (req: Request) => {
       );
     }
 
+    // Vertical gate — RIDDOR only applies to specific workplace verticals.
+    const NON_RIDDOR_VERTICALS = ['festivals', 'motorsport', 'sporting_events', 'fairs_shows', 'private_events'];
+
+    // Resolve effective vertical: prefer booking-level event_vertical on treatment,
+    // fall back to org primary vertical from org_settings.
+    let effectiveVertical: string | null = treatment.event_vertical ?? null;
+
+    if (!effectiveVertical) {
+      const { data: orgSettings } = await supabase
+        .from('org_settings')
+        .select('industry_verticals')
+        .eq('org_id', treatment.org_id)
+        .single();
+      effectiveVertical = orgSettings?.industry_verticals?.[0] ?? 'general';
+    }
+
+    if (NON_RIDDOR_VERTICALS.includes(effectiveVertical)) {
+      return new Response(
+        JSON.stringify({
+          detected: false,
+          category: null,
+          reason: `RIDDOR does not apply to vertical: ${effectiveVertical}`,
+        }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+    // End vertical gate — proceed with RIDDOR detection below.
+
     // Run RIDDOR detection algorithm
     const detection = detectRIDDOR({
       injury_type: treatment.injury_type,

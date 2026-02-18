@@ -69,7 +69,8 @@ Deno.serve(async (req: Request) => {
           treatment_types,
           outcome,
           created_at,
-          reference_number
+          reference_number,
+          event_vertical
         ),
         workers (
           first_name,
@@ -95,6 +96,16 @@ Deno.serve(async (req: Request) => {
           status: 404,
           headers: { 'Content-Type': 'application/json', ...corsHeaders },
         }
+      );
+    }
+
+    // Validate vertical — F2508 only applies to RIDDOR verticals.
+    const NON_RIDDOR_VERTICALS = ['festivals', 'motorsport', 'sporting_events', 'fairs_shows', 'private_events'];
+    const treatmentVertical = (incident.treatments as unknown as { event_vertical?: string })?.event_vertical;
+    if (treatmentVertical && NON_RIDDOR_VERTICALS.includes(treatmentVertical)) {
+      return new Response(
+        JSON.stringify({ error: `F2508 does not apply to vertical: ${treatmentVertical}` }),
+        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
 
