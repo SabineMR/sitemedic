@@ -34,7 +34,7 @@ See: `.planning/milestones/v1.1-ROADMAP.md`
 
 - [x] **Phase 18: Vertical Infrastructure & RIDDOR Fix** — Schema v4, RIDDOR detector vertical gate, mobile OrgContext, booking override wiring, admin vertical settings
 - [ ] **Phase 19: Motorsport Vertical** — GCS/concussion form, mandatory licence suspension workflow, Medical Statistics Sheet, Motorsport UK PDF
-- [ ] **Phase 20: Festivals & Events Vertical** — TST triage, Purple Guide PDF, RIDDOR disabled for attendees, safeguarding + substance flags
+- [x] **Phase 20: Festivals & Events Vertical** — TST triage, Purple Guide PDF, RIDDOR disabled for attendees, safeguarding + substance flags
 - [x] **Phase 21: Film/TV Production Vertical** — Production-specific form fields, Film/TV terminology, cert profile, existing RIDDOR pipeline reused
 - [ ] **Phase 22: Football / Sports Vertical** — Dual patient type (player/spectator), FA + SGSA forms and PDFs, RIDDOR disabled for players
 - [ ] **Phase 23: Analytics — Heat Maps & Trend Charts** — Near-miss heat maps (org + platform), compliance score history, trend charts
@@ -134,10 +134,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 20-01-PLAN.md — Festival form fields: TST triage priority (P1/P2/P3/P4) required field, alcohol/substance flag, safeguarding flag, attendee disposition; RIDDOR banner gate for festivals; all written to vertical_extra_fields JSONB
-- [ ] 20-02-PLAN.md — RIDDOR gate verification: confirm festivals in NON_RIDDOR_VERTICALS in riddor-detector and F2508 generator; confirm VERTICAL_COMPLIANCE.festivals.riddorApplies is false; read-only verification
-- [ ] 20-03-PLAN.md — Purple Guide PDF Edge Function: replace 501 stub with full PurpleGuideDocument React-PDF generation; purple-guide-mapping.ts; storage bucket migration 125
-- [ ] 20-04-PLAN.md — Dashboard wiring: EventIncidentReportCard, generateEventIncidentPDF query, vertical-aware terminology (Attendee/Venue/Organiser), medic profile recommended cert types (FEST-05)
+- [x] 20-01-PLAN.md — Festival form fields: TST triage priority (P1/P2/P3/P4) required field, alcohol/substance flag, safeguarding flag, attendee disposition; RIDDOR banner gate for festivals; all written to vertical_extra_fields JSONB
+- [x] 20-02-PLAN.md — RIDDOR gate verification: confirm festivals in NON_RIDDOR_VERTICALS in riddor-detector and F2508 generator; confirm VERTICAL_COMPLIANCE.festivals.riddorApplies is false; read-only verification
+- [x] 20-03-PLAN.md — Purple Guide PDF Edge Function: replace 501 stub with full PurpleGuideDocument React-PDF generation; purple-guide-mapping.ts; storage bucket migration 125
+- [x] 20-04-PLAN.md — Dashboard wiring: EventIncidentReportCard, generateEventIncidentPDF query, vertical-aware terminology (Attendee/Venue/Organiser), medic profile recommended cert types (FEST-05)
 
 ---
 
@@ -251,7 +251,7 @@ Plans:
 | 18. Vertical Infrastructure & RIDDOR Fix | v2.0 | 5/5 | Complete | 2026-02-18 |
 | 18.5. Construction & Infrastructure Vertical | v2.0 | 2/2 | Complete | 2026-02-18 |
 | 19. Motorsport Vertical | v2.0 | 0/5 | Not started | - |
-| 20. Festivals & Events Vertical | v2.0 | 0/4 | Not started | - |
+| 20. Festivals & Events Vertical | v2.0 | 4/4 | Complete | 2026-02-17 |
 | 21. Film/TV Production Vertical | v2.0 | 2/2 | Complete | 2026-02-17 |
 | 22. Football / Sports Vertical | v2.0 | 0/4 | Not started | - |
 | 23. Analytics — Heat Maps & Trend Charts | v2.0 | 0/5 | Not started | - |

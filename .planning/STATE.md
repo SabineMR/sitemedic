@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 19: Motorsport Vertical 19-03 complete; Phase 19-04 next
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 20: Festivals & Events Vertical COMPLETE (16/16 verified); Phase 19: Motorsport Vertical 19-03 complete, 19-04 next
 
 ## Current Position
 
-Phase: 19 of 23 (Motorsport Vertical) — 19-03 complete
-Plan: 19-01, 19-02, 19-03 complete; 19-04, 19-05 remain
-Status: In progress — 19-03 (motorsport-incident-generator PDF) complete
-Last activity: 2026-02-18 — Completed 19-03-PLAN.md: MotorsportIncidentDocument.tsx + mapping + storage bucket (migration 128) + 501 stub replaced
+Phase: 20 of 23 (Festivals & Events Vertical) — COMPLETE and VERIFIED
+Plan: 20-01, 20-02, 20-03, 20-04 all complete (16/16 must-haves verified)
+Status: Phase 20 complete — Festivals vertical fully wired (triage form fields, RIDDOR gate, Purple Guide PDF, dashboard download, Attendee/Venue/Organiser terminology, cert profile)
+Last activity: 2026-02-17 — Phase 20 complete: festival form fields, RIDDOR gate verified, Purple Guide PDF Edge Function, EventIncidentReportCard, Attendee/Venue/Organiser terminology, FREC 3 cert ordering on medic profile
 
 Progress: [██████████] v1.1 complete | [████████░░] v2.0 19/27 plans (Phase 18 + 18.5 + 19-01 + 19-02 + 19-03 + 20-01 + 20-02 + 20-03 + 20-04 + 21 + 22-01 + 22-02 + 22-03 + 22-04 complete)
 
