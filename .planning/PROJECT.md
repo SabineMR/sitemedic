@@ -2,7 +2,7 @@
 
 ## What This Is
 
-SiteMedic is a mobile-first platform for UK construction site medics and film/TV set medics that turns their daily clinical work into automatic compliance documentation. The medic uses the app as their primary work tool on an iPhone or iPad. Every treatment, observation, and safety check they perform generates timestamped, auditable records that flow into a web dashboard the site manager can access. This replaces paper-based reporting and creates automatic compliance records as a byproduct of clinical work, not as a separate admin task.
+SiteMedic is a multi-vertical mobile-first platform for UK medics — across construction, Film/TV production, festivals & events, motorsport, and football — that turns daily clinical work into automatic compliance documentation. Each vertical has its own incident form fields, shared documents, certification requirements, and terminology. The medic uses the app as their primary work tool on an iPhone or iPad. Every treatment, observation, and safety check generates timestamped, auditable records that flow into a web dashboard the client can access. This replaces paper-based reporting and creates automatic compliance records as a byproduct of clinical work, not as a separate admin task.
 
 ## Core Value
 
@@ -65,15 +65,22 @@ Documentation happens automatically as the medic does their job, not as separate
 - ✓ Critical bug fixes — payslip medic_id FK corrected, RIDDOR draft inputs wired — v1.1
 - ✓ Geofence coverage analytics — "X of Y active sites covered" stat card with 60s polling — v1.1
 
-### Active
+### Active (v2.0 — Multi-Vertical Platform Expansion)
 
-(No active requirements — ready to plan v2.0)
+**Multi-Vertical Support:**
+- [ ] Per-vertical incident form fields — Film/TV, Festivals, Motorsport, Football each see different injury categories, mechanisms, and post-treatment guidance
+- [ ] Per-vertical shared document templates — Film/TV uses Purple Guide PDF; Motorsport uses Motorsport UK form; Football uses FA form; Festivals use event incident report
+- [ ] Per-vertical certification requirements — each vertical shows the cert types relevant to that industry on medic profiles
+- [ ] Per-vertical terminology throughout app — Film/TV sees "Cast & Crew", "Scene", "Production" not "Worker", "Site", "Client"
+- [ ] Per-org default vertical — admin sets vertical when creating org; all medics in that org use it as default
+- [ ] Per-booking vertical override — client selects event type on booking; medic's app adapts to that booking's vertical
+
+**Analytics (org + platform level):**
+- [ ] Near-miss heat map — geographic pattern visualisation for site managers (org) and platform admin (aggregate)
+- [ ] Trend analysis charts — compliance score history, incident frequency trends over time (org + platform level)
 
 ### Out of Scope
 
-- **Film/TV mode** — Defer until construction mode is validated with real clients
-- **Heat map visualisation** — Phase 2 feature after basic near-miss logging proves valuable
-- **Trend analysis charts** — Phase 2 analytics layer
 - **Document library** — Not MVP-critical, add when clients request it
 - **Toolbox Talk Logger** — Nice-to-have, not core compliance value
 - **Multi-project support** — Single-site focus for MVP, add when scaling to multiple medics
@@ -158,5 +165,16 @@ Documentation happens automatically as the medic does their job, not as separate
 | Territory-based assignment | UK postcode sectors enable geographic optimization and coverage tracking | ✓ Good (v1.0 - 100% auto-assignment) |
 | Stripe Connect for medics | Express accounts handle UK Faster Payments without custom bank integration | ✓ Good (v1.0 - weekly payouts working) |
 
+## Current Milestone: v2.0 Multi-Vertical Platform Expansion
+
+**Goal:** Expand SiteMedic from a construction-only platform to a multi-vertical medic compliance platform — Film/TV, Festivals, Motorsport, and Football each get their own incident forms, compliance documents, cert types, and in-app terminology. Add heat map and trend analytics visible at both org and platform level.
+
+**Target features:**
+- Multi-vertical support (Film/TV, Festivals & Events, Motorsport, Football/Sports)
+- Per-org default vertical + per-booking override
+- Per-vertical: incident fields, PDF templates, cert types, terminology
+- Near-miss heat maps (org + platform level)
+- Trend analysis charts (org + platform level)
+
 ---
-*Last updated: 2026-02-17 after v1.1 milestone completion*
+*Last updated: 2026-02-17 after v2.0 milestone initialized*

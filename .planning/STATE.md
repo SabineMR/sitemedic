@@ -5,13 +5,13 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v1.1 COMPLETE — archived 2026-02-17. Ready to plan v2.0 with /gsd:new-milestone.
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — defining requirements
 
 ## Current Position
-Phase: — (between milestones)
+Phase: Not started (defining requirements)
 Plan: —
-Status: v1.1 MILESTONE COMPLETE — all 10 phases verified, 33/33 requirements satisfied, git tag v1.1 created
-Last activity: 2026-02-17 — v1.1 milestone archived (MILESTONES.md updated, PROJECT.md evolved, git tag v1.1)
+Status: Defining requirements — v2.0 milestone initialized
+Last activity: 2026-02-17 — Milestone v2.0 started
 Progress: [██████████] v1.1 complete (33/33 requirements, 35 plans, 10 phases)
 
 ## Performance Metrics
