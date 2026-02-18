@@ -26,7 +26,7 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { getDatabase } from '../../src/lib/watermelon';
 import Treatment from '../../src/database/models/Treatment';
 import { useAutoSave, AutoSaveIndicator } from '../../components/forms/AutoSaveForm';
@@ -43,10 +43,9 @@ import { getMechanismPresets } from '../../services/taxonomy/mechanism-presets';
 import { getVerticalOutcomeCategories, getPatientLabel } from '../../services/taxonomy/vertical-outcome-labels';
 import { getVerticalCompliance } from '../../services/taxonomy/vertical-compliance';
 import { useSync } from '../../src/contexts/SyncContext';
+import { useOrg } from '../../src/contexts/OrgContext';
 import { photoUploadQueue } from '../../src/services/PhotoUploadQueue';
 import { supabase } from '../../src/lib/supabase';
-
-// Mechanism presets are loaded dynamically from the org's vertical (see fetchOrgVertical)
 
 export default function NewTreatmentScreen() {
   // Sync context
@@ -76,41 +75,16 @@ export default function NewTreatmentScreen() {
   const [riddorFlagged, setRiddorFlagged] = useState(false);
   const [certValidationError, setCertValidationError] = useState<string | null>(null);
 
-  // Org vertical — drives mechanism presets, outcome labels, and section headings
-  const [orgVertical, setOrgVertical] = useState<string | null>(null);
+  // Booking route params and org vertical — drives mechanism presets, outcome labels, and section headings
+  const params = useLocalSearchParams<{ booking_id?: string; event_vertical?: string }>();
+  const { primaryVertical } = useOrg();
+  const orgVertical = (params.event_vertical as string | undefined) ?? primaryVertical;
+  const bookingId = (params.booking_id as string | undefined) ?? null;
 
-  // Initialize treatment record and org vertical on mount
+  // Initialize treatment record on mount
   useEffect(() => {
     initializeTreatment();
-    fetchOrgVertical();
   }, []);
-
-  /**
-   * Fetch the org's primary industry vertical from org_settings.
-   * Used to adapt mechanism presets, outcome labels, and section headings.
-   * Non-blocking — if it fails we fall back to the general/construction defaults.
-   */
-  const fetchOrgVertical = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const orgId = user.app_metadata?.org_id;
-      if (!orgId) return;
-
-      const { data } = await supabase
-        .from('org_settings')
-        .select('industry_verticals')
-        .eq('org_id', orgId)
-        .single();
-
-      if (data?.industry_verticals && Array.isArray(data.industry_verticals) && data.industry_verticals.length > 0) {
-        setOrgVertical(data.industry_verticals[0] as string);
-      }
-    } catch {
-      // Non-critical — fall back to general presets
-    }
-  };
 
   const initializeTreatment = async () => {
     try {
@@ -136,6 +110,8 @@ export default function NewTreatmentScreen() {
           t.createdAt = Date.now();
           t.updatedAt = Date.now();
           t.lastModifiedAt = Date.now();
+          t.eventVertical = orgVertical;
+          t.bookingId = bookingId ?? undefined;
         });
       });
 
@@ -355,6 +331,8 @@ export default function NewTreatmentScreen() {
             created_at: new Date(treatment.createdAt).toISOString(),
             updated_at: new Date(treatment.updatedAt).toISOString(),
             last_modified_at: treatment.lastModifiedAt,
+            event_vertical: treatment.eventVertical ?? null,
+            booking_id: treatment.bookingId ?? null,
           },
           treatment.isRiddorReportable ? 0 : 1 // RIDDOR = priority 0 (immediate)
         );
