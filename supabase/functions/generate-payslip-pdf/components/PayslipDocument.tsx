@@ -102,7 +102,6 @@ export const PayslipDocument = ({ data, branding, logoSrc }: { data: PayslipData
         />
       ) : (
         <View style={styles.header}>
-          <Text style={styles.companyName}>SiteMedic</Text>
           <Text style={styles.title}>PAYSLIP</Text>
         </View>
       )}
