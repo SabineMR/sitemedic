@@ -172,7 +172,7 @@ Plans:
 
 **Requirements:** FOOT-01, FOOT-02, FOOT-03, FOOT-04, FOOT-05, FOOT-06, FOOT-07
 
-**Research flag:** Confirm with client whether they target professional clubs (SGSA form mandatory) or grassroots only (FA form sufficient). This determines whether the SGSA Edge Function output is required for v2.0 or can be deferred.
+**Research flag resolved:** SGSA form implemented for ALL spectator incidents — best practice regardless of ground licensing tier. No sub-branch for professional vs grassroots needed.
 
 **Success Criteria** (what must be TRUE when this phase completes):
 1. A medic at a football match is prompted to select patient type (Player or Spectator) at the start of the treatment form — the form fields that follow differ based on this selection
@@ -181,13 +181,13 @@ Plans:
 4. A player on-pitch injury never produces a RIDDOR flag — the vertical gate prevents RIDDOR detection before any logic runs for the football vertical
 5. An admin can download the correct PDF for each football incident — the FA Match Day Injury Form for player incidents and the SGSA Medical Incident Report for spectator incidents
 
-**Plans:** TBD
+**Plans:** 4 plans
 
 Plans:
-- [ ] 22-01: Football dual patient type form — patient type selector (Player / Spectator) at form start; conditional Player fields (phase of play, contact/non-contact, HIA outcome, squad number, FA severity); conditional Spectator fields (stand location, referral outcome, safeguarding flag); all written to `vertical_extra_fields` JSONB
-- [ ] 22-02: Football RIDDOR gate — verify Phase 18 detector gate is active for `vertical: 'football'`; player on-pitch treatments never produce RIDDOR flag
-- [ ] 22-03: Football PDF Edge Functions — `fa-incident-generator` outputting FA Match Day Injury Form for player incidents and SGSA Medical Incident Report for spectator incidents; `incident-report-dispatcher` routes to correct format based on patient type in `vertical_extra_fields`
-- [ ] 22-04: Football vertical wiring — terminology: "Player", "Pitch / Ground", "Club"; cert profile `getRecommendedCertTypes('football')` ordering (ATMMiF, ITMMiF, FA Advanced Trauma Management, FA Concussion Module)
+- [ ] 22-01-PLAN.md — Football dual patient type form: patient type selector (Player / Spectator) at form start; conditional Player fields (squad number, phase of play, contact/non-contact, HIA performed/outcome, FA severity); conditional Spectator fields (stand location, row/seat, referral outcome, safeguarding flag/notes, alcohol involvement); validation guards; all written to vertical_extra_fields JSONB in sync payload
+- [ ] 22-02-PLAN.md — Football RIDDOR gate: verify 'sporting_events' is in NON_RIDDOR_VERTICALS; export const for testability; annotate FOOT-04; write Jest test asserting gate; confirm F2508 generator 400 guard
+- [ ] 22-03-PLAN.md — Football PDF Edge Functions: replace fa-incident-generator 501 stub with full FA Match Day Injury Form (player) and SGSA Medical Incident Report (spectator) PDF generation; FAPlayerDocument.tsx, FASpectatorDocument.tsx, mapping files; fa-incident-reports storage bucket migration 125
+- [ ] 22-04-PLAN.md — Football vertical wiring: getPatientLabel('sporting_events') → 'Player'; org-labels.ts sporting_events → Player/Pitch+Ground/Club; 4 new football cert types (ATMMiF, ITMMiF, FA Advanced Trauma Management, FA Concussion Module) + sporting_events CertCategory + VERTICAL_CERT_TYPES update
 
 ---
 
