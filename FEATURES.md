@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Phase 21-02: Film/TV Cast & Crew terminology applied across workers tab, worker screens, and treatment screens; tv_film cert ordering updated; getLocationLabel/getEventLabel helpers added)
+**Last Updated**: 2026-02-18 (Phase 20-03: Purple Guide Patient Contact Log PDF generation backend; event-incident-report-generator Edge Function fully implemented with triage colour badges, alcohol/safeguarding flags, disposition, Supabase Storage bucket, and 7-day signed URL)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -16,6 +16,56 @@ SiteMedic is a comprehensive platform combining **mobile medic software** (offli
 - High-value add-ons: Corporate Events, Private Events (weddings/parties/galas), Education & Youth (DBS-checked), Outdoor Adventure & Endurance
 
 **Business Model**: Software bundled with medic staffing service (no separate software charge). Revenue from medic bookings with a configurable platform/medic split (default 60% platform / 40% medic, overridable per employee). Weekly medic payouts via UK Faster Payments, Net 30 invoicing for established corporate clients. Referral bookings (jobs recommended by a third party who cannot take them) trigger a 10% referral payout (configurable) deducted from the platform's share — medic payout is unaffected.
+
+---
+
+## Recent Updates — Festivals & Events Vertical: Purple Guide PDF Backend (2026-02-18)
+
+### Phase 20-03: Purple Guide Patient Contact Log PDF Generation (FEST-06 Backend) ✅
+
+The `event-incident-report-generator` Supabase Edge Function now produces a fully-populated Purple Guide PDF and returns a signed download URL. Previously it returned a 501 Not Implemented stub.
+
+**Purple Guide PDF layout (`PurpleGuideDocument.tsx`):**
+- Title: "Purple Guide — Patient Contact Log"
+- Subtitle: "Events Industry Forum — Health, Safety and Welfare at Events"
+- Header accent colour: `#6B21A8` (purple)
+- Six sections: Patient Identifier, Presenting Complaint, Treatment Given, Flags, Disposition, Attending Medic
+- Triage priority colour-coded badge: P1=#DC2626 (red), P2=#F59E0B (amber), P3=#22C55E (green), P4=#1F2937 (black)
+- Alcohol/substance and safeguarding flags shown as highlighted badges
+- Safeguarding warning callout rendered in amber when safeguarding concern is raised
+- Footer: SiteMedic attribution + Purple Guide framework reference (EIF 8th edition)
+
+**Treatment-to-PDF data mapping (`purple-guide-mapping.ts`):**
+- `mapTreatmentToPurpleGuide()` maps raw Supabase treatment row to `PurpleGuideData`
+- Event name sourced from `bookings.site_name` (not a denormalised column)
+- Event date sourced from `bookings.shift_date` (falls back to `treatment_date`)
+- Triage priority parsed from `vertical_extra_fields.triage_priority` (defaults P3 if missing)
+- Alcohol/substance and safeguarding flags read from `vertical_extra_fields`
+- Disposition label mapped from `vertical_extra_fields.disposition` (defaults to "Discharged on site")
+- Null-safe throughout — missing fields render as "Not recorded" or sensible defaults; never crashes
+
+**Edge Function implementation (`index.ts` — 501 stub replaced):**
+- Creates Supabase service-role client
+- Fetches treatment with joins: `medics`, `org_settings!treatments_org_id_fkey`, `workers`, `bookings(site_name, shift_date)`
+- Renders PDF via `@react-pdf/renderer@4.3.2` `renderToBuffer()`
+- Uploads to `event-incident-reports` storage bucket with `upsert: true`
+- Returns `{ success: true, pdf_path, signed_url }` with 7-day signed URL
+- Preserves CORS headers, OPTIONS handler, and event_vertical validation from stub
+
+**Storage bucket (`125_event_incident_reports_storage.sql`):**
+- Private bucket `event-incident-reports` (patient data)
+- RLS SELECT: authenticated users who are members of the treatment's org can view
+- RLS INSERT/UPDATE: service_role only (Edge Function)
+
+**Types (`types.ts`):**
+- `PurpleGuideData` interface added alongside existing `EventIncidentData`
+
+**Files created/modified:**
+- `supabase/functions/event-incident-report-generator/PurpleGuideDocument.tsx` — new (React-PDF component)
+- `supabase/functions/event-incident-report-generator/purple-guide-mapping.ts` — new (data mapper)
+- `supabase/functions/event-incident-report-generator/types.ts` — updated (PurpleGuideData added)
+- `supabase/functions/event-incident-report-generator/index.ts` — updated (501 stub → full flow)
+- `supabase/migrations/125_event_incident_reports_storage.sql` — new (storage bucket + RLS)
 
 ---
 
