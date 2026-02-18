@@ -93,10 +93,10 @@ Foundation work that all subsequent phases depend on. No user-visible output —
 | SUB-01 | Phase 25 | Pending |
 | SUB-03 | Phase 25 | Pending |
 | GATE-01 | Phase 25 | Pending |
-| ROUTE-01 | Phase 26 | Pending |
-| ROUTE-02 | Phase 26 | Pending |
-| ROUTE-03 | Phase 26 | Pending |
-| ROUTE-04 | Phase 26 | Pending |
+| ROUTE-01 | Phase 26 | Complete |
+| ROUTE-02 | Phase 26 | Complete |
+| ROUTE-03 | Phase 26 | Complete |
+| ROUTE-04 | Phase 26 | Complete |
 | BRAND-03 | Phase 27 | Pending |
 | BRAND-06 | Phase 27 | Pending |
 | BRAND-04 | Phase 28 | Pending |

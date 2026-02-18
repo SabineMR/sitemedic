@@ -42,7 +42,7 @@ See: `.planning/milestones/v2.0-ROADMAP.md`
 
 - [x] **Phase 24: DB Foundation** — Next.js CVE patch, migrations 132/133/134, org backfill ✓ 2026-02-18
 - [ ] **Phase 25: Billing Infrastructure** — Stripe Products, billing webhook handler, feature gates map
-- [ ] **Phase 26: Subdomain Routing** — Middleware wildcard DNS, subdomain extraction, security headers, branded login
+- [x] **Phase 26: Subdomain Routing** — Middleware wildcard DNS, subdomain extraction, security headers, branded login ✓ 2026-02-18
 - [ ] **Phase 27: Branding — Web Portal** — BrandingProvider, SSR header injection, CSS custom properties, portal rebrand
 - [ ] **Phase 28: Branding — PDFs & Emails** — Org logo in all 8 PDF Edge Functions + all 3 email templates
 - [ ] **Phase 29: Org Onboarding Flow** — Signup page, Stripe Checkout, activation queue, welcome email
@@ -119,10 +119,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 26-01-PLAN.md — Environment Setup & DNS Initiation: add NEXT_PUBLIC_ROOT_DOMAIN env var; checkpoint for Vercel wildcard domain + DNS CNAME configuration
-- [ ] 26-02-PLAN.md — Middleware Subdomain Extraction & Header Injection: extractSubdomain() helper, x-org-* header stripping (CVE-2025-29927), service-role org+branding lookup by slug, header injection, unknown slug redirect
-- [ ] 26-03-PLAN.md — Branded Login Page: convert login to server component + client form; read x-org-* headers for org branding; fallback to SiteMedic defaults; "Powered by SiteMedic" footer
-- [ ] 26-04-PLAN.md — Auth Cookie Scope Verification & Local Dev Testing: fix signout route for subdomain support; verify cookie scope isolation; regression-test auth redirects
+- [x] 26-01-PLAN.md — Environment Setup & DNS Initiation: add NEXT_PUBLIC_ROOT_DOMAIN env var; checkpoint for Vercel wildcard domain + DNS CNAME configuration
+- [x] 26-02-PLAN.md — Middleware Subdomain Extraction & Header Injection: extractSubdomain() helper, x-org-* header stripping (CVE-2025-29927), service-role org+branding lookup by slug, header injection, unknown slug redirect
+- [x] 26-03-PLAN.md — Branded Login Page: convert login to server component + client form; read x-org-* headers for org branding; fallback to SiteMedic defaults; "Powered by SiteMedic" footer
+- [x] 26-04-PLAN.md — Auth Cookie Scope Verification & Local Dev Testing: fix signout route for subdomain support; verify cookie scope isolation; regression-test auth redirects
 
 ---
 
@@ -270,7 +270,7 @@ Note: Phases 27 and 28 can be parallelised once Phase 26 is deployed. Phase 30 a
 | 23. Analytics — Heat Maps & Trend Charts | v2.0 | 7/7 | Complete | 2026-02-18 |
 | 24. DB Foundation | v3.0 | 0/5 | Not started | - |
 | 25. Billing Infrastructure | v3.0 | 0/3 | Not started | - |
-| 26. Subdomain Routing | v3.0 | 0/4 | Planned | - |
+| 26. Subdomain Routing | v3.0 | 4/4 | Complete | 2026-02-18 |
 | 27. Branding — Web Portal | v3.0 | 0/3 | Not started | - |
 | 28. Branding — PDFs & Emails | v3.0 | 0/2 | Not started | - |
 | 29. Org Onboarding Flow | v3.0 | 0/5 | Not started | - |
