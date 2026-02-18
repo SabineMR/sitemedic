@@ -93,12 +93,12 @@ Core plumbing that all four new verticals depend on. Must ship before any vertic
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| VERT-01 | Phase 18 | Pending |
-| VERT-02 | Phase 18 | Pending |
-| VERT-03 | Phase 18 | Pending |
-| VERT-04 | Phase 18 | Pending |
-| VERT-05 | Phase 18 | Pending |
-| VERT-06 | Phase 18 | Pending |
+| VERT-01 | Phase 18 | Complete |
+| VERT-02 | Phase 18 | Complete |
+| VERT-03 | Phase 18 | Complete |
+| VERT-04 | Phase 18 | Complete |
+| VERT-05 | Phase 18 | Complete |
+| VERT-06 | Phase 18 | Complete |
 | FILM-01 | Phase 21 | Pending |
 | FILM-02 | Phase 21 | Pending |
 | FILM-03 | Phase 21 | Pending |

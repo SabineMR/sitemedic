@@ -32,7 +32,7 @@ See: `.planning/milestones/v1.1-ROADMAP.md`
 
 **Phase list:**
 
-- [ ] **Phase 18: Vertical Infrastructure & RIDDOR Fix** — Schema v4, RIDDOR detector vertical gate, mobile OrgContext, booking override wiring, admin vertical settings
+- [x] **Phase 18: Vertical Infrastructure & RIDDOR Fix** — Schema v4, RIDDOR detector vertical gate, mobile OrgContext, booking override wiring, admin vertical settings
 - [ ] **Phase 19: Motorsport Vertical** — GCS/concussion form, mandatory licence suspension workflow, Medical Statistics Sheet, Motorsport UK PDF
 - [ ] **Phase 20: Festivals & Events Vertical** — TST triage, Purple Guide PDF, RIDDOR disabled for attendees, safeguarding + substance flags
 - [ ] **Phase 21: Film/TV Production Vertical** — Production-specific form fields, Film/TV terminology, cert profile, existing RIDDOR pipeline reused
@@ -59,11 +59,11 @@ See: `.planning/milestones/v1.1-ROADMAP.md`
 **Plans:** 5 plans
 
 Plans:
-- [ ] 18-01-PLAN.md — WatermelonDB schema v4: add event_vertical, vertical_extra_fields, booking_id to treatments; gps_lat, gps_lng to near_misses; Supabase SQL migration 124; compliance_score_history table
-- [ ] 18-02-PLAN.md — Vertical-aware RIDDOR detector: gate riddor-detector on non-RIDDOR verticals; F2508 generator returns 400 for non-RIDDOR; scaffold 3 new Edge Functions; incident-report-dispatcher utility
-- [ ] 18-03-PLAN.md — Mobile OrgContext: create src/contexts/OrgContext.tsx with AsyncStorage caching; register OrgProvider in app/_layout.tsx between AuthProvider and SyncProvider
-- [ ] 18-04-PLAN.md — Booking vertical override: remove per-mount fetchOrgVertical from new.tsx; add useOrg + useLocalSearchParams; booking_id + event_vertical in sync payload
-- [ ] 18-05-PLAN.md — Admin + client vertical settings: add eventVertical to BookingRequest and Supabase insert in /api/bookings/create; verify admin vertical selector already works
+- [x] 18-01-PLAN.md — WatermelonDB schema v4: add event_vertical, vertical_extra_fields, booking_id to treatments; gps_lat, gps_lng to near_misses; Supabase SQL migration 124; compliance_score_history table
+- [x] 18-02-PLAN.md — Vertical-aware RIDDOR detector: gate riddor-detector on non-RIDDOR verticals; F2508 generator returns 400 for non-RIDDOR; scaffold 3 new Edge Functions; incident-report-dispatcher utility
+- [x] 18-03-PLAN.md — Mobile OrgContext: create src/contexts/OrgContext.tsx with AsyncStorage caching; register OrgProvider in app/_layout.tsx between AuthProvider and SyncProvider
+- [x] 18-04-PLAN.md — Booking vertical override: remove per-mount fetchOrgVertical from new.tsx; add useOrg + useLocalSearchParams; booking_id + event_vertical in sync payload
+- [x] 18-05-PLAN.md — Admin + client vertical settings: add eventVertical to BookingRequest and Supabase insert in /api/bookings/create; verify admin vertical selector already works
 
 ---
 
@@ -249,7 +249,7 @@ Plans:
 | 15. Compliance Exports | v1.1 | 3/3 | Complete | 2026-02-17 |
 | 16. Contract Detail | v1.1 | 2/2 | Complete | 2026-02-17 |
 | 17. Geofence Coverage | v1.1 | 1/1 | Complete | 2026-02-17 |
-| 18. Vertical Infrastructure & RIDDOR Fix | v2.0 | 0/5 | Not started | - |
+| 18. Vertical Infrastructure & RIDDOR Fix | v2.0 | 5/5 | Complete | 2026-02-18 |
 | 18.5. Construction & Infrastructure Vertical | v2.0 | 0/2 | Not started | - |
 | 19. Motorsport Vertical | v2.0 | 0/5 | Not started | - |
 | 20. Festivals & Events Vertical | v2.0 | 0/4 | Not started | - |

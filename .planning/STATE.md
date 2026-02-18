@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 18: Vertical Infrastructure & RIDDOR Fix
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 19: Motorsport Vertical
 
 ## Current Position
 
-Phase: 18 of 23 (Vertical Infrastructure & RIDDOR Fix)
-Plan: 4 of N in current phase (18-04 complete; 18-05 also complete — plans completed out of order)
-Status: In progress
-Last activity: 2026-02-18 — Completed 18-04-PLAN.md (OrgContext wiring + booking vertical override in treatment form)
+Phase: 19 of 23 (Motorsport Vertical) — Phase 18 complete
+Plan: — (ready to plan)
+Status: Phase 18 complete — all 5/5 plans executed and verified (18/18 must-haves passed)
+Last activity: 2026-02-18 — Phase 18 complete: vertical infrastructure, RIDDOR gate, OrgContext, booking override, booking API
 
-Progress: [██████████] v1.1 complete | [███░░░░░░░] v2.0 6/25 plans
+Progress: [██████████] v1.1 complete | [████░░░░░░] v2.0 5/25 plans (Phase 18 complete)
 
 ## Performance Metrics
 
