@@ -113,7 +113,7 @@ export default async function TreatmentDetailPage({
             {treatment.worker?.company && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Company
+                  {treatment.event_vertical === 'festivals' ? 'Event Organiser' : 'Client'}
                 </p>
                 <p>{treatment.worker.company}</p>
               </div>
