@@ -54,12 +54,12 @@ Core plumbing that all four new verticals depend on. Must ship before any vertic
 
 ### ANLT — Analytics: Heat Maps & Trend Charts
 
-- [ ] **ANLT-01**: Near-miss heat map visible on the org dashboard — GPS-clustered near-miss incidents plotted on a Leaflet map using `leaflet.heat`, filtered to the current org
-- [ ] **ANLT-02**: Near-miss heat map visible on the platform admin dashboard — aggregate across all orgs, with org colour-coding
-- [ ] **ANLT-03**: Compliance scores are persisted to a `compliance_score_history` table weekly (upsert from the existing weekly report Edge Function)
-- [ ] **ANLT-04**: Compliance score trend chart on the org dashboard — weekly score plotted over the last 12 months using Recharts (already installed)
-- [ ] **ANLT-05**: Incident frequency trend chart on the org dashboard — treatment + near-miss counts per week over the last 12 months
-- [ ] **ANLT-06**: Platform admin sees aggregate compliance trend across all orgs and top/bottom performing orgs by compliance score
+- [x] **ANLT-01**: Near-miss heat map visible on the org dashboard — GPS-clustered near-miss incidents plotted on a Leaflet map using CircleMarker (leaflet.heat incompatible with react-leaflet@5), filtered to the current org
+- [x] **ANLT-02**: Near-miss heat map visible on the platform admin dashboard — aggregate across all orgs, with org colour-coding
+- [x] **ANLT-03**: Compliance scores are persisted to a `compliance_score_history` table weekly (upsert from the existing weekly report Edge Function)
+- [x] **ANLT-04**: Compliance score trend chart on the org dashboard — weekly score plotted over the last 12 months using Recharts (already installed)
+- [x] **ANLT-05**: Incident frequency trend chart on the org dashboard — treatment + near-miss counts per week over the last 12 months
+- [x] **ANLT-06**: Platform admin sees aggregate compliance trend across all orgs and top/bottom performing orgs by compliance score
 
 ## Future Requirements (v2.1+)
 
@@ -126,12 +126,12 @@ Core plumbing that all four new verticals depend on. Must ship before any vertic
 | FOOT-05 | Phase 22 | Pending |
 | FOOT-06 | Phase 22 | Pending |
 | FOOT-07 | Phase 22 | Pending |
-| ANLT-01 | Phase 23 | Pending |
-| ANLT-02 | Phase 23 | Pending |
-| ANLT-03 | Phase 23 | Pending |
-| ANLT-04 | Phase 23 | Pending |
-| ANLT-05 | Phase 23 | Pending |
-| ANLT-06 | Phase 23 | Pending |
+| ANLT-01 | Phase 23 | Complete |
+| ANLT-02 | Phase 23 | Complete |
+| ANLT-03 | Phase 23 | Complete |
+| ANLT-04 | Phase 23 | Complete |
+| ANLT-05 | Phase 23 | Complete |
+| ANLT-06 | Phase 23 | Complete |
 
 **Coverage:**
 - v2.0 requirements: 36 total

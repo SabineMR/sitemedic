@@ -37,7 +37,7 @@ See: `.planning/milestones/v1.1-ROADMAP.md`
 - [x] **Phase 20: Festivals & Events Vertical** — TST triage, Purple Guide PDF, RIDDOR disabled for attendees, safeguarding + substance flags
 - [x] **Phase 21: Film/TV Production Vertical** — Production-specific form fields, Film/TV terminology, cert profile, existing RIDDOR pipeline reused
 - [x] **Phase 22: Football / Sports Vertical** — Dual patient type (player/spectator), FA + SGSA forms and PDFs, RIDDOR disabled for players
-- [ ] **Phase 23: Analytics — Heat Maps & Trend Charts** — Near-miss heat maps (org + platform), compliance score history, trend charts
+- [x] **Phase 23: Analytics — Heat Maps & Trend Charts** — Near-miss heat maps (org + platform), compliance score history, trend charts
 
 ---
 
@@ -212,11 +212,11 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 23-01-PLAN.md — Compliance score history: migration 130 (UNIQUE index + platform admin RLS policy on compliance_score_history); generate-weekly-report Edge Function upsert of numeric score 0-100 with v1 formula; formula_version in details JSONB
-- [ ] 23-02-PLAN.md — Near-miss heat map (org): NearMissHeatMap component using react-leaflet CircleMarker (severity-coded); TanStack Query hook for GPS data; heat-map page on org dashboard at /analytics/heat-map; Analytics nav link in DashboardNav
-- [ ] 23-03-PLAN.md — Near-miss heat map (platform admin): AdminNearMissHeatMap with org colour-coding; admin query hook; Heat Map tab added to admin analytics page
-- [ ] 23-04-PLAN.md — Compliance trend charts (org): ComplianceScoreChart (Recharts LineChart, 12-month weekly scores); IncidentFrequencyChart (Recharts AreaChart, treatment + near-miss counts per week); compliance page at /analytics/compliance
-- [ ] 23-05-PLAN.md — Platform admin compliance analytics: AdminComplianceTrend (aggregate score across all orgs); OrgComplianceTable (top/bottom performers with trend arrows); Compliance tab on admin analytics page
+- [x] 23-01-PLAN.md — Compliance score history: migration 130 (UNIQUE index + platform admin RLS policy on compliance_score_history); generate-weekly-report Edge Function upsert of numeric score 0-100 with v1 formula; formula_version in details JSONB
+- [x] 23-02-PLAN.md — Near-miss heat map (org): NearMissHeatMap component using react-leaflet CircleMarker (severity-coded); TanStack Query hook for GPS data; heat-map page on org dashboard at /analytics/heat-map; Analytics nav link in DashboardNav
+- [x] 23-03-PLAN.md — Near-miss heat map (platform admin): AdminNearMissHeatMap with org colour-coding; admin query hook; Heat Map tab added to admin analytics page
+- [x] 23-04-PLAN.md — Compliance trend charts (org): ComplianceScoreChart (Recharts LineChart, 12-month weekly scores); IncidentFrequencyChart (Recharts AreaChart, treatment + near-miss counts per week); compliance page at /analytics/compliance
+- [x] 23-05-PLAN.md — Platform admin compliance analytics: AdminComplianceTrend (aggregate score across all orgs); OrgComplianceTable (top/bottom performers with trend arrows); Compliance tab on admin analytics page
 
 ---
 
@@ -255,4 +255,4 @@ Plans:
 | 20. Festivals & Events Vertical | v2.0 | 4/4 | Complete | 2026-02-17 |
 | 21. Film/TV Production Vertical | v2.0 | 2/2 | Complete | 2026-02-17 |
 | 22. Football / Sports Vertical | v2.0 | 5/5 | Complete | 2026-02-18 |
-| 23. Analytics — Heat Maps & Trend Charts | v2.0 | 0/5 | Not started | - |
+| 23. Analytics — Heat Maps & Trend Charts | v2.0 | 5/5 | Complete | 2026-02-17 |
