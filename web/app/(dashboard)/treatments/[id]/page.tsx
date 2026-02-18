@@ -124,6 +124,27 @@ export default async function TreatmentDetailPage({
                 <p>{treatment.worker.role}</p>
               </div>
             )}
+            {/* Venue / Site — shown when vertical_extra_fields contains a venue name */}
+            {treatment.event_vertical === 'festivals' &&
+              treatment.vertical_extra_fields &&
+              typeof treatment.vertical_extra_fields === 'object' &&
+              'venue_name' in treatment.vertical_extra_fields &&
+              treatment.vertical_extra_fields.venue_name && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Venue</p>
+                  <p>{String(treatment.vertical_extra_fields.venue_name)}</p>
+                </div>
+              )}
+            {treatment.event_vertical !== 'festivals' &&
+              treatment.vertical_extra_fields &&
+              typeof treatment.vertical_extra_fields === 'object' &&
+              'site_name' in treatment.vertical_extra_fields &&
+              treatment.vertical_extra_fields.site_name && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Site</p>
+                  <p>{String(treatment.vertical_extra_fields.site_name)}</p>
+                </div>
+              )}
           </CardContent>
         </Card>
 
@@ -202,6 +223,11 @@ export default async function TreatmentDetailPage({
           </CardContent>
         </Card>
       </div>
+
+      {/* Purple Guide — Event Incident Report (festivals only) */}
+      {treatment.event_vertical === 'festivals' && (
+        <EventIncidentReportCard treatmentId={treatment.id} />
+      )}
 
       {/* Photos */}
       {photoUrls.length > 0 && (
