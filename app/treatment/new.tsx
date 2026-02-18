@@ -42,6 +42,10 @@ import { OUTCOME_CATEGORIES } from '../../services/taxonomy/outcome-categories';
 import { getMechanismPresets } from '../../services/taxonomy/mechanism-presets';
 import { getVerticalOutcomeCategories, getPatientLabel } from '../../services/taxonomy/vertical-outcome-labels';
 import { getVerticalCompliance } from '../../services/taxonomy/vertical-compliance';
+import {
+  MotorsportExtraFields,
+  INITIAL_MOTORSPORT_FIELDS,
+} from '../../services/taxonomy/motorsport-fields';
 import { useSync } from '../../src/contexts/SyncContext';
 import { useOrg } from '../../src/contexts/OrgContext';
 import { photoUploadQueue } from '../../src/services/PhotoUploadQueue';
@@ -90,8 +94,8 @@ export default function NewTreatmentScreen() {
   const [disposition, setDisposition] = useState<string>('');
   const [showDispositionPicker, setShowDispositionPicker] = useState(false);
 
-  // Football (sporting_events) vertical state
-  const isFootball = orgVertical === 'sporting_events';
+  // Football (sporting_events) vertical state — states declared before orgVertical derivation,
+  // isFootball constant placed after orgVertical below
   const [footballPatientType, setFootballPatientType] = useState<'player' | 'spectator' | null>(null);
 
   // Player-specific field states
@@ -115,6 +119,12 @@ export default function NewTreatmentScreen() {
   const { primaryVertical } = useOrg();
   const orgVertical = (params.event_vertical as string | undefined) ?? primaryVertical;
   const bookingId = (params.booking_id as string | undefined) ?? null;
+
+  // Derived: football vertical guard (must be after orgVertical declaration)
+  const isFootball = orgVertical === 'sporting_events';
+
+  // Motorsport extra fields (MOTO-01, MOTO-02) — only active when orgVertical === 'motorsport'
+  const [motorsportFields, setMotorsportFields] = useState<MotorsportExtraFields>(INITIAL_MOTORSPORT_FIELDS);
 
   const FILM_TV_PATIENT_ROLES = [
     { id: 'cast', label: 'Cast' },
@@ -210,6 +220,55 @@ export default function NewTreatmentScreen() {
     }
   };
 
+  /**
+   * Build the vertical_extra_fields JSON string for the current vertical.
+   * Used for both auto-save (formValues) and the completion sync payload.
+   */
+  const buildVerticalExtraFields = (): string | null => {
+    if (orgVertical === 'motorsport') {
+      return JSON.stringify(motorsportFields);
+    }
+    if (orgVertical === 'tv_film') {
+      return JSON.stringify({
+        production_title: productionTitle,
+        patient_role: patientRole,
+        sfx_involved: sfxInvolved,
+        scene_context: sceneContext,
+      });
+    }
+    if (orgVertical === 'festivals') {
+      return JSON.stringify({
+        triage_priority: triagePriority,
+        alcohol_substance: festivalAlcoholSubstanceFlag,
+        safeguarding_concern: festivalSafeguardingFlag,
+        disposition,
+      });
+    }
+    if (isFootball && footballPatientType === 'player') {
+      return JSON.stringify({
+        patient_type: 'player',
+        squad_number: squadNumber || null,
+        phase_of_play: phaseOfPlay,
+        contact_type: contactType,
+        hia_performed: hiaPerformed,
+        hia_outcome: hiaPerformed ? hiaOutcome : null,
+        fa_severity: faSeverity,
+      });
+    }
+    if (isFootball && footballPatientType === 'spectator') {
+      return JSON.stringify({
+        patient_type: 'spectator',
+        stand_location: standLocation,
+        stand_row_seat: standRowSeat || null,
+        referral_outcome: referralOutcome,
+        safeguarding_flag: safeguardingFlag,
+        safeguarding_notes: safeguardingFlag ? safeguardingNotes : null,
+        alcohol_involvement: alcoholInvolvement,
+      });
+    }
+    return null;
+  };
+
   // Auto-save form values to treatment record
   const formValues = {
     workerId,
@@ -222,17 +281,7 @@ export default function NewTreatmentScreen() {
     outcome: outcomeId,
     signatureUri,
     isRiddorReportable: riddorFlagged,
-    verticalExtraFields: orgVertical === 'tv_film' ? JSON.stringify({
-      production_title: productionTitle,
-      patient_role: patientRole,
-      sfx_involved: sfxInvolved,
-      scene_context: sceneContext,
-    }) : orgVertical === 'festivals' ? JSON.stringify({
-      triage_priority: triagePriority,
-      alcohol_substance: festivalAlcoholSubstanceFlag,
-      safeguarding_concern: festivalSafeguardingFlag,
-      disposition,
-    }) : null,
+    verticalExtraFields: buildVerticalExtraFields(),
   };
 
   const fieldMapping = {
@@ -282,6 +331,17 @@ export default function NewTreatmentScreen() {
   // Handle signature capture
   const handleSignatureSave = (base64: string) => {
     setSignatureUri(base64);
+  };
+
+  /**
+   * Toggle a boolean field in motorsportFields.
+   * Used by the motorsport section toggle Pressables.
+   */
+  const toggleMotorsportBool = (field: keyof MotorsportExtraFields) => {
+    setMotorsportFields((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
   };
 
   // Validate medic certifications before allowing treatment completion
@@ -357,8 +417,20 @@ export default function NewTreatmentScreen() {
     }
     setCertValidationError(null);
 
+    // MOTO-02: Concussion clearance gate — must pass before any other validation
+    if (orgVertical === 'motorsport' && motorsportFields.concussion_suspected) {
+      const { hia_conducted, competitor_stood_down, cmo_notified } = motorsportFields;
+      if (!hia_conducted || !competitor_stood_down || !cmo_notified) {
+        Alert.alert(
+          'Concussion Clearance Required',
+          'When concussion is suspected, you must confirm:\n- HIA conducted\n- Competitor stood down\n- CMO notified\n\nbefore completing this record.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+    }
+
     // Existing validation
-    // Validation
     if (!workerId) {
       Alert.alert('Missing Information', 'Please select a worker');
       return;
@@ -370,6 +442,24 @@ export default function NewTreatmentScreen() {
     if (!signatureUri) {
       Alert.alert('Missing Information', 'Please capture a signature');
       return;
+    }
+
+    // Football vertical: patient type required
+    if (isFootball && !footballPatientType) {
+      Alert.alert('Missing Information', 'Please select patient type: Player or Spectator');
+      return;
+    }
+    // Football player: required fields
+    if (isFootball && footballPatientType === 'player') {
+      if (!phaseOfPlay) { Alert.alert('Missing Information', 'Please select Phase of Play'); return; }
+      if (!contactType) { Alert.alert('Missing Information', 'Please select Contact or Non-contact'); return; }
+      if (hiaPerformed && !hiaOutcome) { Alert.alert('Missing Information', 'Please select HIA Outcome'); return; }
+      if (!faSeverity) { Alert.alert('Missing Information', 'Please select FA Severity Classification'); return; }
+    }
+    // Football spectator: required fields
+    if (isFootball && footballPatientType === 'spectator') {
+      if (!standLocation) { Alert.alert('Missing Information', 'Please select Stand / Location'); return; }
+      if (!referralOutcome) { Alert.alert('Missing Information', 'Please select Referral Outcome'); return; }
     }
 
     // Festival-specific validation (FEST-01, FEST-02)
@@ -384,20 +474,45 @@ export default function NewTreatmentScreen() {
       }
     }
 
+    // Build vertical_extra_fields for football
+    let verticalExtraFields: Record<string, unknown> | null = null;
+    if (isFootball && footballPatientType === 'player') {
+      verticalExtraFields = {
+        patient_type: 'player',
+        squad_number: squadNumber || null,
+        phase_of_play: phaseOfPlay,
+        contact_type: contactType,
+        hia_performed: hiaPerformed,
+        hia_outcome: hiaPerformed ? hiaOutcome : null,
+        fa_severity: faSeverity,
+      };
+    } else if (isFootball && footballPatientType === 'spectator') {
+      verticalExtraFields = {
+        patient_type: 'spectator',
+        stand_location: standLocation,
+        stand_row_seat: standRowSeat || null,
+        referral_outcome: referralOutcome,
+        safeguarding_flag: safeguardingFlag,
+        safeguarding_notes: safeguardingFlag ? safeguardingNotes : null,
+        alcohol_involvement: alcoholInvolvement,
+      };
+    }
+
     try {
       if (treatment) {
+        const extraFieldsJson = buildVerticalExtraFields();
+
         await treatment.update((t) => {
           t.status = 'complete';
           t.updatedAt = Date.now();
           t.lastModifiedAt = Date.now();
-          // Write festival extra fields to WatermelonDB record on completion
-          if (orgVertical === 'festivals') {
-            t.verticalExtraFields = JSON.stringify({
-              triage_priority: triagePriority,
-              alcohol_substance: festivalAlcoholSubstanceFlag,
-              safeguarding_concern: festivalSafeguardingFlag,
-              disposition,
-            });
+          t.eventVertical = orgVertical ?? null;
+          // Write all vertical extra fields to WatermelonDB record on completion
+          if (extraFieldsJson !== null) {
+            t.verticalExtraFields = extraFieldsJson;
+          } else if (isFootball && verticalExtraFields) {
+            // Football uses the separately built verticalExtraFields object
+            t.verticalExtraFields = JSON.stringify(verticalExtraFields);
           }
         });
 
@@ -425,18 +540,47 @@ export default function NewTreatmentScreen() {
             updated_at: new Date(treatment.updatedAt).toISOString(),
             last_modified_at: treatment.lastModifiedAt,
             event_vertical: treatment.eventVertical ?? null,
-            vertical_extra_fields: orgVertical === 'festivals'
-              ? JSON.stringify({
-                  triage_priority: triagePriority,
-                  alcohol_substance: festivalAlcoholSubstanceFlag,
-                  safeguarding_concern: festivalSafeguardingFlag,
-                  disposition,
-                })
-              : treatment.verticalExtraFields ?? null,
+            vertical_extra_fields: extraFieldsJson ?? (verticalExtraFields ? JSON.stringify(verticalExtraFields) : treatment.verticalExtraFields ?? null),
             booking_id: treatment.bookingId ?? null,
           },
           treatment.isRiddorReportable ? 0 : 1 // RIDDOR = priority 0 (immediate)
         );
+
+        // MOTO-03: Non-blocking concussion alert for admin visibility
+        if (
+          orgVertical === 'motorsport' &&
+          motorsportFields.concussion_suspected &&
+          treatment.bookingId
+        ) {
+          try {
+            const carNum = motorsportFields.competitor_car_number || 'unknown';
+            const section = motorsportFields.circuit_section || 'unknown location';
+            await supabase.from('medic_alerts').insert({
+              medic_id: treatment.medicId,
+              booking_id: treatment.bookingId,
+              alert_type: 'motorsport_concussion',
+              alert_severity: 'high',
+              alert_title: 'Motorsport Concussion Suspected',
+              alert_message:
+                `Concussion suspected for competitor #${carNum} at ${section}. ` +
+                `HIA conducted: ${motorsportFields.hia_conducted ? 'Yes' : 'No'}. ` +
+                `Competitor stood down: ${motorsportFields.competitor_stood_down ? 'Yes' : 'No'}. ` +
+                `CMO notified: ${motorsportFields.cmo_notified ? 'Yes' : 'No'}.`,
+              metadata: {
+                treatment_id: treatment.id,
+                competitor_car_number: motorsportFields.competitor_car_number,
+                circuit_section: motorsportFields.circuit_section,
+                gcs_score: motorsportFields.gcs_score,
+                hia_conducted: motorsportFields.hia_conducted,
+                competitor_stood_down: motorsportFields.competitor_stood_down,
+                cmo_notified: motorsportFields.cmo_notified,
+              },
+            });
+          } catch (alertError) {
+            // Non-blocking — alert failure must not prevent treatment completion
+            console.warn('Motorsport concussion alert insert failed (non-blocking):', alertError);
+          }
+        }
 
         // Queue photos for progressive upload
         if (treatment.photoUris && treatment.photoUris.length > 0) {
@@ -556,6 +700,205 @@ export default function NewTreatmentScreen() {
           />
         </View>
 
+        {/* Football: Player-specific fields */}
+        {isFootball && footballPatientType === 'player' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Player Information</Text>
+
+            <Text style={styles.fieldLabel}>Squad Number (optional)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. 9"
+              value={squadNumber}
+              onChangeText={setSquadNumber}
+              keyboardType="numeric"
+              maxLength={3}
+            />
+
+            <Text style={styles.fieldLabel}>Phase of Play *</Text>
+            <View style={styles.chipRow}>
+              {(['In play', 'Set piece', 'Warm-up', 'Half-time', 'Training', 'Post-match'] as const).map((phase) => {
+                const val = phase.toLowerCase().replace(/[- ]/g, '_').replace(/'/g, '');
+                const isSelected = phaseOfPlay === val;
+                return (
+                  <Pressable
+                    key={val}
+                    style={[styles.chip, isSelected && styles.chipSelected]}
+                    onPress={() => setPhaseOfPlay(val)}
+                  >
+                    <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>{phase}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={styles.fieldLabel}>Contact Type *</Text>
+            <View style={styles.chipRow}>
+              {[{ label: 'Contact', val: 'contact' }, { label: 'Non-contact', val: 'non_contact' }].map(({ label, val }) => {
+                const isSelected = contactType === val;
+                return (
+                  <Pressable
+                    key={val}
+                    style={[styles.chip, isSelected && styles.chipSelected]}
+                    onPress={() => setContactType(val)}
+                  >
+                    <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>{label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={styles.fieldLabel}>Head Injury Assessment (HIA)</Text>
+            <View style={styles.chipRow}>
+              <Pressable
+                style={[styles.chip, !hiaPerformed && styles.chipSelected]}
+                onPress={() => { setHiaPerformed(false); setHiaOutcome(''); }}
+              >
+                <Text style={[styles.chipText, !hiaPerformed && styles.chipTextSelected]}>No HIA</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.chip, hiaPerformed && styles.chipSelected]}
+                onPress={() => setHiaPerformed(true)}
+              >
+                <Text style={[styles.chipText, hiaPerformed && styles.chipTextSelected]}>HIA Conducted</Text>
+              </Pressable>
+            </View>
+
+            {hiaPerformed && (
+              <>
+                <Text style={styles.fieldLabel}>HIA Outcome *</Text>
+                <View style={styles.chipRow}>
+                  {[
+                    { label: 'Cleared to return', val: 'hia_assessed_returned' },
+                    { label: 'Concussion confirmed — removed', val: 'hia_concussion_confirmed' },
+                    { label: 'Referred to hospital', val: 'hia_hospital_referred' },
+                  ].map(({ label, val }) => {
+                    const isSelected = hiaOutcome === val;
+                    return (
+                      <Pressable
+                        key={val}
+                        style={[styles.chip, isSelected && styles.chipSelected]}
+                        onPress={() => setHiaOutcome(val)}
+                      >
+                        <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>{label}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </>
+            )}
+
+            <Text style={styles.fieldLabel}>FA Severity Classification *</Text>
+            <View style={styles.chipRow}>
+              {[
+                { label: 'Medical attention only', val: 'medical_attention' },
+                { label: 'Minor (1–7 days)', val: 'minor' },
+                { label: 'Moderate (8–28 days)', val: 'moderate' },
+                { label: 'Severe (29–89 days)', val: 'severe' },
+                { label: 'Major (90+ days)', val: 'major' },
+              ].map(({ label, val }) => {
+                const isSelected = faSeverity === val;
+                return (
+                  <Pressable
+                    key={val}
+                    style={[styles.chip, isSelected && styles.chipSelected]}
+                    onPress={() => setFaSeverity(val)}
+                  >
+                    <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>{label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
+        {/* Football: Spectator-specific fields */}
+        {isFootball && footballPatientType === 'spectator' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Spectator Information</Text>
+
+            <Text style={styles.fieldLabel}>Stand / Location *</Text>
+            <View style={styles.chipRow}>
+              {['North Stand', 'South Stand', 'East Stand', 'West Stand', 'Concourse', 'Car Park', 'Other'].map((loc) => {
+                const isSelected = standLocation === loc;
+                return (
+                  <Pressable
+                    key={loc}
+                    style={[styles.chip, isSelected && styles.chipSelected]}
+                    onPress={() => setStandLocation(loc)}
+                  >
+                    <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>{loc}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={styles.fieldLabel}>Row / Seat (optional)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. Row G, Seat 14"
+              value={standRowSeat}
+              onChangeText={setStandRowSeat}
+            />
+
+            <Text style={styles.fieldLabel}>Referral Outcome *</Text>
+            <View style={styles.chipRow}>
+              {[
+                { label: 'Treated on site', val: 'treated_on_site' },
+                { label: 'Referred to hospital', val: 'referred_to_hospital' },
+                { label: 'Ambulance conveyed', val: 'ambulance_conveyed' },
+                { label: 'Self-discharged', val: 'self_discharged' },
+              ].map(({ label, val }) => {
+                const isSelected = referralOutcome === val;
+                return (
+                  <Pressable
+                    key={val}
+                    style={[styles.chip, isSelected && styles.chipSelected]}
+                    onPress={() => setReferralOutcome(val)}
+                  >
+                    <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>{label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <View style={styles.toggleRow}>
+              <Text style={styles.fieldLabel}>Safeguarding Concern</Text>
+              <Pressable
+                style={[styles.toggleButton, safeguardingFlag && styles.toggleButtonOn]}
+                onPress={() => { setSafeguardingFlag((v) => !v); if (safeguardingFlag) setSafeguardingNotes(''); }}
+              >
+                <Text style={styles.toggleText}>{safeguardingFlag ? 'Yes' : 'No'}</Text>
+              </Pressable>
+            </View>
+
+            {safeguardingFlag && (
+              <>
+                <Text style={styles.fieldLabel}>Safeguarding Notes</Text>
+                <TextInput
+                  style={styles.textArea}
+                  placeholder="Describe the safeguarding concern..."
+                  value={safeguardingNotes}
+                  onChangeText={setSafeguardingNotes}
+                  multiline
+                  numberOfLines={3}
+                  textAlignVertical="top"
+                />
+              </>
+            )}
+
+            <View style={styles.toggleRow}>
+              <Text style={styles.fieldLabel}>Alcohol Involvement</Text>
+              <Pressable
+                style={[styles.toggleButton, alcoholInvolvement && styles.toggleButtonOn]}
+                onPress={() => setAlcoholInvolvement((v) => !v)}
+              >
+                <Text style={styles.toggleText}>{alcoholInvolvement ? 'Yes' : 'No'}</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+
         {/* Film/TV Production Details — FILM-01 */}
         {orgVertical === 'tv_film' && (
           <View style={styles.section}>
@@ -596,6 +939,175 @@ export default function NewTreatmentScreen() {
               numberOfLines={3}
               textAlignVertical="top"
             />
+          </View>
+        )}
+
+        {/* Motorsport Details — MOTO-01, MOTO-02 */}
+        {orgVertical === 'motorsport' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Motorsport Details</Text>
+
+            {/* Competitor identification */}
+            <Text style={styles.fieldLabel}>Competitor Car Number</Text>
+            <TextInput
+              style={styles.textArea}
+              placeholder="e.g. 42"
+              value={motorsportFields.competitor_car_number}
+              onChangeText={(v) =>
+                setMotorsportFields((prev) => ({ ...prev, competitor_car_number: v }))
+              }
+              keyboardType="default"
+            />
+
+            <Text style={styles.fieldLabel}>Circuit Section</Text>
+            <TextInput
+              style={styles.textArea}
+              placeholder="e.g. Turn 3, Paddock, Pit Lane"
+              value={motorsportFields.circuit_section}
+              onChangeText={(v) =>
+                setMotorsportFields((prev) => ({ ...prev, circuit_section: v }))
+              }
+            />
+
+            {/* GCS Score */}
+            <Text style={styles.fieldLabel}>GCS Score (3-15, leave blank if not assessed)</Text>
+            <TextInput
+              style={styles.textArea}
+              placeholder="e.g. 15"
+              value={motorsportFields.gcs_score !== null ? String(motorsportFields.gcs_score) : ''}
+              onChangeText={(v) => {
+                if (v === '') {
+                  setMotorsportFields((prev) => ({ ...prev, gcs_score: null }));
+                  return;
+                }
+                const parsed = parseInt(v, 10);
+                if (!isNaN(parsed) && parsed >= 3 && parsed <= 15) {
+                  setMotorsportFields((prev) => ({ ...prev, gcs_score: parsed }));
+                }
+              }}
+              keyboardType="number-pad"
+            />
+
+            {/* Boolean toggles */}
+            <Text style={styles.fieldLabel}>Scene Management</Text>
+
+            <Pressable
+              style={[
+                styles.treatmentTypeButton,
+                motorsportFields.extrication_required && styles.motorsportToggleSelected,
+              ]}
+              onPress={() => toggleMotorsportBool('extrication_required')}
+            >
+              <Text style={[
+                styles.treatmentTypeText,
+                motorsportFields.extrication_required && styles.motorsportToggleTextSelected,
+              ]}>
+                {motorsportFields.extrication_required ? 'Extrication Required — Yes' : 'Extrication Required — No'}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={[
+                styles.treatmentTypeButton,
+                motorsportFields.helmet_removed && styles.motorsportToggleSelected,
+              ]}
+              onPress={() => toggleMotorsportBool('helmet_removed')}
+            >
+              <Text style={[
+                styles.treatmentTypeText,
+                motorsportFields.helmet_removed && styles.motorsportToggleTextSelected,
+              ]}>
+                {motorsportFields.helmet_removed ? 'Helmet Removed at Scene — Yes' : 'Helmet Removed at Scene — No'}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={[
+                styles.treatmentTypeButton,
+                motorsportFields.clerk_of_course_notified && styles.motorsportToggleSelected,
+              ]}
+              onPress={() => toggleMotorsportBool('clerk_of_course_notified')}
+            >
+              <Text style={[
+                styles.treatmentTypeText,
+                motorsportFields.clerk_of_course_notified && styles.motorsportToggleTextSelected,
+              ]}>
+                {motorsportFields.clerk_of_course_notified ? 'Clerk of Course Notified — Yes' : 'Clerk of Course Notified — No'}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={[
+                styles.treatmentTypeButton,
+                motorsportFields.concussion_suspected && styles.concussionToggleSelected,
+              ]}
+              onPress={() => toggleMotorsportBool('concussion_suspected')}
+            >
+              <Text style={[
+                styles.treatmentTypeText,
+                motorsportFields.concussion_suspected && styles.concussionToggleTextSelected,
+              ]}>
+                {motorsportFields.concussion_suspected ? 'Concussion Suspected — YES' : 'Concussion Suspected — No'}
+              </Text>
+            </Pressable>
+
+            {/* MOTO-02: Concussion clearance panel */}
+            {motorsportFields.concussion_suspected && (
+              <View style={styles.concussionClearancePanel}>
+                <Text style={styles.concussionClearanceTitle}>Concussion Clearance Required</Text>
+                <Text style={styles.concussionClearanceSubtitle}>
+                  All three items must be confirmed before completing this record
+                </Text>
+
+                <Pressable
+                  style={[
+                    styles.clearanceCheckbox,
+                    motorsportFields.hia_conducted && styles.clearanceCheckboxChecked,
+                  ]}
+                  onPress={() => toggleMotorsportBool('hia_conducted')}
+                >
+                  <Text style={[
+                    styles.clearanceCheckboxText,
+                    motorsportFields.hia_conducted && styles.clearanceCheckboxTextChecked,
+                  ]}>
+                    {motorsportFields.hia_conducted ? '[X] ' : '[ ] '}
+                    HIA (Head Injury Assessment) conducted
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  style={[
+                    styles.clearanceCheckbox,
+                    motorsportFields.competitor_stood_down && styles.clearanceCheckboxChecked,
+                  ]}
+                  onPress={() => toggleMotorsportBool('competitor_stood_down')}
+                >
+                  <Text style={[
+                    styles.clearanceCheckboxText,
+                    motorsportFields.competitor_stood_down && styles.clearanceCheckboxTextChecked,
+                  ]}>
+                    {motorsportFields.competitor_stood_down ? '[X] ' : '[ ] '}
+                    Competitor stood down from event
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  style={[
+                    styles.clearanceCheckbox,
+                    motorsportFields.cmo_notified && styles.clearanceCheckboxChecked,
+                  ]}
+                  onPress={() => toggleMotorsportBool('cmo_notified')}
+                >
+                  <Text style={[
+                    styles.clearanceCheckboxText,
+                    motorsportFields.cmo_notified && styles.clearanceCheckboxTextChecked,
+                  ]}>
+                    {motorsportFields.cmo_notified ? '[X] ' : '[ ] '}
+                    Chief Medical Officer (CMO) notified
+                  </Text>
+                </Pressable>
+              </View>
+            )}
           </View>
         )}
 
@@ -968,6 +1480,66 @@ const styles = StyleSheet.create({
   patientTypeTextSelected: {
     color: '#2563EB',
   },
+  input: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: '#1F2937',
+    backgroundColor: '#FFFFFF',
+    marginBottom: 8,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  chip: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#FFFFFF',
+  },
+  chipSelected: {
+    borderColor: '#2563EB',
+    backgroundColor: '#EFF6FF',
+  },
+  chipText: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  chipTextSelected: {
+    color: '#2563EB',
+    fontWeight: '600',
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  toggleButton: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    backgroundColor: '#FFFFFF',
+  },
+  toggleButtonOn: {
+    borderColor: '#DC2626',
+    backgroundColor: '#FEF2F2',
+  },
+  toggleText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+  },
   section: {
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
@@ -1086,5 +1658,66 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#6B7280',
+  },
+  // Motorsport boolean toggles (green when active) — MOTO-01
+  motorsportToggleSelected: {
+    borderColor: '#059669',
+    backgroundColor: '#ECFDF5',
+  },
+  motorsportToggleTextSelected: {
+    color: '#065F46',
+    fontWeight: '700',
+  },
+  // Concussion toggle — amber/orange to indicate clinical alert
+  concussionToggleSelected: {
+    borderColor: '#D97706',
+    backgroundColor: '#FEF3C7',
+  },
+  concussionToggleTextSelected: {
+    color: '#92400E',
+    fontWeight: '700',
+  },
+  // Concussion clearance panel (MOTO-02) — amber warning theme
+  concussionClearancePanel: {
+    marginTop: 16,
+    backgroundColor: '#FFFBEB',
+    borderWidth: 2,
+    borderColor: '#F59E0B',
+    borderRadius: 8,
+    padding: 14,
+    gap: 10,
+  },
+  concussionClearanceTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#92400E',
+  },
+  concussionClearanceSubtitle: {
+    fontSize: 13,
+    color: '#B45309',
+    marginBottom: 4,
+  },
+  clearanceCheckbox: {
+    minHeight: 52,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 2,
+    borderColor: '#FCD34D',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+  },
+  clearanceCheckboxChecked: {
+    borderColor: '#D97706',
+    backgroundColor: '#FEF3C7',
+  },
+  clearanceCheckboxText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#78350F',
+  },
+  clearanceCheckboxTextChecked: {
+    color: '#78350F',
+    fontWeight: '700',
   },
 });
