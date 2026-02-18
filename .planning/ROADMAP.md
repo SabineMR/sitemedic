@@ -91,12 +91,12 @@ Plans:
 3. `hasFeature('starter', 'white_label')` returns `false` and `hasFeature('growth', 'white_label')` returns `true` — the `FEATURE_GATES` constant is the sole source of truth for both values, no duplication in component code
 4. `STRIPE_BILLING_WEBHOOK_SECRET` is a distinct env var from `STRIPE_WEBHOOK_SECRET` — the two Stripe systems have separate signing secrets, preventing event cross-contamination
 
-**Plans:** TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 25-01: Stripe Products setup — create Starter/Growth/Enterprise Products and Prices in Stripe Dashboard (test mode); record price IDs; add `STRIPE_PRICE_STARTER`, `STRIPE_PRICE_GROWTH`, `STRIPE_PRICE_ENTERPRISE`, `STRIPE_BILLING_WEBHOOK_SECRET`, `NEXT_PUBLIC_ROOT_DOMAIN` to Vercel env vars
-- [ ] 25-02: `feature-gates.ts` — create `web/lib/billing/feature-gates.ts` with `FEATURE_GATES` constant (tier → feature set map) and `hasFeature(tier, feature)` helper; TypeScript types for tiers and feature keys
-- [ ] 25-03: Billing webhook handler — create `web/app/api/stripe/billing-webhooks/route.ts`; handle `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`; idempotency via `webhook_events` table; timestamp-based state transitions; service-role DB writes to `organizations`
+- [ ] 25-01-PLAN.md — Stripe Products setup: env var template for billing Price IDs and webhook secret; user creates 3 Products with 18 Prices in Stripe Dashboard (test mode)
+- [ ] 25-02-PLAN.md — Feature gates: create web/lib/billing/feature-gates.ts with FEATURE_GATES constant, hasFeature() helper, isAtLeastTier() helper, SubscriptionTier and FeatureKey types
+- [ ] 25-03-PLAN.md — Billing webhook handler: migration 135 (webhook_events table + subscription_status_updated_at column); create web/app/api/stripe/billing-webhooks/route.ts handling checkout.session.completed, customer.subscription.updated, customer.subscription.deleted, invoice.payment_failed
 
 ---
 
