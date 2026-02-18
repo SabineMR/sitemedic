@@ -133,39 +133,20 @@ export default function SettingsScreen() {
     try {
       const { supabase } = await import('../../src/lib/supabase');
 
-      // Fallback 1: auth context state (set at startup by initializeAuth)
-      let orgId: string | null = state.user?.orgId ?? null;
-      console.log('[Settings] handleAddContact: state.user?.orgId =', state.user?.orgId, '| state.user =', state.user ? 'present' : 'null');
+      // Get org_id using the same pattern as EmergencyAlertService.sendAlert():
+      // ask Supabase directly rather than relying on auth context state, which can
+      // be null if initializeAuth() hit a startup race or the JWT had no org_id.
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
 
-      // Fallback 2: JWT user_metadata (local AsyncStorage, no network)
-      // Handles startup race where getSession() returned null before client initialized.
-      let session: any = null;
-      if (!orgId) {
-        const { data } = await supabase.auth.getSession();
-        session = data.session;
-        orgId = session?.user?.user_metadata?.org_id ?? null;
-        console.log('[Settings] Fallback 2 (JWT):', orgId, '| user_metadata:', session?.user?.user_metadata);
-      }
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('org_id')
+        .eq('id', user.id)
+        .single();
 
-      // Fallback 3: direct profiles table query (works after Supabase client is fully
-      // initialized — by save-time the client has had plenty of time to init, unlike startup)
-      if (!orgId) {
-        if (!session) {
-          const { data } = await supabase.auth.getSession();
-          session = data.session;
-        }
-        if (session?.user?.id) {
-          const { data: profileRow, error: profileErr } = await supabase
-            .from('profiles')
-            .select('org_id')
-            .eq('id', session.user.id)
-            .maybeSingle();
-          orgId = (profileRow as any)?.org_id ?? null;
-          console.log('[Settings] Fallback 3 (DB profiles):', orgId, '| error:', profileErr?.message);
-        }
-      }
-
-      if (!orgId) throw new Error('Could not load org');
+      if (profileError || !profile?.org_id) throw new Error('Could not load org');
+      const orgId = (profile as any).org_id as string;
 
       // Check for existing contact with same phone in this org
       const { data: existingRaw } = await supabase

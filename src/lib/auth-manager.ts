@@ -32,7 +32,9 @@ class AuthManager {
    * Sets up network monitoring and session restoration
    */
   async initialize(): Promise<void> {
-    // Set up network connectivity monitoring
+    // Set up network connectivity monitoring.
+    // NOTE: isConnected (not isInternetReachable) is intentional — isInternetReachable is
+    // unreliable on iOS Simulator (often reports false even when internet is accessible).
     NetInfo.addEventListener((state: NetInfoState) => {
       const wasOnline = this.isOnline;
       this.isOnline = state.isConnected ?? false;
@@ -47,6 +49,7 @@ class AuthManager {
     // Check initial network state
     const networkState = await NetInfo.fetch();
     this.isOnline = networkState.isConnected ?? false;
+    console.log('[AuthManager] Initial network state: isConnected =', networkState.isConnected, '| isOnline =', this.isOnline);
 
     // If offline on startup, try to restore cached session
     if (!this.isOnline) {
@@ -66,13 +69,18 @@ class AuthManager {
           return;
         }
 
-        // If online, allow logout and clear cache
-        console.log('[AuthManager] SIGNED_OUT while online - clearing cache');
-        await this.clearCache();
+        // If online, SIGNED_OUT may fire due to automatic token refresh failure (not a
+        // real logout). Only clear the session credential cache — preserve the profile
+        // cache so orgId survives token expiry. signOut() explicitly calls clearCache()
+        // to wipe everything when the user actually logs out.
+        console.log('[AuthManager] SIGNED_OUT while online - clearing session cache only');
+        await this.clearSessionCache();
       }
 
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        // Cache session for offline restoration
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        // Cache session for offline restoration.
+        // INITIAL_SESSION fires when onAuthStateChange is first set up — important to
+        // capture so restoreCachedSession() has something to restore later.
         if (session) {
           console.log('[AuthManager] Caching session after', event);
           await this.cacheSession(session);
@@ -228,20 +236,27 @@ class AuthManager {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session?.user) {
-        return null; // Not authenticated — no session in storage
+        // Session is null — this can happen when the token refresh fails while offline
+        // (Supabase fires SIGNED_OUT, clearing the in-memory session). Fall back to the
+        // profile cache so previously-authenticated users aren't broken.
+        console.log('[AuthManager] getSession() returned null — trying cache/JWT fallback');
+        return await this.getProfileFromCacheOrJwt();
       }
 
       const userId = session.user.id;
       const jwtOrgId: string | undefined = session.user.user_metadata?.org_id;
+      console.log('[AuthManager] getUserProfile: userId =', userId, '| jwtOrgId =', jwtOrgId);
 
       // Fetch fresh profile from DB (network call — may fail offline)
       const profile = await this.fetchUserProfile(userId);
+      console.log('[AuthManager] getUserProfile: fetchUserProfile returned', profile ? `profile with orgId=${profile.orgId}` : 'null');
 
       if (profile) {
         // Supplement null orgId from JWT metadata (handles users whose profiles
         // row in DB has a null org_id — org_id was stored in JWT at signup)
         if (!profile.orgId && jwtOrgId) {
           profile.orgId = jwtOrgId;
+          console.log('[AuthManager] getUserProfile: supplemented null orgId from JWT:', jwtOrgId);
         }
         await this.cacheProfile(profile);
         return profile;
@@ -303,9 +318,10 @@ class AuthManager {
         .single();
 
       if (error || !data) {
-        console.error('[AuthManager] Error fetching profile:', error);
+        console.error('[AuthManager] fetchUserProfile DB error:', JSON.stringify(error));
         return null;
       }
+      console.log('[AuthManager] fetchUserProfile raw DB data: org_id =', (data as any).org_id);
 
       // Type assertion safe here: we know the structure from migration 00002_profiles_and_roles.sql
       const profile = data as {
@@ -379,9 +395,9 @@ class AuthManager {
   }
 
   /**
-   * Get cached profile from AsyncStorage
+   * Get cached profile from AsyncStorage (public — used as fallback in UI layer)
    */
-  private async getCachedProfile(): Promise<UserProfile | null> {
+  async getCachedProfile(): Promise<UserProfile | null> {
     try {
       const cached = await AsyncStorage.getItem(this.profileCacheKey);
       if (!cached) {
@@ -410,7 +426,9 @@ class AuthManager {
       // Check if token is expired
       if (cachedSession.expires_at && cachedSession.expires_at < Date.now() / 1000) {
         console.log('[AuthManager] Cached session expired - cannot restore');
-        await this.clearCache();
+        // Clear session cache only — profile cache must survive token expiry so that
+        // orgId and user data remain accessible even when the JWT has lapsed.
+        await this.clearSessionCache();
         return;
       }
 
@@ -432,12 +450,27 @@ class AuthManager {
   }
 
   /**
-   * Clear all cached auth data
+   * Clear session cache only — preserves profile cache.
+   * Use this when the token expires or Supabase forces a SIGNED_OUT.
+   * Profile data (including orgId) remains valid even when the JWT lapses.
+   */
+  private async clearSessionCache(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(this.sessionCacheKey);
+      console.log('[AuthManager] Session cache cleared (profile cache preserved)');
+    } catch (error) {
+      console.error('[AuthManager] Error clearing session cache:', error);
+    }
+  }
+
+  /**
+   * Clear all cached auth data — session + profile.
+   * Only called on explicit user sign-out.
    */
   private async clearCache(): Promise<void> {
     try {
       await AsyncStorage.multiRemove([this.sessionCacheKey, this.profileCacheKey]);
-      console.log('[AuthManager] Cache cleared');
+      console.log('[AuthManager] Full cache cleared');
     } catch (error) {
       console.error('[AuthManager] Error clearing cache:', error);
     }
