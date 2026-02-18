@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 23: Analytics — Heat Maps & Trend Charts (in progress, plan 23-02 complete)
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 23: Analytics — Heat Maps & Trend Charts (in progress, plan 23-03 complete)
 
 ## Current Position
 
-Phase: 23 of 23 (Analytics — Heat Maps & Trend Charts) — In progress (2/5 plans)
-Plan: 23-02 complete (near-miss heat map: NearMissHeatMap + useNearMissGeoData + AnalyticsSubNav + heat-map page + DashboardNav Analytics link)
-Status: In progress — heat map at /analytics/heat-map live; Analytics link in dashboard sidebar
-Last activity: 2026-02-18 — Completed 23-02-PLAN.md: CircleMarker heat map, geo query hook, sub-nav, page, DashboardNav update
+Phase: 23 of 23 (Analytics — Heat Maps & Trend Charts) — In progress (3/5 plans)
+Plan: 23-03 complete (admin near-miss heat map: AdminNearMissHeatMap + useAdminNearMissGeoData + Heat Map tab in /admin/analytics)
+Status: In progress — admin heat map at /admin/analytics (Heat Map tab) live
+Last activity: 2026-02-18 — Completed 23-03-PLAN.md: cross-org admin near-miss heat map
 
-Progress: [██████████] v1.1 complete | [█████████░] v2.0 24/27 plans (Phase 18 + 18.5 + 19-01…05 + 20-01…04 + 21 + 22-01…05 + 23-01 + 23-02 complete)
+Progress: [██████████] v1.1 complete | [█████████░] v2.0 25/27 plans (Phase 18 + 18.5 + 19-01…05 + 20-01…04 + 21 + 22-01…05 + 23-01 + 23-02 + 23-03 complete)
 
 ## Performance Metrics
 
@@ -32,8 +32,8 @@ Progress: [██████████] v1.1 complete | [██████�
 | 18–23 (v2.0) | 12/25 | ~22 min | ~1.8 min |
 
 **Recent Trend:**
-- Last plan: 23-02 — near-miss heat map: NearMissHeatMap (CircleMarker, severity colour/scale, legend), useNearMissGeoData hook, AnalyticsSubNav, heat-map page, DashboardNav Analytics link (~2 min)
-- Phase 23 plan 23-02: front-end analytics UI foundation — site managers can now see where near-misses are clustering geographically
+- Last plan: 23-03 — admin near-miss heat map: AdminNearMissHeatMap (org-colour-coded CircleMarkers, severity sizing, dual legend), useAdminNearMissGeoData hook with two-step org enrichment, Heat Map tab in /admin/analytics (~2 min)
+- Phase 23 plan 23-03: platform admin now has cross-org geographic near-miss visibility — identifies systemic safety issues spanning multiple organisations
 - Trend: Stable — consistent 1–8 min for vertical surgical additions
 
 *Updated after each plan completion*
@@ -109,6 +109,11 @@ Key decisions affecting v2.0:
 - 23-02: DashboardNav isActive for /analytics/heat-map href checks pathname?.startsWith('/analytics') — entire analytics section stays highlighted regardless of sub-page
 - 23-02: AnalyticsSubNav uses pathname?.includes(tab.href) for active detection — works for exact and prefix matches
 - 23-02: Severity config (radius + color) as Record<severity, value> maps — TypeScript enforces all four severity levels; easy to update thresholds without structural change
+- 23-03: orgColorMap built in hook (not component) — deterministic per sorted org_id list; component receives stable reference without recomputing colour assignments
+- 23-03: ORG_COLORS[index % length] pattern — cycles gracefully when org count exceeds 8-colour palette
+- 23-03: Two-step DB query in useAdminNearMissGeoData: near_misses first, then organizations WHERE id IN (uniqueOrgIds) — avoids join complexity; org name fetch failure is non-fatal
+- 23-03: Limit 1000 for admin hook vs 500 for org hook — platform admin aggregate view needs more data points for cross-org clustering
+- 23-03: 'Heat Map' tab label rendered as literal string (not generic charAt(0).toUpperCase()) — handles hyphen in 'heat-map' slug correctly
 
 ### Research Flags (Phase-Blocking)
 
@@ -126,6 +131,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T05:27:31Z
-Stopped at: Completed 23-02-PLAN.md (near-miss heat map — NearMissHeatMap CircleMarker component, useNearMissGeoData hook, AnalyticsSubNav tab nav, /analytics/heat-map page, DashboardNav Analytics link; heat map live at /analytics/heat-map)
+Last session: 2026-02-18T05:33:01Z
+Stopped at: Completed 23-03-PLAN.md (admin near-miss heat map — AdminNearMissHeatMap CircleMarker component, useAdminNearMissGeoData hook with org enrichment, Heat Map tab (8th) in /admin/analytics; admin heat map live)
 Resume file: None
