@@ -651,12 +651,17 @@ class EmergencyAlertService {
     }
 
     // Step 2: Connect directly to OpenAI Realtime API with the ephemeral token.
-    // React Native WebSocket does not support custom headers, so we pass the
-    // token via the ?api_key= query param — OpenAI explicitly supports this
-    // for browser/client environments where headers cannot be set.
-    const openaiWsUrl = `wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview&api_key=${ephemeralToken}`;
+    // React Native's WebSocket supports a 3rd {headers} argument (unlike browser
+    // WebSocket) — the native iOS layer passes these headers in the HTTP upgrade
+    // request, so Authorization: Bearer reaches OpenAI correctly.
+    const openaiWsUrl = 'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview';
     console.log('[EmergencyAlert] Connecting streaming WebSocket directly to OpenAI');
-    const ws = new WebSocket(openaiWsUrl, ['realtime']);
+    const ws = new WebSocket(openaiWsUrl, ['realtime'], {
+      headers: {
+        Authorization: `Bearer ${ephemeralToken}`,
+        'OpenAI-Beta': 'realtime=v1',
+      },
+    } as any);
     this.streamWs = ws;
 
     // Fallback: if no transcript arrives within 8s, the streaming path is
