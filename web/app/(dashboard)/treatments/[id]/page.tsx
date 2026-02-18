@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { EventIncidentReportCard } from '@/components/dashboard/EventIncidentReportCard';
+import { FAIncidentReportCard } from '@/components/dashboard/FAIncidentReportCard';
 
 interface TreatmentDetailPageProps {
   params: Promise<{ id: string }>;
@@ -227,6 +228,11 @@ export default async function TreatmentDetailPage({
       {/* Purple Guide — Event Incident Report (festivals only) */}
       {treatment.event_vertical === 'festivals' && (
         <EventIncidentReportCard treatmentId={treatment.id} />
+      )}
+
+      {/* FA / SGSA Match Day Report (sporting_events only) */}
+      {treatment.event_vertical === 'sporting_events' && (
+        <FAIncidentReportCard treatmentId={treatment.id} />
       )}
 
       {/* Photos */}

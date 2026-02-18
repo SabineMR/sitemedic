@@ -6,13 +6,13 @@
  *   → riddor-f2508-generator (F2508 form, Phase 6)
  *
  * Event verticals (festivals, fairs_shows, private_events)
- *   → event-incident-report-generator (Phase 19+, currently returns 501)
+ *   → event-incident-report-generator (Phase 20, fully implemented)
  *
  * Motorsport vertical
- *   → motorsport-incident-generator (Phase 19+, currently returns 501)
+ *   → motorsport-incident-generator (Phase 19, fully implemented)
  *
  * Sporting events vertical
- *   → fa-incident-generator (Phase 22+, currently returns 501)
+ *   → fa-incident-generator (Phase 22, fully implemented)
  */
 
 import { createClient } from '@/lib/supabase/client';
@@ -39,7 +39,8 @@ export interface DispatchResult {
  * Generate an incident report PDF for the given incident and vertical.
  *
  * Routes to the correct Edge Function based on the vertical.
- * Non-RIDDOR verticals currently return a 501 (Phase 19+).
+ * Event verticals call event-incident-report-generator (Phase 20).
+ * Sporting events vertical calls fa-incident-generator (Phase 22).
  *
  * @param incidentId - The incident ID to generate a PDF for
  * @param vertical   - The event vertical (e.g. 'construction', 'festivals')
