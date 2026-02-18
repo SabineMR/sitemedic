@@ -26,4 +26,7 @@ export default class NearMiss extends Model {
   @field('created_at') createdAt!: number
   @field('updated_at') updatedAt!: number
   @field('last_modified_at') lastModifiedAt!: number
+  // v4: GPS coordinates for location precision (Phase 18)
+  @field('gps_lat') gpsLat?: number
+  @field('gps_lng') gpsLng?: number
 }

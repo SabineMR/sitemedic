@@ -48,4 +48,8 @@ export default class Treatment extends Model {
   @field('created_at') createdAt!: number
   @field('updated_at') updatedAt!: number
   @field('last_modified_at') lastModifiedAt!: number
+  // v4: vertical infrastructure fields (Phase 18)
+  @field('event_vertical') eventVertical?: string
+  @text('vertical_extra_fields') verticalExtraFields?: string // raw JSON; parse with JSON.parse() at call site
+  @field('booking_id') bookingId?: string
 }
