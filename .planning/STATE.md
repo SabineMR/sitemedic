@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 19: Motorsport Vertical
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 21: Film/TV Production Vertical
 
 ## Current Position
 
-Phase: 19 of 23 (Motorsport Vertical) — Phase 18.5 complete
-Plan: — (ready to plan)
-Status: Phase 18.5 complete — all 2/2 plans executed and verified; construction vertical fully confirmed
-Last activity: 2026-02-18 — Phase 18.5 plan 02 complete: construction vertical smoke test (RIDDOR gate, dispatcher, cert types, compliance config, patient label all verified)
+Phase: 21 of 23 (Film/TV Production Vertical)
+Plan: 1 of N in current phase
+Status: In progress
+Last activity: 2026-02-18 — Completed 21-01-PLAN.md: Film/TV form section + cert types (ScreenSkills + EFR)
 
-Progress: [██████████] v1.1 complete | [█████░░░░░] v2.0 8/27 plans (Phase 18 + 18.5 complete)
+Progress: [██████████] v1.1 complete | [█████░░░░░] v2.0 9/27 plans (Phase 18 + 18.5 + 21-01 complete)
 
 ## Performance Metrics
 
@@ -32,9 +32,9 @@ Progress: [██████████] v1.1 complete | [█████░�
 | 18–23 (v2.0) | 6/25 | ~7 min | ~1 min |
 
 **Recent Trend:**
-- Last plan: 18.5-02 — construction vertical smoke test, read-only verification (1 min)
-- Phase 18.5 plans: 18.5-01 (schema/model/migration updates), 18.5-02 (smoke test)
-- Trend: Stable — consistent 1–2 min for Phase 18/18.5 surgical refactors
+- Last plan: 21-01 — Film/TV form section + ScreenSkills/EFR cert types (2 min)
+- Phase 21 plans: 21-01 (treatment form section + cert registry entries)
+- Trend: Stable — consistent 1–2 min for vertical surgical additions
 
 *Updated after each plan completion*
 
@@ -61,6 +61,9 @@ Key decisions affecting v2.0:
 - 18-04: `orgVertical` variable name preserved in new.tsx — downstream usages (getMechanismPresets, getVerticalOutcomeCategories, getPatientLabel, getVerticalCompliance) unchanged
 - 18-04: `t.bookingId = bookingId ?? undefined` (not null) — WatermelonDB optional field; sync payload uses `?? null` for Supabase NULL compatibility
 - 18.5-01: `services/taxonomy/verticals.ts` created as NEW canonical `VERTICAL_CONFIG` file — construction is the reference entry; Phases 19–22 add their verticals here; does NOT replace existing taxonomy files (vertical-compliance.ts, certification-types.ts remain the runtime sources)
+- 21-01: Film/TV form section uses `orgVertical === 'tv_film'` guard; verticalExtraFields JSON string serialized at formValues build time (4 fields: production_title, patient_role, sfx_involved, scene_context)
+- 21-01: ScreenSkills Production Safety Passport and EFR use 'medical' category — no new CertCategory union member needed
+- 21-01: VERTICAL_CERT_TYPES for tv_film NOT updated — Plan 21-02 handles cert ordering; new cert types added to array + info/metadata records only
 
 ### Research Flags (Phase-Blocking)
 
@@ -78,6 +81,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T03:42:47Z
-Stopped at: Completed 18.5-02-PLAN.md — construction vertical smoke test (Phase 18.5 complete)
+Last session: 2026-02-18T03:50:22Z
+Stopped at: Completed 21-01-PLAN.md — Film/TV form section + cert types
 Resume file: None

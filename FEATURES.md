@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-17 (Auth race-condition fix: getUserProfile() now uses getSession() instead of getUser() to eliminate startup race; belt-and-suspenders orgId fallback added in handleAddContact())
+**Last Updated**: 2026-02-18 (Phase 21-01: Film/TV production conditional form section + ScreenSkills Production Safety Passport & EFR cert types added to both cert registries)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -16,6 +16,36 @@ SiteMedic is a comprehensive platform combining **mobile medic software** (offli
 - High-value add-ons: Corporate Events, Private Events (weddings/parties/galas), Education & Youth (DBS-checked), Outdoor Adventure & Endurance
 
 **Business Model**: Software bundled with medic staffing service (no separate software charge). Revenue from medic bookings with a configurable platform/medic split (default 60% platform / 40% medic, overridable per employee). Weekly medic payouts via UK Faster Payments, Net 30 invoicing for established corporate clients. Referral bookings (jobs recommended by a third party who cannot take them) trigger a 10% referral payout (configurable) deducted from the platform's share — medic payout is unaffected.
+
+---
+
+## Recent Updates — Film/TV Production Vertical: Form Section + Cert Types (2026-02-18)
+
+### Phase 21-01: Film/TV Treatment Form Section and Cert Registry Entries ✅
+
+When a medic is working on a Film/TV production (`orgVertical === 'tv_film'`), the treatment logging form now shows a **Production Details** section capturing incident context required for F2508 RIDDOR completeness.
+
+**New conditional form section** (`app/treatment/new.tsx`):
+- **Production Title** — free-text field (e.g. "The Crown S8")
+- **Patient Role** — picker with 9 crew roles: Cast, Stunt Performer, Director, Camera, Grip, Lighting, Art Dept, Costume, Other Crew
+- **SFX / Pyrotechnic Involved** — toggle button (highlights amber when active)
+- **Scene / Shot Context** — multi-line textarea (e.g. "Car chase scene, Stage 4")
+
+**Data wiring:**
+- All 4 fields are serialised as a JSON string into `verticalExtraFields` and written to the `vertical_extra_fields` JSONB column on every auto-save (10s interval)
+- `vertical_extra_fields` is included in the `enqueueSyncItem` payload so the data syncs to Supabase when connectivity is restored
+- Stored as raw JSON string (`@text` column) — consistent with Phase 18 design; parsed at call site by the RIDDOR completeness gate (Plan 21-03)
+
+**New cert types** (both mobile `services/taxonomy/certification-types.ts` AND web `web/types/certification.types.ts`):
+- **ScreenSkills Production Safety Passport** — CPD-based production safety cert with no fixed expiry; issued by ScreenSkills
+- **EFR (Emergency First Responder)** — basic pre-hospital first aid; 3-year renewal; various issuers (Highfield, RCN, FPHC)
+
+Both cert types are prerequisites for Plan 21-02 which sets up the ordered cert recommendation list for the `tv_film` vertical.
+
+**Files modified:**
+- `app/treatment/new.tsx` — Film/TV conditional section, 5 state vars, `verticalExtraFields` in formValues/fieldMapping/sync payload, patient role BottomSheetPicker
+- `services/taxonomy/certification-types.ts` — ScreenSkills Production Safety Passport + EFR in CERT_TYPES array and CERT_TYPE_INFO record
+- `web/types/certification.types.ts` — ScreenSkills Production Safety Passport + EFR in UK_CERT_TYPES array and CERT_TYPE_METADATA record
 
 ---
 
@@ -6576,9 +6606,53 @@ The system supports four primary user roles:
 
 ---
 
-**Document Version**: 1.3
-**Last Updated**: 2026-02-17 (Multi-vertical website rework + org industry vertical picker in admin settings)
-**Next Review**: After Phase 7.5 UI completion
+**Document Version**: 1.4
+**Last Updated**: 2026-02-17 (Phase 21 Film/TV vertical planned — 2 plans created)
+**Next Review**: After Phase 21 execution
+
+---
+
+### Planned: Phase 21 — Film/TV Production Vertical (Not yet executed)
+
+Phase 21 adds Film/TV-specific capabilities to the platform. All infrastructure prerequisites were delivered in Phase 18 (`vertical_extra_fields` column, `OrgContext`, RIDDOR gate, `incident-report-dispatcher`). Phase 21 is content-layer work only — no new infrastructure or Edge Functions required.
+
+#### Plan 21-01: Film/TV Form Fields + Cert Type Registration
+
+**Files modified:** `app/treatment/new.tsx`, `services/taxonomy/certification-types.ts`, `web/types/certification.types.ts`
+
+| Change | Description |
+|--------|-------------|
+| Production Details section | Conditional section appears in treatment form when `orgVertical === 'tv_film'`. 4 fields: Production Title (text), Patient Role (picker: Cast / Stunt Performer / Director / Camera / Grip / Lighting / Art Dept / Costume / Other Crew), SFX/Pyrotechnic Involved (toggle), Scene/Shot Context (text). |
+| `vertical_extra_fields` wiring | Film/TV fields serialised as JSON and written to `vertical_extra_fields` column via `useAutoSave` and included in `enqueueSyncItem` payload for Supabase sync. JSON shape: `{ production_title, patient_role, sfx_involved, scene_context }`. |
+| New cert types | `'ScreenSkills Production Safety Passport'` and `'EFR'` (Emergency First Responder) registered in both `services/taxonomy/certification-types.ts` (mobile) and `web/types/certification.types.ts` (web). Required by the Film/TV cert profile — neither existed previously. |
+
+**FILM-01 requirement satisfied.**
+
+#### Plan 21-02: Terminology Overrides + Cert Profile + F2508 Verification
+
+**Files modified:** `services/taxonomy/certification-types.ts`, `web/types/certification.types.ts`, `services/taxonomy/vertical-outcome-labels.ts`, `app/(tabs)/_layout.tsx`, `app/(tabs)/workers.tsx`, `app/worker/new.tsx`, `app/worker/quick-add.tsx`, `app/worker/[id].tsx`, `app/treatment/[id].tsx`, `app/treatment/templates.tsx`
+
+| Change | Description |
+|--------|-------------|
+| Film/TV cert ordering | `VERTICAL_CERT_TYPES.tv_film` updated in both cert files: HCPC Paramedic → ScreenSkills Production Safety Passport → FREC 4 → EFR → PHEC → PHTLS → ALS Provider → ATLS → FREC 3. CSCS and IPAF removed from `tv_film` ordering (construction site access cards, not relevant to film/TV — remain in master list). |
+| New terminology helpers | `getLocationLabel(verticalId)` and `getEventLabel(verticalId)` exported from `services/taxonomy/vertical-outcome-labels.ts`. Film/TV returns `'Set'` and `'Production'` respectively. Mirrors web `org-labels.ts` pattern on mobile. |
+| Workers tab / header | `app/(tabs)/_layout.tsx`: tab bar label and header title dynamically computed from `useOrg().primaryVertical`. Film/TV org sees `'Cast & Crew'` tab label and `'Cast & Crew Registry'` header. |
+| Worker screens | `app/(tabs)/workers.tsx`, `app/worker/new.tsx`, `app/worker/quick-add.tsx`, `app/worker/[id].tsx`: `useOrg()` added; "Add Worker" buttons, section headings, search placeholders use `getPatientLabel(primaryVertical)`. Film/TV medic sees "Add Crew member", "Cast & Crew Registry", etc. |
+| Treatment screens | `app/treatment/[id].tsx`: "Worker Information" section heading → `'{patientLabel} Information'`. `app/treatment/templates.tsx`: "1. Select Worker" and search placeholder use `personLabel`. |
+| FILM-04 verification | `web/lib/pdf/incident-report-dispatcher.ts` already maps `tv_film → riddor-f2508-generator`. No code changes needed — RIDDOR auto-flagging and F2508 PDF generation work unchanged for Film/TV crew members. |
+
+**FILM-02, FILM-03, FILM-04 requirements satisfied.**
+
+#### Film/TV Vertical Summary
+
+| Requirement | Status after Phase 21 |
+|-------------|----------------------|
+| FILM-01: Production-specific form fields | Production Title, Patient Role (9 options), SFX/Pyro flag, Scene Context |
+| FILM-02: Terminology | "Cast & Crew" / "Set" / "Production" across all 7 mobile screens |
+| FILM-03: Cert profile | HCPC Paramedic, ScreenSkills Production Safety Passport, FREC 4, EFR at top |
+| FILM-04: RIDDOR active for crew | Unchanged — `tv_film` passes through RIDDOR gate; F2508 generated for qualifying incidents |
+
+---
 
 ### Recent Changes (2026-02-17)
 
