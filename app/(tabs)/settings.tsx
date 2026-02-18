@@ -42,10 +42,58 @@ export default function SettingsScreen() {
   const [newPhone, setNewPhone] = useState('');
   const [newRole, setNewRole] = useState('');
   const [saving, setSaving] = useState(false);
+  const [suggestions, setSuggestions] = useState<EmergencyContact[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [modalOrgId, setModalOrgId] = useState<string | null>(null);
 
   useEffect(() => {
     loadContacts();
   }, []);
+
+  // Fetch orgId when modal opens; reset suggestions on close
+  useEffect(() => {
+    if (!addModalVisible) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    (async () => {
+      try {
+        const { supabase } = await import('../../src/lib/supabase');
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data: profile } = await supabase
+          .from('profiles').select('org_id').eq('id', user.id).single();
+        if (profile?.org_id) setModalOrgId(profile.org_id);
+      } catch (_) {}
+    })();
+  }, [addModalVisible]);
+
+  // Debounced search: fires when newName changes, queries matching org contacts
+  useEffect(() => {
+    if (!modalOrgId || newName.trim().length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const { supabase } = await import('../../src/lib/supabase');
+        const { data } = await supabase
+          .from('emergency_contacts')
+          .select('id, name, phone, role')
+          .eq('org_id', modalOrgId)
+          .ilike('name', `%${newName.trim()}%`)
+          .limit(5);
+        setSuggestions((data as EmergencyContact[]) ?? []);
+        setShowSuggestions((data?.length ?? 0) > 0);
+      } catch (_) {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [newName, modalOrgId]);
 
   const loadContacts = useCallback(async () => {
     setContactsLoading(true);
@@ -59,6 +107,14 @@ export default function SettingsScreen() {
     }
   }, []);
 
+  const handleSelectSuggestion = (contact: EmergencyContact) => {
+    setNewName(contact.name);
+    setNewPhone(contact.phone);
+    setNewRole(contact.role || '');
+    setSuggestions([]);
+    setShowSuggestions(false);
+  };
+
   const handleAddContact = async () => {
     if (!newName.trim() || !newPhone.trim()) {
       Alert.alert('Missing fields', 'Please enter both a name and phone number.');
@@ -67,23 +123,15 @@ export default function SettingsScreen() {
 
     setSaving(true);
     try {
+      if (!modalOrgId) throw new Error('Could not load org');
+
       const { supabase } = await import('../../src/lib/supabase');
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('org_id')
-        .eq('id', user.id)
-        .single();
-
-      if (profileError || !profile?.org_id) throw new Error('Could not load org');
 
       // Check for existing contact with same phone in this org
       const { data: existing } = await supabase
         .from('emergency_contacts')
         .select('id')
-        .eq('org_id', profile.org_id)
+        .eq('org_id', modalOrgId)
         .eq('phone', newPhone.trim())
         .maybeSingle();
 
@@ -99,7 +147,7 @@ export default function SettingsScreen() {
         const { error } = await supabase
           .from('emergency_contacts')
           .insert({
-            org_id: profile.org_id,
+            org_id: modalOrgId,
             name: newName.trim(),
             phone: newPhone.trim(),
             role: newRole.trim() || null,
@@ -383,7 +431,25 @@ export default function SettingsScreen() {
               placeholderTextColor="#9CA3AF"
               autoCapitalize="words"
               returnKeyType="next"
+              onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
             />
+
+            {showSuggestions && suggestions.length > 0 && (
+              <View style={styles.suggestionsContainer}>
+                {suggestions.map((item, index) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[styles.suggestionItem, index < suggestions.length - 1 && styles.suggestionBorder]}
+                    onPress={() => handleSelectSuggestion(item)}
+                  >
+                    <Text style={styles.suggestionName}>{item.name}</Text>
+                    <Text style={styles.suggestionDetail}>
+                      {item.phone}{item.role ? ` · ${item.role}` : ''}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
 
             <Text style={styles.fieldLabel}>Phone Number *</Text>
             <TextInput
@@ -698,5 +764,31 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
+  },
+  suggestionsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 10,
+    marginTop: 4,
+    overflow: 'hidden',
+  },
+  suggestionItem: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  suggestionBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  suggestionName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  suggestionDetail: {
+    fontSize: 13,
+    color: '#64748b',
+    marginTop: 2,
   },
 });
