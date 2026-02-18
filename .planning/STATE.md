@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-18)
 
 ## Current Position
 
-Phase: 24 of 31 (DB Foundation — planned, ready to execute)
-Plan: 0 of 5 in Phase 24
-Status: Phase 24 planned — 5 plans in 2 waves, verified, ready for `/gsd:execute-phase 24`
-Last activity: 2026-02-18 — Phase 24 planned (5 plans: Next.js CVE, migrations 132/133/134, backfill verification)
+Phase: 24 of 31 (DB Foundation — in progress)
+Plan: 2 of 5 in Phase 24
+Status: In progress — 24-02 complete (migration 132_org_branding.sql created)
+Last activity: 2026-02-18 — Completed 24-02-PLAN.md (org_branding table, backfill, RLS)
 
-Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [░░░░░░░░░░] v3.0 0% (Phase 24 planned, not executed)
+Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [░░░░░░░░░░] v3.0 ~8% (Phase 24: 2/5 plans done)
 
 ## Performance Metrics
 
@@ -32,7 +32,7 @@ Progress: [██████████] v1.0 complete | [██████�
 | 18–23 (v2.0) | 30/30 | ~22 min | ~1.8 min |
 
 **Recent Trend:**
-- Last plan: 23-07 — competitor_cleared_to_return checkbox; MOTO-07 gap closed (~1 min)
+- Last plan: 24-02 — migration 132_org_branding.sql; org_branding table with backfill and RLS (~1 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -47,6 +47,9 @@ Progress: [██████████] v1.0 complete | [██████�
 - CSS custom properties are the only correct pattern for per-org colours — Tailwind JIT cannot use runtime-constructed class names
 - Cookie domain NOT widened to `.sitemedic.co.uk` — each subdomain requires its own sign-in to prevent cross-org session leak
 - Legacy orgs (NULL stripe_customer_id) get access granted until they go through onboarding — Apex is Growth tier, all others Starter
+- **24-02:** org_branding UPDATE is self-service (is_org_admin()) unlike org_settings (platform-admin-only write) — branding doesn't need platform intervention
+- **24-02:** primary_colour_hex CHECK uses `IS NULL OR regex` pattern — allows NULL initial state without constraint violation
+- **24-02:** company_name pre-populated from organizations.name at migration time — no empty-state problem for existing orgs
 
 ### Pending Todos
 
@@ -62,5 +65,5 @@ Progress: [██████████] v1.0 complete | [██████�
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Phase 24 plans created and verified — 5 PLAN.md files in .planning/phases/24-db-foundation/; ready to execute
+Stopped at: Completed 24-02-PLAN.md — migration 132_org_branding.sql committed (712c3b6)
 Resume file: None
