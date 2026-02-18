@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 19: Motorsport Vertical COMPLETE (all 5/5 plans); Phase 20 (Festivals & Events) already complete; next: Phase 23 Compliance Analytics
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 22: Football Sports Vertical COMPLETE (all 5/5 plans including gap closure 22-05); next: Phase 23 Compliance Analytics
 
 ## Current Position
 
-Phase: 19 of 23 (Motorsport Vertical) — COMPLETE (all 5/5 plans)
-Plan: 19-01, 19-02, 19-03, 19-04, 19-05 all complete
-Status: Phase 19 complete — integration verification approved by user
-Last activity: 2026-02-18 — Completed 19-05-PLAN.md: integration verification (all 5 success criteria + bonus alert criterion PASS; human checkpoint approved)
+Phase: 22 of 23 (Football Sports Vertical) — COMPLETE (all 5/5 plans)
+Plan: 22-01, 22-02, 22-03, 22-04, 22-05 all complete (22-05 = gap closure: FA incident UI)
+Status: Phase 22 complete — Truth 5 satisfied; FAIncidentReportCard wired to fa-incident-generator
+Last activity: 2026-02-18 — Completed 22-05-PLAN.md: FA incident UI gap closure (FAIncidentReportCard + generateFAIncidentPDF query)
 
-Progress: [██████████] v1.1 complete | [████████░░] v2.0 21/27 plans (Phase 18 + 18.5 + 19-01 + 19-02 + 19-03 + 19-04 + 19-05 + 20-01 + 20-02 + 20-03 + 20-04 + 21 + 22-01 + 22-02 + 22-03 + 22-04 complete)
+Progress: [██████████] v1.1 complete | [█████████░] v2.0 22/27 plans (Phase 18 + 18.5 + 19-01…05 + 20-01…04 + 21 + 22-01…05 complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 88 (v1.0 + v1.1 + v2.0 so far)
+- Total plans completed: 89 (v1.0 + v1.1 + v2.0 so far)
 - Average duration: 4.1 min
-- Total execution time: ~6.0 hours
+- Total execution time: ~6.1 hours
 
 **By Phase:**
 
@@ -29,13 +29,11 @@ Progress: [██████████] v1.1 complete | [██████�
 |-------|-------|-------|----------|
 | 01–07.5 (v1.0) | 84/84 | ~5.5 hrs | ~4 min |
 | 08–17 (v1.1) | 35/35 | ~2.4 hrs | ~4.1 min |
-| 18–23 (v2.0) | 9/25 | ~15 min | ~1.7 min |
+| 18–23 (v2.0) | 10/25 | ~19 min | ~1.9 min |
 
 **Recent Trend:**
-- Last plan: 19-05 — integration verification: all 5 motorsport SC + bonus alert criterion PASS; human checkpoint approved (~5 min)
-- Phase 19 plans: 19-01 (MOTO-01/02/03 form + gate + alert), 19-02 (cert taxonomy + TreatmentWithWorker), 19-03 (PDF generator), 19-04 (stats sheet + badge + button), 19-05 (integration verification — all SC PASS) — ALL COMPLETE
-- Phase 20 plans: 20-01 (FEST-01/02 form fields), 20-02 (RIDDOR gate), 20-03 (Purple Guide PDF backend), 20-04 (compliance frontend) — ALL COMPLETE
-- Phase 22 plans: 22-01 (football dual patient type form + HIA + FA severity), 22-02 (RIDDOR gate FOOT-04), 22-03 (FA/SGSA PDF), 22-04 (cert types + terminology) — ALL COMPLETE
+- Last plan: 22-05 — FA incident UI gap closure: FAIncidentReportCard + generateFAIncidentPDF wired; Truth 5 satisfied (~4 min)
+- Phase 22 plans: 22-01 (football dual patient type form + HIA + FA severity), 22-02 (RIDDOR gate FOOT-04), 22-03 (FA/SGSA PDF), 22-04 (cert types + terminology), 22-05 (gap closure: FA incident UI) — ALL COMPLETE
 - Trend: Stable — consistent 1–8 min for vertical surgical additions
 
 *Updated after each plan completion*
@@ -104,6 +102,7 @@ Key decisions affecting v2.0:
 - 19-04: createClient from @/lib/supabase/client used in booking detail page — matches gdpr/page.tsx and payslips pattern (not createClientComponentClient)
 - 19-04: Stats sheet button placed between Site Details and Pre-Event Medical Brief sections — visible without scrolling on typical booking
 - 19-05: Phase 19 integration verification complete — all 5 SC + bonus motorsport_concussion alert confirmed PASS; DRAFT watermark on motorsport PDF accepted pending Motorsport UK Incident Pack V8.0 field validation
+- 22-05: FAIncidentReportCard mirrors EventIncidentReportCard exactly — same useMutation, Card/Button layout, onSuccess opens signed_url; gap closure Truth 5 satisfied
 
 ### Research Flags (Phase-Blocking)
 
@@ -121,6 +120,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T04:45:45Z
-Stopped at: Completed 19-05-PLAN.md (integration verification — all 5 success criteria + bonus alert PASS; human checkpoint approved; Phase 19 Motorsport Vertical fully complete)
+Last session: 2026-02-18T04:57:45Z
+Stopped at: Completed 22-05-PLAN.md (FA incident UI gap closure — FAIncidentReportCard + generateFAIncidentPDF; Truth 5 satisfied; Phase 22 Football Sports Vertical fully complete)
 Resume file: None
