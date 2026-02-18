@@ -66,14 +66,14 @@ See: `.planning/milestones/v2.0-ROADMAP.md`
 4. Apex Safety Solutions org row has `subscription_tier = 'growth'` after the backfill — all other existing orgs have `subscription_tier = 'starter'`
 5. `next --version` in the web workspace reports ≥ 15.2.3 — the CVE-2025-29927 middleware bypass patch is in place before subdomain routing expands the attack surface in Phase 26
 
-**Plans:** TBD
+**Plans:** 5 plans
 
 Plans:
-- [ ] 24-01: Next.js CVE patch — bump `next` in `web/package.json` to ≥15.2.3; run `pnpm install`; verify build passes with no type errors
-- [ ] 24-02: Migration 132 — `org_branding` table with `org_id` FK, `logo_path`, `primary_colour_hex`, `company_name`, `tagline`; RLS policies scoped to `org_id`; backfill empty rows for all existing orgs
-- [ ] 24-03: Migration 133 — Add `stripe_customer_id`, `stripe_subscription_id`, `subscription_tier` (starter/growth/enterprise), `subscription_status` (active/past_due/cancelled) to `organizations`; all new columns `DEFAULT NULL`
-- [ ] 24-04: Migration 134 — Create public `org-logos` Supabase Storage bucket; write-scoped RLS so org admins can upload only under their `org_id` path
-- [ ] 24-05: Backfill — Update existing org rows to set `subscription_tier = 'growth'` for Apex Safety Solutions, `subscription_tier = 'starter'` for all others; document NULL-stripe-customer-id behaviour (legacy tier = access granted, no billing enforcement until onboarding)
+- [ ] 24-01-PLAN.md — Next.js CVE patch: bump next and eslint-config-next to ^15.2.3, verify build passes
+- [ ] 24-02-PLAN.md — Migration 132: org_branding table with RLS, backfill rows for all existing orgs with company_name from organizations.name
+- [ ] 24-03-PLAN.md — Migration 133: subscription columns on organizations + Apex/starter tier backfill
+- [ ] 24-04-PLAN.md — Migration 134: public org-logos storage bucket with org-scoped write RLS
+- [ ] 24-05-PLAN.md — Verify all migrations and document legacy org behaviour for downstream phases
 
 ---
 
