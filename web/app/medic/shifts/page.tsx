@@ -9,8 +9,10 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Calendar, MapPin, Clock, ChevronDown } from 'lucide-react';
-import { format, isPast, isToday } from 'date-fns';
+import { Calendar, MapPin, Clock, ChevronDown, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { format, isPast, isToday, isBefore } from 'date-fns';
+import { BusyBlockForm } from '@/components/medic/busy-block-form';
+import { toast } from 'sonner';
 
 interface Shift {
   id: string;
@@ -25,6 +27,13 @@ interface Shift {
   client: { company_name: string } | null;
 }
 
+interface BusyBlock {
+  id: string;
+  date: string;
+  reason: string | null;
+  request_type: string;
+}
+
 const statusColors: Record<string, string> = {
   confirmed: 'bg-green-900/50 text-green-300',
   pending: 'bg-yellow-900/50 text-yellow-300',
@@ -37,12 +46,35 @@ export default function MedicShiftsPage() {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
+  const [busyBlocks, setBusyBlocks] = useState<BusyBlock[]>([]);
+  const [showBusyForm, setShowBusyForm] = useState(false);
+  const [medicId, setMedicId] = useState<string | null>(null);
+
+  async function fetchBusyBlocks(supabase: ReturnType<typeof createClient>, mId: string) {
+    const today = new Date().toISOString().split('T')[0];
+    const { data } = await supabase
+      .from('medic_availability')
+      .select('id, date, reason, request_type')
+      .eq('medic_id', mId)
+      .eq('is_available', false)
+      .eq('status', 'approved')
+      .gte('date', today)
+      .order('date', { ascending: true });
+    setBusyBlocks((data as BusyBlock[]) || []);
+  }
 
   useEffect(() => {
     async function fetchShifts() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      // Get medic record
+      const { data: medicData } = await supabase
+        .from('medics')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
 
       const { data, error } = await supabase
         .from('bookings')
@@ -59,6 +91,13 @@ export default function MedicShiftsPage() {
       } else {
         setShifts((data as unknown as Shift[]) || []);
       }
+
+      // Fetch busy blocks if we have a medic record
+      if (medicData) {
+        setMedicId(medicData.id);
+        await fetchBusyBlocks(supabase, medicData.id);
+      }
+
       setLoading(false);
     }
     fetchShifts();
@@ -149,6 +188,88 @@ export default function MedicShiftsPage() {
           ))}
         </div>
       )}
+
+      {/* My Busy Blocks Section */}
+      <div className="border-t border-gray-700/50 pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-bold text-white">My Busy Blocks</h2>
+            <p className="text-gray-400 text-sm mt-0.5">
+              Mark dates when you&apos;re unavailable (personal appointments, etc.)
+            </p>
+          </div>
+          {medicId && !showBusyForm && (
+            <button
+              onClick={() => setShowBusyForm(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-sm font-medium transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Busy Block
+            </button>
+          )}
+        </div>
+
+        {showBusyForm && medicId && (
+          <div className="mb-4">
+            <BusyBlockForm
+              medicId={medicId}
+              onSaved={() => {
+                setShowBusyForm(false);
+                const supabase = createClient();
+                fetchBusyBlocks(supabase, medicId);
+              }}
+              onCancel={() => setShowBusyForm(false)}
+            />
+          </div>
+        )}
+
+        {busyBlocks.length === 0 ? (
+          <div className="text-center py-8 bg-gray-800/30 rounded-2xl border border-gray-700/50">
+            <AlertCircle className="w-10 h-10 text-gray-500 mx-auto mb-2" />
+            <p className="text-gray-400 text-sm">No upcoming busy blocks</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {busyBlocks.map((block) => (
+              <div
+                key={block.id}
+                className="flex items-center justify-between bg-orange-900/10 border border-orange-700/30 rounded-xl px-4 py-3"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-orange-400 text-sm font-medium">
+                    {format(new Date(block.date), 'EEE dd MMM yyyy')}
+                  </span>
+                  <span className="text-gray-400 text-sm">
+                    {block.reason || 'Personal'}
+                  </span>
+                  <span className="px-2 py-0.5 bg-orange-900/40 text-orange-300 rounded-full text-xs capitalize">
+                    {block.request_type?.replace(/_/g, ' ') || 'personal'}
+                  </span>
+                </div>
+                <button
+                  onClick={async () => {
+                    const supabase = createClient();
+                    const { error } = await supabase
+                      .from('medic_availability')
+                      .delete()
+                      .eq('id', block.id);
+                    if (error) {
+                      toast.error('Failed to remove busy block');
+                    } else {
+                      toast.success('Busy block removed');
+                      if (medicId) fetchBusyBlocks(supabase, medicId);
+                    }
+                  }}
+                  className="text-gray-500 hover:text-red-400 transition-colors"
+                  title="Remove busy block"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

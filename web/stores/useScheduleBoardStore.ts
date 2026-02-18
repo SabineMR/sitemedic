@@ -18,6 +18,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import type {
   MedicWithStats,
   Booking,
+  BusyBlock,
   ConflictCheckResult,
   Conflict,
   ConflictCheckParams,
@@ -32,6 +33,7 @@ interface ScheduleBoardState {
   // Data from schedule-board-api
   medics: MedicWithStats[];
   bookings: Booking[]; // All bookings for the week
+  busyBlocks: Record<string, BusyBlock[]>; // Keyed by medicId
   isLoading: boolean;
   error: string | null;
 
@@ -46,6 +48,7 @@ interface ScheduleBoardState {
   // Actions
   setWeek: (weekStart: string) => void;
   fetchScheduleData: () => Promise<void>;
+  fetchBusyBlocks: () => Promise<void>;
   assignMedicToBooking: (bookingId: string, medicId: string) => Promise<void>;
   checkConflicts: (params: ConflictCheckParams) => Promise<ConflictCheckResult>;
   subscribe: () => void;
@@ -54,6 +57,7 @@ interface ScheduleBoardState {
 
   // Getters
   getBookingsForMedicOnDate: (medicId: string, date: string) => Booking[];
+  getBusyBlocksForMedicOnDate: (medicId: string, date: string) => BusyBlock[];
   getUnassignedBookings: () => Booking[];
   getBookingById: (bookingId: string) => Booking | undefined;
 }
@@ -174,6 +178,7 @@ export const useScheduleBoardStore = create<ScheduleBoardState>((set, get) => ({
   dates: generateWeekDates(getMondayOfCurrentWeek()),
   medics: [],
   bookings: [],
+  busyBlocks: {},
   isLoading: false,
   error: null,
   isConnected: false,
@@ -234,6 +239,9 @@ export const useScheduleBoardStore = create<ScheduleBoardState>((set, get) => ({
         dates: data.dates || get().dates,
         isLoading: false,
       });
+
+      // Also fetch busy blocks for this week
+      get().fetchBusyBlocks();
     } catch (error) {
       set({
         medics: [],
@@ -241,6 +249,28 @@ export const useScheduleBoardStore = create<ScheduleBoardState>((set, get) => ({
         isLoading: false,
         error: error instanceof Error ? error.message : 'Failed to load schedule data',
       });
+    }
+  },
+
+  /**
+   * Fetch busy blocks (Google Calendar + manual + time-off) for the current week
+   */
+  fetchBusyBlocks: async () => {
+    const { selectedWeekStart } = get();
+    try {
+      const response = await fetch(
+        `/api/google-calendar/busy-blocks?weekStart=${selectedWeekStart}`
+      );
+
+      if (!response.ok) {
+        console.error('[ScheduleBoard] Failed to fetch busy blocks:', response.statusText);
+        return;
+      }
+
+      const data = await response.json();
+      set({ busyBlocks: data.busyBlocks || {} });
+    } catch (error) {
+      console.error('[ScheduleBoard] Error fetching busy blocks:', error);
     }
   },
 
@@ -300,6 +330,15 @@ export const useScheduleBoardStore = create<ScheduleBoardState>((set, get) => ({
             : b
         ),
       }));
+
+      // Push booking to medic's Google Calendar (fire-and-forget)
+      fetch('/api/google-calendar/push-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId, medicId }),
+      }).catch((err) => {
+        console.warn('[ScheduleBoard] Failed to push event to Google Calendar:', err);
+      });
 
     } catch (error) {
       console.error('[ScheduleBoard] Error assigning booking:', error);
@@ -371,6 +410,14 @@ export const useScheduleBoardStore = create<ScheduleBoardState>((set, get) => ({
     return get().bookings.filter(
       (b) => b.medic_id === medicId && b.shift_date === date
     );
+  },
+
+  /**
+   * Get all busy blocks for a specific medic on a specific date
+   */
+  getBusyBlocksForMedicOnDate: (medicId: string, date: string): BusyBlock[] => {
+    const medicBlocks = get().busyBlocks[medicId] || [];
+    return medicBlocks.filter((b) => b.date === date);
   },
 
   /**

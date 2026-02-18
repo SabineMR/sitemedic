@@ -76,6 +76,21 @@ export interface ConflictCheckParams {
 }
 
 /**
+ * A busy block from Google Calendar, manual entry, or approved time-off.
+ * Displayed as colored chips on the schedule board.
+ */
+export interface BusyBlock {
+  id: string;
+  medicId: string;
+  source: 'google_calendar' | 'manual' | 'time_off';
+  title: string;
+  date: string; // YYYY-MM-DD
+  startTime: string; // HH:MM
+  endTime: string; // HH:MM
+  reason?: string;
+}
+
+/**
  * Response from schedule-board-api
  */
 export interface ScheduleBoardData {

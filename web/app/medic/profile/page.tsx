@@ -9,9 +9,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { StripeOnboardingStatus } from '@/components/medics/stripe-onboarding-status';
-import { User, CheckCircle2, XCircle, ToggleLeft, ToggleRight, AlertTriangle, ExternalLink, FileDown, Calendar } from 'lucide-react';
+import { User, CheckCircle2, XCircle, ToggleLeft, ToggleRight, AlertTriangle, ExternalLink, FileDown, Calendar, Unlink, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { CERT_TYPE_METADATA, getRecommendedCertTypes } from '@/types/certification.types';
@@ -72,6 +73,9 @@ export default function MedicProfilePage() {
   const [medic, setMedic] = useState<MedicData | null>(null);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
+  const [gcalConnected, setGcalConnected] = useState(false);
+  const [gcalDisconnecting, setGcalDisconnecting] = useState(false);
+  const searchParams = useSearchParams();
 
   // Org context for vertical-aware recommended certs
   const { industryVerticals } = useOrg();
@@ -93,11 +97,48 @@ export default function MedicProfilePage() {
         console.error('Error fetching medic profile:', error);
       } else {
         setMedic(data);
+
+        // Check Google Calendar connection status
+        const { data: prefs } = await supabase
+          .from('medic_preferences')
+          .select('google_calendar_enabled')
+          .eq('medic_id', data.id)
+          .single();
+        setGcalConnected(prefs?.google_calendar_enabled === true);
       }
       setLoading(false);
     }
     fetchProfile();
   }, []);
+
+  // Handle Google Calendar OAuth redirect params
+  useEffect(() => {
+    const gcalStatus = searchParams.get('gcal');
+    if (gcalStatus === 'connected') {
+      toast.success('Google Calendar connected successfully');
+      setGcalConnected(true);
+    } else if (gcalStatus === 'denied') {
+      toast.error('Google Calendar connection was denied');
+    } else if (gcalStatus === 'error') {
+      toast.error('Failed to connect Google Calendar');
+    }
+  }, [searchParams]);
+
+  async function disconnectGoogleCalendar() {
+    setGcalDisconnecting(true);
+    try {
+      const res = await fetch('/api/google-calendar/disconnect', { method: 'POST' });
+      if (res.ok) {
+        setGcalConnected(false);
+        toast.success('Google Calendar disconnected');
+      } else {
+        toast.error('Failed to disconnect Google Calendar');
+      }
+    } catch {
+      toast.error('Failed to disconnect Google Calendar');
+    }
+    setGcalDisconnecting(false);
+  }
 
   async function toggleAvailability() {
     if (!medic) return;
@@ -225,6 +266,54 @@ export default function MedicProfilePage() {
             <ToggleLeft className="w-12 h-12 text-gray-500" />
           )}
         </button>
+      </div>
+
+      {/* Google Calendar Integration */}
+      <div className={`bg-gray-800/50 border rounded-2xl p-6 ${
+        gcalConnected ? 'border-purple-700/30' : 'border-gray-700/50'
+      }`}>
+        <div className="flex items-center gap-2 mb-4">
+          <Calendar className="w-5 h-5 text-purple-400" />
+          <h2 className="text-white font-semibold text-lg">Google Calendar</h2>
+        </div>
+        {gcalConnected ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-900/50 border border-green-700/50 text-green-300 rounded-full text-sm">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Connected
+              </span>
+            </div>
+            <p className="text-gray-400 text-sm">
+              Your Google Calendar events will appear on the admin schedule board. Confirmed bookings will be added to your calendar automatically.
+            </p>
+            <button
+              onClick={disconnectGoogleCalendar}
+              disabled={gcalDisconnecting}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-700/50 hover:bg-red-900/30 border border-gray-600/50 hover:border-red-700/50 text-gray-300 hover:text-red-300 rounded-xl text-sm transition-colors"
+            >
+              {gcalDisconnecting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Unlink className="w-4 h-4" />
+              )}
+              Disconnect
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-gray-400 text-sm">
+              Connect your Google Calendar so the scheduling team can see when you&apos;re busy, and confirmed bookings appear on your calendar automatically.
+            </p>
+            <a
+              href="/api/google-calendar/auth"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-medium transition-colors"
+            >
+              <Calendar className="w-4 h-4" />
+              Connect Google Calendar
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Personal Info */}

@@ -15,6 +15,9 @@ import MedicAssignmentEmail from '@/lib/email/templates/medic-assignment-email';
 import { sendBookingReceivedEmail } from '@/lib/email/send-booking-received';
 import { NextResponse } from 'next/server';
 import { render } from '@react-email/components';
+import type { EmailBranding } from '@/lib/email/types';
+import { DEFAULT_EMAIL_BRANDING } from '@/lib/email/types';
+import { hasFeature } from '@/lib/billing/feature-gates';
 
 interface EmailRequest {
   bookingId: string;
