@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Phase: 19 of 23 (Motorsport Vertical) — 19-01 complete
-Plan: 19-01 complete (motorsport form fields + concussion gate + alert); 19-02 through 19-05 remain
-Status: In progress — 19-01 (MOTO-01/02/03 form + gate + alert) complete; motorsport PDF (19-03) and remaining plans remain
-Last activity: 2026-02-18 — Completed 19-01-PLAN.md: motorsport form fields, concussion clearance gate, medic_alerts migration
+Phase: 22 of 23 (Football/Sports Vertical) — 22-01 complete
+Plan: 22-01 complete (football dual patient type form + validation + sync wiring); 22-03 (fa-incident-generator) remains
+Status: In progress — 22-01 (FOOT-01/02/03 dual patient type form) complete; fa-incident-generator PDF (22-03) remains
+Last activity: 2026-02-18 — Completed 22-01-PLAN.md: football dual patient type form, player/spectator fields, HIA protocol, FA severity, vertical_extra_fields wiring
 
-Progress: [██████████] v1.1 complete | [████████░░] v2.0 14/27 plans (Phase 18 + 18.5 + 19-01 + 19-02 + 20-01 + 20-02 + 21 + 22-01 + 22-02 complete)
+Progress: [██████████] v1.1 complete | [████████░░] v2.0 15/27 plans (Phase 18 + 18.5 + 19-01 + 19-02 + 20-01 + 20-02 + 21 + 22-01 + 22-02 + 22-04 complete)
 
 ## Performance Metrics
 
@@ -35,8 +35,8 @@ Progress: [██████████] v1.1 complete | [██████�
 - Last plan: 19-01 — Motorsport form fields, concussion gate, alert migration (7 min)
 - Phase 19 plans so far: 19-01 (MOTO-01/02/03 form + gate + alert), 19-02 (cert taxonomy + TreatmentWithWorker)
 - Phase 20 plans so far: 20-01 (FEST-01/02 form fields), 20-02 (previously complete)
-- Phase 22 plans so far: 22-01 (football patient type UI), 22-02 (RIDDOR gate FOOT-04)
-- Trend: Stable — consistent 1–7 min for vertical surgical additions
+- Phase 22 plans so far: 22-01 (football dual patient type form + HIA + FA severity), 22-02 (RIDDOR gate FOOT-04), 22-04 (cert types + terminology)
+- Trend: Stable — consistent 1–8 min for vertical surgical additions
 
 *Updated after each plan completion*
 
@@ -79,6 +79,11 @@ Key decisions affecting v2.0:
 - 19-01: buildVerticalExtraFields() helper centralises all vertical JSON serialisation in new.tsx — single function replaces per-vertical ternary chains in formValues and enqueueSyncItem; motorsport is the first vertical to use it
 - 19-01: motorsport_concussion alert guarded by treatment.bookingId — medic_alerts.booking_id is NOT NULL; walk-in (unlinked) motorsport treatments cannot insert an alert; alert is non-blocking (try/catch, failure logs only)
 - 19-01: GCS score stored as number | null in MotorsportExtraFields — null = not assessed; validated 3-15 at TextInput onChangeText (immediate feedback, not at submission)
+- 22-01: isFootball declared after orgVertical (hooks before orgVertical, isFootball constant after) — avoids temporal dead zone; all 13 useState hooks at top level per React constraint
+- 22-01: buildVerticalExtraFields() helper used for football vertical_extra_fields — football cases added to existing helper (from motorsport refactor); not duplicated inline
+- 22-01: hia_outcome excluded from payload entirely (not set to null) when hia_performed is false — payload contains only truthy clinical data
+- 22-01: stand_location stores display string ('North Stand' etc.) matching SGSA form field labels rather than a lowercase slug
+- 22-01: Safeguarding notes cleared (state reset) when safeguardingFlag toggled off — prevents stale notes from persisting if flag toggled back on
 
 ### Research Flags (Phase-Blocking)
 
@@ -96,6 +101,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T04:18:59Z
-Stopped at: Completed 19-01-PLAN.md (motorsport form fields + concussion gate + medic_alerts migration)
+Last session: 2026-02-18T04:18:32Z
+Stopped at: Completed 22-01-PLAN.md (football dual patient type form + player/spectator fields + HIA protocol + FA severity + vertical_extra_fields wiring)
 Resume file: None
