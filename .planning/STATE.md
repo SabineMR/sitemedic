@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v3.0 White-Label Platform & Subscription Engine — Phase 27 complete; Phase 28 next (Branding — PDFs & Emails)
+**Current focus:** v3.0 White-Label Platform & Subscription Engine — Phase 29 in progress (Org Onboarding Flow)
 
 ## Current Position
 
-Phase: 27 of 31 (Branding — Web Portal — COMPLETE)
-Plan: 3 of 3 in Phase 27
-Status: Phase 27 complete — all 3 plans done (27-01 through 27-03)
-Last activity: 2026-02-18 — Completed 27-03-PLAN.md (admin layout rebrand with CSS custom properties)
+Phase: 29 of 31 (Org Onboarding Flow)
+Plan: 5 of 5 in Phase 29
+Status: In progress — 29-05 complete
+Last activity: 2026-02-18 — Completed 29-05-PLAN.md (welcome email template & sender)
 
-Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [██████░░░░] v3.0 ~50% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4, Phase 27: 3/3 done)
+Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [███████░░░] v3.0 ~55% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4, Phase 27: 3/3, Phase 29: 1/5 done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 135 (84 v1.0 + 35 v1.1 + 30 v2.0 + 15 v3.0)
+- Total plans completed: 136 (84 v1.0 + 35 v1.1 + 30 v2.0 + 16 v3.0)
 - Average duration: 4.0 min
-- Total execution time: ~8.7 hours
+- Total execution time: ~8.8 hours
 
 **By Phase:**
 
@@ -34,9 +34,10 @@ Progress: [██████████] v1.0 complete | [██████�
 | 25 (v3.0) | 3/3 | ~8 min | ~2.7 min |
 | 26 (v3.0) | 4/4 | ~8 min | ~2 min |
 | 27 (v3.0) | 3/3 | ~6 min | ~2 min |
+| 29 (v3.0) | 1/5 | ~4 min | ~4 min |
 
 **Recent Trend:**
-- Last plan: 27-03 — admin layout rebrand with CSS custom properties (~2 min)
+- Last plan: 29-05 — welcome email template & sender (~4 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -101,5 +102,5 @@ Progress: [██████████] v1.0 complete | [██████�
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed Phase 27 Branding — Web Portal — all 3 plans done; verification passed (human testing checklist in VERIFICATION.md)
+Stopped at: Completed 29-05-PLAN.md (welcome email template & sender)
 Resume file: None
