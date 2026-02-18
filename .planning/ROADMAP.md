@@ -35,7 +35,7 @@ See: `.planning/milestones/v1.1-ROADMAP.md`
 - [x] **Phase 18: Vertical Infrastructure & RIDDOR Fix** — Schema v4, RIDDOR detector vertical gate, mobile OrgContext, booking override wiring, admin vertical settings
 - [ ] **Phase 19: Motorsport Vertical** — GCS/concussion form, mandatory licence suspension workflow, Medical Statistics Sheet, Motorsport UK PDF
 - [ ] **Phase 20: Festivals & Events Vertical** — TST triage, Purple Guide PDF, RIDDOR disabled for attendees, safeguarding + substance flags
-- [ ] **Phase 21: Film/TV Production Vertical** — Production-specific form fields, Film/TV terminology, cert profile, existing RIDDOR pipeline reused
+- [x] **Phase 21: Film/TV Production Vertical** — Production-specific form fields, Film/TV terminology, cert profile, existing RIDDOR pipeline reused
 - [ ] **Phase 22: Football / Sports Vertical** — Dual patient type (player/spectator), FA + SGSA forms and PDFs, RIDDOR disabled for players
 - [ ] **Phase 23: Analytics — Heat Maps & Trend Charts** — Near-miss heat maps (org + platform), compliance score history, trend charts
 
@@ -252,6 +252,6 @@ Plans:
 | 18.5. Construction & Infrastructure Vertical | v2.0 | 2/2 | Complete | 2026-02-18 |
 | 19. Motorsport Vertical | v2.0 | 0/5 | Not started | - |
 | 20. Festivals & Events Vertical | v2.0 | 0/4 | Not started | - |
-| 21. Film/TV Production Vertical | v2.0 | 0/2 | Not started | - |
+| 21. Film/TV Production Vertical | v2.0 | 2/2 | Complete | 2026-02-17 |
 | 22. Football / Sports Vertical | v2.0 | 0/4 | Not started | - |
 | 23. Analytics — Heat Maps & Trend Charts | v2.0 | 0/5 | Not started | - |

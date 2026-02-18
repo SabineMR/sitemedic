@@ -18,10 +18,10 @@ Core plumbing that all four new verticals depend on. Must ship before any vertic
 
 ### FILM — Film/TV Production Vertical
 
-- [ ] **FILM-01**: Film/TV incident form includes production-specific fields: Production Title, Patient Role (Cast / Stunt Performer / Crew), and SFX / Pyrotechnic Involved flag
-- [ ] **FILM-02**: App terminology switches to Film/TV context when vertical is active: "Cast & Crew" replaces "Worker", "Set" replaces "Site", "Production" replaces "Client"
-- [ ] **FILM-03**: Medic profile shows Film/TV-relevant cert types: HCPC registration, ScreenSkills Production Safety Passport, FREC 4 / EFR
-- [ ] **FILM-04**: RIDDOR auto-flagging remains active for Film/TV (crew are workers under HSE) — existing RIDDOR pipeline used with no changes to flagging logic
+- [x] **FILM-01**: Film/TV incident form includes production-specific fields: Production Title, Patient Role (Cast / Stunt Performer / Crew), and SFX / Pyrotechnic Involved flag
+- [x] **FILM-02**: App terminology switches to Film/TV context when vertical is active: "Cast & Crew" replaces "Worker", "Set" replaces "Site", "Production" replaces "Client"
+- [x] **FILM-03**: Medic profile shows Film/TV-relevant cert types: HCPC registration, ScreenSkills Production Safety Passport, FREC 4 / EFR
+- [x] **FILM-04**: RIDDOR auto-flagging remains active for Film/TV (crew are workers under HSE) — existing RIDDOR pipeline used with no changes to flagging logic
 
 ### FEST — Festivals & Events Vertical
 
@@ -102,10 +102,10 @@ Core plumbing that all four new verticals depend on. Must ship before any vertic
 | CONST-01 | Phase 18.5 | Complete |
 | CONST-02 | Phase 18.5 | Complete |
 | CONST-03 | Phase 18.5 | Complete |
-| FILM-01 | Phase 21 | Pending |
-| FILM-02 | Phase 21 | Pending |
-| FILM-03 | Phase 21 | Pending |
-| FILM-04 | Phase 21 | Pending |
+| FILM-01 | Phase 21 | Complete |
+| FILM-02 | Phase 21 | Complete |
+| FILM-03 | Phase 21 | Complete |
+| FILM-04 | Phase 21 | Complete |
 | FEST-01 | Phase 20 | Pending |
 | FEST-02 | Phase 20 | Pending |
 | FEST-03 | Phase 20 | Pending |
