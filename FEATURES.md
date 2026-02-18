@@ -2,8 +2,170 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Org Onboarding — Platform Admin Activation Queue)
+**Last Updated**: 2026-02-18 (Sprint 4 — SEO, Duplicate Booking Detection & Polish)
 **Audience**: Web developers, technical reviewers, product team
+
+---
+
+## Recent Updates — Sprint 4: SEO, Duplicate Detection & Polish (2026-02-18)
+
+### Overview
+
+Sprint 4 of the gap analysis: adds SEO fundamentals (robots.txt, sitemap.xml) and prevents duplicate bookings.
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/app/robots.ts` | Generates `robots.txt`. Allows marketing/legal crawling, blocks admin/client/medic/API routes |
+| `web/app/sitemap.ts` | Generates `sitemap.xml`. Lists 13 public pages with priority and change frequency |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/app/api/bookings/create-payment-intent/route.ts` | Duplicate detection — rejects if non-cancelled booking exists for same client + date + postcode (HTTP 409) |
+| `web/app/api/bookings/create/route.ts` | Same duplicate detection for Net 30 endpoint |
+
+### Key Features
+
+1. **robots.txt**: Blocks `/admin/`, `/client/`, `/medic/`, `/platform/`, `/api/`, `/setup/`, `/book/payment`, `/book/confirmation`. Links to sitemap.
+2. **sitemap.xml**: Homepage (1.0), services+pricing (0.9), about+contact (0.8), book (0.7), 7 legal pages (0.3-0.4).
+3. **Duplicate Booking Detection**: Checks `client_id + shift_date + site_postcode + org_id` before creating. Returns 409 with user-friendly message.
+
+---
+
+## Recent Updates — Sprint 3: Client Portal Improvements (2026-02-18)
+
+### Overview
+
+Sprint 3 of the gap analysis: transforms the client portal from read-only to interactive. The account page is now editable, bookings can be cancelled with policy-based refunds, and the cancellation flow includes Stripe refund processing.
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/app/(client)/client/account/page.tsx` | **Rewrite** — added inline editing for company name, contact name, email, phone, and billing address. Edit/Save/Cancel buttons with Supabase direct update. Payment info remains read-only (admin-controlled). Toast notifications for save success/failure |
+| `web/app/(client)/client/bookings/[id]/page.tsx` | **Enhanced** — added Cancel Booking button for pending/confirmed bookings. Inline cancellation dialog with refund policy display, refund amount calculation, optional reason textarea, and confirm/keep buttons. Redirects to bookings list on success with toast |
+| `web/app/api/bookings/[id]/cancel/route.ts` | **New file** — cancellation API endpoint. Validates booking ownership via client_id + org_id. Enforces refund policy (7+ days=100%, 3-6 days=50%, <72hrs=0%). Updates booking with cancellation metadata. Initiates Stripe refund if payment exists (fire-and-forget) |
+
+### Key Features
+
+1. **Editable Client Account Page**: The account page now has an Edit button in the header. Clicking it switches all fields (company name, contact name, email, phone, billing address) to input fields. Save persists directly to the `clients` table via Supabase. Cancel reverts to the last saved values. Payment terms, credit limit, and member-since remain read-only (these are admin-controlled business settings). The "contact support" card at the bottom is updated to say "Need to change payment terms or credit limit?" since other fields are now self-service.
+
+2. **Booking Cancellation Flow**: The booking detail page shows a "Cancel Booking" button (red outline, with XCircle icon) for bookings with status `pending` or `confirmed`. Clicking opens an inline cancellation dialog that shows:
+   - Full cancellation policy (7+ days = 100%, 3-6 days = 50%, <72hrs = no refund)
+   - Calculated refund amount with colour coding (green=100%, amber=50%, red=0%)
+   - Optional reason textarea
+   - "Confirm Cancellation" (destructive variant) and "Keep Booking" buttons
+   - Loading state during API call
+
+   On success, shows a toast with the refund amount, invalidates React Query caches, and redirects to the bookings list.
+
+3. **Cancellation API Endpoint** (`POST /api/bookings/[id]/cancel`):
+   - Authenticates user, finds their client record, verifies booking ownership
+   - Only allows cancellation of `pending` or `confirmed` bookings
+   - Calculates refund using `date-fns` `differenceInDays` against shift date
+   - Updates booking: `status='cancelled'`, `cancelled_at`, `cancellation_reason`, `cancelled_by` (user ID), `refund_amount`
+   - Looks up Stripe `payment_intent_id` from `payments` table; if found and refund > 0, creates a Stripe partial/full refund (fire-and-forget — failure logged but doesn't block cancellation)
+   - Returns `{ success, refundPercent, refundAmount }`
+
+### Technical Notes
+
+- Account edit uses direct Supabase client update (no API route needed — RLS handles auth)
+- Cancellation API uses dynamic import for Stripe server to avoid loading Stripe SDK when no refund is needed
+- React Query cache invalidation ensures bookings list and detail page reflect cancellation immediately
+- Refund calculation mirrors the refund policy page at `/refund-policy` exactly
+- Stripe refund is fire-and-forget: if it fails, the booking is still marked cancelled and admin can process the refund manually
+- All changes pass TypeScript compilation with zero errors
+
+---
+
+## Recent Updates — Admin Google Calendar Integration Overview (2026-02-18)
+
+### Overview
+
+Adds a "Google Calendar Integration" section to both the web admin settings page (`/admin/settings`) and the mobile app settings screen (`app/(tabs)/settings.tsx`). Gives admins at-a-glance visibility into whether Google OAuth credentials are configured and which medics have connected their Google Calendar for 2-way sync. Medics see their own connection status on mobile.
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/app/api/admin/google-calendar-status/route.ts` | `GET` endpoint returning credential health (`credentialsConfigured: boolean`), configured `redirectUri`, and an array of all org medics with their GCal connection status (`connected: boolean`). Uses `requireOrgId()` for org-scoped auth. Queries `medics` + `medic_preferences` tables. No secrets are exposed |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/app/admin/settings/page.tsx` | Added "Google Calendar Integration" section between Payout Configuration and CQC Compliance. New state variables (`gcalLoading`, `gcalCredentialsConfigured`, `gcalRedirectUri`, `gcalMedics`). Fetches `/api/admin/google-calendar-status` on mount. Displays: credentials status card (green/red), redirect URI reference box, and medic sync table with Connected/Not Connected badges. Added `Calendar`, `CheckCircle2`, `XCircle` icon imports |
+| `app/(tabs)/settings.tsx` | Added "Google Calendar" section to mobile app settings screen (before Security section). Admin view: lists all medics with Connected/Not Connected badges queried via Supabase (`medics` + `medic_preferences`). Medic view: shows own connection status with hint to connect via web portal. New styles: `gcalMedicRow`, `gcalBadge`, `gcalBadgeConnected/Disconnected`, `gcalSummary`, `gcalHint` |
+| `FEATURES.md` | Documented the new Google Calendar integration overview for both web and mobile |
+
+### Key Features
+
+1. **OAuth Credentials Status Card**: Green "Configured" or red "Not Configured" banner showing whether `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` env vars are set. Shows "Ready" or "Action Required" badge. No secrets are exposed to the client — only a boolean check.
+
+2. **Redirect URI Reference**: If `GOOGLE_REDIRECT_URI` is configured, displays the URI in a reference box so admins can verify it matches their Google Cloud Console settings.
+
+3. **Medic Connection Table**: Lists all medics in the org with their Google Calendar connection status (Connected / Not Connected) from `medic_preferences.google_calendar_enabled`. Shows count summary (e.g., "2 of 5 medics connected"). Medics connect their calendar from their own profile page.
+
+4. **Admin API Endpoint**: `GET /api/admin/google-calendar-status` — org-scoped via `requireOrgId()`. Fetches medics and their preferences in two efficient queries (one for medics, one batch query for preferences). Returns structured JSON for the settings page.
+
+5. **Mobile App GCal Section**: Added to the Expo settings screen (`app/(tabs)/settings.tsx`). Admin view shows all medics with Connected/Not Connected pill badges and a count summary. Medic view shows their own calendar sync status with a hint to connect via the web portal (`/medic/profile`). Queries Supabase directly (same pattern as existing org settings fetch).
+
+### Technical Notes
+
+- API uses `requireOrgId()` pattern consistent with other admin endpoints (`/api/admin/settings`, `/api/admin/branding`)
+- Medic preferences are fetched in a single `.in()` query filtered to `google_calendar_enabled=true` for efficiency
+- The endpoint is read-only — admins cannot modify GCal settings from here. Medics manage their own connection from `/medic/profile`
+- Web section uses the same design system as other settings sections (gray-800/50 cards, backdrop-blur, gradient borders)
+- Mobile section uses the same card/badge pattern as existing Organisation and Status sections (white cards, pill badges, slate/green colour palette)
+- Mobile queries Supabase directly (no API route needed) — consistent with how org settings are already fetched in the mobile app
+
+---
+
+## Recent Updates — Sprint 2: Security, Error Handling & Dead Code Cleanup (2026-02-18)
+
+### Overview
+
+Sprint 2 of the gap analysis: hardens payment security with server-side pricing recalculation, adds Stripe idempotency, creates branded error/404 pages, and removes confirmed dead code.
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/app/api/bookings/create-payment-intent/route.ts` | **Security fix** — now recalculates pricing server-side using `org_settings.base_rate` and rejects requests where client-sent total diverges by >GBP0.01. Stores server-calculated values in DB and charges server-calculated amount to Stripe. Added idempotency key (`pi_booking_{id}`) to prevent duplicate PaymentIntents |
+| `web/app/error.tsx` | **New file** — global error boundary for all routes. Shows branded "Something went wrong" page with Try Again + Go to Homepage buttons. Displays error digest ID for debugging |
+| `web/app/not-found.tsx` | **New file** — branded 404 page with "Page not found" message and links to homepage and contact page. Replaces default Next.js 404 |
+
+### Deleted Files (Dead Code)
+
+| File | Reason |
+|------|--------|
+| `web/lib/org-labels.ts` | `useOrgLabels()` hook and `getLabelsForVertical()` — exported but never imported anywhere in codebase |
+| `web/lib/pdf/incident-report-dispatcher.ts` | `generateIncidentReportPDF()` — exported but never imported. PDF generation handled directly by Edge Functions |
+| `web/components/payments/payment-status.tsx` | `PaymentStatus` component — exported but never imported anywhere |
+| `services/taxonomy/vertical-outcome-labels.ts` (partial) | Removed `getLocationLabel()` and `getEventLabel()` exports — never imported. Other exports in same file (`getOutcomeLabel`, `getVerticalOutcomeCategories`, `getPatientLabel`) retained as they are actively used by mobile app |
+
+### Key Features
+
+1. **Server-Side Pricing Recalculation (Security)**: The `create-payment-intent` API now loads the org's `base_rate` from `org_settings`, calls `calculateBookingPrice()` with server-side values, and compares the result against client-sent pricing. If the total differs by more than GBP0.01 (rounding tolerance), the request is rejected with a 400 error. The server-calculated pricing is stored in the booking record and used for the Stripe charge amount — client-sent values are no longer trusted.
+
+2. **Stripe Idempotency Key**: PaymentIntent creation now includes `idempotencyKey: pi_booking_{bookingId}`. This prevents duplicate charges if the client double-clicks the pay button or retries on network errors. Stripe will return the same PaymentIntent for the same idempotency key within 24 hours.
+
+3. **Global Error Boundary**: `web/app/error.tsx` catches unhandled errors across all non-admin routes (admin has its own specialised boundary). Shows a clean branded page with retry and homepage navigation. Logs errors to console and displays the error digest ID for cross-referencing with server logs.
+
+4. **Branded 404 Page**: `web/app/not-found.tsx` replaces the default Next.js 404 with a branded page showing large "404" text, a clear message, and CTA buttons to homepage and contact page. Uses the same design system (Tailwind, blue-600 accents, slate tones).
+
+5. **Dead Code Removal**: 4 files/exports removed — all confirmed dead through grep analysis (defined but never imported). Reduces codebase maintenance burden and eliminates confusion about which label functions are canonical.
+
+### Technical Notes
+
+- `calculateBookingPrice` from `web/lib/booking/pricing.ts` is now used on both client and server — true shared pricing logic
+- Idempotency key is scoped to booking ID, so each booking can only have one PaymentIntent
+- Error boundary uses `useEffect` for error logging (client component requirement)
+- 404 page is a server component (no `'use client'` directive) for optimal performance
+- All changes pass TypeScript compilation with zero errors
 
 ---
 

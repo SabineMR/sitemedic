@@ -45,6 +45,15 @@ export async function POST(request: Request) {
       );
     }
 
+    // Determine child status based on client's payment terms
+    const { data: clientRecord } = await supabase
+      .from('clients')
+      .select('payment_terms')
+      .eq('id', parentBooking.client_id)
+      .single();
+
+    const clientPaymentTerms = clientRecord?.payment_terms || 'prepay';
+
     // Calculate date increment (7 for weekly, 14 for biweekly)
     const dayIncrement = recurrencePattern === 'weekly' ? 7 : 14;
 
@@ -56,18 +65,14 @@ export async function POST(request: Request) {
       const childShiftDate = addDays(parentShiftDate, dayIncrement * i);
       const childShiftDateString = childShiftDate.toISOString().split('T')[0];
 
-      // Determine status based on payment terms
-      let childStatus = 'confirmed';
-      if (parentBooking.payment_terms === 'full_prepay' || parentBooking.payment_terms === 'split_50_50') {
-        // Prepay clients: Each child booking needs its own payment (Phase 6.5)
-        // For now, create as pending_payment
-        childStatus = 'pending_payment';
-      }
+      // Net 30 clients: auto-confirm (invoiced later). Prepay: pending payment.
+      const childStatus = clientPaymentTerms === 'net_30' ? 'confirmed' : 'pending';
 
       const childBooking = {
         // Inherit parent booking details
+        org_id: parentBooking.org_id,
         client_id: parentBooking.client_id,
-        medic_id: parentBooking.medic_id, // Same medic for all recurring bookings
+        medic_id: parentBooking.medic_id,
         shift_date: childShiftDateString,
         shift_start_time: parentBooking.shift_start_time,
         shift_end_time: parentBooking.shift_end_time,
@@ -80,8 +85,15 @@ export async function POST(request: Request) {
         confined_space_required: parentBooking.confined_space_required,
         trauma_specialist_required: parentBooking.trauma_specialist_required,
         special_notes: parentBooking.special_notes,
-        payment_terms: parentBooking.payment_terms,
-        total_price: parentBooking.total_price,
+        base_rate: parentBooking.base_rate,
+        urgency_premium_percent: parentBooking.urgency_premium_percent,
+        urgency_amount: parentBooking.urgency_amount,
+        travel_surcharge: parentBooking.travel_surcharge,
+        subtotal: parentBooking.subtotal,
+        vat: parentBooking.vat,
+        total: parentBooking.total,
+        platform_fee: parentBooking.platform_fee,
+        medic_payout: parentBooking.medic_payout,
 
         // Recurring metadata
         is_recurring: true,
@@ -107,6 +119,15 @@ export async function POST(request: Request) {
         { error: 'Failed to create recurring bookings', details: insertError.message },
         { status: 500 }
       );
+    }
+
+    // Set recurring_until on the parent booking to the last child's shift date
+    if (childBookings.length > 0) {
+      const lastChildDate = childBookings[childBookings.length - 1].shift_date;
+      await supabase
+        .from('bookings')
+        .update({ recurring_until: lastChildDate })
+        .eq('id', parentBookingId);
     }
 
     return NextResponse.json({

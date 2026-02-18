@@ -32,16 +32,16 @@ export default function NewMedicPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
+    fullName: 'Kai Aufmkolk',
+    email: 'firstcontactsolutions.intl@gmail.com',
+    phone: '+44 7584 639688',
     qualificationLevel: 'paramedic',
     confinedSpaceCert: false,
     traumaSpecialist: false,
     drivingLicence: true,
     ownVehicle: false,
     ir35Status: 'outside',
-    notes: '',
+    notes: '10 years experience',
   });
 
   const set = (field: string, value: string | boolean) =>

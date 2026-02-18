@@ -18,6 +18,7 @@ import { createClient } from '@/lib/supabase/server';
 import { stripe } from '@/lib/stripe/server';
 import { requireOrgId } from '@/lib/organizations/org-resolver';
 import { sendBookingReceivedEmail } from '@/lib/email/send-booking-received';
+import { calculateBookingPrice } from '@/lib/booking/pricing';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,13 +72,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Duplicate booking detection: same client + date + postcode
+    const { data: existingBooking } = await supabase
+      .from('bookings')
+      .select('id')
+      .eq('client_id', body.clientId)
+      .eq('shift_date', body.shiftDate)
+      .eq('site_postcode', body.sitePostcode)
+      .eq('org_id', orgId)
+      .neq('status', 'cancelled')
+      .limit(1)
+      .maybeSingle();
+
+    if (existingBooking) {
+      return NextResponse.json(
+        { error: 'A booking already exists for this date and site. Please check your existing bookings.' },
+        { status: 409 }
+      );
+    }
+
     // Server-side pricing validation
-    // Load allowed premiums from org_settings; fallback to [0, 20, 50, 75]
+    // Load org settings for base_rate and allowed urgency premiums
     const { data: orgSettings } = await supabase
       .from('org_settings')
-      .select('urgency_premiums')
+      .select('base_rate, urgency_premiums')
       .eq('org_id', orgId)
       .single();
+    const serverBaseRate: number = orgSettings?.base_rate ?? 42;
     const validUrgencyPremiums: number[] = orgSettings?.urgency_premiums ?? [0, 20, 50, 75];
     if (!validUrgencyPremiums.includes(body.pricing.urgencyPremiumPercent)) {
       return NextResponse.json(
@@ -94,8 +115,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Recalculate pricing server-side to prevent price manipulation
+    const serverPricing = calculateBookingPrice({
+      shiftHours: body.shiftHours,
+      baseRate: serverBaseRate,
+      urgencyPremiumPercent: body.pricing.urgencyPremiumPercent,
+      travelSurcharge: body.pricing.travelSurcharge || 0,
+    });
+
+    // Reject if client-sent total diverges from server calculation (>£0.01 tolerance for rounding)
+    if (Math.abs(serverPricing.total - body.pricing.total) > 0.01) {
+      return NextResponse.json(
+        { error: 'Pricing mismatch — please refresh and try again' },
+        { status: 400 }
+      );
+    }
+
     // STEP 1: Create booking with status='pending' (payment hasn't happened yet)
     // IMPORTANT: Set org_id to ensure booking belongs to current org
+    // Use server-calculated pricing (source of truth) instead of client-sent values
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
       .insert({
@@ -117,16 +155,16 @@ export async function POST(request: NextRequest) {
         special_notes: body.specialNotes,
         is_recurring: body.isRecurring,
         recurrence_pattern: body.recurrencePattern,
-        // Pricing fields
-        base_rate: body.pricing.baseRate,
-        urgency_premium_percent: body.pricing.urgencyPremiumPercent,
-        urgency_amount: body.pricing.urgencyAmount,
-        travel_surcharge: body.pricing.travelSurcharge || 0,
-        subtotal: body.pricing.subtotal,
-        vat: body.pricing.vat,
-        total: body.pricing.total,
-        platform_fee: body.pricing.platformFee,
-        medic_payout: body.pricing.medicPayout,
+        // Server-calculated pricing (source of truth)
+        base_rate: serverPricing.baseRate,
+        urgency_premium_percent: serverPricing.urgencyPremiumPercent,
+        urgency_amount: serverPricing.urgencyAmount,
+        travel_surcharge: serverPricing.travelSurcharge,
+        subtotal: serverPricing.subtotal,
+        vat: serverPricing.vat,
+        total: serverPricing.total,
+        platform_fee: serverPricing.platformFee,
+        medic_payout: serverPricing.medicPayout,
         event_vertical: body.eventVertical ?? null,
       })
       .select()
@@ -179,19 +217,24 @@ export async function POST(request: NextRequest) {
         .eq('org_id', orgId);
     }
 
-    // STEP 3: Create Stripe Payment Intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(body.pricing.total * 100), // GBP to pence
-      currency: 'gbp',
-      customer: stripeCustomerId,
-      metadata: {
-        booking_id: booking.id,
-        client_id: body.clientId,
+    // STEP 3: Create Stripe Payment Intent with idempotency key to prevent duplicate charges
+    const paymentIntent = await stripe.paymentIntents.create(
+      {
+        amount: Math.round(serverPricing.total * 100), // GBP to pence
+        currency: 'gbp',
+        customer: stripeCustomerId,
+        metadata: {
+          booking_id: booking.id,
+          client_id: body.clientId,
+        },
+        automatic_payment_methods: {
+          enabled: true, // Enables 3D Secure automatically
+        },
       },
-      automatic_payment_methods: {
-        enabled: true, // Enables 3D Secure automatically
-      },
-    });
+      {
+        idempotencyKey: `pi_booking_${booking.id}`,
+      }
+    );
 
     // Fire-and-forget: send "booking received" acknowledgement to client
     sendBookingReceivedEmail(booking.id).catch((err) =>

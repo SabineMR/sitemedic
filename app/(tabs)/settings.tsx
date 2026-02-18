@@ -72,6 +72,62 @@ export default function SettingsScreen() {
     });
   }, [isAdmin, state.user?.orgId]);
 
+  // Google Calendar state
+  const [gcalMedics, setGcalMedics] = useState<Array<{ id: string; first_name: string; last_name: string; connected: boolean }>>([]);
+  const [gcalMedicsLoading, setGcalMedicsLoading] = useState(isAdmin);
+  const [gcalConnected, setGcalConnected] = useState<boolean | null>(null);
+
+  // Fetch Google Calendar connection status
+  useEffect(() => {
+    if (!state.user?.orgId) return;
+
+    import('../../src/lib/supabase').then(async ({ supabase }) => {
+      if (isAdmin) {
+        // Admin: fetch all medics and their GCal status
+        const { data: medics } = await supabase
+          .from('medics')
+          .select('id, first_name, last_name')
+          .eq('org_id', state.user!.orgId)
+          .order('last_name', { ascending: true });
+
+        if (medics && medics.length > 0) {
+          const medicIds = medics.map((m: any) => m.id);
+          const { data: prefs } = await supabase
+            .from('medic_preferences')
+            .select('medic_id, google_calendar_enabled')
+            .in('medic_id', medicIds)
+            .eq('google_calendar_enabled', true);
+
+          const connectedIds = new Set((prefs ?? []).map((p: any) => p.medic_id));
+          setGcalMedics(medics.map((m: any) => ({
+            id: m.id,
+            first_name: m.first_name,
+            last_name: m.last_name,
+            connected: connectedIds.has(m.id),
+          })));
+        }
+        setGcalMedicsLoading(false);
+      } else {
+        // Medic: fetch own GCal status
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data: medic } = await supabase
+          .from('medics')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+        if (medic) {
+          const { data: prefs } = await supabase
+            .from('medic_preferences')
+            .select('google_calendar_enabled')
+            .eq('medic_id', (medic as any).id)
+            .single();
+          setGcalConnected((prefs as any)?.google_calendar_enabled === true);
+        }
+      }
+    });
+  }, [isAdmin, state.user?.orgId]);
+
   // Emergency contacts state
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [contactsLoading, setContactsLoading] = useState(true);
@@ -493,6 +549,75 @@ export default function SettingsScreen() {
           </View>
         </View>
         )}
+
+        {/* Google Calendar Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Google Calendar</Text>
+
+          <View style={styles.card}>
+            {isAdmin ? (
+              gcalMedicsLoading ? (
+                <ActivityIndicator color="#7C3AED" style={{ paddingVertical: 20 }} />
+              ) : gcalMedics.length === 0 ? (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoValue}>No medics in this organisation.</Text>
+                </View>
+              ) : (
+                <>
+                  {gcalMedics.map((medic, index) => (
+                    <View key={medic.id}>
+                      {index > 0 && <View style={styles.divider} />}
+                      <View style={styles.gcalMedicRow}>
+                        <Text style={styles.gcalMedicName}>
+                          {medic.first_name} {medic.last_name}
+                        </Text>
+                        <View style={[
+                          styles.gcalBadge,
+                          medic.connected ? styles.gcalBadgeConnected : styles.gcalBadgeDisconnected,
+                        ]}>
+                          <Text style={[
+                            styles.gcalBadgeText,
+                            medic.connected ? styles.gcalBadgeTextConnected : styles.gcalBadgeTextDisconnected,
+                          ]}>
+                            {medic.connected ? 'Connected' : 'Not Connected'}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  ))}
+                  <View style={styles.divider} />
+                  <Text style={styles.gcalSummary}>
+                    {gcalMedics.filter((m) => m.connected).length} of {gcalMedics.length} medic{gcalMedics.length !== 1 ? 's' : ''} connected
+                  </Text>
+                </>
+              )
+            ) : (
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Calendar Sync</Text>
+                {gcalConnected === null ? (
+                  <Text style={styles.infoValue}>Loading...</Text>
+                ) : gcalConnected ? (
+                  <View style={styles.gcalBadge}>
+                    <Text style={[styles.gcalBadgeText, styles.gcalBadgeTextConnected]}>
+                      Connected
+                    </Text>
+                  </View>
+                ) : (
+                  <View>
+                    <View style={[styles.gcalBadge, styles.gcalBadgeDisconnected]}>
+                      <Text style={[styles.gcalBadgeText, styles.gcalBadgeTextDisconnected]}>
+                        Not Connected
+                      </Text>
+                    </View>
+                    <Text style={styles.gcalHint}>
+                      Connect via the web portal at /medic/profile
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+        </View>
 
         {/* Security Section */}
         <View style={styles.section}>
@@ -961,6 +1086,50 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#64748b',
     marginTop: 4,
+  },
+  gcalMedicRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  gcalMedicName: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#1e293b',
+    flex: 1,
+  },
+  gcalBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: '#D1FAE5',
+  },
+  gcalBadgeConnected: {
+    backgroundColor: '#D1FAE5',
+  },
+  gcalBadgeDisconnected: {
+    backgroundColor: '#F1F5F9',
+  },
+  gcalBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  gcalBadgeTextConnected: {
+    color: '#065F46',
+  },
+  gcalBadgeTextDisconnected: {
+    color: '#64748B',
+  },
+  gcalSummary: {
+    fontSize: 13,
+    color: '#94a3b8',
+    paddingTop: 12,
+  },
+  gcalHint: {
+    fontSize: 12,
+    color: '#94a3b8',
+    marginTop: 6,
   },
   suggestionsContainer: {
     backgroundColor: '#FFFFFF',

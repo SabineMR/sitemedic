@@ -3,11 +3,14 @@
  *
  * Shows full details of a single booking including site info,
  * shift times, medic assignment, pricing breakdown, and notes.
+ * Supports cancellation with refund policy enforcement.
  */
 
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useClientBookingDetail } from '@/lib/queries/client/bookings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,8 +23,12 @@ import {
   MapPin,
   Star,
   FileText,
+  XCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import Link from 'next/link';
+import { differenceInDays } from 'date-fns';
+import { toast } from 'sonner';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800',
@@ -39,10 +46,67 @@ const statusLabels: Record<string, string> = {
   cancelled: 'Cancelled',
 };
 
+function getRefundInfo(shiftDate: string, total: number) {
+  const daysUntil = differenceInDays(new Date(shiftDate), new Date());
+
+  if (daysUntil >= 7) return { percent: 100, amount: total, label: '100% refund' };
+  if (daysUntil >= 3) return { percent: 50, amount: parseFloat((total * 0.5).toFixed(2)), label: '50% refund' };
+  return { percent: 0, amount: 0, label: 'No refund (less than 72 hours notice)' };
+}
+
 export default function ClientBookingDetailPage() {
   const params = useParams();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const bookingId = params.id as string;
   const { data: booking, isLoading, error } = useClientBookingDetail(bookingId);
+
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+
+  const handleCancel = async () => {
+    if (!booking) return;
+
+    setCancelling(true);
+    try {
+      const response = await fetch(`/api/bookings/${booking.id}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: cancelReason || undefined }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || 'Failed to cancel booking');
+        setCancelling(false);
+        return;
+      }
+
+      toast.success(
+        data.refundAmount > 0
+          ? `Booking cancelled. ${formatGBP(data.refundAmount)} refund will be processed.`
+          : 'Booking cancelled.'
+      );
+
+      // Invalidate queries so the list refreshes
+      queryClient.invalidateQueries({ queryKey: ['client-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['client-booking', bookingId] });
+
+      setShowCancelDialog(false);
+      router.push('/client/bookings');
+    } catch (err) {
+      toast.error('Failed to cancel booking. Please try again.');
+      setCancelling(false);
+    }
+  };
+
+  const formatGBP = (amount: number) =>
+    new Intl.NumberFormat('en-GB', {
+      style: 'currency',
+      currency: 'GBP',
+    }).format(amount);
 
   if (isLoading) {
     return (
@@ -77,11 +141,8 @@ export default function ClientBookingDetailPage() {
     ? booking.medics[0]
     : booking.medics;
 
-  const formatGBP = (amount: number) =>
-    new Intl.NumberFormat('en-GB', {
-      style: 'currency',
-      currency: 'GBP',
-    }).format(amount);
+  const canCancel = ['pending', 'confirmed'].includes(booking.status);
+  const refundInfo = canCancel ? getRefundInfo(booking.shift_date, booking.total) : null;
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -236,21 +297,106 @@ export default function ClientBookingDetailPage() {
         </Card>
       )}
 
-      {/* Contact support */}
-      <Card className="border-blue-200 bg-blue-50">
-        <CardContent className="py-4">
-          <p className="text-sm text-blue-800">
-            Need to make changes?{' '}
-            <a
-              href="mailto:support@sitemedic.co.uk"
-              className="font-medium underline"
-            >
-              Contact support
-            </a>{' '}
-            or call us to modify or cancel this booking.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Cancel Booking */}
+      {canCancel && !showCancelDialog && (
+        <Button
+          variant="outline"
+          className="border-red-300 text-red-700 hover:bg-red-50"
+          onClick={() => setShowCancelDialog(true)}
+        >
+          <XCircle className="h-4 w-4 mr-2" />
+          Cancel Booking
+        </Button>
+      )}
+
+      {/* Cancel Confirmation Dialog */}
+      {canCancel && showCancelDialog && refundInfo && (
+        <Card className="border-red-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-700">
+              <AlertTriangle className="h-5 w-5" />
+              Cancel This Booking?
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-slate-50 rounded-lg p-4 space-y-2 text-sm">
+              <p className="font-medium">Cancellation Policy</p>
+              <ul className="space-y-1 text-muted-foreground">
+                <li>7+ days before shift: 100% refund</li>
+                <li>3-6 days before shift: 50% refund</li>
+                <li>Less than 72 hours: No refund</li>
+              </ul>
+            </div>
+
+            <div className={`p-3 rounded-lg text-sm font-medium ${
+              refundInfo.percent === 100
+                ? 'bg-green-50 text-green-800'
+                : refundInfo.percent === 50
+                ? 'bg-amber-50 text-amber-800'
+                : 'bg-red-50 text-red-800'
+            }`}>
+              {refundInfo.percent > 0
+                ? `You will receive a ${refundInfo.label} of ${formatGBP(refundInfo.amount)}`
+                : refundInfo.label}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="cancel-reason">
+                Reason for cancellation (optional)
+              </label>
+              <textarea
+                id="cancel-reason"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={2}
+                placeholder="Let us know why you're cancelling..."
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="destructive"
+                onClick={handleCancel}
+                disabled={cancelling}
+              >
+                {cancelling ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Cancelling...
+                  </>
+                ) : (
+                  'Confirm Cancellation'
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowCancelDialog(false)}
+                disabled={cancelling}
+              >
+                Keep Booking
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Contact support (for non-cancellable bookings) */}
+      {!canCancel && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="py-4">
+            <p className="text-sm text-blue-800">
+              Need help with this booking?{' '}
+              <a
+                href="mailto:support@sitemedic.co.uk"
+                className="font-medium underline"
+              >
+                Contact support
+              </a>
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

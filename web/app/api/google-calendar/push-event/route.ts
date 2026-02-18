@@ -49,7 +49,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Build Google Calendar event
-  const clientName = (booking.client as { company_name: string } | null)?.company_name || 'Unknown Client';
+  const clientData = booking.client as unknown as { company_name: string } | null;
+  const clientName = clientData?.company_name || 'Unknown Client';
   const event: GoogleCalendarEvent = {
     summary: `SiteMedic: ${booking.site_name}`,
     location: booking.site_address || undefined,

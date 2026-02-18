@@ -115,6 +115,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Duplicate booking detection: same client + date + postcode
+    const { data: existingBooking } = await supabase
+      .from('bookings')
+      .select('id')
+      .eq('client_id', body.clientId)
+      .eq('shift_date', body.shiftDate)
+      .eq('site_postcode', body.sitePostcode)
+      .eq('org_id', orgId)
+      .neq('status', 'cancelled')
+      .limit(1)
+      .maybeSingle();
+
+    if (existingBooking) {
+      return NextResponse.json(
+        { error: 'A booking already exists for this date and site. Please check your existing bookings.' },
+        { status: 409 }
+      );
+    }
+
     // Server-side pricing validation (validate urgency premium is valid)
     // Load allowed premiums from org_settings; fallback to [0, 20, 50, 75]
     const { data: orgSettings } = await supabase

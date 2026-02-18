@@ -8,7 +8,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Settings, Building2, Bell, CreditCard, Shield, Mail, Phone, Loader2, Sliders, Layers, Clapperboard, Gauge, HardHat, Music2, Trophy, FerrisWheel, Briefcase, Star, GraduationCap, Tent, ShieldCheck, Palette, Upload, Banknote, Car, Percent } from 'lucide-react';
+import { Settings, Building2, Bell, CreditCard, Shield, Mail, Phone, Loader2, Sliders, Layers, Clapperboard, Gauge, HardHat, Music2, Trophy, FerrisWheel, Briefcase, Star, GraduationCap, Tent, ShieldCheck, Palette, Upload, Banknote, Car, Percent, Calendar, CheckCircle2, XCircle } from 'lucide-react';
 import { useOrg } from '@/contexts/org-context';
 import { toast } from 'sonner';
 
@@ -99,6 +99,12 @@ export default function SettingsPage() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
 
+  // Google Calendar integration state
+  const [gcalLoading, setGcalLoading] = useState(true);
+  const [gcalCredentialsConfigured, setGcalCredentialsConfigured] = useState(false);
+  const [gcalRedirectUri, setGcalRedirectUri] = useState('');
+  const [gcalMedics, setGcalMedics] = useState<Array<{ id: string; first_name: string; last_name: string; connected: boolean }>>([]);
+
   // Branding state
   const [brandingLoading, setBrandingLoading] = useState(true);
   const [savingBranding, setSavingBranding] = useState(false);
@@ -156,6 +162,21 @@ export default function SettingsPage() {
       finally { setSubscriptionLoading(false); }
     }
     fetchSubscription();
+
+    // Fetch Google Calendar integration status
+    async function fetchGcalStatus() {
+      try {
+        const res = await fetch('/api/admin/google-calendar-status');
+        if (res.ok) {
+          const data = await res.json();
+          setGcalCredentialsConfigured(data.credentialsConfigured ?? false);
+          setGcalRedirectUri(data.redirectUri ?? '');
+          setGcalMedics(data.medics ?? []);
+        }
+      } catch { /* endpoint may not exist yet */ }
+      finally { setGcalLoading(false); }
+    }
+    fetchGcalStatus();
 
     // Fetch branding
     async function fetchBranding() {
@@ -877,6 +898,119 @@ export default function SettingsPage() {
                       'Save Payout Settings'
                     )}
                   </button>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+
+        {/* Google Calendar Integration */}
+        <section>
+          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-purple-400" />
+            Google Calendar Integration
+          </h2>
+          <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 shadow-2xl p-6 space-y-5">
+            {gcalLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
+                <span className="ml-3 text-gray-400 text-sm">Loading Google Calendar status...</span>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-gray-400">
+                  Google Calendar 2-way sync allows medics to connect their calendars so the scheduling
+                  team can see busy blocks and confirmed bookings are pushed to the medic&apos;s calendar automatically.
+                </p>
+
+                {/* Credentials status */}
+                <div className={`flex items-center justify-between p-4 rounded-xl border ${
+                  gcalCredentialsConfigured
+                    ? 'bg-green-900/20 border-green-700/30'
+                    : 'bg-red-900/20 border-red-700/30'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    {gcalCredentialsConfigured ? (
+                      <CheckCircle2 className="w-5 h-5 text-green-400" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-red-400" />
+                    )}
+                    <div>
+                      <p className={`text-sm font-medium ${gcalCredentialsConfigured ? 'text-green-300' : 'text-red-300'}`}>
+                        OAuth Credentials {gcalCredentialsConfigured ? 'Configured' : 'Not Configured'}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {gcalCredentialsConfigured
+                          ? 'GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set'
+                          : 'Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET environment variables'}
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+                    gcalCredentialsConfigured
+                      ? 'bg-green-500/20 text-green-300 border-green-500/30'
+                      : 'bg-red-500/20 text-red-300 border-red-500/30'
+                  }`}>
+                    {gcalCredentialsConfigured ? 'Ready' : 'Action Required'}
+                  </span>
+                </div>
+
+                {/* Redirect URI reference */}
+                {gcalRedirectUri && (
+                  <div className="flex items-start gap-3 px-4 py-3 bg-gray-700/20 border border-gray-700/40 rounded-xl">
+                    <Calendar className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div className="text-xs text-gray-400">
+                      <span className="text-gray-200 font-medium">Redirect URI</span>
+                      {' '}&mdash; <code className="text-purple-300 bg-gray-900/50 px-1.5 py-0.5 rounded">{gcalRedirectUri}</code>
+                      <br />
+                      <span className="mt-1 inline-block">Ensure this is added to your Google Cloud Console OAuth 2.0 authorized redirect URIs.</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Medic sync table */}
+                <div>
+                  <h3 className="text-sm font-semibold text-white mb-3">Medic Connection Status</h3>
+                  {gcalMedics.length === 0 ? (
+                    <p className="text-sm text-gray-500">No medics found in this organisation.</p>
+                  ) : (
+                    <div className="overflow-hidden rounded-xl border border-gray-700/50">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-gray-900/50 border-b border-gray-700/50">
+                            <th className="text-left px-4 py-2.5 text-gray-400 font-medium">Medic</th>
+                            <th className="text-right px-4 py-2.5 text-gray-400 font-medium">Calendar Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {gcalMedics.map((medic) => (
+                            <tr key={medic.id} className="border-b border-gray-700/30 last:border-0">
+                              <td className="px-4 py-3 text-white">
+                                {medic.first_name} {medic.last_name}
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                {medic.connected ? (
+                                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-900/50 border border-green-700/50 text-green-300 rounded-full text-xs font-medium">
+                                    <CheckCircle2 className="w-3 h-3" />
+                                    Connected
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-700/50 border border-gray-600/50 text-gray-400 rounded-full text-xs font-medium">
+                                    <XCircle className="w-3 h-3" />
+                                    Not Connected
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500 mt-3">
+                    {gcalMedics.filter((m) => m.connected).length} of {gcalMedics.length} medic{gcalMedics.length !== 1 ? 's' : ''} connected.
+                    Medics can connect their calendar from their profile page.
+                  </p>
                 </div>
               </>
             )}
