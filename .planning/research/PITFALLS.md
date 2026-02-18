@@ -1,598 +1,583 @@
-# Domain Pitfalls: Adding Multi-Vertical Support to an Existing Compliance SaaS
+# Domain Pitfalls: Adding White-Label Branding, Subdomain Routing, and Stripe Billing to an Existing Multi-Tenant SaaS
 
-**Domain:** UK medic compliance platform — adding Film/TV, Festivals, Motorsport, Football verticals to shipped Construction baseline
-**Researched:** 2026-02-17
-**Confidence:** HIGH — findings grounded in codebase inspection plus regulatory source verification
+**Domain:** Medic staffing compliance SaaS — adding white-label, per-org subdomains, and Stripe Billing subscription tiers to a shipped system
+**Researched:** 2026-02-18
+**Confidence:** HIGH — findings grounded in direct codebase inspection + cross-referenced with Stripe documentation, Next.js GitHub issues, and Supabase auth documentation
 
 ---
 
 ## How to Read This File
 
-Each pitfall entry is structured as:
+This file documents pitfalls specific to **adding these features to an existing system** — not greenfield. The distinction matters: an existing system has live users, live cookies, live Stripe Connect wiring, and live RLS policies. Every pitfall below accounts for what is already in place.
+
+Each entry is structured as:
 
 - **What goes wrong** — the failure mode
-- **Evidence in this codebase** — what was found during code inspection (not hypothetical)
-- **Warning signs** — how to detect early
-- **Prevention strategy** — concrete action to take
-- **Phase to address** — when in the roadmap this should be fixed
+- **Evidence in this codebase** — what was found during code inspection or is a known structural property of the system
+- **Warning signs** — how to detect this early
+- **Prevention strategy** — concrete, actionable steps
+- **Phase to address** — when in the roadmap this must be resolved
+- **Severity** — Critical (blocks launch or causes data leaks) / High (degrades UX noticeably) / Medium (annoying but recoverable)
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause regulatory liability, data corruption, or require rewrites.
+Mistakes that block launch, cause data leaks, corrupt billing state, or expose security vulnerabilities.
 
 ---
 
-### Pitfall 1: RIDDOR Detector Has No Vertical Awareness — Will Flag Non-Workers
+### Pitfall 1: Confusing Stripe Connect (Medic Payouts) with Stripe Billing (Org Subscriptions)
+
+**Severity:** CRITICAL
 
 **What goes wrong:**
-The `riddor-detector` Edge Function fires on every completed treatment and applies RIDDOR detection rules
-regardless of which vertical the treatment belongs to. RIDDOR (Reporting of Injuries, Diseases and
-Dangerous Occurrences Regulations 2013) applies only when a **worker** is injured at a **workplace**.
-It does not apply to festival-goers, motorsport competitors, or football spectators.
+The existing system uses **Stripe Connect** to pay medics (the revenue split and referral system added in migration 115). The new milestone adds **Stripe Billing** so staffing orgs pay SiteMedic a subscription fee. These are two entirely separate Stripe product lines using different objects, different APIs, and different webhook event namespaces — but they share one Stripe account and one `STRIPE_SECRET_KEY`.
 
-When a Festivals or Motorsport org uses the platform, a festival-goer who fractures a wrist will
-trigger a RIDDOR `specified_injury` flag and create a `riddor_incidents` record with a 10-day
-deadline. This is legally incorrect, produces false urgency, and will erode medic trust in the system
-fast — once medics learn the flags are wrong, they stop reviewing real ones.
+The confusion manifests in three specific ways:
+
+1. **Webhook handler pollution.** A single webhook endpoint (or a shared handler) receives events from both systems. A `customer.subscription.updated` event from Stripe Billing (org subscription tier changed) gets mixed with `transfer.paid` and `account.updated` events from Connect (medic payout completed). If the handler routes by event type without also checking whether the event originated from the platform account vs. a connected account, it will try to process a Billing event as a Connect event or vice versa. This can result in subscription state being silently ignored, or — worse — a medic payout event being misread as a subscription cancellation.
+
+2. **Customer object ownership mismatch.** In Stripe Billing, the `Customer` object represents the org (the business paying the subscription). In Connect, `Customer` objects may exist on connected accounts (medics) for payment method storage. If the implementation creates a Stripe Customer for each org to hold their subscription but reuses the same `stripe.customers.create()` call pattern already used for medic payment methods, the team may accidentally create Customers on connected accounts instead of the platform account — or add subscription data to medic-level Customers.
+
+3. **`stripe_customer_id` column ambiguity.** If a single `stripe_customer_id` column is added to the `organizations` table (the natural place), it will hold the Billing Customer ID for the org. But if the medic payout logic also stores a Connect account's Customer ID on the org (some Connect patterns do this for charge-back tracking), the column semantics clash immediately with no compile error.
 
 **Evidence in this codebase:**
-`supabase/functions/riddor-detector/index.ts` fetches the treatment record and immediately runs
-`detectRIDDOR()` with no check of the treatment's org vertical, the booking's `event_vertical`, or
-whether `patientIsWorker` is true for that org. There is no vertical lookup anywhere in the detector
-function.
+`web/lib/stripe/server.ts` initialises one `stripe` instance with `STRIPE_SECRET_KEY`. No separation of concerns between Connect and Billing operations exists yet — both will share this instance. The Stripe Node SDK version installed is `stripe@20.3.1` (detected in node_modules), which supports both Connect and Billing, making it easy to call the wrong API without a type error.
 
-`services/taxonomy/vertical-compliance.ts` correctly defines `riddorApplies: false` for `festivals`,
-`motorsport`, `sporting_events`, `fairs_shows`, `private_events`. This data exists but is never
-consulted by the detector at the point of incident creation.
-
-The treatment record stored in WatermelonDB (`src/database/schema.ts`) has no `vertical_id` or
-`event_vertical` column — the vertical is fetched fresh from `org_settings` on each form mount
-(`app/treatment/new.tsx` lines 93–113) and is not persisted to the treatment row. When the sync
-payload reaches Supabase, the vertical is not included in the `treatments` table row, so the
-detector cannot read it from the treatment record either.
+Migration 115 adds `is_referral`, `referred_by`, `referral_payout_percent`, `referral_payout_amount`, `platform_net` to bookings — these are Connect-related payout fields. Adding a `stripe_customer_id` to `organizations` for Billing without clear naming will create two parallel Stripe-ID concepts with no column-level differentiation.
 
 **Warning signs:**
-- Festival org's RIDDOR incidents list fills with entries for wrist fractures and head injuries on attendees
-- Medics report "Everything is being flagged as RIDDOR — we're at a festival, these are members of the public"
-- RIDDOR incidents table accumulates entries for orgs where `riddorApplies = false`
-- Medic overrides every single auto-flagged incident as "not reportable"
+- A webhook handler file has both `customer.subscription.*` and `transfer.*` event cases in the same switch statement without account-level routing
+- A column named `stripe_customer_id` appears on `organizations` without a comment specifying it is the Billing Customer (not a Connect Customer)
+- Test logs show a `customer.subscription.deleted` event triggering the wrong handler path
+- A medic payout fails silently because the webhook routing check erroneously matched a Billing event
 
 **Prevention strategy:**
-1. Add `vertical_id` (TEXT, optional) column to the WatermelonDB `treatments` table (schema version 4 migration required) so the vertical is persisted with the treatment record at capture time.
-2. Include `vertical_id` in the sync payload sent to Supabase treatments table.
-3. At the start of `riddor-detector/index.ts`, after fetching the treatment, resolve the org's primary vertical from `org_settings.industry_verticals` OR the booking's `event_vertical` (prefer booking-level for per-booking overrides). Call `getVerticalCompliance()` logic server-side and gate the entire detection: if `riddorApplies === false`, return `{ detected: false, reason: "RIDDOR does not apply to this vertical" }` immediately.
-4. For the `education` and `outdoor_adventure` verticals where `patientIsWorker: false` (patient may be staff or participant), add a patient-type field to the treatment form so the detector can distinguish a staff injury (RIDDOR applies) from a student/participant injury (RIDDOR does not apply).
+1. Create separate webhook endpoints from day one: `/api/webhooks/stripe-billing` (Stripe Billing events: `customer.subscription.*`, `invoice.*`, `checkout.session.*`) and keep/extend `/api/webhooks/stripe-connect` (Connect events: `transfer.*`, `account.*`, `payout.*`). Register these as separate webhook destinations in the Stripe Dashboard.
+2. Name the new column on `organizations` explicitly: `billing_stripe_customer_id` (not `stripe_customer_id`). The `billing_` prefix makes the purpose unambiguous and prevents future columns from colliding.
+3. Add a code comment in `web/lib/stripe/server.ts` that names the two Stripe product lines in use, links to their respective docs, and states which functions belong to which product line.
+4. For all new Billing-related Stripe API calls, always create Customers on the **platform account** (no `stripeAccount` header). Connect operations target connected accounts. Document this distinction in the billing service file.
+5. When processing incoming webhooks, validate the `Stripe-Signature` header against the correct webhook secret (each endpoint has its own secret in Stripe Dashboard). Mixing secrets will cause signature validation failures that are hard to debug.
 
 **Phase to address:**
-Before activating any non-RIDDOR vertical for production orgs. This must be fixed before the Festivals or Motorsport vertical launches — a single false RIDDOR flag sent to an HSE-aware client will damage credibility immediately.
+Stripe Billing integration phase — before any webhook handler is written. The architectural decision (separate endpoints) must be made first.
 
 ---
 
-### Pitfall 2: Motorsport Concussion Protocol — Mandatory Licence Suspension Not Captured
+### Pitfall 2: Subdomain Routing Breaks the Existing Auth Cookie
+
+**Severity:** CRITICAL
 
 **What goes wrong:**
-Under Motorsport UK General Regulations (and equivalent FIA rules), when a driver or competitor
-suffers a concussion — or any head injury requiring the HIA (Head Injury Assessment) protocol — the
-event's Chief Medical Officer has a mandatory duty to notify the competitor's licence-issuing body
-and the competitor may not return to racing until medically cleared. This is not optional guidance;
-it is a regulatory obligation that the platform must facilitate.
+The current middleware (`web/middleware.ts` → `web/lib/supabase/middleware.ts`) creates Supabase auth cookies that are scoped to the current hostname. When a user signs in at `app.sitemedic.com`, the Supabase SSR client (`@supabase/ssr`) sets cookies with no explicit `domain` option — which defaults to the current hostname only. When subdomain routing is added and an org accesses `acmecorp.sitemedic.com`, the browser will not send the `app.sitemedic.com` session cookie to the subdomain. The user is forced to re-authenticate on every subdomain, and if the auth redirect points back to `app.sitemedic.com`, they enter an infinite redirect loop.
 
-The existing treatment form (`app/treatment/new.tsx`) captures `injury_type` from the shared
-`INJURY_TYPES` taxonomy. `loss-of-consciousness` is listed but is mapped directly to a RIDDOR
-`specified_injury` trigger in the detector — the wrong framework entirely for motorsport. There is
-no concussion-specific capture path, no HIA checkbox, no "Competitor licence suspended — notification
-required to Motorsport UK" action, and no field for the Clerk of the Course notification.
+The reverse problem also occurs: if the cookie domain is set to `.sitemedic.com` (the apex with a leading dot, which shares the cookie across all subdomains), then a session cookie from `acmecorp.sitemedic.com` is readable by `othercorp.sitemedic.com`. In the white-label context this is a cross-org session leak — a user signed into Org A's subdomain should never have their session cookie sent to Org B's subdomain.
 
-If a medic treats a concussed driver and the platform does not prompt the mandatory notification
-workflow, a competitor could re-enter racing without clearance. This is a clinical safety failure
-with liability exposure.
+There is a third variant: the middleware's `publicRoutes` list in `web/lib/supabase/middleware.ts` checks `request.nextUrl.pathname`. When subdomain routing is added and the middleware uses `NextResponse.rewrite()` to map `acmecorp.sitemedic.com/dashboard` to an internal path, the pathname the middleware sees is the rewritten path, not the original. The public route check may pass or fail incorrectly depending on whether it runs before or after the rewrite.
+
+Additionally, CVE-2025-29927 is a confirmed critical vulnerability (CVSS 9.1) in Next.js versions prior to 15.2.3 that allows attackers to bypass middleware authentication entirely by sending the `x-middleware-subrequest` header. If this system runs on a version below 15.2.3 on a self-hosted deployment, adding more routes via subdomain routing expands the attack surface without fixing the underlying bypass.
 
 **Evidence in this codebase:**
-`services/taxonomy/mechanism-presets.ts` includes `'Head impact / concussion'` as a mechanism
-preset. `services/taxonomy/vertical-compliance.ts` references `motorsport_uk` as the primary
-framework with post-treatment guidance about the Clerk of the Course, but no form field or workflow
-enforces the HIA/concussion pathway. No field called `concussion_protocol`, `hia_conducted`,
-`licence_suspension_required`, or `cmo_notified` exists anywhere in the schema or treatment form.
+`web/lib/supabase/middleware.ts` `setAll()` callback calls `supabaseResponse.cookies.set(name, value, options)` but the `options` object comes directly from Supabase SSR — no `domain` override is applied. The middleware has no hostname parsing logic today. All routing decisions use `request.nextUrl.pathname` with no subdomain awareness.
 
 **Warning signs:**
-- Motorsport medics complete treatment forms for head injuries and the form does not prompt any concussion-specific action
-- No "Return to Race Clearance" step in the treatment completion flow for motorsport vertical
-- Medics report: "The app doesn't have a section for the concussion check — I did it verbally"
-- A competitor appears on track after a flagged head injury with no clearance record in the system
+- User signs in at `acmecorp.sitemedic.com`, is redirected to `/dashboard`, middleware does not find a session, redirects to `/login` — infinite loop
+- Browser devtools show the auth cookie domain is `acmecorp.sitemedic.com` but the request is going to `app.sitemedic.com`
+- Setting cookie domain to `.sitemedic.com` and noticing in devtools that the cookie appears in requests to multiple org subdomains simultaneously
+- A test reveals that a user authenticated on Org A's subdomain can access Org B's subdomain without re-authenticating
 
 **Prevention strategy:**
-1. Add a vertical-specific post-treatment step for `motorsport`: after saving a treatment with `injury_type === 'loss-of-consciousness'` OR mechanism containing 'concussion', show a mandatory checklist: (a) HIA conducted Y/N, (b) Competitor stood down from racing Y/N, (c) CMO / Clerk of Course notified Y/N. These must be answered before the form can be submitted.
-2. Record `licence_suspension_flag: boolean` and `cmo_notified_at: timestamp` on the treatment record for motorsport verticals.
-3. Surface incomplete concussion protocols in the web dashboard's "Race Incidents" list with a red badge ("Concussion clearance required").
-4. Review Motorsport UK General Regulations annually — this requirement may tighten for national events with FIA oversight.
+1. Subdomain routing middleware must run before auth cookie logic. Parse the hostname at the top of `middleware.ts` to extract the org subdomain slug. Use `NextResponse.rewrite()` to map the subdomain to an internal path before the Supabase session refresh runs.
+2. **Do not share session cookies across subdomains.** Each org subdomain should require its own sign-in. The Supabase auth cookie should be scoped to the specific subdomain (no leading dot). A user who is signed into the main app (`app.sitemedic.com`) must re-authenticate on `acmecorp.sitemedic.com` — this is correct behaviour for white-label isolation.
+3. Set `cookieOptions.domain` explicitly in the Supabase SSR client constructor for each context: for the main app, omit the `domain` (defaults to current host); for subdomain contexts, set to the current subdomain only.
+4. Audit the Next.js version. If running below 15.2.3, update before adding subdomain routing. Block the `x-middleware-subrequest` header at the reverse proxy (nginx/Vercel edge) regardless of version. This header should never arrive from external clients.
+5. The public routes check in middleware must account for the rewrite: check `request.nextUrl.pathname` before the rewrite takes effect, or use the original URL object.
 
 **Phase to address:**
-Motorsport vertical MVP phase. Cannot ship motorsport without this — it is the highest-risk regulatory gap identified.
+Subdomain routing phase — this is the first task, before any branding or feature gating work. The cookie architecture must be decided before any org-facing routing is built.
 
 ---
 
-### Pitfall 3: WatermelonDB Schema Freeze — Adding Vertical-Specific Fields Is Painful
+### Pitfall 3: Branding Data Leaking Across Orgs via Uncached or Mis-Cached Lookups
+
+**Severity:** CRITICAL
 
 **What goes wrong:**
-WatermelonDB migrations for shipped apps are structurally painful: every added column requires a
-migration file, schema version bump, and the migration must be applied before users sync. If a
-migration is missing or misapplied, the app throws and the user is stuck until they clear app data —
-losing all unsynced treatments.
+White-label branding requires fetching the org's logo URL, primary colour, and name on every request to render the correct brand. The natural implementation is: middleware resolves the subdomain → looks up the org's branding config from Supabase → passes it to the layout. If this lookup is cached (in Vercel's ISR/CDN cache, in a server-side cache, or in a React cache) without including the org slug as part of the cache key, two orgs can receive each other's branding.
 
-The current WatermelonDB schema (`src/database/schema.ts`) is at version 3 with no `vertical_id`,
-no `booking_id`, no `patient_type`, and no `event_specific_flags` field on the treatments table.
-Adding multi-vertical support requires at minimum: `vertical_id` (to fix Pitfall 1 above),
-potentially `patient_type` (worker vs. public, for education/outdoor verticals), and
-`concussion_protocol_flags` for motorsport.
+This is not hypothetical — it is a documented pattern failure in multi-tenant caching. A deploy or a cache warm-up that fetches Org A's branding first will cause Org B's first request to hit the stale Org A cache entry if the cache key is only the path (`/dashboard`) and not the org context (`/dashboard?org=acmecorp`).
 
-Each of these requires a WatermelonDB schema migration. If migrations are added ad-hoc across
-multiple sprints without planning, you get schema drift: some medic devices are on version 4, others
-on version 5 after a fast update, and sync conflicts arise between incompatible record shapes.
+The second variant is Vercel's CDN-level cache. If branding is rendered server-side (SSR) and the CDN caches the rendered HTML, a cached page that shows Org A's logo gets served to Org B's visitors unless the cache key includes the hostname. Vercel does not automatically include the hostname in its cache key for custom subdomains unless explicitly configured.
+
+The third variant involves Supabase Storage: org logos are stored in a bucket. If the bucket policy allows public reads with no path-scoping (e.g., `logos/` is fully public), any logo URL can be guessed by substituting the org UUID in the path. This is not a caching problem but a data exposure problem — a white-label client's logo could be accessed by another org's users if the URL structure is predictable.
 
 **Evidence in this codebase:**
-`src/database/migrations.ts` shows migrations to version 2 and 3 exist. `src/database/schema.ts`
-comments say "When bumping schema version, add a migration adapter before production release." No
-migration exists beyond version 3. The treatments table has no vertical-related columns.
+`supabase/migrations/00001_organizations.sql` creates the `organizations` table with `name TEXT NOT NULL` but no branding fields yet. The branding schema (`logo_url`, `primary_colour`) does not exist yet — it will be added in the new milestone. The risk is in how it will be fetched and cached once added.
+
+`supabase/migrations/014_storage_buckets.sql` creates storage buckets; the access policy for the planned `logos` bucket will determine whether logo URLs are guessable.
+
+`web/lib/supabase/server.ts` and `web/lib/supabase/client.ts` create Supabase clients — neither has any application-level cache layer today. The risk emerges when a caching layer is added for branding lookups.
 
 **Warning signs:**
-- PR descriptions that say "added column to WatermelonDB schema" without a corresponding migration in `migrations.ts`
-- Schema version bumped without a migration step
-- New columns added that have no `isOptional: true` — will crash existing installs
-- Team discusses "just clearing app data in development" — this approach does not work in production
+- Org B's admin portal shows Org A's logo after a deploy
+- Clearing browser cache resolves the wrong-logo issue temporarily (CDN cache hit)
+- Two different subdomains show the same logo in the same browser session
+- A logo URL from one org can be loaded by a user of a different org by substituting a UUID in the URL
 
 **Prevention strategy:**
-1. Before multi-vertical development begins, write a single planned migration (version 4) that adds ALL vertical-related columns to `treatments` in one shot: `vertical_id TEXT optional`, `patient_type TEXT optional`, `booking_id TEXT optional`. Adding them in one migration is less risky than spreading them across multiple versions.
-2. Every new WatermelonDB column must be `isOptional: true` unless it has a safe default value. Do not add required columns to existing tables in migrations — they will crash existing rows.
-3. Use a JSONB-style escape hatch: add `extra_fields TEXT optional` (JSON string) to `treatments` for vertical-specific one-off fields that don't justify a schema column (e.g., `concussion_hia_conducted`, `motorsport_cmo_notified`). This mirrors the `booking_briefs.extra_fields JSONB` pattern already in the Supabase schema.
-4. Test migrations on a device that has existing data from version 3 before releasing to production.
+1. Branding lookups must include the org slug or org UUID as a cache key component at every layer: React `cache()`, Vercel ISR, and CDN. Never cache branding on path alone.
+2. For Vercel hosting: add the `Vary: Host` header to all subdomain responses, or use `next.config.js` headers configuration to include the host in the cache key for ISR pages.
+3. For Supabase Storage: create logo buckets with **authenticated read** policies (not public), and generate short-lived signed URLs when rendering the branding. This prevents logo URL guessing even if the UUID is exposed in the page source.
+4. Add an integration test (or smoke test in CI) that: loads Org A's subdomain, asserts Org A's logo is shown, loads Org B's subdomain in the same test runner, asserts Org B's logo is shown and Org A's logo is absent.
+5. Do not use Vercel's CDN for org-specific branded pages without explicit cache key configuration. Either serve branded pages with `Cache-Control: private, no-store` (safe but slower) or configure Vercel's cache key to include the hostname.
 
 **Phase to address:**
-Start of multi-vertical development sprint. Must be planned as a single coordinated migration, not accumulated ad-hoc.
+Branding implementation phase — the cache key strategy must be decided before any branding fetch is written, not retrofitted after.
 
 ---
 
-### Pitfall 4: Booking Vertical vs. Org Vertical Mismatch in Treatment Form
+### Pitfall 4: Subscription Tier Not Authoritative — Feature Gating Can Be Bypassed
+
+**Severity:** CRITICAL
 
 **What goes wrong:**
-The system supports per-booking vertical overrides: `bookings.event_vertical` was added in migration
-123. An org might be primarily `construction` but book a one-off `motorsport` event. When a medic
-opens a treatment form during that motorsport booking, they should see motorsport mechanism presets,
-motorsport outcome labels, and motorsport RIDDOR/compliance guidance — not construction defaults.
+Feature gating based on subscription tier is only as strong as the data source it reads from. The common mistake is: the front-end reads the org's tier from a database column (e.g., `organizations.subscription_tier`) and shows or hides UI elements based on it. This column is set by a webhook handler when Stripe confirms payment. If:
 
-Currently (`app/treatment/new.tsx` lines 93–113), `fetchOrgVertical()` reads only from
-`org_settings.industry_verticals[0]`. It has no awareness of the current booking's `event_vertical`.
-A medic at a motorsport booking booked by a construction org will see "RIDDOR-flagging" guidance,
-"Worker Information" section heading (mitigated by `getPatientLabel()` which falls back to vertical),
-and construction-specific mechanism presets — all wrong.
+- The webhook is delayed or missed, the column is stale. Stripe retries webhooks for up to 3 days — an org that cancelled yesterday may still show as active.
+- The column is set but the UI reads it from a client-side context (React state, local storage) that was populated at page load and is now stale after a mid-session tier change.
+- The API route that serves gated data checks the column directly with a Supabase query, but the RLS policies do not enforce the subscription tier at the database level. A developer who adds a new API route may forget to check the tier, leaving a gap.
+
+The result is a tier bypass: an org on the Starter plan accesses Growth-plan features because the UI gate was not present on a new route, or because the webhook was missed, or because the column was last written by a stale handler.
+
+In this codebase's context: the platform admin manually activates orgs after Stripe Checkout. This "hybrid onboarding" means there is a deliberate human step before full activation. If the feature gate reads only Stripe's subscription status (ignoring the manual activation flag), an org that paid but was not manually activated gets full access. If it reads only the manual activation flag (ignoring Stripe's subscription status), an org whose subscription lapsed still gets access.
 
 **Evidence in this codebase:**
-`app/treatment/new.tsx` line 101–108: fetches `org_settings.industry_verticals` and uses index `[0]`
-as `orgVertical`. No code reads `bookings.event_vertical`. The booking context (which booking the
-medic is currently working on) is not passed into the new treatment screen at all. The WatermelonDB
-treatments table has no `booking_id` column, so there is no way to look up the booking from the
-treatment record.
-
-`web/lib/booking/vertical-requirements.ts` defines `BookingVerticalId` type and per-vertical
-requirements, but the mobile treatment form does not consume this.
+`web/lib/supabase/middleware.ts` currently checks `user.app_metadata?.org_id` but does not check subscription tier or activation status. The middleware is the natural place to enforce tier gating at the routing level — this does not exist yet. `org_settings` (migration 118) exists but does not have a `subscription_tier` or `is_active` column yet. Both will be added in the new milestone, making the design decision critical.
 
 **Warning signs:**
-- Medic at a motorsport event sees "Worker Information" heading and RIDDOR warning banner
-- Treatment records from motorsport bookings appear in the RIDDOR incidents queue when they should not
-- Mechanism presets show construction-specific options (confined space, plant machinery) at a race circuit
-- Medic feedback: "The app doesn't know what kind of event I'm at"
+- An org on Starter tier can access a Growth-only page by typing the URL directly
+- A webhook delivery failure means an org's tier is not downgraded after cancellation
+- An org that completed Stripe Checkout but was not manually activated by the platform admin can access the full dashboard
+- A new API route is added for a Growth feature without a tier check, and Starter orgs call it successfully
 
 **Prevention strategy:**
-1. Add `booking_id TEXT optional` to the WatermelonDB treatments schema (part of the version 4 migration above).
-2. When navigating to the new treatment screen, pass the current booking ID as a route param.
-3. In `fetchOrgVertical()`, first check if a `booking_id` is available. If so, fetch that booking's `event_vertical` from Supabase. Fall back to `org_settings.industry_verticals[0]` only if no booking context exists.
-4. Cache the resolved vertical in the treatment record at creation time (the new `vertical_id` column), so it does not need to be re-fetched on every auto-save tick.
+1. The subscription tier must be the intersection of two sources: Stripe's subscription status (confirmed via webhook) AND the platform admin's manual activation flag. Both must be true for full access. Store both separately: `billing_status` (from Stripe: `active`, `past_due`, `canceled`) and `activation_status` (from platform admin: `pending`, `active`, `suspended`).
+2. Enforce tier gating at the middleware level for route-based restrictions (block `/growth-feature/*` for Starter orgs at the Next.js middleware). This prevents URL-guessing bypasses.
+3. Enforce tier gating at the API level for data-based restrictions (a Supabase RLS policy or an API route guard that checks `activation_status = 'active' AND billing_status = 'active'`). This catches cases where the UI gate was missed on a new route.
+4. Webhook handlers must be idempotent: track processed event IDs in a `webhook_events` table and skip duplicates. Stripe retries events for 3 days — processing a `customer.subscription.updated` event twice must not corrupt the `billing_status`.
+5. Do not trust client-side tier state for security decisions. The tier check that controls access must happen server-side on every request, not once at page load.
 
 **Phase to address:**
-Multi-vertical treatment form sprint. Should be done at the same time as Pitfall 1 (vertical-aware RIDDOR detector) since both require `vertical_id` to be stored on the treatment record.
+Stripe Billing integration phase, specifically the webhook handler and tier state design. The data model for `billing_status` + `activation_status` must be settled before any feature gating UI is built.
 
 ---
 
-### Pitfall 5: F2508 PDF Generator Will Trigger for Non-RIDDOR Verticals
+### Pitfall 5: Existing Orgs Have No Stripe Billing Customer — Migration Path Creates Orphan State
+
+**Severity:** CRITICAL
 
 **What goes wrong:**
-The `riddor-f2508-generator` Edge Function generates the HSE F2508 RIDDOR form PDF. It is currently
-called from the web dashboard's RIDDOR incidents page. Once non-RIDDOR verticals exist, that page
-will show incidents from festivals, motorsport, and sporting events — but those incidents should
-not produce an F2508 (which is specifically the HSE RIDDOR reporting form). Generating an F2508 for
-a festival-goer's injury would be factually incorrect and could confuse a client who forwards it
-to HSE.
+When Stripe Billing is added to an existing system, every existing org needs a Stripe Billing Customer record — but they do not have one yet. If the code path that serves existing org users assumes a `billing_stripe_customer_id` is always present (because new orgs will create it during Stripe Checkout), existing org users will hit null reference errors or ungated access.
 
-There is also the reverse problem: if the PDF generator is locked only to RIDDOR incidents and the
-festivals/motorsport incidents page reuses the same `/riddor` route (which it does — the RIDDOR
-page adapts its heading based on vertical but does not change its URL), a medic trying to generate
-a PDF for a festival incident will find the button is absent or generates the wrong form.
+Two failure modes exist:
+
+1. **Hard failure:** The billing service throws when `billing_stripe_customer_id IS NULL`, breaking the dashboard for existing orgs. These are paying customers who suddenly cannot use the product after a deploy.
+2. **Silent bypass:** The feature gate treats `NULL billing_stripe_customer_id` as "not billing customer yet — give full access as a grace period." This is typically what developers do to avoid hard failures, but it means all existing orgs get all features indefinitely — the subscription model has no effect on them.
+
+The existing codebase has multiple orgs already in the `organizations` table with no billing columns. A deploy that adds feature gating must handle these orgs explicitly.
 
 **Evidence in this codebase:**
-`web/app/(dashboard)/riddor/page.tsx` line 28–29 reads `compliance = getVerticalCompliance(primaryVertical)`
-and conditionally shows a RIDDOR disclaimer for non-RIDDOR verticals. But the page URL is `/riddor`
-and the "Export PDF" button (`exportRIDDORIncidentsPDF`) presumably generates F2508 format
-regardless of the vertical's compliance framework.
-
-`supabase/functions/riddor-f2508-generator/index.ts` fetches the incident and calls
-`mapTreatmentToF2508()` with no vertical check. The function is named `riddor-f2508-generator`
-and outputs specifically the HSE F2508 format.
+`supabase/migrations/00001_organizations.sql` creates `organizations` with `id`, `name`, `created_at`, `updated_at` — no billing fields. There are already live orgs (backfill seeds in migrations like 118 show `FROM organizations ON CONFLICT DO NOTHING`). These orgs will exist without billing data when the new columns land.
 
 **Warning signs:**
-- PDF download button appears on the incidents page for a Festivals org and generates an HSE F2508 document
-- Festival org's incident PDF has fields like "Name and address of the organisation where the accident happened" formatted as HSE RIDDOR report
-- Medic reports: "The PDF download button produces a form that says 'Report to HSE' — that's not what we need"
+- A deploy adding billing columns causes 500 errors on existing org dashboards
+- Support request from existing client: "I can't log in since the update"
+- All existing orgs silently get Enterprise-tier access because the gate returns `true` on `NULL`
+- The first billing webhook arrives for a new org but the handler cannot find the existing org by `billing_stripe_customer_id` because the column was NULL before Checkout
 
 **Prevention strategy:**
-1. Add a vertical check to the PDF generation trigger on the incidents page: if `compliance.primaryFramework !== 'RIDDOR'`, call a different PDF generator (event incident report format) or disable the PDF button with a tooltip explaining the correct reporting form for that vertical.
-2. Create a separate `generate-event-incident-pdf` Edge Function for non-RIDDOR verticals, producing a generic event incident report PDF rather than HSE F2508.
-3. The F2508 generator should validate on entry that the incident's org vertical is RIDDOR-applicable; if not, return a 400 error with a clear message rather than generating an incorrect form.
-4. Rename `/riddor` route or use a dynamic segment (`/incidents`) with vertical-aware heading — already partially done via `compliance.incidentPageLabel` — but ensure the PDF logic is also vertical-aware.
+1. When adding billing columns to `organizations`, always use `DEFAULT NULL` and treat NULL as "legacy org — apply a defined tier" explicitly. Do not leave the NULL interpretation ambiguous. Document the intended behaviour: `NULL billing_stripe_customer_id` → assigned to `legacy` tier with defined access level.
+2. Write a backfill script (not a migration — migrations must not make external API calls) that runs as a one-time post-deploy job: for each existing org, call `stripe.customers.create()` with the org's name and admin email, then store the returned Customer ID in `billing_stripe_customer_id`. This can be done lazily (create the Customer on the org's first request if NULL) or eagerly (pre-create all).
+3. The "lazy creation" pattern: in the billing service, if `billing_stripe_customer_id IS NULL`, create the Stripe Customer on the fly and update the org record before continuing. This eliminates hard failures at the cost of a slightly slower first request.
+4. Decide the legacy tier before launch and communicate it to existing clients. Do not leave it implicit.
 
 **Phase to address:**
-PDF/reporting sprint for new verticals. The existing construction workflow must not regress. New verticals need appropriate report formats rather than repurposed F2508 forms.
+Stripe Billing integration phase — the migration and backfill strategy must be defined before the billing columns are added to production.
 
 ---
 
-## Moderate Pitfalls
+## High Pitfalls
 
-Mistakes that create technical debt, user confusion, or compliance gaps without immediate regulatory liability.
+Mistakes that degrade UX noticeably, create billing edge cases, or produce support burden.
 
 ---
 
-### Pitfall 6: Configuration Drift Across Vertical Definition Files
+### Pitfall 6: Invoice PDF and Email Branding Is Org-Agnostic — Will Show SiteMedic Branding for White-Label Clients
+
+**Severity:** HIGH
 
 **What goes wrong:**
-Vertical configuration is currently split across multiple TypeScript files:
+The existing invoice PDF generator (`web/lib/invoices/pdf-generator.ts`) hardcodes SiteMedic bank details, payment terms text, and uses the `Helvetica` font with no logo. The email client (`web/lib/email/resend.ts`) uses a single global `RESEND_API_KEY`. When white-label is active, org clients expect to receive invoices and emails branded with their medic staffing business identity — not SiteMedic's identity.
 
-- `services/taxonomy/vertical-compliance.ts` — RIDDOR applicability, framework labels (mobile + web)
-- `services/taxonomy/certification-types.ts` — `VERTICAL_CERT_TYPES` record (mobile)
-- `services/taxonomy/vertical-outcome-labels.ts` — outcome label overrides (mobile)
-- `services/taxonomy/mechanism-presets.ts` — mechanism chips per vertical (mobile)
-- `web/lib/booking/vertical-requirements.ts` — booking-level requirement checkboxes (web)
-- `web/lib/compliance/vertical-compliance.ts` — duplicate of mobile taxonomy (web)
+Specifically, the `InvoiceDocument` component renders:
+- No logo (line 47: `<Text style={invoiceStyles.title}>INVOICE</Text>` — hardcoded text, no image)
+- Hardcoded footer: `Bank details: Sort Code 12-34-56, Account 12345678` (line 127) — this is placeholder but will be wrong for white-label orgs that have their own bank details
+- No primary colour — all grey/neutral
 
-Each file uses a string key (`'motorsport'`, `'festivals'`, etc.) with no shared type enforcement.
-As new verticals are added, a developer updating one file will miss another. A new vertical added
-to `VERTICAL_CERT_TYPES` but not to `VERTICAL_REQUIREMENTS` gets generic requirements. A vertical
-added to `OUTCOME_LABEL_OVERRIDES` but not to `getPatientLabel()` shows "Patient" instead of the
-correct noun. These gaps are invisible until a medic from that vertical notices wrong terminology
-or missing configuration.
+For email, the `from` address is set per email send call. If the `from` is `noreply@sitemedic.com`, a white-label org's client will see "SiteMedic" as the sender — breaking the white-label illusion.
+
+The risk compounds in server-side generation: `generateInvoicePDF()` is called asynchronously on a server. If there is any module-level caching of the PDF template (e.g., a singleton component or a cached style object), one org's logo URL could be rendered in another org's PDF if the server processes two concurrent PDF generation requests.
 
 **Evidence in this codebase:**
-`services/taxonomy/vertical-compliance.ts` defines 10 verticals. `web/lib/compliance/vertical-compliance.ts`
-is a duplicate file with identical content (evidenced by the same function names and structure).
-`services/taxonomy/vertical-outcome-labels.ts` defines `TreatmentVerticalId` imported from
-`mechanism-presets.ts`, but the union type there and the string keys in `vertical-compliance.ts`
-are not enforced against each other — a typo in one will not cause a compile error in the other.
+`web/lib/invoices/pdf-generator.ts` lines 125–128: footer hardcodes payment terms and bank details. Line 47: title is hardcoded text. Lines 27–40: `invoiceStyles` is a module-level constant created once — styles are shared across all PDF renders (no org-specific colour injection).
+
+`web/lib/email/resend.ts`: Single global `resend` client. Email `from` address is not shown in this file — it will be set in the individual send functions, and those must be updated per-org for white-label.
 
 **Warning signs:**
-- A new vertical shows generic "Patient" label instead of the correct noun
-- Mechanism presets for a new vertical are the construction defaults
-- Cert types for a new vertical show the full 30-item list (no prioritisation) because `VERTICAL_CERT_TYPES` record was not updated
-- The two `vertical-compliance.ts` files (mobile vs. web) diverge silently when one is updated
+- A white-label client receives an invoice PDF with the footer saying "SiteMedic Bank Details" or with placeholder bank info
+- The `from` address on booking confirmation emails reads `noreply@sitemedic.com` for an org that expects `noreply@acmemedicalsupport.com`
+- Two concurrent PDF generation requests: one org's logo appears in the other org's PDF (if logo is set as a module-level variable)
+- Client complaint: "Our clients can see this is SiteMedic software — we need our own branding"
 
 **Prevention strategy:**
-1. Create a single canonical `VERTICAL_IDS` constant (e.g., `as const` tuple) and derive all per-vertical records from it using TypeScript's `Record<VerticalId, ...>` — this forces exhaustive coverage: adding a new vertical to `VERTICAL_IDS` immediately breaks compilation anywhere the record is not updated.
-2. Write a simple unit test that imports all vertical config files and asserts that every vertical ID present in `vertical-compliance.ts` exists in `VERTICAL_CERT_TYPES`, `OUTCOME_LABEL_OVERRIDES`, and `getPatientLabel()` switch. This test fails fast when a new vertical is added without updating one config file.
-3. Consolidate the duplicate `web/lib/compliance/vertical-compliance.ts` into a single shared package or import from the mobile taxonomy. Two copies of the same data will drift.
-4. Document "the vertical checklist" — a list of all files that must be updated when adding a new vertical — and add it to the PR template.
+1. `InvoiceDocument` must accept a `branding` prop: `{ logoUrl: string | null, primaryColour: string, orgName: string, bankDetails: string, paymentTermsText: string }`. All current hardcoded values become props. Fetch branding from the org's settings before calling `generateInvoicePDF()`.
+2. `invoiceStyles` as a module-level constant is safe only because it has no org-specific values today. Once primary colour is injected, use `StyleSheet.create()` inside a function that takes `primaryColour` as a parameter — do not share styles across renders.
+3. For email `from` addresses, create a per-org sending configuration: `{ from: 'noreply@{orgDomain}', replyTo: orgAdminEmail }`. This requires the org to configure a verified sending domain in Resend. Add this to the onboarding checklist for white-label orgs. For orgs that have not configured a sending domain, fall back to a SiteMedic-branded `from` with a transparent disclaimer.
+4. Logo images in PDFs require the image to be fetched at render time. Use signed URLs (short-lived) from Supabase Storage. Do not cache the signed URL across requests — generate a fresh one per PDF.
 
 **Phase to address:**
-Before the second vertical (Film/TV) launches. The pattern should be established once, so all subsequent verticals follow it.
+Branding implementation phase. The `InvoiceDocument` signature must be updated before any org uses the white-label tier. A single invoice with wrong branding sent to an end client is a trust incident.
 
 ---
 
-### Pitfall 7: Terminology Bleed — "Worker" and "Site" Survive in Screens Not Yet Updated
+### Pitfall 7: Feature Gating UI Shows Inconsistent States — Gated UI Without Gated API
+
+**Severity:** HIGH
 
 **What goes wrong:**
-The `getPatientLabel()` function correctly returns vertical-specific nouns ("Attendee", "Driver / Competitor",
-"Crew member"). The treatment form (`app/treatment/new.tsx`) correctly uses it for section heading 1.
-But the treatment _detail_ screen (`app/treatment/[id].tsx`) hardcodes "Worker Information" as the
-section heading. The treatments list (`app/(tabs)/treatments.tsx`) stores and displays `workerName`
-with no vertical substitution. The validation alert (`app/treatment/new.tsx` line 315) says
-"Please select a worker" regardless of vertical.
+The most common feature gating mistake: the UI hides a button or tab for lower tiers (e.g., the "Compliance Analytics" tab is hidden for Starter), but the underlying API route (`/api/compliance/analytics`) has no tier check. A Starter-tier user who knows the API URL (from browser devtools, from a previous plan, or from a colleague on a higher plan) can call the endpoint directly and receive the data.
 
-For Film/TV, Festival, and Motorsport medics, every completed treatment detail view will show
-"Worker Information" — which is factually incorrect and potentially confusing (a festival-goer is
-not a worker, a race driver is not a worker). If a legal review of records is triggered, the
-mislabelling could complicate documentation.
+The reverse is equally harmful: the UI shows a feature as available (e.g., a nav item is not gated), but the underlying API returns a 403. The user clicks the nav item, sees an error, and reports a bug — when actually it is a gating inconsistency, not a bug.
 
-The tab bar also shows "Workers" and "Worker Registry" as the tab label and header title
-(`app/(tabs)/_layout.tsx` lines 96–98). A Festivals org has no concept of a "Worker Registry" —
-they would expect "Patient Register" or "Attendee Register".
+In the SiteMedic context, this is especially relevant for:
+- Compliance trend charts (analytics)
+- RIDDOR submission tracking (regulatory feature)
+- Territory metrics and auto-assignment (operational feature)
+- Export/PDF generation endpoints
+
+These features all have existing API routes and pages. When subscription tiers are introduced, each must be gated both at the UI layer AND the API layer consistently.
 
 **Evidence in this codebase:**
-`app/treatment/[id].tsx` line 233: `<Text style={styles.sectionTitle}>Worker Information</Text>` — hardcoded, no vertical check.
-`app/(tabs)/treatments.tsx` line 63: `let workerName = 'Unknown Worker';` — hardcoded fallback string.
-`app/(tabs)/treatments.tsx` line 224: `<Text style={styles.workerName}>{item.workerName}</Text>` — displayed directly.
-`app/(tabs)/_layout.tsx` lines 96–98: tab title and header hardcoded as "Workers" / "Worker Registry".
-`app/treatment/new.tsx` line 315: `Alert.alert('Missing Information', 'Please select a worker');`
-`app/worker/new.tsx` line 273: title hardcoded as "Add Worker - Site Induction".
+The queries in `web/lib/queries/analytics/compliance-history.ts`, `web/lib/queries/admin/analytics.ts`, `web/lib/territory/metrics.ts` etc. are called from Server Components or API routes with no tier check today — because tiers don't exist yet. When tiers are added, each query file becomes a potential ungated access point if only the UI is updated.
 
 **Warning signs:**
-- Film/TV or Festivals org reports: "The app calls everyone 'Workers' — my clients notice this"
-- Treatment records for festival attendees display "Worker Information" header in detail view
-- The tab bar shows "Workers" to an org whose patients are race competitors
-- Support request: "We're a motorsport company, why does the app say 'Site Induction'?"
+- A Starter-tier org calls `fetch('/api/analytics/compliance-history')` in the browser console and gets data
+- An org upgrades their plan, the UI updates, but an API call that was previously allowed continues returning 200 rather than switching to the new tier's data set
+- Two different team members implement gating for the same feature — one adds a UI gate, the other adds an API gate — and their tier name strings do not match (e.g., `'growth'` vs `'Growth'` capitalisation)
 
 **Prevention strategy:**
-1. Extend `getPatientLabel()` to return a plural form and an "registry" noun: `{ singular: 'Attendee', plural: 'Attendees', registryLabel: 'Attendee Register', inductionLabel: 'Pre-Event Registration' }`.
-2. Thread this through `app/treatment/[id].tsx`, `app/(tabs)/treatments.tsx` (rename `workerName` field to `patientName` in the local interface), and the validation alert messages.
-3. The tab navigator (`_layout.tsx`) should read the org vertical (cached in auth context or async storage) to set tab labels. If this is too complex for now, use a generic term ("Patients" / "Patient Register") that is accurate for all verticals instead of the construction-specific "Workers" / "Worker Registry".
-4. Run a grep for hardcoded "Worker", "worker", "Site Induction", "worker_id" strings in UI-facing positions and document a list. Address them as a named subtask within the terminology/vertical milestone.
+1. Create a single source of truth for tier definitions: a `SUBSCRIPTION_TIERS` constant (TypeScript `as const`) that names features and which tiers include them. Both UI gates and API gates import from this constant — no inline string comparison.
+2. Write a helper `requireTier(orgId: string, requiredTier: SubscriptionTier): Promise<void>` that API routes call at the top of their handler. This throws a 403 if the org does not have the required tier. Every protected API route calls this before touching data.
+3. Create a UI wrapper component `<TierGate tier="growth">` that wraps gated UI elements. The component reads the tier from a server-side context (not client-side state) and renders either the children or an upgrade prompt.
+4. Before launch, run a checklist: for every feature listed in the Starter vs. Growth vs. Enterprise matrix, verify there is both a UI gate AND an API gate test.
 
 **Phase to address:**
-During each vertical's launch sprint. The Film/TV vertical should not ship with "Worker Registry" visible to Film production companies. The tab-level labels can be addressed in a single cross-cutting PR before any non-construction vertical launches.
+Feature gating phase. Must be done in one coordinated pass — adding UI gates without API gates in one PR, then API gates in a follow-up PR, creates a window where gating is inconsistent.
 
 ---
 
-### Pitfall 8: Festival Triage Outcomes Use Wrong Category System
+### Pitfall 8: Stripe Checkout Redirect URL Is Environment-Specific — Breaks in Review Apps and Staging
+
+**Severity:** HIGH
 
 **What goes wrong:**
-The standard `OUTCOME_CATEGORIES` taxonomy (`services/taxonomy/outcome-categories.ts`) uses
-work-focused outcomes: "Returned to work — same duties", "Sent home", "Referred to GP". These
-categories reflect the RIDDOR/worker mindset. The Purple Guide framework used at festivals
-expects outcomes to be recorded using the TST (Triage Sieve Tool) priority system:
-P1 (Immediate), P2 (Urgent), P3 (Delayed), P4 (Expectant / Dead).
+Stripe Checkout requires a `success_url` and `cancel_url`. When building the subscription flow, developers typically hardcode or environment-variable these URLs as `https://app.sitemedic.com/billing/success`. This works in production but fails in:
 
-Even after the outcome label overrides in `vertical-outcome-labels.ts` (which maps
-"returned-to-work-same-duties" to "Returned to event / crowd" for festivals), the underlying
-category IDs stored in the database remain work-outcome IDs. A Purple Guide-based festival audit
-or a mass casualty debrief that asks "how many P1 patients did you treat?" cannot be answered
-from the data, because the platform captured "ambulance-called" and "hospitalized" instead of
-P1/P2/P3/P4.
+- **Review apps / preview deployments**: The URL is `https://sitemedic-pr-123.vercel.app/billing/success` — the Stripe Checkout session returns to the wrong URL, and the platform admin cannot test the activation flow
+- **Subdomain contexts**: If the Stripe Checkout is initiated from `acmecorp.sitemedic.com/billing`, the redirect should return to `acmecorp.sitemedic.com/billing/success` — not to the generic app URL
 
-This is not just a terminology issue — it is a data structure mismatch between the platform's
-data model and the regulatory reporting framework for festivals.
+A related problem: after Stripe Checkout completes, the `checkout.session.completed` webhook fires. The webhook handler creates the Stripe Customer and subscription, then sets the org's `billing_status`. But the `success_url` redirect happens before the webhook is processed. If the success page immediately checks `billing_status`, it may show "Payment failed" because the webhook hasn't fired yet. This is a race condition — the redirect arrives faster than the webhook.
 
 **Evidence in this codebase:**
-`services/taxonomy/outcome-categories.ts` defines 7 outcome IDs, all work-outcome focused.
-`services/taxonomy/vertical-outcome-labels.ts` remaps display labels but preserves the same 7 IDs.
-No `triage_priority` field exists on the treatment record. The festivals compliance config
-(`services/taxonomy/vertical-compliance.ts`) names `purple_guide` as the primary framework and
-references an "Event Incident Log" but no Purple Guide-specific data fields exist.
+No Stripe Billing Checkout flow exists yet. When it is built, the `success_url` pattern will be new code. The environment-specific URL problem is a write-time pitfall, not a refactor pitfall.
 
 **Warning signs:**
-- Festival org asks: "Can we run a P1/P2/P3 breakdown for the event medical plan?" — the answer from existing data is no
-- Purple Guide post-event report template asks for patient priority categories and the data does not exist
-- Local authority or event safety officer reviews the incident report and asks about triage priorities
-- Festival medics report: "We're triaging using TST but entering a different outcome in the app — they don't match"
+- PR review for the Checkout flow shows `success_url: process.env.NEXT_PUBLIC_APP_URL + '/billing/success'` — the env var is not set in review app environments
+- QA tests the billing flow in staging and the Stripe redirect returns to a 404
+- The success page shows an error for a few seconds after returning from Stripe before the webhook catches up
 
 **Prevention strategy:**
-1. Add an optional `triage_priority TEXT` field to the WatermelonDB treatments table (part of the version 4 migration). Values: `P1`, `P2`, `P3`, `P4`, or null for non-triage verticals.
-2. For the `festivals` vertical, show a triage priority selector as an additional step in the treatment form after injury details — it does not replace outcome category, but supplements it.
-3. Include `triage_priority` in the sync payload so it is stored in Supabase and available for event reports.
-4. Consult the Purple Guide (Events Industry Forum, current edition) and verify the exact triage terminology required for local authority licensing submissions before finalising the data model.
+1. Build the `success_url` dynamically from the current request's origin: `const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL`. This handles review apps, staging, and production correctly.
+2. For subdomain contexts, parse the current hostname and build the subdomain-aware return URL.
+3. On the success page, do not check `billing_status` immediately. Instead, poll for up to 10 seconds (with exponential backoff) until the webhook-updated status appears, then show the confirmation. Or use Stripe's synchronous confirmation approach: check the Stripe Checkout Session status directly via the API using the `session_id` query param that Stripe appends to the `success_url`.
+4. Never put Stripe Checkout session data (especially plan tier) in the `success_url` query params — that data can be tampered with. The webhook is the authoritative source.
 
 **Phase to address:**
-Festivals vertical MVP sprint. This is a data model decision that cannot be retrofitted once festival orgs have live records.
+Stripe Checkout implementation phase. The dynamic URL pattern must be established from the first implementation.
 
 ---
 
-### Pitfall 9: Offline Vertical Config Requires a Network Round-Trip on Every Treatment
+### Pitfall 9: Webhook Events Arrive Out of Order — Subscription State Machine Can Go Backwards
+
+**Severity:** HIGH
 
 **What goes wrong:**
-`fetchOrgVertical()` in `app/treatment/new.tsx` makes a Supabase network call on every mount of
-the new treatment screen. On a construction site, at a remote film location, or at an outdoor
-festival with poor mobile signal, this request will timeout or fail. The code gracefully falls
-back to `null` (which falls back to `general` defaults via the vertical taxonomy functions), but
-the "fall back to general" default is construction-flavoured in most of the taxonomy files. A
-Festivals medic who opens the treatment form offline sees construction mechanism presets.
+Stripe webhooks do not guarantee delivery order. During a subscription lifecycle, the following events may arrive in any order:
 
-The fetch is not memoised or cached — it happens on every mount of the screen, not once per
-session. In a busy shift where a medic logs 20 treatments, this is 20 network round-trips to
-fetch the same vertical config that does not change during the shift.
+- `checkout.session.completed` (org paid)
+- `customer.subscription.created` (subscription object created)
+- `invoice.payment_succeeded` (first invoice paid)
+- `customer.subscription.updated` (tier change)
+- `customer.subscription.deleted` (cancellation)
+
+If a `customer.subscription.deleted` event is processed before `customer.subscription.created` (due to Stripe's retry logic or delivery timing), the handler sets `billing_status = 'canceled'`, then the delayed `created` event sets it to `'active'` — the org is now marked active after they cancelled.
+
+In the SiteMedic hybrid onboarding context, this is especially dangerous: the platform admin sees `billing_status = 'active'` and manually activates the org — but the org actually cancelled. The platform admin has no way to know the state machine went backwards.
 
 **Evidence in this codebase:**
-`app/treatment/new.tsx` lines 83–113: `useEffect(() => { fetchOrgVertical(); }, [])` — no cache,
-no async-storage lookup before fetching. The `orgVertical` state is local to the component and
-resets every time the screen is mounted.
-
-`services/taxonomy/mechanism-presets.ts` `getMechanismPresets()` falls back to the `general`
-preset array when `verticalId` is null — and the `general` array is identical to construction
-presets in most implementations.
+No webhook handler exists yet for Billing. The risk is in how the first handler is written. Stripe's own documentation warns that events should be processed based on the object's `created` timestamp (within the event's `data.object`), not on the order events arrive.
 
 **Warning signs:**
-- Medic at a festival with poor signal reports: "The mechanism options look wrong — they're for a building site"
-- Performance profiling shows 20+ identical Supabase calls to `org_settings` during a shift
-- Treatment form shows construction presets when offline, even for a non-construction org
+- An org that cancelled gets reactivated in the platform
+- The `billing_status` column flips from `'canceled'` to `'active'` unexpectedly
+- Webhook handler logs show `customer.subscription.created` processed after `customer.subscription.deleted` for the same subscription ID
 
 **Prevention strategy:**
-1. Cache the resolved vertical in AsyncStorage (or the SyncContext) after first successful fetch. Key: `vertical_cache_${orgId}`. Invalidate when the medic next syncs successfully. This means offline treatments use the last-known vertical.
-2. Alternatively, include the org's `industry_verticals` in the auth token's `app_metadata` (already done for `org_id` — extend it to include `primary_vertical`). This makes the vertical available instantly without any network call.
-3. If neither approach above is taken before launch, change the fallback from `general` to a genuinely neutral default (use "Patient" as patient label, omit construction-specific mechanism presets) so wrong-vertical fallback is less jarring than current.
+1. Use an idempotency table: `webhook_events (stripe_event_id TEXT PRIMARY KEY, processed_at TIMESTAMPTZ)`. Before processing any event, insert the `stripe_event_id`. If the insert fails (duplicate), skip processing. This eliminates duplicate event processing.
+2. For subscription state transitions, compare the event's `data.object.created` timestamp against the current `billing_status_updated_at` in your database. Only apply the transition if the event's timestamp is newer than the last recorded transition. This makes the state machine safe against out-of-order delivery.
+3. Handle each specific event type explicitly with a defined state transition table (e.g., `created` → `active`, `deleted` → `canceled`). Do not write a generic "update from Stripe object" handler that blindly overwrites local state — it has no protection against stale events.
+4. Log all Stripe webhook events with the event ID, type, and processing outcome to a `webhook_events` table regardless of processing result. This gives the platform admin an audit trail when diagnosing incorrect billing states.
 
 **Phase to address:**
-Offline-first hardening sprint. Address before the first non-construction vertical launches to production.
+Stripe Billing webhook handler phase. The idempotency table and state machine logic must be in the first version of the handler — not added later when the first race condition is discovered in production.
 
 ---
 
-### Pitfall 10: Cert Expiry Checker Sends Alerts Regardless of Vertical Relevance
+## Medium Pitfalls
+
+Mistakes that create annoying but recoverable problems.
+
+---
+
+### Pitfall 10: Subdomain DNS and Vercel Wildcard Domain Configuration Ordering
+
+**Severity:** MEDIUM
 
 **What goes wrong:**
-The `certification-expiry-checker` Edge Function (`supabase/functions/certification-expiry-checker/index.ts`)
-emails medics about expiring certifications from a flat list across all cert types. A medic who
-works exclusively in the Motorsport vertical will receive reminder emails about their expiring CSCS
-card — a construction site access card that is irrelevant to their work. A Festivals medic with an
-FIA Grade 3 cert that is expiring gets an email that mentions the cert type, but the email template
-may frame it in generic terms that confuse them.
+Vercel wildcard subdomain support requires the `*.sitemedic.com` wildcard DNS record to be added before Vercel can verify the domain. The verification process can take 24–72 hours. If the subdomain routing code is deployed before DNS propagation completes, any test of the feature against production will return DNS errors — and developers will incorrectly conclude the middleware code is wrong and start debugging the wrong thing.
 
-More critically, for verticals with mandatory compliance implications — Motorsport (FIA grade
-required for FIA-graded events), Education (DBS must be current to be on site with children) — the
-expiry email should convey urgency proportional to the regulatory consequence. A lapsed FIA Grade
-means the medic cannot work FIA-governed circuits. A lapsed Enhanced DBS means the medic cannot
-legally be unsupervised with children. The current generic email template does not distinguish these.
+A second ordering problem: Vercel requires the wildcard domain to be added via Nameserver delegation (not A records). If the current DNS is configured with A records (common for existing domains), switching to Nameserver delegation requires a DNS provider change that has a propagation window during which the main `sitemedic.com` domain may be unreachable.
 
 **Evidence in this codebase:**
-`supabase/functions/certification-expiry-checker/index.ts` calls `get_certifications_expiring_in_days`
-RPC and iterates all results without filtering by the medic's vertical(s). `VERTICAL_CERT_TYPES`
-in `services/taxonomy/certification-types.ts` defines which certs are relevant per vertical, but
-this mapping is not used by the expiry checker.
+No Vercel wildcard domain configuration exists yet (the current app uses a single domain). The DNS change is a deployment infrastructure task, not a code task — but it has a long lead time that is easy to forget until the last moment.
 
 **Warning signs:**
-- Motorsport-only medics receiving CSCS expiry warnings
-- Medic ignores expiry emails because "they're always about certs I don't need" — then misses a critical one
-- Education org admin receives notification about a medic's FIA Grade 3 expiry — irrelevant to them
+- The middleware rewrite code is deployed but `acmecorp.sitemedic.com` returns NXDOMAIN
+- The team spends time debugging `middleware.ts` when the actual problem is DNS propagation
+- The main `sitemedic.com` has a DNS downtime window during the Nameserver migration
 
 **Prevention strategy:**
-1. Store each medic's primary vertical(s) on their profile. The expiry checker should filter reminders to certs in `VERTICAL_CERT_TYPES[primaryVertical]` before sending emails.
-2. Add a `regulatory_consequence` field to cert type info (in `CERT_TYPE_INFO`) for certs with mandatory implications: `{ label: 'FIA Grade 3', category: 'motorsport', mandatoryFor: 'FIA-graded circuit events', consequence: 'Cannot work FIA circuits when expired' }`. Use this in email templates to frame urgency correctly.
-3. For DBS and FIA grade certs, send alerts to the org admin at the 30-day stage (not just 14/7/1) with wording that reflects the legal consequence.
+1. Add the wildcard DNS record and Vercel domain configuration at least 72 hours before the first subdomain routing test against production.
+2. Test the middleware subdomain logic using `localhost` subdomain simulation first (e.g., using browser `hosts` file or a local reverse proxy) before touching production DNS.
+3. Plan the Nameserver migration during a low-traffic window. Schedule it before feature development begins, not after the code is ready.
 
 **Phase to address:**
-Certification vertical awareness sprint. Should be done before any non-construction vertical goes live with real medics.
+Infrastructure setup phase — before any subdomain routing code is written.
 
 ---
 
-## Minor Pitfalls
+### Pitfall 11: Per-Org Primary Colour Injected at Runtime Breaks CSS-in-JS Caching
 
-Issues that are irritating but recoverable without rewriting.
-
----
-
-### Pitfall 11: Treatment Reference Number Format Is Construction-Branded
+**Severity:** MEDIUM
 
 **What goes wrong:**
-The treatment reference number generator (`app/treatment/new.tsx` line 153–174) generates
-`SITE-YYYYMMDD-NNN`. "SITE" is construction-specific branding. For a Film/TV org, the reference
-will appear in reports as `SITE-20260301-001` — a production company's clients or insurers may find
-"SITE" confusing or unprofessional when the event is a film shoot, not a construction site.
+Per-org primary colour (`#3B82F6` for Org A, `#DC2626` for Org B) must be applied to buttons, links, and accent elements. The natural implementation is a CSS custom property (`--primary-colour: #3B82F6`) injected into the page at render time by reading the org's branding config.
+
+If Tailwind CSS is used (which this project uses), the colour classes (`bg-blue-500`, `text-red-600`) are statically compiled at build time. An org's dynamic primary colour cannot be expressed as a Tailwind class — it must be a CSS custom property. This means UI components that use `bg-primary` will not pick up the org-specific colour unless they are written to use `var(--primary-colour)` via Tailwind's arbitrary value syntax (`bg-[var(--primary-colour)]`).
+
+The risk: a developer implements the per-org colour by setting a Tailwind class dynamically (e.g., computing `bg-[${org.primaryColour}]`). Tailwind's JIT mode only generates classes for strings present at build time — dynamic class name construction is explicitly unsupported and will result in the class not being generated, and the colour not being applied.
 
 **Evidence in this codebase:**
-`app/treatment/new.tsx` line 171: `` return `SITE-${dateStr}-${sequenceNumber}`; ``
-Hardcoded prefix, not derived from vertical.
+The current `InvoiceDocument` uses inline styles (react-pdf StyleSheet) with no Tailwind dependency, so the PDF is unaffected. The web UI uses Tailwind (the standard in Next.js 15 projects based on the project structure). The risk exists for any new UI component that tries to apply a dynamic colour.
 
 **Warning signs:**
-- Film/TV client asks: "Why do all incident reports say SITE- if we're on a film set?"
-- Insurance paperwork requires a reference format that the "SITE" prefix breaks
+- An org's primary colour is configured as `#DC2626` but buttons still appear blue (the default)
+- Dynamic Tailwind class `bg-[#DC2626]` is computed at runtime but the CSS rule was never generated
+- The primary colour appears correctly in development (Tailwind JIT regenerates) but fails in production builds
 
 **Prevention strategy:**
-Use a vertical-configurable prefix: `construction` → `SITE`, `tv_film` → `PROD`, `motorsport` → `RACE`, `festivals` → `EVT`, others → `MED`. Derive the prefix from `orgVertical` at reference generation time. If vertical is not known yet (offline), use `MED` as a safe neutral prefix.
+1. Use CSS custom properties for all dynamic branding values. In the root layout, render a `<style>` tag that sets `--org-primary: {org.primaryColour};` based on the server-fetched branding.
+2. In Tailwind, reference the custom property using `bg-[color:var(--org-primary)]` or configure a CSS variable in `tailwind.config.js` as `primary: 'var(--org-primary)'`. This approach is build-safe.
+3. Do not construct dynamic Tailwind class names from runtime values. The Tailwind docs explicitly state this does not work.
+4. The `<style>` tag injecting custom properties must be rendered server-side (in the layout Server Component) using the org's branding fetched from the database — not client-side (which would cause a flash of un-branded content on first load).
 
 **Phase to address:**
-During Film/TV vertical sprint. Low effort, high polish value.
+Branding implementation phase. The CSS custom property pattern must be established before the first branded component is built.
 
 ---
 
-### Pitfall 12: Heat Map GPS Data Gap — Treatments Have No Location Field
+### Pitfall 12: Onboarding Flow Ambiguity — Stripe Checkout Completes But Platform Admin Has Not Activated
+
+**Severity:** MEDIUM
 
 **What goes wrong:**
-Near-miss records capture GPS location (`app/safety/near-miss.tsx` captures `latitude` and
-`longitude` on mount). Treatment records do not. The WatermelonDB `treatments` table has no
-`location` column and the treatment form does not request location permission. If a heat map feature
-is planned (showing where on a site or event most injuries occur), treatment GPS data will be absent.
-Near-miss records will show location data; treatment records will not. The resulting heat map will
-appear to show "injuries never happen" when in fact the location was never captured.
+The hybrid onboarding design is: org signs up → Stripe Checkout → platform admin manually activates. Between Stripe Checkout completion and platform admin activation, the org is in a limbo state: they have paid, but they cannot access the platform.
+
+If this limbo state is not explicitly communicated in the UI, the org's admin will:
+1. Complete Stripe Checkout
+2. Return to the success page
+3. Try to log in to their dashboard
+4. See an error or an empty state with no explanation
+
+This generates immediate support requests ("I paid but can't log in") and creates distrust in the product before the org has even started using it.
+
+A second problem: the platform admin has no dedicated queue for "pending activation" orgs. If the notification is just an email, the platform admin may miss it, and the new org waits hours or days for activation — despite having paid.
 
 **Evidence in this codebase:**
-`src/database/schema.ts` — `near_misses` table has `{ name: 'location', type: 'string', isOptional: true }`.
-`treatments` table has no location column. `app/treatment/new.tsx` makes no `expo-location` import.
-`app/safety/near-miss.tsx` imports `expo-location` and captures coordinates at form open.
+No onboarding flow or platform admin activation queue exists yet. The `activation_status` concept (mentioned in Pitfall 4) is new to the milestone. Migration 118 (`org_settings`) and the platform admin role (migration 100) exist — the platform admin infrastructure is in place, but no activation workflow is built.
 
 **Warning signs:**
-- Analytics dashboard shows heat map of near-misses but no heat map of treatment locations
-- Business requirement for "location intelligence" across all incident types cannot be met
-- A heat map feature is built that only covers 50% of incident types
+- Support tickets: "I completed payment but can't access the platform"
+- Platform admin email inbox has activation requests with no structured priority
+- New orgs wait more than 24 hours for activation
 
 **Prevention strategy:**
-Add `location TEXT optional` (JSON lat/lng string) to the WatermelonDB treatments table in the version 4 migration. Silently capture GPS at treatment form open (same pattern as near-miss). Do not block form completion if location is unavailable — make it background capture. Store in the same format as `near_misses.location`. This is trivial to add now; retrofitting after live records exist means historical data has no location.
+1. The post-Checkout success page must show a clear limbo state message: "Payment received. Your account is being reviewed and you will receive an email within X hours once activated." Set accurate expectations.
+2. When a Checkout session completes, create a `pending_activations` record (or equivalent status on the org) that appears in the platform admin dashboard as an actionable queue item with timestamp, org name, plan tier, and Stripe invoice link.
+3. Send the platform admin a push notification or email immediately on checkout completion — not daily digest.
+4. Define and publish the activation SLA: "Accounts are reviewed and activated within 4 business hours." Put this on the pricing page so prospects know before they pay.
 
 **Phase to address:**
-Version 4 WatermelonDB migration sprint — add it alongside `vertical_id` so both are in one schema bump.
+Hybrid onboarding phase. The limbo state experience must be designed before the Checkout flow is built.
 
 ---
 
-### Pitfall 13: Trend Chart Data Integrity — Compliance Score History Has No Consistent Formula
+### Pitfall 13: Supabase Storage Logo Bucket Requires Its Own RLS Policies
+
+**Severity:** MEDIUM
 
 **What goes wrong:**
-If a compliance score trend chart is added to the dashboard (a common roadmap item for compliance
-SaaS), the score formula must be frozen before data is collected. If the formula changes between
-week 1 and week 8 (e.g., "we added RIDDOR submission rate as a factor"), historical scores become
-incomparable to current scores. The chart appears to show improvement or decline that is actually
-a formula change.
+When org logo files are stored in Supabase Storage, a new storage bucket policy is required. The existing storage buckets (migration 014) have RLS policies for safety reports and other org documents. A new `logos` bucket for white-label branding has different access semantics:
+
+- **Read:** Anyone who accesses that org's subdomain (including unauthenticated visitors to the login page) must be able to see the logo. This means either a public bucket (risky — URLs are guessable) or authenticated reads with signed URLs served from the middleware.
+- **Write:** Only platform admins should be able to upload logos on behalf of orgs. Org admins should be able to upload their own org's logo but not other orgs'.
+
+If a developer adds the `logos` bucket without RLS (the default Supabase Storage behaviour is to use bucket policies), the bucket is either fully public (logos guessable across orgs) or fully private (logo cannot be shown on the login page at all). Neither is correct.
 
 **Evidence in this codebase:**
-No compliance score or trend table exists yet in the migrations reviewed. The `daily_location_trends`
-view referenced in `web/app/admin/analytics/page.tsx` exists for admin analytics, but no per-org
-compliance score history table was found.
+`supabase/migrations/014_storage_buckets.sql` and `015_safety_reports_storage.sql` set up existing buckets with specific RLS. Adding a `logos` bucket requires a corresponding migration with a correctly scoped policy.
 
 **Warning signs:**
-- Compliance score logic is embedded in a dashboard component rather than a database view or Edge Function
-- Score formula is changed mid-month and historical scores are not recalculated
-- Two orgs compare their scores and get different results for identical incident counts because they onboarded at different times
+- The `logos` bucket is created without an explicit RLS policy and defaults to the bucket's public/private setting
+- A logo URL from `acmecorp.sitemedic.com` can be loaded in a browser when the user is not authenticated to any org
+- An org admin uploads a logo successfully but it cannot be displayed on the unauthenticated login page
 
 **Prevention strategy:**
-Before building the compliance trend chart, define the score formula in a database view or Edge Function (single source of truth). Snapshot daily scores into a `org_compliance_scores (org_id, score_date, score, formula_version)` table. Include `formula_version` so historical scores are interpretable after formula updates.
+1. Use Supabase Storage's `getPublicUrl()` vs. `createSignedUrl()` decision matrix:
+   - If logos must appear on unauthenticated pages (subdomain login page): store logos in a public bucket with per-org path scoping (`logos/{org_id}/logo.png`). The UUID in the path is not secret if the org's subdomain is public, so path-scoped public access is acceptable.
+   - If logo URLs must not be guessable: store in private bucket, generate signed URLs in middleware when resolving branding config, cache the signed URL for the duration of the response (not persistently).
+2. Write a migration that creates the `logos` bucket with appropriate RLS before the branding upload UI is built.
+3. Add an RLS policy: write access scoped to `is_platform_admin() OR org_id = auth.jwt() -> org_id`. Read access scoped to the bucket's public policy or authenticated signed URLs.
 
 **Phase to address:**
-Analytics/reporting sprint. Do not build the front-end chart before the score formula and snapshot table are in place.
+Branding schema and storage phase. The bucket policy must exist before the first logo is uploaded.
 
 ---
 
-## Regulatory Compliance Errors (Most Likely to Create Liability)
+## Regulatory and Compliance Considerations
 
-A summary of the regulatory gaps identified, ranked by consequence severity.
-
-| Vertical | Regulatory Requirement | Current Status | Consequence if Missed |
-|----------|----------------------|----------------|----------------------|
-| Motorsport | Mandatory concussion licence suspension notification (Motorsport UK) | Not implemented | Competitor races after concussion; platform has liability |
-| Festivals / Motorsport / Sporting Events | RIDDOR must NOT flag public patient injuries | RIDDOR detector is vertical-blind | False RIDDOR reports to clients; erosion of trust |
-| Festivals | Purple Guide TST triage priority (P1/P2/P3/P4) must be capturable | No triage priority field | Cannot produce Purple Guide-compliant post-event reports for local authority licensing |
-| Education | Enhanced DBS is mandatory to be on-site with children | Cert tracked but expiry alert not urgent-framed | Lapsed DBS medic on-site with children; Ofsted violation |
-| Motorsport | FIA Grade certificate required for graded events | Cert tracked but expiry alert not role-specific | Ungraded medic provides track-side cover at FIA event; FIA violation |
-| Football/Sporting | Two patient types (player vs. spectator) need different form fields | Single treatment form with no patient type selector | Insurance claim uses wrong form; governance report incomplete |
+These pitfalls relate to the UK regulatory context specific to SiteMedic's domain.
 
 ---
 
-## Phase-Specific Warnings
+### Pitfall 14: White-Label Branding Does Not Exempt the Platform from GDPR Controllership
 
-| Phase Topic | Most Likely Pitfall | Mitigation |
-|-------------|--------------------|-----------|
-| WatermelonDB schema migration | Missing columns break existing installs | Plan all new columns as one version 4 migration with all fields optional; test on device with existing v3 data before release |
-| Motorsport vertical MVP | Concussion protocol missing | Mandatory concussion checklist in treatment form before motorsport vertical goes live |
-| Festivals vertical MVP | RIDDOR flags on public patients | Fix vertical-aware RIDDOR detector before festival vertical activates |
-| Festivals vertical MVP | No triage priority capture | Add `triage_priority` field in v4 migration; show selector for festival vertical |
-| Film/TV vertical | Terminology bleed ("Worker Information", "SITE-" prefix) | Cross-cutting terminology PR before Film/TV launch |
-| All new verticals | Config drift (missing entry in one taxonomy file) | Mandatory unit test: all verticals present in all config records |
-| Certification alerts | Irrelevant cert reminders | Filter by vertical before launch |
-| Analytics/heat map | Treatment has no GPS | Add `location` column in v4 migration |
-| Compliance score chart | Formula not frozen | Define formula in DB before building front-end |
+**Severity:** HIGH (for UK compliance)
+
+**What goes wrong:**
+When staffing orgs use SiteMedic under their own brand, the medics and event clients they serve will interact with a system that looks like the staffing org's product. However, the underlying data controller for the health data (treatment records, RIDDOR incidents, patient information) remains SiteMedic unless a formal Data Processing Agreement (DPA) and a revised Privacy Notice are in place.
+
+A white-label client may incorrectly tell their end users that data is processed under the staffing org's privacy policy. If the staffing org's privacy policy does not disclose SiteMedic as a sub-processor, or if SiteMedic's data is not included in the staffing org's Data Protection Officer notifications to the ICO, this is a GDPR compliance gap.
+
+The branding hides SiteMedic's identity from end users. GDPR Article 13 requires data subjects to be informed of the data controller's identity. If end users only see the white-label brand and the privacy policy is the white-label org's own document (not SiteMedic's), SiteMedic's role must still appear somewhere as a sub-processor.
+
+**Evidence in this codebase:**
+`supabase/migrations/00006_gdpr_infrastructure.sql` shows GDPR infrastructure exists (data retention, deletion). The existing privacy policy pages (`/privacy-policy`) are SiteMedic-branded. Under white-label, if the subdomain serves a re-branded UI, users may never see a reference to SiteMedic's privacy policy.
+
+**Warning signs:**
+- A white-label org's end users complain they cannot find information about who processes their health data
+- A staffing org's DPA does not list SiteMedic as a sub-processor
+- ICO enquiry regarding a white-label client's data practices reveals SiteMedic's processing was undisclosed
+
+**Prevention strategy:**
+1. Require all white-label orgs to sign a DPA with SiteMedic before activation. Platform admin cannot activate an org without confirming DPA is signed.
+2. The white-label branding must include a mandatory disclosure footer on the login page: "Powered by SiteMedic — data processed under SiteMedic's Privacy Policy." This footer cannot be hidden or removed by the org admin.
+3. Provide a white-label-specific Privacy Notice template that the staffing org must publish, which discloses SiteMedic as a sub-processor.
+4. Get a UK-qualified data protection solicitor to review the white-label DPA template before the first org is onboarded.
+
+**Phase to address:**
+Legal and compliance review phase — before the first white-label org is onboarded. This is not a code task but it blocks launch.
+
+---
+
+## Phase-Specific Warnings Summary
+
+| Phase Topic | Most Likely Pitfall | Severity | Mitigation |
+|-------------|---------------------|----------|-----------|
+| Stripe Billing architecture | Mixing Connect and Billing webhook handlers | Critical | Separate webhook endpoints from day one; name columns explicitly |
+| Stripe Billing architecture | Existing orgs have no Billing Customer | Critical | Lazy-create Customer on first billing interaction; define legacy tier |
+| Subdomain routing | Auth cookie not scoped per subdomain | Critical | Parse hostname in middleware; no shared cookies across org subdomains |
+| Subdomain routing | CVE-2025-29927 middleware bypass | Critical | Update to Next.js ≥15.2.3; block x-middleware-subrequest at proxy |
+| Branding implementation | Logo/colour cached without org as cache key | Critical | Include hostname in all cache keys; Vary: Host header |
+| Feature gating | UI gate without API gate | High | Single SUBSCRIPTION_TIERS constant; requireTier() helper in all API routes |
+| Feature gating | Webhook delay causes stale tier state | High | Idempotent webhook handler; idempotency table |
+| Stripe Checkout | success_url hardcoded for production | High | Build dynamically from request origin |
+| Stripe webhooks | Out-of-order event delivery corrupts state | High | Timestamp-based state transitions; idempotency table |
+| Invoice/email branding | PDF and email shows SiteMedic brand | High | Pass branding as props; per-org email from address |
+| Onboarding | No pending activation queue | Medium | Pending activation dashboard for platform admin |
+| Branding UI | Dynamic Tailwind class names fail | Medium | CSS custom properties via <style> tag server-side |
+| Storage | Logo bucket without correct RLS | Medium | Write RLS migration before branding upload UI |
+| DNS/infrastructure | Wildcard DNS propagation takes 72h | Medium | Configure wildcard domain 72h before first test |
+| Legal/GDPR | White-label hides SiteMedic sub-processor identity | High | Mandatory DPA; non-removable "Powered by SiteMedic" footer |
 
 ---
 
 ## Sources
 
-**Regulatory sources consulted for this research:**
+**Stripe documentation consulted:**
+- Stripe Connect vs. Billing product line distinctions: https://docs.stripe.com/connect
+- Stripe Billing webhook events and handling: https://docs.stripe.com/billing/subscriptions/webhooks
+- Stripe webhook idempotency and retry behaviour: https://docs.stripe.com/webhooks
+- Stripe Connect webhook routing (platform vs. connected account): https://docs.stripe.com/connect/webhooks
+- Stripe Billing + Connect coexistence (charging SaaS fees to connected accounts): https://docs.stripe.com/connect/integrate-billing-connect
 
-- Motorsport UK General Regulations (2024 edition) — concussion and HIA requirements: https://www.motorsportuk.org/the-sport/regulations/
-- FIA Medical Code — Grade requirements for circuit events: https://www.fia.com/sites/default/files/fia_medical_code.pdf
-- HSE RIDDOR Regulations 2013 — who is covered (workers only, not public): https://www.hse.gov.uk/riddor/who-must-report.htm
-- Events Industry Forum — The Purple Guide (current edition): https://www.thepurpleguide.co.uk
-- Ofsted — Paediatric First Aid requirements in education settings: https://www.gov.uk/government/publications/paediatric-first-aid-in-early-years-settings
-- DBS/Barred List obligations in education: https://www.gov.uk/dbs-check-guidance
+**Next.js and Supabase documentation and community discussions:**
+- CVE-2025-29927 Next.js middleware bypass vulnerability: https://securitylabs.datadoghq.com/articles/nextjs-middleware-auth-bypass/
+- Supabase auth subdomain cookie configuration: https://github.com/orgs/supabase/discussions/5742
+- Supabase subdomain multi-tenancy discussion: https://github.com/vercel/next.js/discussions/84461
+- Next.js subdomain routing on Vercel: https://vercel.com/docs/multi-tenant
+- Supabase SSR cookie options: https://supabase.com/docs/guides/auth/server-side/advanced-guide
 
-**Code files inspected (all findings are grounded in this codebase):**
+**Multi-tenant caching and data isolation:**
+- Cache key tenant isolation: https://quantumbyte.ai/articles/multi-tenant-architecture (cache keys must include tenant context)
+- Multi-tenant views cache not tenant-driven (GitHub issue): https://github.com/tenancy/multi-tenant/issues/522
+- Supabase RLS and public table exposure: https://supabase.com/docs/guides/database/postgres/row-level-security
 
-- `supabase/functions/riddor-detector/index.ts` — no vertical check found
-- `supabase/functions/riddor-detector/detection-rules.ts` — no vertical check found
-- `supabase/functions/riddor-f2508-generator/index.ts` — no vertical check found
-- `supabase/functions/certification-expiry-checker/index.ts` — no vertical filter found
-- `services/taxonomy/vertical-compliance.ts` — RIDDOR applicability correctly defined (not used by detector)
-- `services/taxonomy/certification-types.ts` — `VERTICAL_CERT_TYPES` correctly defined (not used by expiry checker)
-- `services/taxonomy/vertical-outcome-labels.ts` — outcome label overrides correct (TST triage not present)
-- `src/database/schema.ts` — version 3, no vertical_id or location on treatments table
-- `src/database/migrations.ts` — migrations to v3 only
-- `app/treatment/new.tsx` — vertical fetch pattern (network call on every mount, no cache)
-- `app/treatment/[id].tsx` — "Worker Information" heading hardcoded
-- `app/(tabs)/_layout.tsx` — "Workers" / "Worker Registry" tab labels hardcoded
-- `supabase/migrations/123_booking_briefs.sql` — `event_vertical` added to bookings table
-- `supabase/migrations/121_org_industry_verticals.sql` — `industry_verticals` in org_settings
-- `web/app/(dashboard)/riddor/page.tsx` — renders for all verticals including non-RIDDOR
+**Code files inspected in this codebase (all findings grounded in direct inspection):**
+- `web/middleware.ts` — no hostname parsing, no subdomain routing
+- `web/lib/supabase/middleware.ts` — cookie domain not set; pathname-only routing checks
+- `web/lib/stripe/server.ts` — single Stripe instance shared by all operations
+- `web/lib/invoices/pdf-generator.ts` — hardcoded branding, module-level styles
+- `web/lib/email/resend.ts` — single global Resend client
+- `web/lib/organizations/org-resolver.ts` — org_id from JWT app_metadata pattern
+- `supabase/migrations/00001_organizations.sql` — no billing columns
+- `supabase/migrations/118_org_settings.sql` — org_settings exists; no subscription tier
+- `supabase/migrations/115_referral_and_per_medic_rates.sql` — Connect payout fields (separate from Billing)
+- `supabase/migrations/014_storage_buckets.sql` — existing bucket structure
 
 ---
 
-*Pitfalls research for: SiteMedic v2.0 multi-vertical expansion milestone*
-*Researched: 2026-02-17*
-*Confidence: HIGH — all findings grounded in direct code inspection of the shipped codebase*
+*Pitfalls research for: SiteMedic white-label + subscriptions milestone*
+*Researched: 2026-02-18*
+*Confidence: HIGH — all findings grounded in direct code inspection and verified against Stripe, Next.js, and Supabase documentation*
