@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 20: Festivals / Events Vertical complete; Phase 23 next
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 19: Motorsport Vertical 19-03 complete; Phase 19-04 next
 
 ## Current Position
 
-Phase: 20 of 23 (Festivals / Events Vertical) — 20-04 complete; Phase 20 complete
-Plan: 20-01, 20-02, 20-03, 20-04 all complete — Phase 20 complete
-Status: Phase 20 complete — FEST-04 (terminology), FEST-05 (cert types), FEST-06 frontend (EventIncidentReportCard) done
-Last activity: 2026-02-18 — Completed 20-04-PLAN.md: EventIncidentReportCard, festivals terminology, recommended certs on profile
+Phase: 19 of 23 (Motorsport Vertical) — 19-03 complete
+Plan: 19-01, 19-02, 19-03 complete; 19-04, 19-05 remain
+Status: In progress — 19-03 (motorsport-incident-generator PDF) complete
+Last activity: 2026-02-18 — Completed 19-03-PLAN.md: MotorsportIncidentDocument.tsx + mapping + storage bucket (migration 128) + 501 stub replaced
 
-Progress: [██████████] v1.1 complete | [████████░░] v2.0 18/27 plans (Phase 18 + 18.5 + 19-01 + 19-02 + 20-01 + 20-02 + 20-03 + 20-04 + 21 + 22-01 + 22-02 + 22-03 + 22-04 complete)
+Progress: [██████████] v1.1 complete | [████████░░] v2.0 19/27 plans (Phase 18 + 18.5 + 19-01 + 19-02 + 19-03 + 20-01 + 20-02 + 20-03 + 20-04 + 21 + 22-01 + 22-02 + 22-03 + 22-04 complete)
 
 ## Performance Metrics
 
@@ -32,10 +32,10 @@ Progress: [██████████] v1.1 complete | [██████�
 | 18–23 (v2.0) | 8/25 | ~10 min | ~1 min |
 
 **Recent Trend:**
-- Last plan: 20-04 — EventIncidentReportCard + festivals terminology + recommended certs (3 min)
+- Last plan: 19-03 — MotorsportIncidentDocument + mapping + storage bucket + 501 stub replaced (4 min)
+- Phase 19 plans: 19-01 (MOTO-01/02/03 form + gate + alert), 19-02 (cert taxonomy + TreatmentWithWorker), 19-03 (PDF generator) — 3 of 5 complete
 - Phase 20 plans: 20-01 (FEST-01/02 form fields), 20-02 (RIDDOR gate), 20-03 (Purple Guide PDF backend), 20-04 (compliance frontend) — ALL COMPLETE
 - Phase 22 plans: 22-01 (football dual patient type form + HIA + FA severity), 22-02 (RIDDOR gate FOOT-04), 22-03 (FA/SGSA PDF), 22-04 (cert types + terminology) — ALL COMPLETE
-- Phase 19 plans: 19-01 (MOTO-01/02/03 form + gate + alert), 19-02 (cert taxonomy + TreatmentWithWorker) — COMPLETE
 - Trend: Stable — consistent 1–8 min for vertical surgical additions
 
 *Updated after each plan completion*
@@ -93,10 +93,14 @@ Key decisions affecting v2.0:
 - 20-04: EventIncidentReportCard uses useMutation pattern matching RIDDOR F2508 card — consistent across all vertical PDF generation
 - 20-04: useOrg() used in medic profile for industryVerticals — avoids extra Supabase fetch since OrgContext already caches org_settings
 - 20-04: Venue/Site displayed from vertical_extra_fields.venue_name / site_name — no new query or schema change needed
+- 19-03: DRAFT watermark on motorsport PDF — user approved draft approach; watermark applied at opacity 0.08, rotate -45deg, 36pt font
+- 19-03: motorsport-reports bucket uses migration 128 (not 125 as planned) — 125/126/127 already occupied by event-incident-reports, motorsport concussion alert, and fa-incident-reports respectively
+- 19-03: Concussion clearance section always rendered in motorsport PDF even when hia_conducted=false — blank fields visible for completeness
+- 19-03: upsert:true for motorsport-reports storage — allows PDF regeneration; consistent with event-incident-reports pattern (20-03)
 
 ### Research Flags (Phase-Blocking)
 
-- **Phase 19 (Motorsport PDF):** Obtain physical Motorsport UK Accident Form from Incident Pack V8.0 before building `motorsport-incident-generator` Edge Function. Field names inferred from regulatory text only — do not build the PDF template without the actual form.
+- **Phase 19 (Motorsport PDF) — DRAFT APPROACH:** `motorsport-incident-generator` built with inferred MOTO-01 fields and DRAFT watermark (user approved "proceed with draft" in 19-03 checkpoint). Obtain physical Motorsport UK Accident Form from Incident Pack V8.0 before regulatory submission to validate field layout.
 - **Phase 22 (Football scope) — RESOLVED:** Both FA Match Day Injury Form (player) and SGSA Medical Incident Report (spectator) implemented in 22-03. Both formats wired in fa-incident-generator routed by patient_type.
 - **Phase 23 (Compliance score formula):** Formula must be agreed and frozen before building the trend chart. Recommend: PostgreSQL view with `formula_version` column so historical scores remain interpretable after formula updates.
 
@@ -110,6 +114,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T04:28:16Z
-Stopped at: Completed 20-04-PLAN.md (EventIncidentReportCard + festivals terminology + recommended certs on medic profile)
+Last session: 2026-02-18T04:30:08Z
+Stopped at: Completed 19-03-PLAN.md (MotorsportIncidentDocument.tsx + motorsport-mapping.ts + types.ts expansion + 501 stub replaced in index.ts + migration 128 motorsport-reports bucket)
 Resume file: None
