@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 23: Analytics — Heat Maps & Trend Charts (COMPLETE — all 5 plans done)
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 23: Analytics — Heat Maps & Trend Charts + Gap Closures (COMPLETE — 7/7 plans done including gap-closure 23-06 and 23-07)
 
 ## Current Position
 
-Phase: 23 of 23 (Analytics — Heat Maps & Trend Charts) — COMPLETE (5/5 plans)
-Plan: 23-05 complete (platform admin compliance analytics: useAdminComplianceTrend + useOrgComplianceRanking hooks, AdminComplianceTrend ComposedChart, OrgComplianceTable ranking table, Compliance tab as 9th tab on /admin/analytics)
-Status: Phase 23 complete — v2.0 roadmap fully complete (27/27 plans)
-Last activity: 2026-02-18 — Completed 23-05-PLAN.md: ANLT-06 closed; admin analytics now has 9 tabs; aggregate compliance trend with min/max band; org ranking table with trend arrows
+Phase: 23 of 23 (Analytics — Heat Maps & Trend Charts + Gap Closures) — COMPLETE (7/7 plans)
+Plan: 23-07 complete (GAP Flow 3 closed: competitor_cleared_to_return checkbox added to motorsport section in app/treatment/new.tsx — outside concussion gate, visible for all motorsport treatments)
+Status: Phase 23 complete — v2.0 roadmap fully complete (29/29 plans including gap closures)
+Last activity: 2026-02-18 — Completed 23-07-PLAN.md: MOTO-07 checkbox added; medics can now set competitor_cleared_to_return=true; 'Concussion clearance required' badge resolvable
 
-Progress: [██████████] v1.1 complete | [██████████] v2.0 27/27 plans (Phase 18 + 18.5 + 19-01…05 + 20-01…04 + 21 + 22-01…05 + 23-01…05 complete)
+Progress: [██████████] v1.1 complete | [██████████] v2.0 29/29 plans (Phase 18 + 18.5 + 19-01…05 + 20-01…04 + 21 + 22-01…05 + 23-01…07 complete)
 
 ## Performance Metrics
 
@@ -32,8 +32,8 @@ Progress: [██████████] v1.1 complete | [██████�
 | 18–23 (v2.0) | 12/25 | ~22 min | ~1.8 min |
 
 **Recent Trend:**
-- Last plan: 23-05 — admin compliance analytics: useAdminComplianceTrend + useOrgComplianceRanking hooks, AdminComplianceTrend ComposedChart (Line avg + Area min/max band), OrgComplianceTable ranking table (top/bottom 5 accents + trend arrows), Compliance 9th tab in /admin/analytics (~2 min)
-- Phase 23 plan 23-05: platform admin now has full cross-org compliance visibility — aggregate trend chart with shaded band + org ranking table; ANLT-06 closed; v2.0 roadmap complete
+- Last plan: 23-07 — GAP Flow 3 gap-closure: competitor_cleared_to_return checkbox added to motorsport treatment form outside concussion gate; MOTO-07 closed; 'Concussion clearance required' badge now resolvable (~1 min)
+- Phase 23 plan 23-07: single-file edit to app/treatment/new.tsx; no new styles or helpers needed; reused clearanceCheckbox pattern; concussion gate (lines 420-431) unchanged
 - Trend: Stable — consistent 1–8 min for vertical surgical additions
 
 *Updated after each plan completion*
@@ -125,6 +125,9 @@ Key decisions affecting v2.0:
 - 23-05: Two-step query (compliance_score_history then organizations WHERE id IN) for org names — consistent with 23-03 useAdminNearMissGeoData pattern
 - 23-05: orgScoreMap takes only latest 2 rows per org (rows DESC by period_start) — minimal data for trend (up/down/stable) with no extra query
 - 23-05: Top 5 / bottom 5 accent threshold hardcoded as visual convention in OrgComplianceTable
+- 23-07: competitor_cleared_to_return checkbox placed OUTSIDE concussion_suspected gate — visible for all motorsport treatments, not just concussion-suspected ones
+- 23-07: No change to buildVerticalExtraFields() — field already in INITIAL_MOTORSPORT_FIELDS; JSON.stringify(motorsportFields) covers it automatically
+- 23-07: Concussion clearance gate (lines 420-431) left unchanged — still checks only hia_conducted, competitor_stood_down, cmo_notified
 
 ### Research Flags (Phase-Blocking)
 
@@ -142,6 +145,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T05:40:28Z
-Stopped at: Completed 23-05-PLAN.md (platform admin compliance analytics — useAdminComplianceTrend + useOrgComplianceRanking hooks, AdminComplianceTrend ComposedChart, OrgComplianceTable ranking table, Compliance tab as 9th tab on /admin/analytics; ANLT-06 closed; v2.0 complete)
+Last session: 2026-02-18T06:24:34Z
+Stopped at: Completed 23-07-PLAN.md (GAP Flow 3 closed — competitor_cleared_to_return checkbox added to app/treatment/new.tsx motorsport section; MOTO-07 closed; 'Concussion clearance required' badge now resolvable by medic)
 Resume file: None
