@@ -50,6 +50,7 @@ export async function POST(request: Request) {
         *,
         clients (
           id,
+          org_id,
           company_name,
           contact_name,
           contact_email
@@ -90,6 +91,36 @@ export async function POST(request: Request) {
         { error: 'Client or medic data missing' },
         { status: 400 }
       );
+    }
+
+    // Fetch org branding for email personalisation
+    let branding: EmailBranding = { ...DEFAULT_EMAIL_BRANDING };
+    if (client.org_id) {
+      const [{ data: orgBranding }, { data: org }] = await Promise.all([
+        supabase
+          .from('org_branding')
+          .select('company_name, logo_path, primary_colour_hex, tagline')
+          .eq('org_id', client.org_id)
+          .single(),
+        supabase
+          .from('organizations')
+          .select('subscription_tier')
+          .eq('id', client.org_id)
+          .single(),
+      ]);
+
+      if (orgBranding) {
+        const logoUrl = orgBranding.logo_path
+          ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/org-logos/${orgBranding.logo_path}`
+          : null;
+        branding = {
+          companyName: orgBranding.company_name || 'SiteMedic',
+          logoUrl,
+          primaryColourHex: orgBranding.primary_colour_hex,
+          tagline: orgBranding.tagline,
+          showPoweredBy: !hasFeature(org?.subscription_tier ?? null, 'white_label'),
+        };
+      }
     }
 
     // Generate .ics calendar invite
@@ -137,11 +168,12 @@ export async function POST(request: Request) {
             total: booking.total_price || 0,
           },
           confirmationUrl,
+          branding,
         })
       );
 
       const clientEmailResult = await resend.emails.send({
-        from: 'ASG Bookings <bookings@sitemedic.co.uk>',
+        from: `${branding.companyName} Bookings <bookings@sitemedic.co.uk>`,
         to: client.contact_email,
         subject: `Booking Confirmed - ${formattedDate}`,
         html: clientEmailHtml,
@@ -184,11 +216,12 @@ export async function POST(request: Request) {
             name: `${medic.first_name} ${medic.last_name}`,
           },
           dashboardUrl,
+          branding,
         })
       );
 
       const medicEmailResult = await resend.emails.send({
-        from: 'Apex Safety Group <bookings@sitemedic.co.uk>',
+        from: `${branding.companyName} <bookings@sitemedic.co.uk>`,
         to: medic.email,
         subject: `New Booking Assignment - ${formattedDate} at ${booking.site_name}`,
         html: medicEmailHtml,

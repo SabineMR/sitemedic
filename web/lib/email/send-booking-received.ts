@@ -11,6 +11,9 @@ import { createClient } from '@/lib/supabase/server';
 import { resend } from '@/lib/email/resend';
 import BookingReceivedEmail from '@/lib/email/templates/booking-received-email';
 import { render } from '@react-email/components';
+import type { EmailBranding } from '@/lib/email/types';
+import { DEFAULT_EMAIL_BRANDING } from '@/lib/email/types';
+import { hasFeature } from '@/lib/billing/feature-gates';
 
 export async function sendBookingReceivedEmail(bookingId: string): Promise<void> {
   try {
@@ -22,6 +25,7 @@ export async function sendBookingReceivedEmail(bookingId: string): Promise<void>
         *,
         clients (
           id,
+          org_id,
           company_name,
           contact_name,
           contact_email
@@ -50,6 +54,36 @@ export async function sendBookingReceivedEmail(bookingId: string): Promise<void>
 
     const dashboardUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:30500'}/dashboard`;
 
+    // Fetch org branding for email personalisation
+    let branding: EmailBranding = { ...DEFAULT_EMAIL_BRANDING };
+    if (client.org_id) {
+      const [{ data: orgBranding }, { data: org }] = await Promise.all([
+        supabase
+          .from('org_branding')
+          .select('company_name, logo_path, primary_colour_hex, tagline')
+          .eq('org_id', client.org_id)
+          .single(),
+        supabase
+          .from('organizations')
+          .select('subscription_tier')
+          .eq('id', client.org_id)
+          .single(),
+      ]);
+
+      if (orgBranding) {
+        const logoUrl = orgBranding.logo_path
+          ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/org-logos/${orgBranding.logo_path}`
+          : null;
+        branding = {
+          companyName: orgBranding.company_name || 'SiteMedic',
+          logoUrl,
+          primaryColourHex: orgBranding.primary_colour_hex,
+          tagline: orgBranding.tagline,
+          showPoweredBy: !hasFeature(org?.subscription_tier ?? null, 'white_label'),
+        };
+      }
+    }
+
     const emailHtml = await render(
       BookingReceivedEmail({
         booking: {
@@ -63,11 +97,12 @@ export async function sendBookingReceivedEmail(bookingId: string): Promise<void>
           name: client.contact_name || client.company_name,
         },
         dashboardUrl,
+        branding,
       })
     );
 
     const result = await resend.emails.send({
-      from: 'ASG Bookings <bookings@sitemedic.co.uk>',
+      from: `${branding.companyName} Bookings <bookings@sitemedic.co.uk>`,
       to: client.contact_email,
       subject: `Booking Received — ${formattedDate}`,
       html: emailHtml,

@@ -179,6 +179,20 @@ export async function sendCashFlowAlert(
 // INVOICE EMAIL
 // =============================================================================
 
+interface InvoiceEmailBranding {
+  company_name: string;
+  primary_colour_hex: string | null;
+  logo_url: string | null;
+  show_powered_by: boolean;
+}
+
+const DEFAULT_INVOICE_BRANDING: InvoiceEmailBranding = {
+  company_name: 'SiteMedic',
+  primary_colour_hex: '#7c3aed',
+  logo_url: null,
+  show_powered_by: true,
+};
+
 interface InvoiceDetails {
   invoiceNumber: string;
   clientName: string;
@@ -189,7 +203,8 @@ interface InvoiceDetails {
 
 export async function sendInvoiceEmail(
   clientEmail: string,
-  invoice: InvoiceDetails
+  invoice: InvoiceDetails,
+  branding: InvoiceEmailBranding = DEFAULT_INVOICE_BRANDING,
 ): Promise<{ success: boolean; error?: string }> {
   if (!resend) {
     console.warn('⚠️  Resend API key not configured - email not sent');
@@ -198,12 +213,13 @@ export async function sendInvoiceEmail(
 
   try {
     await resend.emails.send({
-      from: 'SiteMedic Invoices <invoices@sitemedic.co.uk>',
+      from: `${branding.company_name} Invoices <invoices@sitemedic.co.uk>`,
       to: clientEmail,
-      subject: `Invoice ${invoice.invoiceNumber} from SiteMedic`,
+      subject: `Invoice ${invoice.invoiceNumber} from ${branding.company_name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); padding: 32px; text-align: center; border-radius: 8px 8px 0 0;">
+          <div style="background: linear-gradient(135deg, ${branding.primary_colour_hex || '#7c3aed'} 0%, ${branding.primary_colour_hex || '#a855f7'} 100%); padding: 32px; text-align: center; border-radius: 8px 8px 0 0;">
+            ${branding.logo_url ? `<img src="${branding.logo_url}" alt="${branding.company_name}" width="150" style="max-height: 60px; margin-bottom: 12px;" />` : ''}
             <h1 style="color: white; margin: 0; font-size: 24px;">Invoice Ready</h1>
           </div>
 
@@ -234,7 +250,7 @@ export async function sendInvoiceEmail(
             </div>
 
             <div style="text-align: center; margin: 32px 0;">
-              <a href="${invoice.pdfUrl}" style="display: inline-block; background: #7c3aed; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+              <a href="${invoice.pdfUrl}" style="display: inline-block; background: ${branding.primary_colour_hex || '#7c3aed'}; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600;">
                 Download Invoice PDF
               </a>
             </div>
@@ -251,7 +267,8 @@ export async function sendInvoiceEmail(
 
             <p style="color: #6b7280; font-size: 14px;">
               Thank you for your business,<br>
-              <strong>SiteMedic Team</strong>
+              <strong>${branding.company_name} Team</strong>
+              ${branding.show_powered_by ? '<br><span style="font-size: 12px; color: #9ca3af;">Powered by <a href="https://sitemedic.co.uk" style="color: #9ca3af;">SiteMedic</a></span>' : ''}
             </p>
           </div>
         </div>
