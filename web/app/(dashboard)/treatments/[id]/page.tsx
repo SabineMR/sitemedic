@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { EventIncidentReportCard } from '@/components/dashboard/EventIncidentReportCard';
 import { FAIncidentReportCard } from '@/components/dashboard/FAIncidentReportCard';
+import { MotorsportIncidentReportCard } from '@/components/dashboard/MotorsportIncidentReportCard';
 
 interface TreatmentDetailPageProps {
   params: Promise<{ id: string }>;
@@ -233,6 +234,11 @@ export default async function TreatmentDetailPage({
       {/* FA / SGSA Match Day Report (sporting_events only) */}
       {treatment.event_vertical === 'sporting_events' && (
         <FAIncidentReportCard treatmentId={treatment.id} />
+      )}
+
+      {/* Motorsport UK Accident Form (motorsport only) */}
+      {treatment.event_vertical === 'motorsport' && (
+        <MotorsportIncidentReportCard treatmentId={treatment.id} />
       )}
 
       {/* Photos */}
