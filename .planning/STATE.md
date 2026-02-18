@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 20: Festivals / Events Vertical (active) + Phase 19 + 22 in progress
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 19: Motorsport Vertical (executing) + Phase 20 + 22 in progress
 
 ## Current Position
 
-Phase: 20 of 23 (Festivals / Events Vertical) — also 19 and 22 in progress
-Plan: 20-01 and 20-02 complete; 20-03 and 20-04 remain; 19-02 complete; 22-01 and 22-02 complete
-Status: In progress — 20-01 (FEST-01/02 form fields) just completed; festival Purple Guide PDF (20-03) and compliance (20-04) remain
-Last activity: 2026-02-18 — Completed 20-01-PLAN.md: TST triage priority picker, alcohol/substance + safeguarding flags, disposition picker, RIDDOR suppression for festivals
+Phase: 19 of 23 (Motorsport Vertical) — 19-01 complete
+Plan: 19-01 complete (motorsport form fields + concussion gate + alert); 19-02 through 19-05 remain
+Status: In progress — 19-01 (MOTO-01/02/03 form + gate + alert) complete; motorsport PDF (19-03) and remaining plans remain
+Last activity: 2026-02-18 — Completed 19-01-PLAN.md: motorsport form fields, concussion clearance gate, medic_alerts migration
 
-Progress: [██████████] v1.1 complete | [████████░░] v2.0 13/27 plans (Phase 18 + 18.5 + 20-01 + 20-02 + 21 + 22-01 + 22-02 + 19-01 + 19-02 complete)
+Progress: [██████████] v1.1 complete | [████████░░] v2.0 14/27 plans (Phase 18 + 18.5 + 19-01 + 19-02 + 20-01 + 20-02 + 21 + 22-01 + 22-02 complete)
 
 ## Performance Metrics
 
@@ -32,11 +32,11 @@ Progress: [██████████] v1.1 complete | [██████�
 | 18–23 (v2.0) | 8/25 | ~10 min | ~1 min |
 
 **Recent Trend:**
-- Last plan: 20-01 — Festival form fields (TST triage, flags, disposition, RIDDOR suppression) (2 min)
+- Last plan: 19-01 — Motorsport form fields, concussion gate, alert migration (7 min)
+- Phase 19 plans so far: 19-01 (MOTO-01/02/03 form + gate + alert), 19-02 (cert taxonomy + TreatmentWithWorker)
 - Phase 20 plans so far: 20-01 (FEST-01/02 form fields), 20-02 (previously complete)
-- Phase 19 plans so far: 19-01 (pending), 19-02 (cert taxonomy + TreatmentWithWorker)
 - Phase 22 plans so far: 22-01 (football patient type UI), 22-02 (RIDDOR gate FOOT-04)
-- Trend: Stable — consistent 1–4 min for vertical surgical additions
+- Trend: Stable — consistent 1–7 min for vertical surgical additions
 
 *Updated after each plan completion*
 
@@ -76,6 +76,9 @@ Key decisions affecting v2.0:
 - 19-02: vertical_extra_fields typed as Record<string, unknown> | null in web/types/database.types.ts (not string | null) — web layer parses JSON before type use; mobile WatermelonDB uses @text raw string per 18-01 decision
 - 19-02: All three Phase 18 Treatment columns (booking_id, event_vertical, vertical_extra_fields) added together to database.types.ts — one cohesive Phase 18 schema column set; TreatmentWithWorker inherits via extends Treatment
 - 20-01: Festival state vars prefixed with 'festival' (festivalAlcoholSubstanceFlag, festivalSafeguardingFlag) to avoid collision with football spectator flags (alcoholInvolvement, safeguardingFlag); RIDDOR suppression applied at form level in handleInjuryTypeSelect via orgVertical !== 'festivals' guard
+- 19-01: buildVerticalExtraFields() helper centralises all vertical JSON serialisation in new.tsx — single function replaces per-vertical ternary chains in formValues and enqueueSyncItem; motorsport is the first vertical to use it
+- 19-01: motorsport_concussion alert guarded by treatment.bookingId — medic_alerts.booking_id is NOT NULL; walk-in (unlinked) motorsport treatments cannot insert an alert; alert is non-blocking (try/catch, failure logs only)
+- 19-01: GCS score stored as number | null in MotorsportExtraFields — null = not assessed; validated 3-15 at TextInput onChangeText (immediate feedback, not at submission)
 
 ### Research Flags (Phase-Blocking)
 
@@ -93,6 +96,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T04:14:10Z (22-04) / 2026-02-18T04:14:13Z (20-01)
-Stopped at: Completed 22-04-PLAN.md (football terminology + cert types) and 20-01-PLAN.md (festival form fields) — parallel sessions
+Last session: 2026-02-18T04:18:59Z
+Stopped at: Completed 19-01-PLAN.md (motorsport form fields + concussion gate + medic_alerts migration)
 Resume file: None
