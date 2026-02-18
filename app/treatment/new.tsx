@@ -82,6 +82,14 @@ export default function NewTreatmentScreen() {
   const [sceneContext, setSceneContext] = useState<string>('');
   const [showPatientRolePicker, setShowPatientRolePicker] = useState(false);
 
+  // Festival (festivals) vertical state — FEST-01, FEST-02
+  const [triagePriority, setTriagePriority] = useState<string>('');
+  const [showTriagePicker, setShowTriagePicker] = useState(false);
+  const [festivalAlcoholSubstanceFlag, setFestivalAlcoholSubstanceFlag] = useState(false);
+  const [festivalSafeguardingFlag, setFestivalSafeguardingFlag] = useState(false);
+  const [disposition, setDisposition] = useState<string>('');
+  const [showDispositionPicker, setShowDispositionPicker] = useState(false);
+
   // Football (sporting_events) vertical state
   const isFootball = orgVertical === 'sporting_events';
   const [footballPatientType, setFootballPatientType] = useState<'player' | 'spectator' | null>(null);
@@ -118,6 +126,19 @@ export default function NewTreatmentScreen() {
     { id: 'art-dept', label: 'Art Dept' },
     { id: 'costume', label: 'Costume' },
     { id: 'other-crew', label: 'Other Crew' },
+  ];
+
+  const TRIAGE_PRIORITIES = [
+    { id: 'P1', label: 'P1 — Immediate (Red)' },
+    { id: 'P2', label: 'P2 — Urgent (Yellow)' },
+    { id: 'P3', label: 'P3 — Delayed (Green)' },
+    { id: 'P4', label: 'P4 — Expectant (Black/Blue)' },
+  ];
+
+  const FESTIVAL_DISPOSITIONS = [
+    { id: 'discharged_on_site', label: 'Discharged on site' },
+    { id: 'transferred_to_hospital', label: 'Transferred to hospital' },
+    { id: 'refused_treatment', label: 'Refused treatment' },
   ];
 
   // Initialize treatment record on mount
@@ -206,6 +227,11 @@ export default function NewTreatmentScreen() {
       patient_role: patientRole,
       sfx_involved: sfxInvolved,
       scene_context: sceneContext,
+    }) : orgVertical === 'festivals' ? JSON.stringify({
+      triage_priority: triagePriority,
+      alcohol_substance: festivalAlcoholSubstanceFlag,
+      safeguarding_concern: festivalSafeguardingFlag,
+      disposition,
     }) : null,
   };
 
@@ -230,9 +256,9 @@ export default function NewTreatmentScreen() {
     setInjuryTypeId(injuryId);
     setShowInjuryPicker(false);
 
-    // Check if RIDDOR reportable
+    // Check if RIDDOR reportable — suppressed for festivals vertical (Purple Guide protocol instead)
     const injuryType = INJURY_TYPES.find((it) => it.id === injuryId);
-    if (injuryType?.isRiddorReportable) {
+    if (injuryType?.isRiddorReportable && orgVertical !== 'festivals') {
       setRiddorFlagged(true);
     } else {
       setRiddorFlagged(false);
@@ -346,12 +372,33 @@ export default function NewTreatmentScreen() {
       return;
     }
 
+    // Festival-specific validation (FEST-01, FEST-02)
+    if (orgVertical === 'festivals') {
+      if (!triagePriority) {
+        Alert.alert('Missing Information', 'Please select a triage priority (P1-P4)');
+        return;
+      }
+      if (!disposition) {
+        Alert.alert('Missing Information', 'Please select attendee disposition');
+        return;
+      }
+    }
+
     try {
       if (treatment) {
         await treatment.update((t) => {
           t.status = 'complete';
           t.updatedAt = Date.now();
           t.lastModifiedAt = Date.now();
+          // Write festival extra fields to WatermelonDB record on completion
+          if (orgVertical === 'festivals') {
+            t.verticalExtraFields = JSON.stringify({
+              triage_priority: triagePriority,
+              alcohol_substance: festivalAlcoholSubstanceFlag,
+              safeguarding_concern: festivalSafeguardingFlag,
+              disposition,
+            });
+          }
         });
 
         // Enqueue for sync to backend
@@ -378,7 +425,14 @@ export default function NewTreatmentScreen() {
             updated_at: new Date(treatment.updatedAt).toISOString(),
             last_modified_at: treatment.lastModifiedAt,
             event_vertical: treatment.eventVertical ?? null,
-            vertical_extra_fields: treatment.verticalExtraFields ?? null,
+            vertical_extra_fields: orgVertical === 'festivals'
+              ? JSON.stringify({
+                  triage_priority: triagePriority,
+                  alcohol_substance: festivalAlcoholSubstanceFlag,
+                  safeguarding_concern: festivalSafeguardingFlag,
+                  disposition,
+                })
+              : treatment.verticalExtraFields ?? null,
             booking_id: treatment.bookingId ?? null,
           },
           treatment.isRiddorReportable ? 0 : 1 // RIDDOR = priority 0 (immediate)
@@ -649,6 +703,61 @@ export default function NewTreatmentScreen() {
           </Pressable>
         </View>
 
+        {/* Section 5b: Purple Guide — Event Triage (festivals vertical only) */}
+        {orgVertical === 'festivals' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>5b. Purple Guide — Event Triage</Text>
+
+            {/* Triage Priority */}
+            <Text style={styles.fieldLabel}>Triage Priority *</Text>
+            <Pressable
+              style={styles.pickerButton}
+              onPress={() => setShowTriagePicker(true)}
+            >
+              <Text style={triagePriority ? styles.pickerButtonText : styles.pickerButtonText}>
+                {triagePriority
+                  ? TRIAGE_PRIORITIES.find(p => p.id === triagePriority)?.label
+                  : 'Select triage priority...'}
+              </Text>
+            </Pressable>
+
+            {/* Alcohol/Substance Flag */}
+            <Text style={styles.fieldLabel}>Alcohol/Substance Involvement</Text>
+            <Pressable
+              style={[styles.treatmentTypeButton, festivalAlcoholSubstanceFlag && styles.treatmentTypeButtonSelected]}
+              onPress={() => setFestivalAlcoholSubstanceFlag(!festivalAlcoholSubstanceFlag)}
+            >
+              <Text style={[styles.treatmentTypeText, festivalAlcoholSubstanceFlag && styles.treatmentTypeTextSelected]}>
+                {festivalAlcoholSubstanceFlag ? 'Yes — Alcohol/Substance Involved' : 'No Alcohol/Substance'}
+              </Text>
+            </Pressable>
+
+            {/* Safeguarding Flag */}
+            <Text style={styles.fieldLabel}>Safeguarding Concern</Text>
+            <Pressable
+              style={[styles.treatmentTypeButton, festivalSafeguardingFlag && styles.treatmentTypeButtonSelected]}
+              onPress={() => setFestivalSafeguardingFlag(!festivalSafeguardingFlag)}
+            >
+              <Text style={[styles.treatmentTypeText, festivalSafeguardingFlag && styles.treatmentTypeTextSelected]}>
+                {festivalSafeguardingFlag ? 'Yes — Safeguarding Concern' : 'No Safeguarding Concern'}
+              </Text>
+            </Pressable>
+
+            {/* Disposition */}
+            <Text style={styles.fieldLabel}>Attendee Disposition *</Text>
+            <Pressable
+              style={styles.pickerButton}
+              onPress={() => setShowDispositionPicker(true)}
+            >
+              <Text style={styles.pickerButtonText}>
+                {disposition
+                  ? FESTIVAL_DISPOSITIONS.find(d => d.id === disposition)?.label
+                  : 'Select disposition...'}
+              </Text>
+            </Pressable>
+          </View>
+        )}
+
         {/* Section 6: Signature */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>6. Signature *</Text>
@@ -739,6 +848,36 @@ export default function NewTreatmentScreen() {
             setShowPatientRolePicker(false);
           }}
           onClose={() => setShowPatientRolePicker(false)}
+        />
+      )}
+
+      {/* Festival: Triage Priority Picker */}
+      {orgVertical === 'festivals' && (
+        <BottomSheetPicker
+          visible={showTriagePicker}
+          title="Triage Priority"
+          items={TRIAGE_PRIORITIES}
+          selectedId={triagePriority}
+          onSelect={(item) => {
+            setTriagePriority(item.id);
+            setShowTriagePicker(false);
+          }}
+          onClose={() => setShowTriagePicker(false)}
+        />
+      )}
+
+      {/* Festival: Attendee Disposition Picker */}
+      {orgVertical === 'festivals' && (
+        <BottomSheetPicker
+          visible={showDispositionPicker}
+          title="Attendee Disposition"
+          items={FESTIVAL_DISPOSITIONS}
+          selectedId={disposition}
+          onSelect={(item) => {
+            setDisposition(item.id);
+            setShowDispositionPicker(false);
+          }}
+          onClose={() => setShowDispositionPicker(false)}
         />
       )}
     </View>
