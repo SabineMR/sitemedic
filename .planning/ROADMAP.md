@@ -56,14 +56,14 @@ See: `.planning/milestones/v1.1-ROADMAP.md`
 4. An admin can open org settings and set a default vertical for their organisation — the saved value persists and is used by new treatments
 5. A client creating a booking can select the event type / vertical — the booking's `event_vertical` field is set and the correct form presets appear when the assigned medic opens that booking
 
-**Plans:** TBD
+**Plans:** 5 plans
 
 Plans:
-- [ ] 18-01: WatermelonDB schema v4 — single coordinated migration adding `event_vertical`, `vertical_extra_fields`, `booking_id`, `gps_lat`, `gps_lng` to treatments and near_misses; matching Supabase SQL migration; `compliance_score_history` table
-- [ ] 18-02: Vertical-aware RIDDOR detector — gate `riddor-detector/index.ts` on `riddorApplies` flag; F2508 generator returns 400 for non-RIDDOR verticals; incident-report-dispatcher scaffold
-- [ ] 18-03: Mobile OrgContext — `src/contexts/OrgContext.tsx` fetches vertical once at auth, caches in AsyncStorage; `OrgProvider` registered in `app/_layout.tsx`; `useVerticalLabels()` hook replaces per-mount fetches
-- [ ] 18-04: Booking vertical override — pass `booking_id` + `event_vertical` as route params to `new.tsx`; booking override takes precedence over org default in form
-- [ ] 18-05: Admin + client vertical settings — org settings page vertical selector (admin); booking form event type selector (client); `bookings.event_vertical` persisted on creation
+- [ ] 18-01-PLAN.md — WatermelonDB schema v4: add event_vertical, vertical_extra_fields, booking_id to treatments; gps_lat, gps_lng to near_misses; Supabase SQL migration 124; compliance_score_history table
+- [ ] 18-02-PLAN.md — Vertical-aware RIDDOR detector: gate riddor-detector on non-RIDDOR verticals; F2508 generator returns 400 for non-RIDDOR; scaffold 3 new Edge Functions; incident-report-dispatcher utility
+- [ ] 18-03-PLAN.md — Mobile OrgContext: create src/contexts/OrgContext.tsx with AsyncStorage caching; register OrgProvider in app/_layout.tsx between AuthProvider and SyncProvider
+- [ ] 18-04-PLAN.md — Booking vertical override: remove per-mount fetchOrgVertical from new.tsx; add useOrg + useLocalSearchParams; booking_id + event_vertical in sync payload
+- [ ] 18-05-PLAN.md — Admin + client vertical settings: add eventVertical to BookingRequest and Supabase insert in /api/bookings/create; verify admin vertical selector already works
 
 ---
 
