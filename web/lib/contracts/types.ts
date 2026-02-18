@@ -133,19 +133,20 @@ export interface ContractEvent {
 export interface ContractWithRelations extends Contract {
   booking?: {
     id: string;
-    service_type: string;
-    scheduled_date: string | null;
-    total_price: number;
-    address_line1: string;
-    address_line2: string | null;
-    city: string;
-    postcode: string;
+    site_name: string;
+    event_vertical: string | null;
+    shift_date: string | null;
+    total: number;
+    subtotal: number;
+    vat: number;
+    site_address: string;
+    site_postcode: string;
   };
   client?: {
     id: string;
-    name: string;
-    email: string;
-    phone: string | null;
+    company_name: string;
+    contact_email: string;
+    contact_phone: string | null;
     payment_terms: string;
   };
   template?: ContractTemplate;

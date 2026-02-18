@@ -65,11 +65,11 @@ export function ContractViewer({ contract }: ContractViewerProps) {
             </h3>
             {contract.client ? (
               <p className="text-slate-700">
-                <strong>{contract.client.name}</strong>
+                <strong>{contract.client.company_name}</strong>
                 <br />
-                Email: {contract.client.email}
+                Email: {contract.client.contact_email}
                 <br />
-                {contract.client.phone && `Phone: ${contract.client.phone}`}
+                {contract.client.contact_phone && `Phone: ${contract.client.contact_phone}`}
               </p>
             ) : (
               <p className="text-slate-500 italic">Client details not available</p>
@@ -84,17 +84,9 @@ export function ContractViewer({ contract }: ContractViewerProps) {
         {contract.booking ? (
           <div className="bg-blue-50 p-4 rounded-lg">
             <p className="text-slate-700">
-              <strong>Address:</strong>
+              <strong>Site:</strong> {contract.booking.site_name}
               <br />
-              {contract.booking.address_line1}
-              {contract.booking.address_line2 && (
-                <>
-                  <br />
-                  {contract.booking.address_line2}
-                </>
-              )}
-              <br />
-              {contract.booking.city}, {contract.booking.postcode}
+              <strong>Address:</strong> {contract.booking.site_address}, {contract.booking.site_postcode}
             </p>
           </div>
         ) : (
@@ -109,12 +101,14 @@ export function ContractViewer({ contract }: ContractViewerProps) {
         </h2>
         {contract.booking ? (
           <div className="bg-green-50 p-4 rounded-lg space-y-2">
+            {contract.booking.event_vertical && (
+              <p className="text-slate-700">
+                <strong>Event Type:</strong> {contract.booking.event_vertical.replace(/_/g, ' ')}
+              </p>
+            )}
             <p className="text-slate-700">
-              <strong>Service Type:</strong> {contract.booking.service_type}
-            </p>
-            <p className="text-slate-700">
-              <strong>Scheduled Date:</strong>{' '}
-              {formatDate(contract.booking.scheduled_date)}
+              <strong>Shift Date:</strong>{' '}
+              {formatDate(contract.booking.shift_date)}
             </p>
           </div>
         ) : (
@@ -133,13 +127,13 @@ export function ContractViewer({ contract }: ContractViewerProps) {
               <tr className="border-b border-slate-200">
                 <td className="py-2 px-4 text-slate-700">Subtotal</td>
                 <td className="py-2 px-4 text-right font-semibold text-slate-900">
-                  {formatGBP(contract.booking.total_price / 1.2)} {/* Assuming 20% VAT */}
+                  {formatGBP(contract.booking.subtotal)}
                 </td>
               </tr>
               <tr className="border-b border-slate-200">
                 <td className="py-2 px-4 text-slate-700">VAT (20%)</td>
                 <td className="py-2 px-4 text-right font-semibold text-slate-900">
-                  {formatGBP(contract.booking.total_price - contract.booking.total_price / 1.2)}
+                  {formatGBP(contract.booking.vat)}
                 </td>
               </tr>
               <tr className="bg-slate-50">
@@ -147,7 +141,7 @@ export function ContractViewer({ contract }: ContractViewerProps) {
                   Total
                 </td>
                 <td className="py-3 px-4 text-right text-lg font-bold text-slate-900">
-                  {formatGBP(contract.booking.total_price)}
+                  {formatGBP(contract.booking.total)}
                 </td>
               </tr>
             </tbody>

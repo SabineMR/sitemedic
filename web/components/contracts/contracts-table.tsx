@@ -91,10 +91,10 @@ export function ContractsTable({ contracts, stats }: ContractsTableProps) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (c) =>
-          c.client?.name?.toLowerCase().includes(query) ||
-          c.booking?.address_line1?.toLowerCase().includes(query) ||
-          c.booking?.city?.toLowerCase().includes(query) ||
-          c.booking?.postcode?.toLowerCase().includes(query)
+          c.client?.company_name?.toLowerCase().includes(query) ||
+          c.booking?.site_name?.toLowerCase().includes(query) ||
+          c.booking?.site_address?.toLowerCase().includes(query) ||
+          c.booking?.site_postcode?.toLowerCase().includes(query)
       );
     }
 
@@ -148,27 +148,27 @@ export function ContractsTable({ contracts, stats }: ContractsTableProps) {
       },
     },
     {
-      accessorKey: 'client.name',
+      accessorKey: 'client.company_name',
       header: 'Client',
       cell: ({ row }) => (
         <div className="max-w-[200px] truncate">
-          {row.original.client?.name || 'Unknown'}
+          {row.original.client?.company_name || 'Unknown'}
         </div>
       ),
     },
     {
-      accessorKey: 'booking.address_line1',
+      accessorKey: 'booking.site_name',
       header: 'Site',
       cell: ({ row }) => (
         <div className="max-w-[200px] truncate">
-          {row.original.booking?.address_line1}, {row.original.booking?.city}
+          {row.original.booking?.site_name}, {row.original.booking?.site_postcode}
         </div>
       ),
     },
     {
-      accessorKey: 'booking.total_price',
+      accessorKey: 'booking.total',
       header: 'Total',
-      cell: ({ row }) => formatGBP(row.original.booking?.total_price || 0),
+      cell: ({ row }) => formatGBP(row.original.booking?.total || 0),
     },
     {
       accessorKey: 'payment_terms',
@@ -218,13 +218,13 @@ export function ContractsTable({ contracts, stats }: ContractsTableProps) {
                     ...contract,
                     client: {
                       id: contract.client.id,
-                      company_name: contract.client.name ?? '',
-                      contact_name: contract.client.name ?? '',
-                      contact_email: contract.client.email ?? '',
+                      company_name: contract.client.company_name ?? '',
+                      contact_name: contract.client.company_name ?? '',
+                      contact_email: contract.client.contact_email ?? '',
                     },
                     booking: contract.booking ? {
                       ...contract.booking,
-                      total: contract.booking.total_price ?? 0,
+                      total: contract.booking.total ?? 0,
                     } : undefined,
                   }}
                   onSent={() =>

@@ -251,20 +251,20 @@ export function ContractDetail({ contract }: ContractDetailProps) {
                 <div className="text-sm font-medium text-muted-foreground">
                   Company
                 </div>
-                <div className="font-medium">{contract.client?.name}</div>
+                <div className="font-medium">{contract.client?.company_name}</div>
               </div>
               <div>
                 <div className="text-sm font-medium text-muted-foreground">
                   Contact Email
                 </div>
-                <div className="font-medium">{contract.client?.email}</div>
+                <div className="font-medium">{contract.client?.contact_email}</div>
               </div>
               <div>
                 <div className="text-sm font-medium text-muted-foreground">
                   Phone
                 </div>
                 <div className="font-medium">
-                  {contract.client?.phone || 'N/A'}
+                  {contract.client?.contact_phone || 'N/A'}
                 </div>
               </div>
               <div>
@@ -291,30 +291,28 @@ export function ContractDetail({ contract }: ContractDetailProps) {
                   Site Address
                 </div>
                 <div className="font-medium">
-                  {contract.booking?.address_line1}
-                  {contract.booking?.address_line2 && (
-                    <>, {contract.booking.address_line2}</>
+                  {contract.booking?.site_name && (
+                    <>{contract.booking.site_name}<br /></>
                   )}
-                  <br />
-                  {contract.booking?.city}, {contract.booking?.postcode}
+                  {contract.booking?.site_address}, {contract.booking?.site_postcode}
                 </div>
               </div>
               <div>
                 <div className="text-sm font-medium text-muted-foreground">
-                  Service Date
+                  Shift Date
                 </div>
                 <div className="font-medium">
-                  {contract.booking?.scheduled_date
-                    ? formatDate(contract.booking.scheduled_date)
+                  {contract.booking?.shift_date
+                    ? formatDate(contract.booking.shift_date)
                     : 'Not scheduled'}
                 </div>
               </div>
               <div>
                 <div className="text-sm font-medium text-muted-foreground">
-                  Service Type
+                  Event Type
                 </div>
                 <div className="font-medium">
-                  {contract.booking?.service_type}
+                  {contract.booking?.event_vertical?.replace(/_/g, ' ') || 'General'}
                 </div>
               </div>
               <div>
@@ -322,7 +320,7 @@ export function ContractDetail({ contract }: ContractDetailProps) {
                   Total Price
                 </div>
                 <div className="font-medium text-lg">
-                  {formatGBP(contract.booking?.total_price || 0)}
+                  {formatGBP(contract.booking?.total || 0)}
                 </div>
               </div>
             </div>

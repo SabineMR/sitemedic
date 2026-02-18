@@ -49,7 +49,7 @@ export default async function AdminContractDetailPage({
           Agreement {contractNumber}
         </h1>
         <p className="text-gray-400">
-          {contract.client?.name} - {contract.booking?.address_line1}
+          {contract.client?.company_name} - {contract.booking?.site_name}
         </p>
       </div>
 
