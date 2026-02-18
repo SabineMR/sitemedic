@@ -90,9 +90,11 @@ export const treatmentColumns: ColumnDef<TreatmentWithWorker>[] = [
     header: 'RIDDOR',
     cell: ({ row }) => {
       const isRiddor = row.getValue('is_riddor_reportable') as boolean;
-      return isRiddor ? (
-        <Badge variant="destructive">RIDDOR</Badge>
-      ) : null;
+      const vertical = row.original.event_vertical;
+      // Never show RIDDOR badge for non-RIDDOR verticals (motorsport, festivals, football, etc.)
+      const nonRiddorVerticals = ['motorsport', 'festivals', 'sporting_events'];
+      if (!isRiddor || (vertical && nonRiddorVerticals.includes(vertical))) return null;
+      return <Badge variant="destructive">RIDDOR</Badge>;
     },
   },
   {

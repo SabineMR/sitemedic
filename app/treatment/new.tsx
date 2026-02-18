@@ -305,9 +305,9 @@ export default function NewTreatmentScreen() {
     setInjuryTypeId(injuryId);
     setShowInjuryPicker(false);
 
-    // Check if RIDDOR reportable — suppressed for festivals vertical (Purple Guide protocol instead)
+    // Check if RIDDOR reportable — suppressed for non-RIDDOR verticals (festivals, motorsport, football, etc.)
     const injuryType = INJURY_TYPES.find((it) => it.id === injuryId);
-    if (injuryType?.isRiddorReportable && orgVertical !== 'festivals') {
+    if (injuryType?.isRiddorReportable && getVerticalCompliance(orgVertical).riddorApplies) {
       setRiddorFlagged(true);
     } else {
       setRiddorFlagged(false);
