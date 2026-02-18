@@ -18,6 +18,12 @@ export interface Treatment {
   riddor_confidence: string | null;
   photo_uris: string[] | null;
   signature_uri: string | null;
+  /** Phase 18: booking FK (ON DELETE SET NULL — treatments survive booking deletion) */
+  booking_id: string | null;
+  /** Phase 18: the industry vertical for the event this treatment was recorded at */
+  event_vertical: string | null;
+  /** Phase 18: vertical-specific extra fields as raw JSON string (parsed at call site) */
+  vertical_extra_fields: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
