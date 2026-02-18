@@ -219,14 +219,14 @@ Plans:
 4. The platform admin subscriptions dashboard shows all org subscriptions with plan tier, status, monthly charge, and a summary MRR figure — data reads from `organizations.subscription_tier` and `organizations.subscription_status`
 5. An org whose subscription is cancelled or payment has lapsed sees a "Subscription Inactive" screen when they log in — their data is fully preserved, and a "Reactivate Subscription" button links to the Stripe Customer Portal to resume billing
 
-**Plans:** TBD
+**Plans:** 5 plans
 
 Plans:
-- [ ] 30-01: `TierGate` component — create `web/components/billing/TierGate.tsx` (wraps gated UI, renders upgrade prompt for lower tiers using `useBranding()` for accent colour); `requireTier()` helper for API route handlers (reads tier from `x-org-tier` header injected by middleware)
-- [ ] 30-02: Feature gate wiring — pass through every feature in the tier matrix and apply both `<TierGate>` UI gate and `requireTier()` API gate; branding features (BRAND-01 through BRAND-05) and subdomain access (ROUTE-01) gated to Growth and Enterprise
-- [ ] 30-03: Stripe Customer Portal — create `web/app/api/billing/portal/route.ts` (server-side Stripe Customer Portal session creation); add billing settings page to org admin settings with portal link button
-- [ ] 30-04: Platform admin MRR dashboard — add subscription tab to platform admin dashboard showing all org subscriptions table (org name, plan, status, MRR contribution); aggregate MRR summary card; reads from `organizations` table
-- [ ] 30-05: Suspension flow — update middleware to check `subscription_status` and `activation_status`; redirect suspended orgs to `/suspended` page with "Subscription Inactive" message, data-preservation assurance, and Stripe Customer Portal reactivation link; reactivation via billing webhook `customer.subscription.updated` event restoring active status
+- [ ] 30-01-PLAN.md — TierGate component + requireTier() API helper: shared UI and server-side gating primitives
+- [ ] 30-02-PLAN.md — Feature gate wiring: wrap branding section with TierGate, add requireTier() to branding API routes
+- [ ] 30-03-PLAN.md — Stripe Customer Portal: POST /api/billing/portal + Manage Billing button on settings page
+- [ ] 30-04-PLAN.md — Platform admin MRR dashboard: /platform/subscriptions page with per-tier breakdown and org table
+- [ ] 30-05-PLAN.md — Suspension flow: middleware subscription check + /suspended page with reactivation path
 
 ---
 
