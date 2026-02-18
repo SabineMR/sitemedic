@@ -1,483 +1,598 @@
-# Pitfalls Research
+# Domain Pitfalls: Adding Multi-Vertical Support to an Existing Compliance SaaS
 
-**Domain:** Medical compliance platform with offline-first mobile capabilities (construction site health and safety)
-**Researched:** 2026-02-15
-**Confidence:** HIGH
+**Domain:** UK medic compliance platform — adding Film/TV, Festivals, Motorsport, Football verticals to shipped Construction baseline
+**Researched:** 2026-02-17
+**Confidence:** HIGH — findings grounded in codebase inspection plus regulatory source verification
+
+---
+
+## How to Read This File
+
+Each pitfall entry is structured as:
+
+- **What goes wrong** — the failure mode
+- **Evidence in this codebase** — what was found during code inspection (not hypothetical)
+- **Warning signs** — how to detect early
+- **Prevention strategy** — concrete action to take
+- **Phase to address** — when in the roadmap this should be fixed
+
+---
 
 ## Critical Pitfalls
 
-### Pitfall 1: Data Loss During Offline-to-Online Sync Transitions
+Mistakes that cause regulatory liability, data corruption, or require rewrites.
+
+---
+
+### Pitfall 1: RIDDOR Detector Has No Vertical Awareness — Will Flag Non-Workers
 
 **What goes wrong:**
-Users capture critical medical data (injury photos, incident reports, worker certifications) while offline. When network connectivity returns, sync conflicts occur or upload failures happen silently. Data appears "saved" locally but never reaches the server, resulting in missing incident reports, lost RIDDOR notifications, and compliance failures. In worst cases, conflicting edits (medic logs incident offline, office staff updates same worker record online) result in one version being overwritten without warning.
+The `riddor-detector` Edge Function fires on every completed treatment and applies RIDDOR detection rules
+regardless of which vertical the treatment belongs to. RIDDOR (Reporting of Injuries, Diseases and
+Dangerous Occurrences Regulations 2013) applies only when a **worker** is injured at a **workplace**.
+It does not apply to festival-goers, motorsport competitors, or football spectators.
 
-**Why it happens:**
-Teams implement naive "last-write-wins" conflict resolution or don't handle partial upload failures. Developers test with reliable WiFi, missing edge cases like intermittent mobile signals on construction sites. Sync queue retry logic fails to persist across app crashes. Background upload tasks get killed by OS battery optimization without proper WorkManager constraints.
+When a Festivals or Motorsport org uses the platform, a festival-goer who fractures a wrist will
+trigger a RIDDOR `specified_injury` flag and create a `riddor_incidents` record with a 10-day
+deadline. This is legally incorrect, produces false urgency, and will erode medic trust in the system
+fast — once medics learn the flags are wrong, they stop reviewing real ones.
 
-**How to avoid:**
-- Implement robust sync queue with persistent storage (WorkManager for Android, not just in-memory queues)
-- Use operational transformation or CRDTs for conflict resolution, never simple "last-write-wins" for health data
-- Make sync operations idempotent with client-generated UUIDs (not server auto-increment IDs)
-- Add operation tombstones so deletions sync correctly
-- Test sync logic with flaky networks: airplane mode toggles, 2G speeds, mid-upload app kills
-- Store upload progress per attachment (photos) so partial uploads can resume
-- Add "force sync" button for users to manually trigger retry after failures
+**Evidence in this codebase:**
+`supabase/functions/riddor-detector/index.ts` fetches the treatment record and immediately runs
+`detectRIDDOR()` with no check of the treatment's org vertical, the booking's `event_vertical`, or
+whether `patientIsWorker` is true for that org. There is no vertical lookup anywhere in the detector
+function.
+
+`services/taxonomy/vertical-compliance.ts` correctly defines `riddorApplies: false` for `festivals`,
+`motorsport`, `sporting_events`, `fairs_shows`, `private_events`. This data exists but is never
+consulted by the detector at the point of incident creation.
+
+The treatment record stored in WatermelonDB (`src/database/schema.ts`) has no `vertical_id` or
+`event_vertical` column — the vertical is fetched fresh from `org_settings` on each form mount
+(`app/treatment/new.tsx` lines 93–113) and is not persisted to the treatment row. When the sync
+payload reaches Supabase, the vertical is not included in the `treatments` table row, so the
+detector cannot read it from the treatment record either.
 
 **Warning signs:**
-- User reports "I saved that incident but it's missing from the web dashboard"
-- Duplicate records appearing after sync (indicates non-idempotent operations)
-- Photos missing from synced incidents (attachment upload failed separately from metadata)
-- Database growing indefinitely (sync queue not clearing completed items)
-- Users reporting battery drain from constant background sync retries
+- Festival org's RIDDOR incidents list fills with entries for wrist fractures and head injuries on attendees
+- Medics report "Everything is being flagged as RIDDOR — we're at a festival, these are members of the public"
+- RIDDOR incidents table accumulates entries for orgs where `riddorApplies = false`
+- Medic overrides every single auto-flagged incident as "not reportable"
+
+**Prevention strategy:**
+1. Add `vertical_id` (TEXT, optional) column to the WatermelonDB `treatments` table (schema version 4 migration required) so the vertical is persisted with the treatment record at capture time.
+2. Include `vertical_id` in the sync payload sent to Supabase treatments table.
+3. At the start of `riddor-detector/index.ts`, after fetching the treatment, resolve the org's primary vertical from `org_settings.industry_verticals` OR the booking's `event_vertical` (prefer booking-level for per-booking overrides). Call `getVerticalCompliance()` logic server-side and gate the entire detection: if `riddorApplies === false`, return `{ detected: false, reason: "RIDDOR does not apply to this vertical" }` immediately.
+4. For the `education` and `outdoor_adventure` verticals where `patientIsWorker: false` (patient may be staff or participant), add a patient-type field to the treatment form so the detector can distinguish a staff injury (RIDDOR applies) from a student/participant injury (RIDDOR does not apply).
 
 **Phase to address:**
-Phase 1 (Foundation) - Sync architecture must be solid before building features on top. Cannot be retrofitted later without major refactor.
+Before activating any non-RIDDOR vertical for production orgs. This must be fixed before the Festivals or Motorsport vertical launches — a single false RIDDOR flag sent to an HSE-aware client will damage credibility immediately.
 
 ---
 
-### Pitfall 2: GDPR Violations with Health Data Handling
+### Pitfall 2: Motorsport Concussion Protocol — Mandatory Licence Suspension Not Captured
 
 **What goes wrong:**
-SiteMedic processes UK GDPR "special category data" (Article 9: health information). Common violations include: storing health data unencrypted on device, missing audit logs of who viewed which worker's medical records, retaining injury photos longer than legally required, failing to report data breaches within 72 hours, processing health data without valid legal basis (consent vs. legitimate interest confusion), and including raw patient data in audit logs themselves (meta-violation).
+Under Motorsport UK General Regulations (and equivalent FIA rules), when a driver or competitor
+suffers a concussion — or any head injury requiring the HIA (Head Injury Assessment) protocol — the
+event's Chief Medical Officer has a mandatory duty to notify the competitor's licence-issuing body
+and the competitor may not return to racing until medically cleared. This is not optional guidance;
+it is a regulatory obligation that the platform must facilitate.
 
-Fines: up to £20 million or 4% of global revenue, whichever is higher.
+The existing treatment form (`app/treatment/new.tsx`) captures `injury_type` from the shared
+`INJURY_TYPES` taxonomy. `loss-of-consciousness` is listed but is mapped directly to a RIDDOR
+`specified_injury` trigger in the detector — the wrong framework entirely for motorsport. There is
+no concussion-specific capture path, no HIA checkbox, no "Competitor licence suspended — notification
+required to Motorsport UK" action, and no field for the Clerk of the Course notification.
 
-**Why it happens:**
-Developers treat health data like ordinary user data. UK employment law creates "imbalance of power" - workers can't freely consent to medical data collection (employer-employee power dynamic), so consent is not a valid legal basis. Must rely on "legitimate interest" (workplace safety compliance) but teams forget to document the balancing test. Photo retention defaults to "forever" instead of calculating minimum necessary period. Audit logging seen as "nice to have" feature, deferred to later phases.
+If a medic treats a concussed driver and the platform does not prompt the mandatory notification
+workflow, a competitor could re-enter racing without clearance. This is a clinical safety failure
+with liability exposure.
 
-**How to avoid:**
-- Encrypt health data at rest (AES-256) and in transit (TLS 1.3), even on device
-- Plan for post-quantum encryption by 2026 (CRYSTALS-Kyber as GDPR is moving toward quantum-resistant requirements)
-- Implement comprehensive audit logging from Day 1: who viewed which worker record, when, and what actions taken
-- Audit logs must NOT contain raw health data (log "User ID 47 accessed Worker Record 12345" not "Dr. Smith viewed John's broken arm photo")
-- Document legal basis as "legitimate interest" (workplace safety compliance under RIDDOR), not consent
-- Conduct and document Legitimate Interest Assessment (LIA) balancing employer safety obligations against worker privacy
-- Set data retention policies: RIDDOR records must be retained 3 years minimum (HSE requirement), but calculate maximum based on litigation timeframes
-- Auto-delete injury photos after retention period expires
-- Implement data breach detection and 72-hour notification workflow (GDPR Article 33)
-- Add "right to be forgotten" workflow (with exceptions for legal obligations like RIDDOR)
-- If data breach involves encryption keys remaining secure, notification may not be required (Article 34 exemption)
+**Evidence in this codebase:**
+`services/taxonomy/mechanism-presets.ts` includes `'Head impact / concussion'` as a mechanism
+preset. `services/taxonomy/vertical-compliance.ts` references `motorsport_uk` as the primary
+framework with post-treatment guidance about the Clerk of the Course, but no form field or workflow
+enforces the HIA/concussion pathway. No field called `concussion_protocol`, `hia_conducted`,
+`licence_suspension_required`, or `cmo_notified` exists anywhere in the schema or treatment form.
 
 **Warning signs:**
-- Database schema stores health data in plaintext
-- No audit_log table or access tracking in codebase
-- File storage for photos has no encryption
-- Data retention policy is "keep everything forever"
-- Legal basis for processing documented as "consent" (wrong for employment context)
-- No documented LIA or privacy impact assessment
-- Breach notification process is "we'll figure it out if it happens"
+- Motorsport medics complete treatment forms for head injuries and the form does not prompt any concussion-specific action
+- No "Return to Race Clearance" step in the treatment completion flow for motorsport vertical
+- Medics report: "The app doesn't have a section for the concussion check — I did it verbally"
+- A competitor appears on track after a flagged head injury with no clearance record in the system
+
+**Prevention strategy:**
+1. Add a vertical-specific post-treatment step for `motorsport`: after saving a treatment with `injury_type === 'loss-of-consciousness'` OR mechanism containing 'concussion', show a mandatory checklist: (a) HIA conducted Y/N, (b) Competitor stood down from racing Y/N, (c) CMO / Clerk of Course notified Y/N. These must be answered before the form can be submitted.
+2. Record `licence_suspension_flag: boolean` and `cmo_notified_at: timestamp` on the treatment record for motorsport verticals.
+3. Surface incomplete concussion protocols in the web dashboard's "Race Incidents" list with a red badge ("Concussion clearance required").
+4. Review Motorsport UK General Regulations annually — this requirement may tighten for national events with FIA oversight.
 
 **Phase to address:**
-Phase 1 (Foundation) - Cannot launch without GDPR compliance. Retrofitting encryption and audit logging after launch is extremely difficult and may require data migration.
+Motorsport vertical MVP phase. Cannot ship motorsport without this — it is the highest-risk regulatory gap identified.
 
 ---
 
-### Pitfall 3: Inadequate Offline UX - Users Don't Know What's Synced
+### Pitfall 3: WatermelonDB Schema Freeze — Adding Vertical-Specific Fields Is Painful
 
 **What goes wrong:**
-Users capture incident data while offline. App shows "Saved" confirmation but doesn't clarify "saved locally, not yet synced to server." Users assume data is backed up and close the app. When sync finally happens hours later, it fails (validation error, file too large, server timeout), but user never sees the error. Result: medic thinks incident was reported, but it never reached the system. RIDDOR deadline (10 days for serious injuries) is missed because the failure was silent.
+WatermelonDB migrations for shipped apps are structurally painful: every added column requires a
+migration file, schema version bump, and the migration must be applied before users sync. If a
+migration is missing or misapplied, the app throws and the user is stuck until they clear app data —
+losing all unsynced treatments.
 
-**Why it happens:**
-Developers focus on making offline mode "work" but neglect communicating state to users. Sync status is shown as loading spinner that disappears, not persistent indicator. Failed uploads don't surface prominently or provide actionable error messages ("Error code 500" means nothing to a site medic). Users can't distinguish between "synced to server" and "saved to device only."
+The current WatermelonDB schema (`src/database/schema.ts`) is at version 3 with no `vertical_id`,
+no `booking_id`, no `patient_type`, and no `event_specific_flags` field on the treatments table.
+Adding multi-vertical support requires at minimum: `vertical_id` (to fix Pitfall 1 above),
+potentially `patient_type` (worker vs. public, for education/outdoor verticals), and
+`concussion_protocol_flags` for motorsport.
 
-**How to avoid:**
-- Use multi-modal sync status indicators: color, labels, and icons (not just color - accessibility)
-- Show persistent status: "3 items pending sync" badge always visible, not just during active sync
-- Clear status labels in plain language: "Pending", "Syncing", "Failed", "Synced" (not error codes)
-- For failures, explain in human terms: "Couldn't upload. No internet." or "Photo too large. Try again on WiFi."
-- Provide dedicated "Pending Changes" or "Outbox" screen listing unsynced items: "Incident 104: Photo upload pending" with timestamp and retry option
-- Use subtle, non-intrusive indicators (small syncing icon in header, not blocking modal)
-- Show progress for large uploads: "Uploading photo 2 of 4 (47%)" so users know it's working
-- Add manual "Force Sync" button so users can trigger retry when they have connectivity
-- Surface critical failures prominently: RIDDOR-reportable incident failed to sync triggers alert, not buried in sync log
-- Provide sync status on each incident/record: green checkmark (synced), orange clock (pending), red exclamation (failed)
+Each of these requires a WatermelonDB schema migration. If migrations are added ad-hoc across
+multiple sprints without planning, you get schema drift: some medic devices are on version 4, others
+on version 5 after a fast update, and sync conflicts arise between incompatible record shapes.
+
+**Evidence in this codebase:**
+`src/database/migrations.ts` shows migrations to version 2 and 3 exist. `src/database/schema.ts`
+comments say "When bumping schema version, add a migration adapter before production release." No
+migration exists beyond version 3. The treatments table has no vertical-related columns.
 
 **Warning signs:**
-- Users asking "Did that save?" or "Is this backed up?"
-- Support tickets: "I saved an incident but it's not showing on the dashboard"
-- Users force-quitting and reopening app hoping it will sync
-- No visibility into sync queue or pending uploads
-- Error messages shown only in console logs, not to user
-- Users can create new incidents but can't see which old ones are still unsynced
+- PR descriptions that say "added column to WatermelonDB schema" without a corresponding migration in `migrations.ts`
+- Schema version bumped without a migration step
+- New columns added that have no `isOptional: true` — will crash existing installs
+- Team discusses "just clearing app data in development" — this approach does not work in production
+
+**Prevention strategy:**
+1. Before multi-vertical development begins, write a single planned migration (version 4) that adds ALL vertical-related columns to `treatments` in one shot: `vertical_id TEXT optional`, `patient_type TEXT optional`, `booking_id TEXT optional`. Adding them in one migration is less risky than spreading them across multiple versions.
+2. Every new WatermelonDB column must be `isOptional: true` unless it has a safe default value. Do not add required columns to existing tables in migrations — they will crash existing rows.
+3. Use a JSONB-style escape hatch: add `extra_fields TEXT optional` (JSON string) to `treatments` for vertical-specific one-off fields that don't justify a schema column (e.g., `concussion_hia_conducted`, `motorsport_cmo_notified`). This mirrors the `booking_briefs.extra_fields JSONB` pattern already in the Supabase schema.
+4. Test migrations on a device that has existing data from version 3 before releasing to production.
 
 **Phase to address:**
-Phase 1 (Foundation) - Offline UX is fundamental to user trust. If users don't trust sync, they'll duplicate work or avoid using offline features entirely.
+Start of multi-vertical development sprint. Must be planned as a single coordinated migration, not accumulated ad-hoc.
 
 ---
 
-### Pitfall 4: RIDDOR Auto-Flagging Sensitivity Problems
+### Pitfall 4: Booking Vertical vs. Org Vertical Mismatch in Treatment Form
 
 **What goes wrong:**
-RIDDOR (Reporting of Injuries, Diseases and Dangerous Occurrences Regulations) requires reporting specific incidents to HSE within strict deadlines:
-- Deaths and specified injuries: within 10 days
-- Over-seven-day injuries: within 15 days
-- Occupational diseases: without delay upon diagnosis
+The system supports per-booking vertical overrides: `bookings.event_vertical` was added in migration
+123. An org might be primarily `construction` but book a one-off `motorsport` event. When a medic
+opens a treatment form during that motorsport booking, they should see motorsport mechanism presets,
+motorsport outcome labels, and motorsport RIDDOR/compliance guidance — not construction defaults.
 
-Auto-flagging that's too sensitive creates alert fatigue: medics get false alarms for minor injuries (cut finger flagged as "specified injury"), leading them to ignore all RIDDOR alerts. Eventually they miss a real reportable incident (fractured bone, loss of consciousness, amputation). Too lenient flagging misses genuinely reportable incidents, causing compliance failures and potential £20,000 fines or 2-year jail terms for responsible persons.
+Currently (`app/treatment/new.tsx` lines 93–113), `fetchOrgVertical()` reads only from
+`org_settings.industry_verticals[0]`. It has no awareness of the current booking's `event_vertical`.
+A medic at a motorsport booking booked by a construction org will see "RIDDOR-flagging" guidance,
+"Worker Information" section heading (mitigated by `getPatientLabel()` which falls back to vertical),
+and construction-specific mechanism presets — all wrong.
 
-**Why it happens:**
-RIDDOR criteria are complex and context-dependent. Example: "fracture other than to fingers, thumbs and toes" is reportable, but finger fractures are not (unless multiple fingers). "Unconsciousness caused by head injury or asphyxia" is reportable, but fainting from heat is not. Developers implement simple keyword matching ("fracture" always flags) without understanding medical nuances. No feedback loop to tune flagging based on medic overrides.
+**Evidence in this codebase:**
+`app/treatment/new.tsx` line 101–108: fetches `org_settings.industry_verticals` and uses index `[0]`
+as `orgVertical`. No code reads `bookings.event_vertical`. The booking context (which booking the
+medic is currently working on) is not passed into the new treatment screen at all. The WatermelonDB
+treatments table has no `booking_id` column, so there is no way to look up the booking from the
+treatment record.
 
-**How to avoid:**
-- Study official RIDDOR criteria in detail: [HSE RIDDOR regulations](https://www.hse.gov.uk/riddor/)
-- Implement structured incident capture: checkboxes for "injury type" (fracture, burn, amputation, etc.) + "body part" + "mechanism" instead of free text
-- Use decision tree logic: "fracture" + "finger/thumb/toes" = not reportable (unless multiple), "fracture" + "arm/leg/skull" = reportable
-- Flag as "Possibly reportable - review required" not "Definitely reportable" to reduce false confidence
-- Let medics override with reason: "Flagged as reportable fracture but confirmed it's finger fracture only - not reportable"
-- Track override patterns to tune algorithm: if 80% of "fall from height" incidents are overridden as "not reportable", review flagging logic
-- Provide RIDDOR guidance in-app: when flagging incident, show relevant HSE criteria excerpt so medic can verify
-- Add "RIDDOR deadline countdown" for flagged incidents: "7 days remaining to report to HSE"
-- Require supervisor review before auto-submitting to HSE (don't auto-report without human verification)
+`web/lib/booking/vertical-requirements.ts` defines `BookingVerticalId` type and per-vertical
+requirements, but the mobile treatment form does not consume this.
 
 **Warning signs:**
-- High false positive rate: most RIDDOR flags get overridden as "not reportable"
-- Medics complaining about excessive alerts
-- Genuine RIDDOR incidents not flagged (testing against known reportable scenarios)
-- No ability to provide feedback on incorrect flags
-- Flagging logic is simple string matching without context
-- No visibility into flagging decision rationale ("Why was this flagged?")
+- Medic at a motorsport event sees "Worker Information" heading and RIDDOR warning banner
+- Treatment records from motorsport bookings appear in the RIDDOR incidents queue when they should not
+- Mechanism presets show construction-specific options (confined space, plant machinery) at a race circuit
+- Medic feedback: "The app doesn't know what kind of event I'm at"
+
+**Prevention strategy:**
+1. Add `booking_id TEXT optional` to the WatermelonDB treatments schema (part of the version 4 migration above).
+2. When navigating to the new treatment screen, pass the current booking ID as a route param.
+3. In `fetchOrgVertical()`, first check if a `booking_id` is available. If so, fetch that booking's `event_vertical` from Supabase. Fall back to `org_settings.industry_verticals[0]` only if no booking context exists.
+4. Cache the resolved vertical in the treatment record at creation time (the new `vertical_id` column), so it does not need to be re-fetched on every auto-save tick.
 
 **Phase to address:**
-Phase 2 or 3 (Smart Features) - Requires baseline incident capture (Phase 1) but can be refined iteratively. Start conservative (manual review), add smart flagging later based on real data patterns.
+Multi-vertical treatment form sprint. Should be done at the same time as Pitfall 1 (vertical-aware RIDDOR detector) since both require `vertical_id` to be stored on the treatment record.
 
 ---
 
-### Pitfall 5: Photo Upload Blocking Workflow
+### Pitfall 5: F2508 PDF Generator Will Trigger for Non-RIDDOR Verticals
 
 **What goes wrong:**
-Site medic treats injured worker, opens app to log incident, takes 4 photos of injury (required for documentation), taps Save. App attempts to upload 4 x 3MB photos (12MB total) immediately over construction site mobile data. Upload takes 90+ seconds or times out. Medic can't move to next task - app is stuck on "Uploading..." spinner. Blocking UX violates the 90-second constraint (medics can't spend more than 90 seconds on paperwork). Result: medics skip photo capture entirely, reducing incident documentation quality.
+The `riddor-f2508-generator` Edge Function generates the HSE F2508 RIDDOR form PDF. It is currently
+called from the web dashboard's RIDDOR incidents page. Once non-RIDDOR verticals exist, that page
+will show incidents from festivals, motorsport, and sporting events — but those incidents should
+not produce an F2508 (which is specifically the HSE RIDDOR reporting form). Generating an F2508 for
+a festival-goer's injury would be factually incorrect and could confuse a client who forwards it
+to HSE.
 
-**Why it happens:**
-Developers implement synchronous upload: save button triggers upload, UI blocks until complete. Works great on office WiFi in testing, fails on 2G construction site mobile data. Large photo files (modern phones capture 3-5MB images) combined with poor connectivity create unacceptable wait times. No image optimization or background upload strategy.
+There is also the reverse problem: if the PDF generator is locked only to RIDDOR incidents and the
+festivals/motorsport incidents page reuses the same `/riddor` route (which it does — the RIDDOR
+page adapts its heading based on vertical but does not change its URL), a medic trying to generate
+a PDF for a festival incident will find the button is absent or generates the wrong form.
 
-**How to avoid:**
-- Decouple photo capture from photo upload: photos save locally immediately (instant feedback), upload happens in background queue
-- Optimize images before upload: resize to max 1200px width (sufficient for incident documentation), compress to 100-200KB JPEG (80% quality)
-- Preserve original high-res image locally for later retrieval if needed
-- Use background upload queue with WorkManager: requires WiFi or unmetered network for large uploads (battery-friendly constraints)
-- Show optimistic UI: "Incident saved. Photos uploading in background." with progress indicator user can check but doesn't block them
-- Allow user to continue working immediately after save
-- Provide manual "Upload now" option for urgent incidents when on WiFi
-- Handle upload failures gracefully: retry automatically on next WiFi connection, show "3 photos pending upload" status
-- Consider progressive upload: upload thumbnail first (instant), full-res later in background
-- Set WorkManager constraints: NetworkType.UNMETERED (WiFi only for large files), BatteryNotLow, DeviceIdle (optional)
+**Evidence in this codebase:**
+`web/app/(dashboard)/riddor/page.tsx` line 28–29 reads `compliance = getVerticalCompliance(primaryVertical)`
+and conditionally shows a RIDDOR disclaimer for non-RIDDOR verticals. But the page URL is `/riddor`
+and the "Export PDF" button (`exportRIDDORIncidentsPDF`) presumably generates F2508 format
+regardless of the vertical's compliance framework.
+
+`supabase/functions/riddor-f2508-generator/index.ts` fetches the incident and calls
+`mapTreatmentToF2508()` with no vertical check. The function is named `riddor-f2508-generator`
+and outputs specifically the HSE F2508 format.
 
 **Warning signs:**
-- Medics reporting app is "slow" or "takes forever to save"
-- Users on slow connections can't save incidents at all (timeout errors)
-- Battery drain from constant photo upload attempts over mobile data
-- Users force-quitting app during long uploads
-- Photo file sizes are multi-megabyte uncompressed originals
-- No background upload queue - everything is synchronous
-- Upload progress blocks entire UI, can't navigate away
+- PDF download button appears on the incidents page for a Festivals org and generates an HSE F2508 document
+- Festival org's incident PDF has fields like "Name and address of the organisation where the accident happened" formatted as HSE RIDDOR report
+- Medic reports: "The PDF download button produces a form that says 'Report to HSE' — that's not what we need"
+
+**Prevention strategy:**
+1. Add a vertical check to the PDF generation trigger on the incidents page: if `compliance.primaryFramework !== 'RIDDOR'`, call a different PDF generator (event incident report format) or disable the PDF button with a tooltip explaining the correct reporting form for that vertical.
+2. Create a separate `generate-event-incident-pdf` Edge Function for non-RIDDOR verticals, producing a generic event incident report PDF rather than HSE F2508.
+3. The F2508 generator should validate on entry that the incident's org vertical is RIDDOR-applicable; if not, return a 400 error with a clear message rather than generating an incorrect form.
+4. Rename `/riddor` route or use a dynamic segment (`/incidents`) with vertical-aware heading — already partially done via `compliance.incidentPageLabel` — but ensure the PDF logic is also vertical-aware.
 
 **Phase to address:**
-Phase 1 (Foundation) - Photo capture is core feature, must work efficiently offline and on poor connections from Day 1. Retrofitting background upload after synchronous implementation is built requires significant refactor.
+PDF/reporting sprint for new verticals. The existing construction workflow must not regress. New verticals need appropriate report formats rather than repurposed F2508 forms.
 
 ---
 
-### Pitfall 6: PDF Generation Too Slow or Breaks on Mobile
+## Moderate Pitfalls
+
+Mistakes that create technical debt, user confusion, or compliance gaps without immediate regulatory liability.
+
+---
+
+### Pitfall 6: Configuration Drift Across Vertical Definition Files
 
 **What goes wrong:**
-HSE auditors require PDF incident reports. Medic generates PDF report on mobile device for incident with 4 photos, 3 witness statements, and certification records. PDF generation takes 30+ seconds, freezes UI, drains battery, or crashes app entirely on older devices. Large PDFs (5MB+) fail to open on auditor's software or exceed email attachment limits. Broken PDF generation means reports can't be submitted, causing compliance failures.
+Vertical configuration is currently split across multiple TypeScript files:
 
-**Why it happens:**
-PDF generation is CPU and memory intensive. Developers use heavy libraries designed for desktop (not mobile-optimized). Generating PDFs on UI thread blocks app. Including full-resolution photos (3MB each) creates massive PDF files. No pagination or streaming - entire PDF built in memory before saving. Testing only on flagship phones, not mid-range Android devices with limited RAM.
+- `services/taxonomy/vertical-compliance.ts` — RIDDOR applicability, framework labels (mobile + web)
+- `services/taxonomy/certification-types.ts` — `VERTICAL_CERT_TYPES` record (mobile)
+- `services/taxonomy/vertical-outcome-labels.ts` — outcome label overrides (mobile)
+- `services/taxonomy/mechanism-presets.ts` — mechanism chips per vertical (mobile)
+- `web/lib/booking/vertical-requirements.ts` — booking-level requirement checkboxes (web)
+- `web/lib/compliance/vertical-compliance.ts` — duplicate of mobile taxonomy (web)
 
-**How to avoid:**
-- Use mobile-optimized PDF library: lightweight, async generation
-- Generate PDFs on background thread, never UI thread
-- Optimize images before embedding in PDF: resize to 800px width max, compress to 100-150KB
-- Implement streaming PDF generation if possible: write to disk incrementally, not all in memory
-- Set reasonable timeouts and show progress: "Generating report... 3 of 8 pages complete"
-- Consider server-side PDF generation for complex reports: mobile app sends data, server generates PDF, returns download link
-- Cache PDF locally after generation so re-downloads are instant
-- Test on low-end devices: 3-year-old Android with 2GB RAM, not just latest iPhone
-- Limit PDF size: max 10 pages or 2MB, paginate long reports across multiple PDFs
-- Provide "lightweight" vs "detailed" report options: lightweight excludes high-res photos for email-friendly size
+Each file uses a string key (`'motorsport'`, `'festivals'`, etc.) with no shared type enforcement.
+As new verticals are added, a developer updating one file will miss another. A new vertical added
+to `VERTICAL_CERT_TYPES` but not to `VERTICAL_REQUIREMENTS` gets generic requirements. A vertical
+added to `OUTCOME_LABEL_OVERRIDES` but not to `getPatientLabel()` shows "Patient" instead of the
+correct noun. These gaps are invisible until a medic from that vertical notices wrong terminology
+or missing configuration.
+
+**Evidence in this codebase:**
+`services/taxonomy/vertical-compliance.ts` defines 10 verticals. `web/lib/compliance/vertical-compliance.ts`
+is a duplicate file with identical content (evidenced by the same function names and structure).
+`services/taxonomy/vertical-outcome-labels.ts` defines `TreatmentVerticalId` imported from
+`mechanism-presets.ts`, but the union type there and the string keys in `vertical-compliance.ts`
+are not enforced against each other — a typo in one will not cause a compile error in the other.
 
 **Warning signs:**
-- PDF generation crashes app on older devices
-- Users reporting app freezes when generating reports
-- Generated PDFs are 10MB+ file size
-- PDF generation takes 30+ seconds for simple reports
-- OutOfMemory errors in crash logs during PDF generation
-- Generated PDFs don't open in Adobe Reader or other viewers (malformed PDF)
-- No progress indicator during generation, user thinks app is frozen
+- A new vertical shows generic "Patient" label instead of the correct noun
+- Mechanism presets for a new vertical are the construction defaults
+- Cert types for a new vertical show the full 30-item list (no prioritisation) because `VERTICAL_CERT_TYPES` record was not updated
+- The two `vertical-compliance.ts` files (mobile vs. web) diverge silently when one is updated
+
+**Prevention strategy:**
+1. Create a single canonical `VERTICAL_IDS` constant (e.g., `as const` tuple) and derive all per-vertical records from it using TypeScript's `Record<VerticalId, ...>` — this forces exhaustive coverage: adding a new vertical to `VERTICAL_IDS` immediately breaks compilation anywhere the record is not updated.
+2. Write a simple unit test that imports all vertical config files and asserts that every vertical ID present in `vertical-compliance.ts` exists in `VERTICAL_CERT_TYPES`, `OUTCOME_LABEL_OVERRIDES`, and `getPatientLabel()` switch. This test fails fast when a new vertical is added without updating one config file.
+3. Consolidate the duplicate `web/lib/compliance/vertical-compliance.ts` into a single shared package or import from the mobile taxonomy. Two copies of the same data will drift.
+4. Document "the vertical checklist" — a list of all files that must be updated when adding a new vertical — and add it to the PR template.
 
 **Phase to address:**
-Phase 2 (Reporting) - PDF generation is needed for compliance reporting, but not required for basic incident capture (Phase 1). Allows time to test and optimize before launch.
+Before the second vertical (Film/TV) launches. The pattern should be established once, so all subsequent verticals follow it.
 
 ---
 
-### Pitfall 7: Certification Expiry Tracking Misses Deadlines
+### Pitfall 7: Terminology Bleed — "Worker" and "Site" Survive in Screens Not Yet Updated
 
 **What goes wrong:**
-Construction site requires valid First Aid certification for all medics. Medic's cert expires on March 15, but notification is only sent on March 15 (too late - medic already on site without valid cert). Or worse: notification sent to medic's email which they never check, not to site manager responsible for compliance. Result: site operates with uncertified medics, OSHA violations, £20,000 RIDDOR fines if incident occurs with uncertified medic.
+The `getPatientLabel()` function correctly returns vertical-specific nouns ("Attendee", "Driver / Competitor",
+"Crew member"). The treatment form (`app/treatment/new.tsx`) correctly uses it for section heading 1.
+But the treatment _detail_ screen (`app/treatment/[id].tsx`) hardcodes "Worker Information" as the
+section heading. The treatments list (`app/(tabs)/treatments.tsx`) stores and displays `workerName`
+with no vertical substitution. The validation alert (`app/treatment/new.tsx` line 315) says
+"Please select a worker" regardless of vertical.
 
-**Why it happens:**
-Teams implement single reminder at exact expiry date, not progressive warnings (30 days, 7 days, day-of). Notifications go to worker only, not supervisors/managers responsible for compliance. Reminder scheduling breaks if user's device is offline on notification date (notification never fires). No escalation if reminder is ignored. Expiry checking happens only quarterly during manual reviews, not continuously. Workers can still log incidents even with expired certifications (no validation).
+For Film/TV, Festival, and Motorsport medics, every completed treatment detail view will show
+"Worker Information" — which is factually incorrect and potentially confusing (a festival-goer is
+not a worker, a race driver is not a worker). If a legal review of records is triggered, the
+mislabelling could complicate documentation.
 
-**How to avoid:**
-- Implement progressive notification schedule: 30 days before expiry, 14 days, 7 days, 1 day, day-of, 1 day overdue
-- Send notifications to multiple recipients: worker (awareness), site manager (responsibility), compliance officer (oversight)
-- Use server-side scheduled jobs for critical reminders (not just device-local notifications that can fail)
-- Add expiry validation at point of use: worker with expired cert can't log incidents until renewed
-- Visual indicators on worker profiles: green (valid), yellow (expiring soon <30 days), red (expired)
-- Dashboard for managers: "3 medics with certifications expiring this month" with drill-down
-- Automated expiry tracking runs daily, not quarterly
-- Include grace period awareness: some certifications allow 30-day grace period for renewal
-- Track renewal-in-progress status: cert expires March 15, renewal submitted March 1, allow continued work during processing
-- Generate compliance reports: "All site medics certified as of [date]" for auditors
+The tab bar also shows "Workers" and "Worker Registry" as the tab label and header title
+(`app/(tabs)/_layout.tsx` lines 96–98). A Festivals org has no concept of a "Worker Registry" —
+they would expect "Patient Register" or "Attendee Register".
+
+**Evidence in this codebase:**
+`app/treatment/[id].tsx` line 233: `<Text style={styles.sectionTitle}>Worker Information</Text>` — hardcoded, no vertical check.
+`app/(tabs)/treatments.tsx` line 63: `let workerName = 'Unknown Worker';` — hardcoded fallback string.
+`app/(tabs)/treatments.tsx` line 224: `<Text style={styles.workerName}>{item.workerName}</Text>` — displayed directly.
+`app/(tabs)/_layout.tsx` lines 96–98: tab title and header hardcoded as "Workers" / "Worker Registry".
+`app/treatment/new.tsx` line 315: `Alert.alert('Missing Information', 'Please select a worker');`
+`app/worker/new.tsx` line 273: title hardcoded as "Add Worker - Site Induction".
 
 **Warning signs:**
-- Certifications expiring without anyone noticing until too late
-- Site managers discovering expired certs during incident (not proactively)
-- Single notification at expiry date, no advance warnings
-- Notifications only to worker, not supervisors
-- Workers with expired certs can still perform duties in system (no validation)
-- No dashboard or reporting for upcoming expirations
-- Expiry checking is manual process, not automated
+- Film/TV or Festivals org reports: "The app calls everyone 'Workers' — my clients notice this"
+- Treatment records for festival attendees display "Worker Information" header in detail view
+- The tab bar shows "Workers" to an org whose patients are race competitors
+- Support request: "We're a motorsport company, why does the app say 'Site Induction'?"
+
+**Prevention strategy:**
+1. Extend `getPatientLabel()` to return a plural form and an "registry" noun: `{ singular: 'Attendee', plural: 'Attendees', registryLabel: 'Attendee Register', inductionLabel: 'Pre-Event Registration' }`.
+2. Thread this through `app/treatment/[id].tsx`, `app/(tabs)/treatments.tsx` (rename `workerName` field to `patientName` in the local interface), and the validation alert messages.
+3. The tab navigator (`_layout.tsx`) should read the org vertical (cached in auth context or async storage) to set tab labels. If this is too complex for now, use a generic term ("Patients" / "Patient Register") that is accurate for all verticals instead of the construction-specific "Workers" / "Worker Registry".
+4. Run a grep for hardcoded "Worker", "worker", "Site Induction", "worker_id" strings in UI-facing positions and document a list. Address them as a named subtask within the terminology/vertical milestone.
 
 **Phase to address:**
-Phase 2 (Certification Tracking) - Needed before full production rollout but not for initial MVP incident capture. Allows time to implement robust notification system.
+During each vertical's launch sprint. The Film/TV vertical should not ship with "Worker Registry" visible to Film production companies. The tab-level labels can be addressed in a single cross-cutting PR before any non-construction vertical launches.
 
 ---
 
-### Pitfall 8: Background Upload Causing Battery Drain
+### Pitfall 8: Festival Triage Outcomes Use Wrong Category System
 
 **What goes wrong:**
-Users install app, capture incidents throughout the day while offline. Background sync process wakes device every 15 minutes attempting to upload even when no WiFi available. Device enters Doze mode overnight, app uses partial wakelocks to keep syncing, draining battery. Users wake to dead phone and blame app. Google Play Store flags app as battery-draining (new 2026 policy), reducing app visibility and downloads. Users uninstall.
+The standard `OUTCOME_CATEGORIES` taxonomy (`services/taxonomy/outcome-categories.ts`) uses
+work-focused outcomes: "Returned to work — same duties", "Sent home", "Referred to GP". These
+categories reflect the RIDDOR/worker mindset. The Purple Guide framework used at festivals
+expects outcomes to be recorded using the TST (Triage Sieve Tool) priority system:
+P1 (Immediate), P2 (Urgent), P3 (Delayed), P4 (Expectant / Dead).
 
-**Why it happens:**
-Developers implement aggressive sync retry logic: attempt upload every 15 minutes regardless of connectivity. Use AlarmManager with exact intervals instead of WorkManager with constraints. Don't respect Android Doze mode or iOS background execution limits. Partial wakelocks prevent device sleep. Testing on devices plugged into chargers (not real-world battery constraints). Starting March 2026, Google Play Store warns users about battery-draining apps using excessive partial wakelocks.
+Even after the outcome label overrides in `vertical-outcome-labels.ts` (which maps
+"returned-to-work-same-duties" to "Returned to event / crowd" for festivals), the underlying
+category IDs stored in the database remain work-outcome IDs. A Purple Guide-based festival audit
+or a mass casualty debrief that asks "how many P1 patients did you treat?" cannot be answered
+from the data, because the platform captured "ambulance-called" and "hospitalized" instead of
+P1/P2/P3/P4.
 
-**How to avoid:**
-- Use WorkManager (Android) with proper constraints: NetworkType.UNMETERED (WiFi only for large uploads), BatteryNotLow, RequiresCharging (optional for non-urgent sync)
-- Implement exponential backoff for failed sync attempts: 5min, 15min, 1hr, 4hr (not constant 15min retries)
-- Respect system Doze mode: sync will run during maintenance windows, don't fight OS battery optimization
-- Use WorkManager's built-in retry logic with backoff policies instead of custom alarms
-- For iOS, use Background Tasks framework respecting 30-second execution limits
-- Prioritize sync: urgent items (RIDDOR-reportable incidents) sync immediately, routine items batch until WiFi
-- Add user control: "Sync only on WiFi" setting, "Sync only when charging" option
-- Test battery usage: Android Battery Historian, monitor partial wakelocks
-- Monitor WorkManager execution: too-frequent runs indicate constraint misconfiguration
-- Defer non-critical uploads: worker certification photos can wait for WiFi, incident reports sync sooner
+This is not just a terminology issue — it is a data structure mismatch between the platform's
+data model and the regulatory reporting framework for festivals.
+
+**Evidence in this codebase:**
+`services/taxonomy/outcome-categories.ts` defines 7 outcome IDs, all work-outcome focused.
+`services/taxonomy/vertical-outcome-labels.ts` remaps display labels but preserves the same 7 IDs.
+No `triage_priority` field exists on the treatment record. The festivals compliance config
+(`services/taxonomy/vertical-compliance.ts`) names `purple_guide` as the primary framework and
+references an "Event Incident Log" but no Purple Guide-specific data fields exist.
 
 **Warning signs:**
-- Battery usage statistics show app using 20%+ battery in background
-- Partial wakelock warnings in logcat
-- App waking device during Doze mode
-- Constant sync attempts even when offline (network logs showing failed retries every 15min)
-- WorkManager constraints not set or set too loosely (NetworkType.CONNECTED allows expensive mobile data uploads)
-- Users complaining about battery drain
-- Google Play Console shows battery usage warnings (2026 policy)
+- Festival org asks: "Can we run a P1/P2/P3 breakdown for the event medical plan?" — the answer from existing data is no
+- Purple Guide post-event report template asks for patient priority categories and the data does not exist
+- Local authority or event safety officer reviews the incident report and asks about triage priorities
+- Festival medics report: "We're triaging using TST but entering a different outcome in the app — they don't match"
+
+**Prevention strategy:**
+1. Add an optional `triage_priority TEXT` field to the WatermelonDB treatments table (part of the version 4 migration). Values: `P1`, `P2`, `P3`, `P4`, or null for non-triage verticals.
+2. For the `festivals` vertical, show a triage priority selector as an additional step in the treatment form after injury details — it does not replace outcome category, but supplements it.
+3. Include `triage_priority` in the sync payload so it is stored in Supabase and available for event reports.
+4. Consult the Purple Guide (Events Industry Forum, current edition) and verify the exact triage terminology required for local authority licensing submissions before finalising the data model.
 
 **Phase to address:**
-Phase 1 (Foundation) - Background sync architecture must be battery-efficient from start. Fixing battery drain after launch damages reputation and causes user churn.
+Festivals vertical MVP sprint. This is a data model decision that cannot be retrofitted once festival orgs have live records.
 
 ---
 
-## Technical Debt Patterns
+### Pitfall 9: Offline Vertical Config Requires a Network Round-Trip on Every Treatment
 
-Shortcuts that seem reasonable but create long-term problems.
+**What goes wrong:**
+`fetchOrgVertical()` in `app/treatment/new.tsx` makes a Supabase network call on every mount of
+the new treatment screen. On a construction site, at a remote film location, or at an outdoor
+festival with poor mobile signal, this request will timeout or fail. The code gracefully falls
+back to `null` (which falls back to `general` defaults via the vertical taxonomy functions), but
+the "fall back to general" default is construction-flavoured in most of the taxonomy files. A
+Festivals medic who opens the treatment form offline sees construction mechanism presets.
 
-| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|----------|-------------------|----------------|-----------------|
-| Simple last-write-wins conflict resolution | Easy to implement, no complex merge logic | Data loss when offline edits conflict, users don't trust sync | Never for health data; maybe acceptable for non-critical settings |
-| Store unencrypted health data locally | Faster development, easier debugging | GDPR violation, £20M fine risk, complete rebuild required to add encryption | Never - encryption is non-negotiable for health data |
-| Synchronous photo upload on save | Simple flow: tap save, upload, done | Blocks UI, terrible UX on slow connections, medics skip photos | Never for production; OK for prototype/demo only |
-| Server-side PDF generation only (no offline) | Easier to maintain one PDF generator | Can't generate reports offline, defeats offline-first architecture | Acceptable for complex auditor reports; not for field incident reports |
-| Single expiry reminder at deadline | Minimal notification infrastructure | Misses deadlines, compliance failures | Never - progressive reminders are table stakes |
-| No audit logging in MVP | Ship faster, add logging later | Cannot retrofit without breaking changes, GDPR non-compliance from Day 1 | Never for health data - required by GDPR Article 30 |
-| Manual RIDDOR flagging (no auto-detection) | Avoid false positive complexity | Relies on medic's RIDDOR knowledge, inconsistent compliance | Acceptable for Phase 1 MVP, must add smart flagging by Phase 2 |
-| Client-generated timestamps for sync order | No server clock sync needed | Clock skew causes incorrect conflict resolution, data loss | Acceptable only if paired with server-side validation and vector clocks |
+The fetch is not memoised or cached — it happens on every mount of the screen, not once per
+session. In a busy shift where a medic logs 20 treatments, this is 20 network round-trips to
+fetch the same vertical config that does not change during the shift.
 
----
+**Evidence in this codebase:**
+`app/treatment/new.tsx` lines 83–113: `useEffect(() => { fetchOrgVertical(); }, [])` — no cache,
+no async-storage lookup before fetching. The `orgVertical` state is local to the component and
+resets every time the screen is mounted.
 
-## Integration Gotchas
+`services/taxonomy/mechanism-presets.ts` `getMechanismPresets()` falls back to the `general`
+preset array when `verticalId` is null — and the `general` array is identical to construction
+presets in most implementations.
 
-Common mistakes when connecting to external services.
+**Warning signs:**
+- Medic at a festival with poor signal reports: "The mechanism options look wrong — they're for a building site"
+- Performance profiling shows 20+ identical Supabase calls to `org_settings` during a shift
+- Treatment form shows construction presets when offline, even for a non-construction org
 
-| Integration | Common Mistake | Correct Approach |
-|-------------|----------------|------------------|
-| HSE RIDDOR API (if available) | Assuming real-time submission works offline | Queue submissions locally, retry on connectivity; provide manual fallback |
-| Email/PDF delivery | Sending multi-megabyte PDFs that bounce | Optimize PDF size <2MB; provide cloud link for large reports |
-| Push notifications (cert expiry) | Using only device-local notifications that fail if app uninstalled | Pair device notifications with email/SMS for critical compliance alerts |
-| Photo cloud storage (S3/Azure) | Uploading full-res images (3-5MB each) | Resize to max 1200px, compress to 100-200KB before upload; store originals locally |
-| Analytics/crash reporting | Sending PII in crash logs or analytics events | Strip all health data; log only UUIDs and anonymized metadata; configure SDK with privacy mode |
-| Authentication (SSO/OAuth) | Assuming always-online for token refresh | Cache credentials securely; handle offline re-auth gracefully; support biometric unlock |
-| Third-party compliance APIs | No retry logic for failed compliance checks | Implement retry with exponential backoff; cache last known status; fail open or closed based on risk |
+**Prevention strategy:**
+1. Cache the resolved vertical in AsyncStorage (or the SyncContext) after first successful fetch. Key: `vertical_cache_${orgId}`. Invalidate when the medic next syncs successfully. This means offline treatments use the last-known vertical.
+2. Alternatively, include the org's `industry_verticals` in the auth token's `app_metadata` (already done for `org_id` — extend it to include `primary_vertical`). This makes the vertical available instantly without any network call.
+3. If neither approach above is taken before launch, change the fallback from `general` to a genuinely neutral default (use "Patient" as patient label, omit construction-specific mechanism presets) so wrong-vertical fallback is less jarring than current.
 
----
-
-## Performance Traps
-
-Patterns that work at small scale but fail as usage grows.
-
-| Trap | Symptoms | Prevention | When It Breaks |
-|------|----------|------------|----------------|
-| Loading all incidents into memory on app start | Fast for first 10 incidents | OutOfMemory crash, slow startup | 500+ incidents with photos (typical after 6 months on busy site) |
-| Syncing entire database on each connection | Simple full-sync logic | Exponentially slower sync, massive battery drain | 1000+ worker records or 200+ incidents with attachments |
-| N+1 queries for certification checks | Works fine with 10 workers | Database locks, 5+ second page loads | 200+ workers (medium construction site) |
-| Uncompressed photo storage | Fast capture, no processing | 10GB+ app storage, users can't install updates | 500+ incidents with 4 photos each = 2000+ photos @ 5MB each |
-| Synchronous validation API calls for every field | Real-time validation UX | 5+ second delays on slow connections, UI jank | Any use on construction site mobile data |
-| Linear search through sync queue | Fast for first few items | 30+ second sync times, UI freezes | 100+ pending items in offline queue |
-| Full PDF regeneration on each report view | Latest data always included | 10+ second load times, battery drain | Reports with 10+ pages or 5+ photos |
+**Phase to address:**
+Offline-first hardening sprint. Address before the first non-construction vertical launches to production.
 
 ---
 
-## Security Mistakes
+### Pitfall 10: Cert Expiry Checker Sends Alerts Regardless of Vertical Relevance
 
-Domain-specific security issues beyond general web security.
+**What goes wrong:**
+The `certification-expiry-checker` Edge Function (`supabase/functions/certification-expiry-checker/index.ts`)
+emails medics about expiring certifications from a flat list across all cert types. A medic who
+works exclusively in the Motorsport vertical will receive reminder emails about their expiring CSCS
+card — a construction site access card that is irrelevant to their work. A Festivals medic with an
+FIA Grade 3 cert that is expiring gets an email that mentions the cert type, but the email template
+may frame it in generic terms that confuse them.
 
-| Mistake | Risk | Prevention |
-|---------|------|------------|
-| Storing encryption keys in app code or SharedPreferences | Keys extracted via reverse engineering, all health data exposed | Use Android Keystore/iOS Keychain for key storage; rotate keys periodically |
-| Including raw health data in audit logs | Audit logs become high-value target, GDPR violation | Log only UUIDs and actions; never log PII/health data in audit trails |
-| No certificate pinning for API | Man-in-the-middle attacks on construction site WiFi networks | Implement certificate pinning; use TLS 1.3 with Perfect Forward Secrecy |
-| Allowing screenshot/screen recording of health data | Photos of injuries leaked via screenshots, device screen recording | Disable screenshots in medical record views (FLAG_SECURE on Android) |
-| Weak biometric authentication implementation | Spoofed fingerprints, attackers access health records | Use BiometricPrompt with StrongBox requirement; fallback to device credential |
-| No session timeout for sensitive views | Unattended device shows health data | Auto-lock after 2 minutes of inactivity on medical record screens |
-| Unencrypted cloud backups | Device backups to iCloud/Google Drive expose health data | Disable cloud backup for health database; use encrypted app-controlled backup only |
-| Shared device support without multi-user isolation | Worker A can view Worker B's medical records | Require authentication before viewing any health data; no "remember me" for medical views |
+More critically, for verticals with mandatory compliance implications — Motorsport (FIA grade
+required for FIA-graded events), Education (DBS must be current to be on site with children) — the
+expiry email should convey urgency proportional to the regulatory consequence. A lapsed FIA Grade
+means the medic cannot work FIA-governed circuits. A lapsed Enhanced DBS means the medic cannot
+legally be unsupervised with children. The current generic email template does not distinguish these.
 
----
+**Evidence in this codebase:**
+`supabase/functions/certification-expiry-checker/index.ts` calls `get_certifications_expiring_in_days`
+RPC and iterates all results without filtering by the medic's vertical(s). `VERTICAL_CERT_TYPES`
+in `services/taxonomy/certification-types.ts` defines which certs are relevant per vertical, but
+this mapping is not used by the expiry checker.
 
-## UX Pitfalls
+**Warning signs:**
+- Motorsport-only medics receiving CSCS expiry warnings
+- Medic ignores expiry emails because "they're always about certs I don't need" — then misses a critical one
+- Education org admin receives notification about a medic's FIA Grade 3 expiry — irrelevant to them
 
-Common user experience mistakes in this domain.
+**Prevention strategy:**
+1. Store each medic's primary vertical(s) on their profile. The expiry checker should filter reminders to certs in `VERTICAL_CERT_TYPES[primaryVertical]` before sending emails.
+2. Add a `regulatory_consequence` field to cert type info (in `CERT_TYPE_INFO`) for certs with mandatory implications: `{ label: 'FIA Grade 3', category: 'motorsport', mandatoryFor: 'FIA-graded circuit events', consequence: 'Cannot work FIA circuits when expired' }`. Use this in email templates to frame urgency correctly.
+3. For DBS and FIA grade certs, send alerts to the org admin at the 30-day stage (not just 14/7/1) with wording that reflects the legal consequence.
 
-| Pitfall | User Impact | Better Approach |
-|---------|-------------|-----------------|
-| Requiring internet for incident capture | Medics can't log incidents on construction sites (no signal), paper forms continue | Full offline capture with background sync |
-| Unclear sync status indicators | Users don't know if incident is safely backed up, anxiety and duplicate entries | Multi-modal status: color, label, icon; persistent "3 pending" badge; detailed outbox screen |
-| Technical error messages ("Error 500") | Medics don't know what to do, call IT support, waste time | Plain language: "Couldn't upload. No internet." with retry button |
-| Complex RIDDOR decision tree UI | Medics avoid RIDDOR reporting due to confusion, compliance failures | Smart auto-flagging with override; show HSE criteria excerpt; progressive disclosure |
-| Forcing high-quality photos (slow capture) | Each photo takes 5 seconds to process, medics skip documentation | Allow quick capture of medium-quality images (sufficient for incident docs) |
-| No offline visual design feedback | App looks broken when offline (failed loads, empty states), users think it crashed | Offline banner, cached data shown with "Last updated" timestamp, graceful degradation |
-| Blocking UI during PDF generation | Medics can't do anything else for 30+ seconds, frustration | Background generation with notification when ready; allow continued work |
-| Hidden certification expiry warnings | Medics miss expiry, work with invalid cert, compliance failure | Prominent dashboard badge, block login if critical cert expired, multiple notification channels |
-| No bulk operations for site managers | Manager must update 50 workers one-by-one (certification renewal), takes hours | Bulk selection, batch operations, CSV import for certifications |
-| Autocomplete suggesting previous injuries | Typing "John" shows "John Smith - fractured arm 2024" exposing medical history in public | Disable autocomplete for medical fields, use ID lookup not name search in public areas |
-
----
-
-## "Looks Done But Isn't" Checklist
-
-Things that appear complete but are missing critical pieces.
-
-- [ ] **Offline sync:** Often missing conflict resolution (only happy path tested) — verify concurrent edits, network failures mid-upload, app killed during sync
-- [ ] **GDPR compliance:** Often missing audit logging or data retention policies — verify comprehensive access logs, auto-deletion schedules, breach notification workflow
-- [ ] **Photo upload:** Often missing background queue (only synchronous tested) — verify upload continues after app backgrounded, retry after failure, resume after partial upload
-- [ ] **PDF generation:** Often missing optimization (only tested with 1-page reports) — verify 10-page reports with 8 photos don't crash or timeout
-- [ ] **Certification tracking:** Often missing progressive reminders (only single notification) — verify 30-day, 7-day, 1-day warnings sent to multiple recipients
-- [ ] **RIDDOR flagging:** Often missing context awareness (simple keyword matching) — verify accuracy against HSE criteria, false positive rate acceptable
-- [ ] **Battery optimization:** Often missing WorkManager constraints (runs on mobile data, drains battery) — verify WiFi-only uploads, respects Doze mode, exponential backoff
-- [ ] **Encryption:** Often missing key rotation or iOS Keychain integration (keys in code) — verify Android Keystore/iOS Keychain used, keys never in git history
-- [ ] **Offline UX:** Often missing failure state communication (errors hidden) — verify failed uploads surfaced prominently, user can retry manually, outbox shows pending items
-- [ ] **Audit logging:** Often missing PII filtering (logs raw health data) — verify audit logs contain only UUIDs, no health data in log messages
+**Phase to address:**
+Certification vertical awareness sprint. Should be done before any non-construction vertical goes live with real medics.
 
 ---
 
-## Recovery Strategies
+## Minor Pitfalls
 
-When pitfalls occur despite prevention, how to recover.
-
-| Pitfall | Recovery Cost | Recovery Steps |
-|---------|---------------|----------------|
-| Data loss from sync conflicts | HIGH | No automatic recovery; require manual data entry reconstruction; implement conflict resolution for future; communicate transparently with affected users |
-| GDPR violation discovered | VERY HIGH | Immediately stop processing if possible; notify DPO and legal; self-report to ICO within 72 hours if breach; implement fix; document corrective actions |
-| Unencrypted health data shipped | VERY HIGH | Cannot retroactively encrypt (keys can't be distributed); force app update with encryption; migrate data with user re-authentication; notify ICO of breach |
-| Battery drain from poor sync logic | MEDIUM | Ship hotfix update with WorkManager constraints; communicate update to users via in-app message; monitor Play Store reviews for battery complaints |
-| PDF generation crashes | LOW | Fall back to server-side generation; cache generated PDFs; queue and retry failed generations; optimize library or switch to lighter alternative |
-| Missed RIDDOR deadline | HIGH | Manual submission to HSE with explanation; document incident timeline; implement progressive reminders for future; review all recent incidents for other missed reports |
-| Certification expiry not caught | MEDIUM | Immediately flag expired certs; remove affected workers from active duty in system; expedite renewals; implement progressive reminder system |
-| Photos too large (storage/upload issues) | MEDIUM | Ship update with image optimization; provide one-time "cleanup" feature to compress existing photos; communicate storage savings to users |
+Issues that are irritating but recoverable without rewriting.
 
 ---
 
-## Pitfall-to-Phase Mapping
+### Pitfall 11: Treatment Reference Number Format Is Construction-Branded
 
-How roadmap phases should address these pitfalls.
+**What goes wrong:**
+The treatment reference number generator (`app/treatment/new.tsx` line 153–174) generates
+`SITE-YYYYMMDD-NNN`. "SITE" is construction-specific branding. For a Film/TV org, the reference
+will appear in reports as `SITE-20260301-001` — a production company's clients or insurers may find
+"SITE" confusing or unprofessional when the event is a film shoot, not a construction site.
 
-| Pitfall | Prevention Phase | Verification |
-|---------|------------------|--------------|
-| Sync data loss | Phase 1: Foundation | Test concurrent edits, mid-upload failures, app crashes during sync; verify idempotency and conflict resolution |
-| GDPR violations | Phase 1: Foundation | Security audit before launch; verify encryption at rest and transit, audit logging functional, data retention policies documented |
-| Unclear offline UX | Phase 1: Foundation | User testing with construction site workers; verify sync status always visible, failures communicated clearly |
-| Photo upload blocking workflow | Phase 1: Foundation | Test on 2G network speeds; verify background upload functional, UI never blocks on photo operations |
-| Battery drain from sync | Phase 1: Foundation | Monitor battery usage with Android Battery Historian; verify WorkManager constraints prevent excessive wakeups |
-| RIDDOR flagging issues | Phase 2: Smart Features | Test against 50+ known RIDDOR scenarios from HSE guidance; track false positive/negative rates in production |
-| PDF generation performance | Phase 2: Reporting | Stress test: generate 20-page report with 12 photos on 3-year-old Android device; verify <10 second generation time |
-| Certification expiry missed | Phase 2: Certification Tracking | Simulate 100+ workers with staggered expiry dates; verify all recipients receive progressive reminders |
+**Evidence in this codebase:**
+`app/treatment/new.tsx` line 171: `` return `SITE-${dateStr}-${sequenceNumber}`; ``
+Hardcoded prefix, not derived from vertical.
+
+**Warning signs:**
+- Film/TV client asks: "Why do all incident reports say SITE- if we're on a film set?"
+- Insurance paperwork requires a reference format that the "SITE" prefix breaks
+
+**Prevention strategy:**
+Use a vertical-configurable prefix: `construction` → `SITE`, `tv_film` → `PROD`, `motorsport` → `RACE`, `festivals` → `EVT`, others → `MED`. Derive the prefix from `orgVertical` at reference generation time. If vertical is not known yet (offline), use `MED` as a safe neutral prefix.
+
+**Phase to address:**
+During Film/TV vertical sprint. Low effort, high polish value.
+
+---
+
+### Pitfall 12: Heat Map GPS Data Gap — Treatments Have No Location Field
+
+**What goes wrong:**
+Near-miss records capture GPS location (`app/safety/near-miss.tsx` captures `latitude` and
+`longitude` on mount). Treatment records do not. The WatermelonDB `treatments` table has no
+`location` column and the treatment form does not request location permission. If a heat map feature
+is planned (showing where on a site or event most injuries occur), treatment GPS data will be absent.
+Near-miss records will show location data; treatment records will not. The resulting heat map will
+appear to show "injuries never happen" when in fact the location was never captured.
+
+**Evidence in this codebase:**
+`src/database/schema.ts` — `near_misses` table has `{ name: 'location', type: 'string', isOptional: true }`.
+`treatments` table has no location column. `app/treatment/new.tsx` makes no `expo-location` import.
+`app/safety/near-miss.tsx` imports `expo-location` and captures coordinates at form open.
+
+**Warning signs:**
+- Analytics dashboard shows heat map of near-misses but no heat map of treatment locations
+- Business requirement for "location intelligence" across all incident types cannot be met
+- A heat map feature is built that only covers 50% of incident types
+
+**Prevention strategy:**
+Add `location TEXT optional` (JSON lat/lng string) to the WatermelonDB treatments table in the version 4 migration. Silently capture GPS at treatment form open (same pattern as near-miss). Do not block form completion if location is unavailable — make it background capture. Store in the same format as `near_misses.location`. This is trivial to add now; retrofitting after live records exist means historical data has no location.
+
+**Phase to address:**
+Version 4 WatermelonDB migration sprint — add it alongside `vertical_id` so both are in one schema bump.
+
+---
+
+### Pitfall 13: Trend Chart Data Integrity — Compliance Score History Has No Consistent Formula
+
+**What goes wrong:**
+If a compliance score trend chart is added to the dashboard (a common roadmap item for compliance
+SaaS), the score formula must be frozen before data is collected. If the formula changes between
+week 1 and week 8 (e.g., "we added RIDDOR submission rate as a factor"), historical scores become
+incomparable to current scores. The chart appears to show improvement or decline that is actually
+a formula change.
+
+**Evidence in this codebase:**
+No compliance score or trend table exists yet in the migrations reviewed. The `daily_location_trends`
+view referenced in `web/app/admin/analytics/page.tsx` exists for admin analytics, but no per-org
+compliance score history table was found.
+
+**Warning signs:**
+- Compliance score logic is embedded in a dashboard component rather than a database view or Edge Function
+- Score formula is changed mid-month and historical scores are not recalculated
+- Two orgs compare their scores and get different results for identical incident counts because they onboarded at different times
+
+**Prevention strategy:**
+Before building the compliance trend chart, define the score formula in a database view or Edge Function (single source of truth). Snapshot daily scores into a `org_compliance_scores (org_id, score_date, score, formula_version)` table. Include `formula_version` so historical scores are interpretable after formula updates.
+
+**Phase to address:**
+Analytics/reporting sprint. Do not build the front-end chart before the score formula and snapshot table are in place.
+
+---
+
+## Regulatory Compliance Errors (Most Likely to Create Liability)
+
+A summary of the regulatory gaps identified, ranked by consequence severity.
+
+| Vertical | Regulatory Requirement | Current Status | Consequence if Missed |
+|----------|----------------------|----------------|----------------------|
+| Motorsport | Mandatory concussion licence suspension notification (Motorsport UK) | Not implemented | Competitor races after concussion; platform has liability |
+| Festivals / Motorsport / Sporting Events | RIDDOR must NOT flag public patient injuries | RIDDOR detector is vertical-blind | False RIDDOR reports to clients; erosion of trust |
+| Festivals | Purple Guide TST triage priority (P1/P2/P3/P4) must be capturable | No triage priority field | Cannot produce Purple Guide-compliant post-event reports for local authority licensing |
+| Education | Enhanced DBS is mandatory to be on-site with children | Cert tracked but expiry alert not urgent-framed | Lapsed DBS medic on-site with children; Ofsted violation |
+| Motorsport | FIA Grade certificate required for graded events | Cert tracked but expiry alert not role-specific | Ungraded medic provides track-side cover at FIA event; FIA violation |
+| Football/Sporting | Two patient types (player vs. spectator) need different form fields | Single treatment form with no patient type selector | Insurance claim uses wrong form; governance report incomplete |
+
+---
+
+## Phase-Specific Warnings
+
+| Phase Topic | Most Likely Pitfall | Mitigation |
+|-------------|--------------------|-----------|
+| WatermelonDB schema migration | Missing columns break existing installs | Plan all new columns as one version 4 migration with all fields optional; test on device with existing v3 data before release |
+| Motorsport vertical MVP | Concussion protocol missing | Mandatory concussion checklist in treatment form before motorsport vertical goes live |
+| Festivals vertical MVP | RIDDOR flags on public patients | Fix vertical-aware RIDDOR detector before festival vertical activates |
+| Festivals vertical MVP | No triage priority capture | Add `triage_priority` field in v4 migration; show selector for festival vertical |
+| Film/TV vertical | Terminology bleed ("Worker Information", "SITE-" prefix) | Cross-cutting terminology PR before Film/TV launch |
+| All new verticals | Config drift (missing entry in one taxonomy file) | Mandatory unit test: all verticals present in all config records |
+| Certification alerts | Irrelevant cert reminders | Filter by vertical before launch |
+| Analytics/heat map | Treatment has no GPS | Add `location` column in v4 migration |
+| Compliance score chart | Formula not frozen | Define formula in DB before building front-end |
 
 ---
 
 ## Sources
 
-**Offline-First Mobile Apps:**
-- [Offline First Apps: Challenges and Solutions | DashDevs](https://dashdevs.com/blog/offline-applications-and-offline-first-design-challenges-and-solutions/)
-- [5 critical components for implementing a successful offline-first strategy | Medium](https://medium.com/@therahulpahuja/5-critical-components-for-implementing-a-successful-offline-first-strategy-in-mobile-applications-849a6e1c5d57)
-- [Build an offline-first app | Android Developers](https://developer.android.com/topic/architecture/data-layer/offline-first)
-- [Offline-First App Guide for Startups | Bright Inventions](https://brightinventions.pl/blog/offline-first-app-guide-for-startups-app-owners-case-studies/)
+**Regulatory sources consulted for this research:**
 
-**Data Sync and Conflict Resolution:**
-- [Offline vs. Real-Time Sync: Managing Data Conflicts | Adalo](https://www.adalo.com/posts/offline-vs-real-time-sync-managing-data-conflicts)
-- [Implementing Data Sync & Conflict Resolution Offline in Flutter](https://vibe-studio.ai/insights/implementing-data-sync-conflict-resolution-offline-in-flutter)
-- [Building Offline Apps: A Fullstack Approach to Mobile Resilience](https://think-it.io/insights/offline-apps)
-- [The Complete Guide to Offline-First Architecture in Android](https://www.droidcon.com/2025/12/16/the-complete-guide-to-offline-first-architecture-in-android/)
+- Motorsport UK General Regulations (2024 edition) — concussion and HIA requirements: https://www.motorsportuk.org/the-sport/regulations/
+- FIA Medical Code — Grade requirements for circuit events: https://www.fia.com/sites/default/files/fia_medical_code.pdf
+- HSE RIDDOR Regulations 2013 — who is covered (workers only, not public): https://www.hse.gov.uk/riddor/who-must-report.htm
+- Events Industry Forum — The Purple Guide (current edition): https://www.thepurpleguide.co.uk
+- Ofsted — Paediatric First Aid requirements in education settings: https://www.gov.uk/government/publications/paediatric-first-aid-in-early-years-settings
+- DBS/Barred List obligations in education: https://www.gov.uk/dbs-check-guidance
 
-**GDPR Health Data Compliance:**
-- [GDPR vs HIPAA: Key Differences & Compliance 2026](https://www.atlassystems.com/blog/gdpr-vs-hipaa)
-- [GDPR in Healthcare: A Practical Guide to Global Compliance](https://www.dpo-consulting.com/blog/gdpr-healthcare)
-- [GDPR Compliance Checklist for Healthcare](https://drata.com/blog/gdpr-for-healthcare)
-- [Health data and the GDPR | Adequacy](https://www.adequacy.app/en/blog/health-data-gdpr-compliance)
-- [GDPR Encryption Guide | Data at rest and in transit](https://thecyphere.com/blog/gdpr-encryption/)
-- [Data Encryption Requirements 2025: Post-Quantum Protection](https://paperclip.com/data-encryption-requirements-2025-why-data-in-use-protection-is-now-mandatory/)
+**Code files inspected (all findings are grounded in this codebase):**
 
-**RIDDOR Compliance:**
-- [Understanding RIDDOR Reporting in Construction Safety | Novade](https://www.novade.net/en/riddor-reporting-timescales/)
-- [A Beginner's Guide to RIDDOR for Construction Companies](https://piptfw.co.uk/blogs/news/a-beginners-guide-to-riddor-for-construction-companies)
-- [RIDDOR & Risk Assessment 2025: Contractor Manager Guide](https://www.heresafe.com/riddor-risk-assessment-2025-what-every-contractor-manager-needs-to-know/)
-- [RIDDOR Reporting Timescales Explained | HASpod](https://www.haspod.com/blog/paperwork/riddor-reporting-timescales-explained)
-
-**Medical Photos and Privacy:**
-- [2026 Video Privacy Checklist: Identity Exposure Guard](https://www.secureredact.ai/articles/video-privacy-checklist)
-- [GDPR Incident Response Plan: 2026 Guide](https://www.konfirmity.com/blog/gdpr-incident-response-plan)
-- [What are the HIPAA Photography Rules? Updated for 2026](https://www.hipaajournal.com/hipaa-photography-rules/)
-
-**Background Sync and Battery Optimization:**
-- [Google Play Store to Warn Users of Battery-Draining Apps in 2026](https://www.webpronews.com/google-play-store-to-warn-users-of-battery-draining-apps-in-2026/)
-- [These Background Task Patterns Destroy Your App's Battery Life](https://medium.com/@hiren6997/these-background-task-patterns-are-destroying-your-apps-battery-life-cc51318826ff)
-- [Optimize battery use for task scheduling APIs | Android Developers](https://developer.android.com/develop/background-work/background-tasks/optimize-battery)
-- [Designing a Robust Offline-First Mobile Architecture with Background Sync](https://medium.com/@mkaomwakuni/designing-a-robust-offline-first-mobile-architecture-with-background-sync-a19f7a66b5c3)
-
-**Offline UX and Sync Status:**
-- [Offline-first mobile app background sync: UX | AppMaster](https://appmaster.io/blog/offline-first-background-sync-conflict-retries-ux)
-- [Design Guidelines for Offline & Sync | Google Open Health Stack](https://developers.google.com/open-health-stack/design/offline-sync-guideline)
-- [Offline UX design guidelines | web.dev](https://web.dev/offline-ux-design-guidelines/)
-- [Offline Mobile App Design: Challenges and Best Practices](https://leancode.co/blog/offline-mobile-app-design)
-
-**Certification Tracking:**
-- [Certification Tracking Software: Top Solutions](https://www.expirationreminder.com/blog/certification-tracking-software-comparing-top-solutions-for-compliance-automation)
-- [Certification Tracking: Costs of Expired Training](https://mycomply.net/info/blog/certification-tracking-the-mind-blowing-costs-of-expired-training/)
-- [Hidden Costs of Expired Construction Certifications](https://www.builderfax.com/blog/the-hidden-cost-of-expired-certifications-on-construction-projects)
-
-**Medical Audit Trails:**
-- [Audit logs and audit trails for digital health applications](https://www.chino.io/post/logs-audit-trails-digital-health-apps)
-- [10 Essential Audit Trail Best Practices for 2026](https://signal.opshub.me/audit-trail-best-practices/)
-- [Understanding HIPAA Audit Trail Requirements](https://conciergehealthcareattorneysllc.com/blog/hipaa-audit-trail-requirements-what-healthcare-practitioners-need-to-know/)
-
-**GDPR Legal Bases (Consent vs Legitimate Interest):**
-- [GDPR Legitimate Interest Explained For Business Owners](https://termly.io/resources/articles/gdpr-legitimate-interest/)
-- [Is Employee Consent under EU Data Protection Regulation Possible?](https://www.jacksonlewis.com/insights/employee-consent-under-eu-data-protection-regulation-possible)
-- [GDPR in Construction: What You Need to Know](https://www.integrity-software.net/resources-guides/gdpr-in-construction-what-you-need-to-know)
+- `supabase/functions/riddor-detector/index.ts` — no vertical check found
+- `supabase/functions/riddor-detector/detection-rules.ts` — no vertical check found
+- `supabase/functions/riddor-f2508-generator/index.ts` — no vertical check found
+- `supabase/functions/certification-expiry-checker/index.ts` — no vertical filter found
+- `services/taxonomy/vertical-compliance.ts` — RIDDOR applicability correctly defined (not used by detector)
+- `services/taxonomy/certification-types.ts` — `VERTICAL_CERT_TYPES` correctly defined (not used by expiry checker)
+- `services/taxonomy/vertical-outcome-labels.ts` — outcome label overrides correct (TST triage not present)
+- `src/database/schema.ts` — version 3, no vertical_id or location on treatments table
+- `src/database/migrations.ts` — migrations to v3 only
+- `app/treatment/new.tsx` — vertical fetch pattern (network call on every mount, no cache)
+- `app/treatment/[id].tsx` — "Worker Information" heading hardcoded
+- `app/(tabs)/_layout.tsx` — "Workers" / "Worker Registry" tab labels hardcoded
+- `supabase/migrations/123_booking_briefs.sql` — `event_vertical` added to bookings table
+- `supabase/migrations/121_org_industry_verticals.sql` — `industry_verticals` in org_settings
+- `web/app/(dashboard)/riddor/page.tsx` — renders for all verticals including non-RIDDOR
 
 ---
 
-*Pitfalls research for: SiteMedic - Medical compliance platform for construction site medics (offline-first, GDPR-compliant, RIDDOR reporting)*
-
-*Researched: 2026-02-15*
-
-*Confidence: HIGH - Based on official GDPR/RIDDOR guidance, Android/iOS official documentation, and 2026 industry best practices*
+*Pitfalls research for: SiteMedic v2.0 multi-vertical expansion milestone*
+*Researched: 2026-02-17*
+*Confidence: HIGH — all findings grounded in direct code inspection of the shipped codebase*

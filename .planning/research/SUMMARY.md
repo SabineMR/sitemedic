@@ -1,529 +1,302 @@
-# Project Research Summary
+# Research Summary — SiteMedic v2.0 Multi-Vertical
 
-**Project:** SiteMedic
-**Domain:** Medical Compliance & Construction Safety Management Platform (Offline-First Mobile + Web Dashboard)
-**Researched:** 2026-02-15
-**Confidence:** HIGH
+**Project:** SiteMedic v2.0 Multi-Vertical Expansion
+**Domain:** UK medic compliance platform — Film/TV, Festivals, Motorsport, Football/Sports verticals added to shipped Construction baseline
+**Researched:** 2026-02-17
+**Confidence:** HIGH (stack/architecture verified against live codebase; features verified against official regulatory sources)
+
+---
 
 ## Executive Summary
 
-SiteMedic is an offline-first medical compliance platform for construction site medics, combining iOS mobile data capture with a web dashboard for site managers. The 2025-2026 expert consensus for building this type of product centers on proven offline-first patterns: React Native + Expo SDK 54 for mobile, WatermelonDB (SQLite) for local persistence, Supabase (PostgreSQL + Auth + Storage) for backend, and server-side PDF generation. This stack prioritizes rapid shipping, regulatory compliance (RIDDOR + UK GDPR), and field reliability over custom infrastructure.
+SiteMedic v2.0 adds four regulated verticals — Film/TV Production, Festivals & Events, Motorsport, and Football/Sports — to a shipped Construction baseline. Each vertical operates under a distinct regulatory framework: HSE RIDDOR 2013 for Film/TV (same as Construction), The Purple Guide for Festivals, Motorsport UK NCR Chapter 11 for Motorsport, and FA guidelines plus SGSA for Football. This means different incident forms, different PDF output formats, different certification requirements, and critically different rules about when RIDDOR applies. The RIDDOR detector, the PDF generator, and the mobile treatment form must all become vertical-aware before any new vertical can be safely activated for real clients.
 
-The research validates SiteMedic's specification is market-competitive and correctly scoped. Every planned MVP feature has either a regulatory driver (RIDDOR reporting, GDPR compliance, HSE audit requirements) or table stakes status (offline mode, photo evidence, certification tracking). The spec includes two unique differentiators competitors lack: RIDDOR auto-flagging and clinical workflow integration (data capture as byproduct of medic work, not separate admin tasks). Strategic deferrals (heat maps, AI risk prediction, multi-project support) to post-MVP phases demonstrate strong product discipline.
+The good news is that the codebase is structurally well-positioned. The vertical taxonomy (10 verticals defined in TypeScript config), org-level vertical storage (`org_settings.industry_verticals`), booking-level override (`bookings.event_vertical`), and the web dashboard `OrgContext` already exist and are correct. The gaps are focused: the mobile app fetches the vertical on every form mount without caching it, the RIDDOR detector fires on every treatment regardless of vertical, three new regulatory PDF formats have no Edge Functions yet, and the WatermelonDB schema has no `event_vertical` column. These gaps must close before the first non-construction vertical goes live or the system will produce false RIDDOR flags for festival-goers and motorsport competitors.
 
-The dominant risk is sync architecture. Critical pitfalls include data loss during offline-to-online transitions, GDPR violations with health data, inadequate offline UX, photo upload blocking workflow, and battery drain from aggressive background sync. These must be addressed in Phase 1 foundation—retrofitting robust sync after launch requires major refactoring. Secondary risks include RIDDOR auto-flagging sensitivity (Phase 2 concern), PDF generation performance on mobile devices, and certification expiry tracking missing deadlines. All are mitigatable with patterns documented in research.
+The highest-risk single item is the Motorsport concussion protocol: Motorsport UK mandates that a concussed competitor's licence must be suspended immediately and the CMO must notify Motorsport UK. No fields for this workflow exist anywhere in the schema or treatment form. Shipping the motorsport vertical without this is a clinical safety failure with direct liability exposure.
+
+---
 
 ## Key Findings
 
-### Recommended Stack
+### Stack (from STACK.md)
 
-SiteMedic requires a proven offline-first stack optimized for UK health data compliance, rapid field data capture, and professional PDF reporting. Research confirms the 2025-2026 standard for this domain.
+No new npm packages are required for multi-vertical support. All patterns use existing stack capabilities. The one new package needed for the heat map feature is `leaflet.heat` (a 3 KB plugin on top of the already-installed Leaflet 1.9.4). No feature-flag service (LaunchDarkly etc.), no i18n library, and no dynamic form builder are needed.
 
-**Core technologies:**
-- **Expo SDK 54 (React Native 0.81)** — Industry standard for rapid iOS/Android development; SDK 54 includes React Native 0.81, React 19, precompiled XCFrameworks (10x faster iOS builds), and New Architecture by default
-- **WatermelonDB 0.28.0** — Built on SQLite, optimized for React Native offline-first; lazy-loads data for instant app launch regardless of dataset size; Supabase officially recommends for offline sync pattern
-- **Supabase** — PostgreSQL + Auth + Storage + Edge Functions in one managed service; UK/EU region support (eu-west-2 London) ensures GDPR compliance; SOC 2 compliant with BAA available for PHI handling
-- **React 19 + Vite** — Web dashboard framework; latest stable with concurrent rendering for improved dashboard performance; Vite is 2026 standard replacing deprecated Create React App
-- **shadcn/ui + Tailwind CSS 4.x** — Web dashboard UI; pre-built accessible components with utility-first CSS framework; industry standard for 2026, faster than component libraries for custom medical forms
-- **pdfmake (server-side)** — Declarative PDF generation via Supabase Edge Functions; JSON-based templates support tables/headers/footers; server-side offloads processing from mobile devices
-- **TypeScript 5.x** — Type safety across entire stack; standard for React/React Native in 2026; catches errors at compile-time; essential for large codebases with offline sync logic
+**Core technology decisions confirmed:**
+- Vertical config storage: TypeScript static `Record<string, Config>` files, vertical ID string in DB — no DB config table
+- Runtime vertical switching (web): existing `OrgProvider` + `useOrg()` — already correct, no changes needed
+- Runtime vertical switching (mobile): new `src/contexts/OrgContext.tsx` mirroring the web pattern — replaces the per-mount `fetchOrgVertical()` call
+- Terminology switching: extend `services/taxonomy/` files with a new `vertical-terminology.ts` — no i18n library
+- Per-vertical PDF templates: one Edge Function per report-type category with vertical dispatch (not one per vertical)
+- Per-vertical form fields: `services/taxonomy/vertical-form-fields.ts` + JSONB `extra_fields` column on treatments
 
-**Supporting libraries validated:**
-- State management: Zustand (global client state), TanStack Query 5.x (server state)
-- Forms: react-hook-form 7.x + zod 3.x (validation)
-- Offline sync: @react-native-community/netinfo 11.x (connectivity detection)
-- Encryption: expo-crypto + expo-secure-store (AES-256 for health data)
-- Photos: expo-image-picker 17.0.10 (capture with EXIF preservation)
-- Signatures: react-native-signature-canvas 5.0.2 (treatment consent)
+### Features (from FEATURES.md)
 
-### Expected Features
+All four new verticals have researched and documented regulatory requirements from official sources.
 
-Research across 50+ construction safety platforms, RIDDOR compliance systems, and occupational health software confirms SiteMedic's MVP spec is comprehensive and competitive.
+**Film / TV Production:**
+- Uses HSE RIDDOR 2013 in full (same as construction) — existing auto-flagging logic still applies
+- Extra form fields: production title, scene/stunt context, SFX/pyrotechnic flag, stunt coordinator present, patient role (Cast/Crew/Stunt performer)
+- Certs: FREC 4/PHEC + HCPC Paramedic; ATLS for stunt-heavy productions; Enhanced DBS when under-18s on set
+- Regulatory trigger: dangerous occurrences (stunt accidents, pyrotechnic incidents) must be reported even without injuries
+- Terminology: "Crew member" not "Worker"; "Set/Location" not "Site"; "Shoot day" not "Shift"
 
-**Must have (table stakes):**
-- Treatment Logger with photo evidence — Core medic workflow; RIDDOR/HSE compliance requirement; <90 second completion target
-- Offline-first operation with auto-sync — 78% of reviewers rate offline access as important/highly important; construction sites frequently have zero signal
-- RIDDOR auto-flagging — **Unique differentiator vs competitors**; intelligent auto-detection reduces compliance risk
-- Digital forms with mobile capture — Paper-based systems have 35% higher compliance gap rates; industry standard is mobile-first
-- Weekly PDF report generation — Required for HSE audits, principal contractors, insurers; must be professional-grade and audit-ready
-- Worker health profiles with certification tracking — CSCS, CPCS, IPAF, Gas Safe expiry tracking is regulatory requirement in UK construction
-- UK GDPR compliance (encryption, consent, retention) — Mandatory for health data (special category); AES-256 at rest, TLS 1.3 in transit
-- Compliance dashboard (traffic-light visual status) — Site managers consume reports, don't create them; real-time metrics filterable views
-- Digital signature capture — Treatment consent, incident acknowledgment require legally-binding signatures
-- Email alerts — RIDDOR deadlines (15-day), certification expiry notifications (30/14/7 days before)
+**Festivals & Events:**
+- Framework: Purple Guide (Events Industry Forum, 2024) — RIDDOR does NOT apply to festival-goers (attendees)
+- Extra form fields: TST triage priority (P1/P2/P3/P4), alcohol/substance involvement (mandatory), safeguarding flag (mandatory per Purple Guide 2024), welfare area ID
+- Certs: FREC 3 minimum (PHEM D); HCPC Paramedic for Tier 4-5 events as clinical lead
+- Regulatory trigger: post-event medical summary report to local authority Safety Advisory Group (SAG)
+- Key data model issue: existing work-outcome categories (returned to work, sent home) do not map to Purple Guide TST categories
 
-**Should have (competitive advantage):**
-- Clinical workflow integration — **Unique differentiator**; data capture happens DURING treatment, not as separate admin task; <90 second logging
-- Gloves-on usability — 48x48pt tap targets, high-contrast for bright sunlight, one-hand operation for medics working in field
-- Near-miss capture (<45 second workflow) — HSE compliance; photo evidence standard practice
-- Daily safety checklists (10 items, <5 minute completion) — Standard construction practice for site safety
+**Motorsport:**
+- Framework: Motorsport UK NCR Chapter 11 + FIA Medical Code for graded events
+- Extra form fields: GCS score (mandatory), car/competitor number, extrication required (mandatory), helmet removed (mandatory), circuit section, Clerk of Course notified (mandatory), concussion flag, competitor cleared to return to race
+- Certs: HCPC Paramedic or GMC Doctor + Motorsport UK Medical Official Licence (annual, specific to Motorsport UK)
+- Regulatory trigger: mandatory concussion protocol — licence suspension required; CMO must notify Motorsport UK
+- Aggregate document: Medical Statistics Sheet submitted to Clerk of Course at end of every event
+- RIDDOR does NOT apply to competitors (not employees of the circuit)
 
-**Defer (v2+):**
-- Heat map visualization — Pattern identification; competitors include this but SiteMedic correctly deferred to Phase 2
-- AI risk prediction — Requires 12+ months historical data; 40-50% incident reduction potential; high complexity
-- Toolbox talk logger — Pre-task safety meetings; nice-to-have but not core compliance value
-- Multi-project support — Needed when scaling to multiple medics/sites; MVP is single-site focused
-- Android app — iOS first; add only if clients demand it
-- API access for integrations — Tier 3/4 premium feature; ERP/payroll/Procore integrations for post-PMF
-- Film/TV industry mode — Same platform, different labels; validate construction market first
+**Football / Sports:**
+- Two distinct patient types requiring different forms: players (FA guidelines) and spectators at licensed grounds (SGSA form)
+- Player form extra fields: phase of play (match vs. training), contact/non-contact classification (FA Injury Surveillance requirement), HIA outcome (mandatory since 2024), squad number
+- Spectator form: SGSA Standard Medical Incident Report fields (ground, stand/area, nature of injury, outcome)
+- Certs: ATMMiF for professional clubs, ITMMiF for mid-level, EFAiF for grassroots; FA Concussion Module mandatory since August 2024
+- RIDDOR: player on-pitch injuries are NOT RIDDOR incidents (sports injuries, not workplace accidents); match-day staff injuries are RIDDOR
 
-### Architecture Approach
+**What to defer beyond v2.0 scope:**
+- Android app, real-time collaboration, AI risk prediction (needs 12+ months data), API integrations, custom white-label
 
-Standard offline-first mobile + web dashboard architecture with multi-tenant backend and server-side PDF generation.
+### Architecture (from ARCHITECTURE.md)
 
-**Major components:**
+The architecture follows a "vertical ID as key" pattern throughout: the DB stores only a string identifier, all configuration for that vertical lives in TypeScript static config files, a provider/context layer resolves the current vertical at runtime. This is already complete for the web app; the mobile app needs the same treatment.
 
-1. **iOS Mobile App (React Native + Expo)** — Offline-first data capture with local SQLite storage (WatermelonDB); encrypted at rest (AES-256); handles photo capture, digital signatures, treatment logging; syncs to server when connectivity available
+**Major components to build or extend:**
 
-2. **Local SQLite Database (WatermelonDB)** — Offline persistence with encryption (SQLCipher); reactive observables for UI auto-updates; sync queue persisted locally; source of truth while offline; delta sync with conflict resolution (last-write-wins for MVP)
+1. **`src/contexts/OrgContext.tsx` (new, mobile)** — fetches `org_settings.industry_verticals` once at auth time, exposes `primaryVertical`, cached for offline use; replaces the per-mount `fetchOrgVertical()` call in `new.tsx`. Must sit inside `AuthProvider`, outside `SyncProvider` in the provider tree.
 
-3. **Backend API Layer (Supabase)** — PostgreSQL database with Row-Level Security (RLS) for multi-tenant isolation; auto-generated REST API (PostgREST); JWT-based authentication; UK/EU region hosting (eu-west-2 London) for GDPR compliance
+2. **WatermelonDB schema v4 (single coordinated migration)** — adds `event_vertical TEXT optional`, `vertical_extra_fields TEXT optional` (JSON string), `booking_id TEXT optional`, `gps_lat FLOAT optional`, `gps_lng FLOAT optional` to `treatments` and `near_misses` tables. All columns must be `isOptional: true`. Must be one migration, not accumulated ad-hoc.
 
-4. **Object Storage (Supabase Storage)** — Photo upload with progressive compression (low-quality preview syncs first, full-quality later); CDN delivery; lifecycle policies for archival; S3-compatible with encryption at rest
+3. **Vertical-aware RIDDOR detector** — gate `riddor-detector/index.ts` on `getVerticalCompliance(vertical).riddorApplies` before running detection logic; early-return `{ detected: false }` for non-RIDDOR verticals.
 
-5. **Web Dashboard (React 19 + Vite)** — Read-only reporting UI for site managers; React Query for server state management; shadcn/ui components; traffic-light compliance scoring; real-time updates via polling
+4. **`app/treatment/new.tsx` vertical sections** — conditional sections rendered per `primaryVertical` value; vertical-specific fields write to `vertical_extra_fields` JSONB; booking vertical override passed as route param.
 
-6. **PDF Generator (Serverless Edge Functions)** — Server-side generation using pdfmake (Node.js); triggered by weekly cron or on-demand; fetches data from PostgreSQL, generates PDF, uploads to Storage, emails download link
+5. **Three new PDF Edge Functions** — `event-incident-report-generator` (Festivals, Purple Guide format), `motorsport-incident-generator` (Motorsport UK Accident Form), `fa-incident-generator` (FA Match Day Injury Form + SGSA format); each mirrors the existing `riddor-f2508-generator` file structure.
 
-7. **Notification Service** — RIDDOR deadline alerts, certification expiry warnings; email (SendGrid/Postmark) + push notifications (Expo Notifications); progressive reminder schedule (30/14/7/1 days)
+6. **`web/lib/pdf/incident-report-dispatcher.ts`** — routes PDF generation to the correct Edge Function based on the treatment's vertical `primaryFramework` field.
 
-**Key architectural patterns:**
-- Offline-first with optimistic UI (local writes immediate, background sync)
-- Delta sync with timestamp-based conflict resolution (last-write-wins for single-medic-per-site MVP)
-- Photo upload with progressive compression (preview + full-quality queue)
-- Multi-tenant with Row-Level Security (single database, RLS policies enforce isolation)
-- Server-side PDF generation (offloads processing, smaller mobile bundle, faster rendering)
+7. **`compliance_score_history` table** — new SQL migration; `generate-weekly-report` Edge Function upserts scores on each run; enables trend chart.
 
-### Critical Pitfalls
+8. **`NearMissHeatMap` component** — Leaflet + `leaflet.heat` following the existing `GeofenceMapPicker.tsx` `dynamic(..., { ssr: false })` SSR-bypass pattern. Requires GPS columns added in schema v4.
 
-Research identifies 8 critical pitfalls; top 5 requiring Phase 1 mitigation:
+**Vertical resolution data flow:**
 
-1. **Data loss during offline-to-online sync transitions** — Naive "last-write-wins" conflict resolution or silent upload failures result in missing incident reports and RIDDOR compliance failures. **Prevention:** Implement robust sync queue with persistent storage (WorkManager), use client-generated UUIDs for idempotency, test with flaky networks (airplane mode toggles, 2G speeds), add operational transformation or CRDTs for health data conflicts, provide "force sync" button for manual retry.
+```
+org_settings.industry_verticals (DB)
+  → OrgProvider (web/mobile) fetches once at auth
+  → primaryVertical in context
+  → useVerticalLabels() hook: patientLabel, mechanismPresets, outcomeCategories
+  → treatment form captures event_vertical + vertical_extra_fields
+  → syncs to Supabase treatments table
+  → incident-report-dispatcher reads primaryFramework
+  → correct PDF Edge Function invoked → signed URL returned
+```
 
-2. **GDPR violations with health data handling** — Storing health data unencrypted, missing audit logs, retaining data too long, processing without valid legal basis. Fines: up to £20 million or 4% of global revenue. **Prevention:** Encrypt health data at rest (AES-256) and in transit (TLS 1.3), implement comprehensive audit logging from Day 1 (who viewed which worker record), document legal basis as "legitimate interest" (workplace safety compliance under RIDDOR, not consent), set data retention policies (3 years minimum for RIDDOR, auto-delete after maximum), implement 72-hour breach notification workflow.
+**Booking override cascade:** `bookings.event_vertical` takes precedence over org default. Passed as route param `/treatment/new?booking_id=xxx&event_vertical=motorsport`.
 
-3. **Inadequate offline UX - users don't know what's synced** — Users capture incident data offline, app shows "Saved" but doesn't clarify "saved locally, not yet synced." Sync fails hours later silently, RIDDOR deadline missed. **Prevention:** Multi-modal sync status indicators (color, labels, icons), persistent "3 items pending sync" badge always visible, dedicated "Pending Changes" outbox screen, plain language errors ("Couldn't upload. No internet." not "Error 500"), surface critical failures prominently (RIDDOR-reportable incident failed to sync triggers alert).
+### Critical Pitfalls (from PITFALLS.md)
 
-4. **Photo upload blocking workflow** — Synchronous upload of 4 x 3MB photos over construction site mobile data takes 90+ seconds, blocking medics from next task. Violates <90 second constraint; medics skip photos entirely. **Prevention:** Decouple photo capture from upload (local save immediate, background upload), optimize images before upload (resize to 1200px, compress to 100-200KB JPEG), use background upload queue with WorkManager (WiFi-only constraints), show optimistic UI ("Photos uploading in background"), allow user to continue working immediately.
+Five pitfalls carry regulatory liability or data corruption risk:
 
-5. **Background upload causing battery drain** — Aggressive sync retry logic attempts upload every 15 minutes regardless of connectivity; app uses partial wakelocks preventing device sleep; Google Play Store flags app as battery-draining (2026 policy); users uninstall. **Prevention:** Use WorkManager with proper constraints (NetworkType.UNMETERED for WiFi-only, BatteryNotLow), implement exponential backoff for failed attempts (5min, 15min, 1hr, 4hr), respect Doze mode, prioritize sync (RIDDOR-reportable immediate, routine items batch until WiFi), test with Android Battery Historian.
+1. **RIDDOR detector is vertical-blind** — fires on every treatment; will produce false RIDDOR flags for festival-goers and motorsport competitors. Prevention: vertical check at top of `riddor-detector/index.ts`. Must fix before any non-RIDDOR vertical activates.
 
-**Secondary pitfalls (Phase 2 concerns):**
-- RIDDOR auto-flagging sensitivity problems (false positives cause alert fatigue; false negatives miss compliance)
-- PDF generation too slow or breaks on mobile (30+ second generation, crashes on older devices)
-- Certification expiry tracking misses deadlines (single notification at expiry, not progressive warnings)
+2. **Motorsport concussion protocol completely absent** — no HIA checkbox, no licence suspension flag, no CMO notification field. A concussed competitor could return to racing with no clearance record. Prevention: mandatory post-treatment concussion checklist for motorsport vertical. Must ship with the motorsport vertical — cannot be deferred.
+
+3. **WatermelonDB schema must be planned as one v4 migration** — ad-hoc column additions across sprints cause device version drift and sync conflicts. Prevention: define all new columns in one migration before multi-vertical development begins; all columns `isOptional: true`.
+
+4. **Booking vertical override not wired to treatment form** — `new.tsx` reads only `org_settings.industry_verticals[0]`, ignoring `bookings.event_vertical`. A construction org at a motorsport booking sees construction presets and RIDDOR warnings. Prevention: pass `booking_id` + `event_vertical` as route params.
+
+5. **F2508 PDF generator produces incorrect reports for non-RIDDOR verticals** — the incidents page calls `riddor-f2508-generator` regardless of vertical. Prevention: `incident-report-dispatcher.ts` routes to correct Edge Function; F2508 generator validates vertical on entry and returns 400 for non-RIDDOR verticals.
+
+Two additional pitfalls with high regulatory consequence:
+- **Festival triage data structure mismatch**: Purple Guide requires TST triage priority (P1/P2/P3/P4); existing outcome taxonomy cannot represent this. Add `triage_priority TEXT optional` in v4 migration.
+- **Terminology bleed across the app**: "Worker Information", "SITE-" prefix, "Worker Registry" tab label, `workerName` variable in treatments list are hardcoded. A cross-cutting terminology PR must precede each non-construction vertical's launch.
+
+---
 
 ## Implications for Roadmap
 
-Based on research, suggested phase structure aligns with architectural dependencies and pitfall prevention:
+Research produces a clear six-phase build order based on hard dependencies. Schema changes must precede all form work. Mobile context must precede hook usage. Form changes must precede PDF generation. Data collection must precede analytics visualisation.
 
-### Phase 1: Foundation (Backend + Auth + Core Offline Infrastructure)
-**Rationale:** Mobile app and web dashboard both depend on backend API, authentication, and database schema. Offline sync architecture must be solid before building features on top—cannot be retrofitted later without major refactor. All critical pitfalls (data loss, GDPR violations, inadequate offline UX, photo upload blocking, battery drain) must be addressed in this foundational phase.
+### Phase 1: Schema Foundation + Critical Detector Fixes
 
-**Delivers:**
-- Supabase project setup (UK region: eu-west-2 London)
-- PostgreSQL database schema with Row-Level Security policies for multi-tenant isolation
-- Authentication flows (login, JWT refresh, offline session handling)
-- Encrypted local SQLite database (WatermelonDB + SQLCipher) with AES-256
-- Sync queue with persistent storage, conflict resolution, and exponential backoff retry logic
-- Encryption key management (iOS Keychain / Android Keystore, never in AsyncStorage)
-- Audit logging infrastructure (who viewed which worker record, no PII in logs)
-- Data retention policies documented (3-year minimum for RIDDOR)
-- Background sync with WorkManager constraints (WiFi-only for large uploads, battery-friendly)
-- Network monitoring and connectivity detection
-
-**Addresses features:**
-- Offline-first operation (table stakes)
-- UK GDPR compliance (mandatory)
-- Multi-modal sync status indicators (offline UX)
-
-**Avoids pitfalls:**
-- Pitfall 1: Data loss during sync transitions (sync queue, idempotency, conflict resolution)
-- Pitfall 2: GDPR violations (encryption, audit logging, retention policies)
-- Pitfall 3: Inadequate offline UX (sync status indicators from Day 1)
-- Pitfall 5: Battery drain (WorkManager constraints, exponential backoff)
-- Technical debt: Cannot defer encryption or audit logging (GDPR non-compliance from Day 1)
-
-**Research flag:** Phase 1 is well-documented with standard patterns (Supabase + WatermelonDB official guides, offline-first architecture resources). No additional research needed.
-
----
-
-### Phase 2: Mobile App Core (Treatment Logger + Worker Profiles)
-**Rationale:** Core value proposition is offline-first mobile app for medic data capture. Must work 100% offline before adding sync or dashboard features. Builds on Phase 1 foundation (encrypted local storage, sync queue ready but not yet actively used).
+**Rationale:** All subsequent phases depend on these. No new vertical can safely go live without the schema changes and the RIDDOR detector fix. No user-visible output from this phase — it is prerequisite infrastructure.
 
 **Delivers:**
-- Treatment logging screen with structured incident capture (injury type, body part, mechanism for RIDDOR flagging foundation)
-- Photo capture with on-device compression (resize to 1200px, compress to 100-200KB)
-- Digital signature capture for treatment consent
-- Worker health profile screen (emergency contacts, health info, treatment history)
-- Near-miss capture workflow (<45 second target)
-- Daily safety checklist (10 items, <5 minute completion)
-- Local-only operation (no network required)
-- Gloves-on usability (48x48pt tap targets, high contrast, one-hand operation)
+- WatermelonDB schema v4 migration (single batch): `event_vertical`, `vertical_extra_fields`, `booking_id`, `gps_lat`, `gps_lng` on `treatments` and `near_misses`; all columns `isOptional: true`
+- Supabase SQL migrations: matching columns on server-side `treatments` and `near_misses` tables; `vertical_extra_fields JSONB` on `treatments`; `compliance_score_history` table with `formula_version` column
+- Vertical-aware `riddor-detector/index.ts` — early exit when `riddorApplies === false`
+- F2508 generator validation — returns 400 for non-RIDDOR verticals with a clear error message
 
-**Uses stack elements:**
-- React Native + Expo SDK 54
-- expo-image-picker for photo capture with EXIF preservation
-- react-native-signature-canvas for consent signatures
-- react-hook-form + zod for form validation
-- WatermelonDB for local data persistence
+**Avoids:** Pitfalls 1, 3, 5 (false RIDDOR flags, schema drift, wrong PDF format)
 
-**Implements architecture components:**
-- Treatment, Worker, NearMiss, SafetyCheck data models (WatermelonDB schema)
-- Repositories pattern for data access (abstracts SQLite queries)
-- Business logic services (TreatmentService, WorkerService)
-- Photo compression utility with progressive upload preparation
+**Research flag:** Standard patterns — fully specified in ARCHITECTURE.md and PITFALLS.md. No additional research needed.
 
-**Addresses features:**
-- Treatment Logger (table stakes, core workflow)
-- Worker health profiles (table stakes)
-- Digital forms with mobile capture (table stakes)
-- Digital signature capture (table stakes)
-- Photo evidence attachment (table stakes)
-- Gloves-on usability (differentiator)
-- Near-miss capture (should-have)
-- Daily safety checklists (should-have)
+### Phase 2: Mobile Context + Treatment Form Vertical Awareness
 
-**Avoids pitfalls:**
-- Pitfall 4: Photo upload blocking workflow (compression on-device, local save immediate)
-- Technical debt: Build offline-first from start (not as retrofit)
-
-**Research flag:** Phase 2 uses standard mobile patterns (well-documented Expo modules, form libraries). No additional research needed.
-
----
-
-### Phase 3: Sync Engine (Mobile ↔ Backend Data Flow)
-**Rationale:** Connects mobile app to backend, enabling data flow to web dashboard. Depends on Phase 1 (backend API, sync queue infrastructure) and Phase 2 (mobile app generating data to sync). Critical phase for validating pitfall prevention from Phase 1.
+**Rationale:** The treatment form is the core medic workflow. Until the mobile app has a cached vertical context and the form captures vertical-specific fields, no non-construction vertical works correctly on mobile.
 
 **Delivers:**
-- Delta sync implementation (only changes since last successful sync, not full database)
-- Background sync orchestration (triggers on app resume, network restore, periodic WorkManager)
-- Photo upload queue with progressive compression (preview first, full-quality later)
-- Conflict resolution execution (last-write-wins with timestamp comparison)
-- Sync status UI (persistent badge showing pending items, detailed outbox screen)
-- Failed sync error handling (plain language messages, manual retry button)
-- Network state detection integration
-- Idempotent operations with client-generated UUIDs
+- `src/contexts/OrgContext.tsx` — vertical fetched once at auth, cached in AsyncStorage for offline; exposes `primaryVertical`, `orgId`, `industryVerticals`
+- `OrgProvider` registered in `app/_layout.tsx` inside `AuthProvider`, outside `SyncProvider`
+- `useVerticalLabels()` hook at `src/hooks/useVerticalLabels.ts` — replaces per-mount `fetchOrgVertical()` across all screens
+- Treatment form vertical sections: motorsport fields (GCS, car number, COC), festival fields (triage category), Film/TV fields (stunt flag, production title), football fields (phase of play, HIA)
+- `booking_id` + `event_vertical` passed as route params to `new.tsx`; booking-level cascade implemented
+- Cross-cutting terminology PR: "Worker Information" header, "SITE-" reference prefix, "Worker Registry" tab label, validation alert messages — all made vertical-aware or changed to neutral ("Patient Register")
 
-**Uses stack elements:**
-- @react-native-community/netinfo for connectivity detection
-- WorkManager (Android) / Background Tasks (iOS) for background sync
-- Supabase client for API calls
-- Supabase Storage for photo uploads
+**Avoids:** Pitfalls 2 (offline stale presets), 4 (booking mismatch), 7 (terminology bleed), 9 (per-mount network fetch offline)
 
-**Implements architecture components:**
-- SyncQueue (priority, retry, persistence)
-- ConflictResolver (timestamp-based last-write-wins)
-- NetworkMonitor (connectivity state detection)
-- BackgroundSync (orchestration with battery-friendly constraints)
-- Photo upload with compression pipeline
+**Research flag:** Standard patterns — ARCHITECTURE.md has complete TypeScript shapes, provider tree placement, and hook patterns. No additional research needed.
 
-**Addresses features:**
-- Offline-first with auto-sync (table stakes, completing mobile-to-backend flow)
-- Photo upload that doesn't block workflow (pitfall prevention)
+### Phase 3: Motorsport Vertical MVP
 
-**Avoids pitfalls:**
-- Pitfall 1: Data loss during sync (validation via extensive testing: concurrent edits, mid-upload failures, app crashes)
-- Pitfall 3: Inadequate offline UX (sync status UI surfacing pending/failed items)
-- Pitfall 4: Photo upload blocking (background queue, progressive compression)
-- Pitfall 5: Battery drain (WorkManager constraints verified with Battery Historian)
-
-**Research flag:** Phase 3 has well-documented patterns (Supabase + WatermelonDB sync guide, offline-first architecture resources). Critical testing phase but no additional research needed.
-
----
-
-### Phase 4: Web Dashboard (Manager Reporting UI)
-**Rationale:** Depends on backend API having data from mobile app (Phase 3 sync complete). Read-only consumption layer for site managers. Lower risk than mobile phases since it's server-connected (no offline complexity).
+**Rationale:** Motorsport has the highest clinical stakes (mandatory concussion protocol with licence suspension). Build and validate in isolation before launching to real clients. Any miss here carries direct liability exposure.
 
 **Delivers:**
-- Treatment log view with filtering (by worker, date, injury type, RIDDOR status)
-- Worker registry with certification status indicators (green/yellow/red visual)
-- Compliance score calculation and traffic-light dashboard
-- Real-time updates via React Query polling (60-second intervals)
-- Near-miss log view
-- Daily safety checklist history
-- Photo viewing (served from Supabase Storage via CDN)
-- Responsive design (desktop-focused, mobile-friendly)
+- Motorsport conditional sections in treatment form: GCS score, extrication required, helmet removed, circuit section, Clerk of Course notified
+- Mandatory concussion checklist as a post-treatment gate: HIA conducted Y/N, competitor stood down Y/N, CMO notified Y/N — form cannot submit without all three if concussion suspected
+- `licence_suspension_flag` and `cmo_notified_at` stored on treatment record
+- "Concussion clearance required" badge in web dashboard incident list for uncleared motorsport head injuries
+- `motorsport-incident-generator` PDF Edge Function (Motorsport UK Accident Form format)
+- Medical Statistics Sheet auto-populated from individual accident forms for CMO submission
+- Cert profile UI: `getRecommendedCertTypes('motorsport')` orders Motorsport UK Medical Official Licence, HCPC Paramedic, PHTLS at top of cert selector
 
-**Uses stack elements:**
-- React 19 + Vite for build tooling
-- shadcn/ui + Tailwind CSS 4.x for UI components
-- React Query 5.x for server state management
-- Zustand for client state (filters, user preferences)
-- react-router 7.x for navigation
+**Avoids:** Pitfalls 2 (concussion protocol), 5 (wrong PDF)
 
-**Implements architecture components:**
-- Dashboard feature modules (treatments, workers, compliance, reports)
-- Supabase client integration (read-only queries)
-- React Query hooks for data fetching with caching
+**Research flag:** Needs validation. Motorsport UK Incident Pack V8.0 was confirmed to exist but the exact field names on the Motorsport UK Accident Form were inferred from regulatory text — the PDF was not machine-readable. Obtain the form from Motorsport UK or a registered club before building `MotorsportIncidentDocument.tsx`. Do not build the PDF template without the actual form.
 
-**Addresses features:**
-- Compliance dashboard (table stakes)
-- Real-time metrics (table stakes, via polling not WebSockets)
-- Filterable views (table stakes)
-- Exportable data preparation (foundation for Phase 5 PDF reports)
+### Phase 4: Festivals Vertical MVP
 
-**Research flag:** Phase 4 uses standard React patterns (well-documented shadcn/ui, React Query, Supabase client). No additional research needed.
-
----
-
-### Phase 5: PDF Report Generation (Compliance Reporting)
-**Rationale:** Depends on dashboard having mature data model and tested queries (Phase 4). Server-side generation avoids mobile performance pitfalls. Required for HSE audits and compliance deliverables.
+**Rationale:** Second highest regulatory complexity due to the Purple Guide triage data model conflicting with the existing work-outcome taxonomy. This conflict must be resolved before any festival org captures live records — retrofitting triage priority into existing records is not possible.
 
 **Delivers:**
-- Weekly safety report template (treatments, near-misses, worker certifications, compliance score)
-- Server-side PDF generation via Supabase Edge Functions (pdfmake on Node.js)
-- Async job queue pattern (POST /generate-pdf enqueues job, background worker generates, emails link when ready)
-- PDF optimization (max 10 pages or 2MB, compressed photos at 800px width max)
-- Supabase Storage integration for PDF hosting with signed URLs
-- Email delivery for completed reports (SendGrid/Postmark integration)
-- Dashboard UI for on-demand report generation and download history
+- TST triage priority field (P1 Immediate / P2 Urgent / P3 Delayed / P4 Expectant) in festival treatment form — supplements, does not replace, outcome category
+- Alcohol/substance involvement selector and safeguarding flag (both mandatory per Purple Guide 2024)
+- Festival-specific outcome labels (attendee disposition, not worker outcomes)
+- RIDDOR detector confirmed NOT firing for festival-goer injuries (Phase 1 fix already in place)
+- `event-incident-report-generator` PDF Edge Function (Purple Guide Patient Contact Log format)
+- Post-event medical summary PDF: aggregate count by triage priority, presenting complaint, alcohol involvement
 
-**Uses stack elements:**
-- pdfmake 0.2.x for declarative PDF generation (JSON-based templates)
-- Supabase Edge Functions (Deno runtime) for serverless execution
-- Supabase Storage for PDF hosting
-- Email service integration (SendGrid/Postmark)
+**Avoids:** Pitfalls 1 (false RIDDOR flags on attendees), 8 (triage taxonomy mismatch)
 
-**Implements architecture components:**
-- PDF Generator serverless function
-- Job queue for async processing
-- Email notification service
+**Research flag:** Low risk, well-documented. Purple Guide 2024 is publicly available. TST triage categories confirmed from peer-reviewed Glastonbury Festival study (PMC11035920). Standard patterns after Phase 1 schema work is complete.
 
-**Addresses features:**
-- Weekly PDF report generation (table stakes, regulatory requirement for HSE audits)
-- Professional-grade, audit-ready reports (table stakes)
+### Phase 5: Film/TV and Football/Sports Vertical MVPs
 
-**Avoids pitfalls:**
-- Pitfall 6: PDF generation too slow (server-side offloads processing; test with 20-page reports)
-- Technical debt: Async job queue prevents blocking UI during generation
-
-**Research flag:** Phase 5 has medium confidence on pdfmake + Supabase Edge Functions (Deno runtime) compatibility. Test pdfmake with Edge Functions during phase planning. Well-documented patterns for PDF generation itself; integration point needs validation.
-
----
-
-### Phase 6: RIDDOR Auto-Flagging (Smart Compliance Features)
-**Rationale:** Requires baseline incident capture (Phase 2) and data flowing to backend (Phase 3). Can be refined iteratively based on real data patterns. Unique differentiator vs competitors but complex enough to warrant separate phase.
+**Rationale:** Both reuse the existing F2508/RIDDOR pipeline (Film/TV in full; Football for staff-only incidents). They can be built together since they share the cert profile wiring and terminology cleanup work. Football's dual-form model (player vs. spectator) is the main complexity.
 
 **Delivers:**
-- RIDDOR criteria decision tree (fracture + body part + mechanism logic)
-- Structured incident capture for flagging input (checkboxes for injury type, body part, mechanism vs free text)
-- Auto-flagging with confidence levels ("Possibly reportable - review required")
-- Medic override capability with reason tracking ("Flagged as reportable fracture but confirmed finger fracture only")
-- RIDDOR deadline countdown display ("7 days remaining to report to HSE")
-- In-app RIDDOR guidance (show relevant HSE criteria excerpt when flagging)
-- Override pattern tracking for algorithm tuning (if 80% overridden, review logic)
-- Supervisor review workflow (no auto-submission to HSE without human verification)
+- Film/TV form sections: production title, stunt/SFX flags, patient role (Cast/Crew/Stunt performer), scene context
+- Film/TV: existing F2508 generator handles RIDDOR reporting unchanged; no new PDF Edge Function needed
+- Football form: dual patient type selection (player vs. spectator), phase of play, contact/non-contact, HIA outcome, squad number
+- `fa-incident-generator` PDF Edge Function outputting both FA Match Day Injury Form and SGSA Medical Incident Report
+- Cert expiry checker filtered by medic's primary vertical(s) — removes irrelevant cert reminders (e.g., no CSCS alerts to motorsport-only medics)
+- Cert profile UI: `getRecommendedCertTypes(vertical)` wired in admin medic edit form for all verticals
+- Vertical config unit tests: assert every vertical ID present in `vertical-compliance.ts` exists in `VERTICAL_CERT_TYPES`, `OUTCOME_LABEL_OVERRIDES`, and `getPatientLabel()` — catches config drift on any future vertical addition
 
-**Uses stack elements:**
-- RIDDOR detection logic as TypeScript service
-- Zod schemas for structured incident validation
-- Supabase database fields for flagging metadata (is_riddor_reportable, riddor_criteria, override_reason)
+**Avoids:** Pitfalls 6 (config drift), 10 (irrelevant cert reminders), 11 (SITE- prefix in Film/TV references)
 
-**Implements architecture components:**
-- RIDDORDetector service with HSE criteria decision tree
-- Validation layer for structured incident capture
+**Research flag:** Football has two regulatory tracks (FA for players, SGSA for spectators) that interact. Confirm with client whether they target professional clubs (SGSA form mandatory) or grassroots only (FA form sufficient). This determines which form fields are mandatory vs. optional and whether the SGSA Edge Function output is required for v2.0.
 
-**Addresses features:**
-- RIDDOR auto-flagging (unique differentiator, competitive advantage)
-- Automated alerts for RIDDOR deadlines (table stakes, completing notification system)
+### Phase 6: Analytics and Visualisation
 
-**Avoids pitfalls:**
-- Pitfall 4: RIDDOR flagging sensitivity (structured capture, override capability, feedback loop)
-- Technical debt: Start conservative (manual review), add smart flagging based on data
-
-**Research flag:** Phase 6 requires detailed RIDDOR criteria study (HSE regulations). Official guidance available but decision tree logic needs careful design. Plan for iterative tuning based on false positive/negative rates in production. Medium confidence on implementation patterns; regulatory criteria well-documented.
-
----
-
-### Phase 7: Certification Tracking + Expiry Alerts (Compliance Monitoring)
-**Rationale:** Worker registry exists from Phase 2, notification infrastructure from Phase 5/6. Certification tracking is table stakes but can launch without it if focusing on incident capture first. Progressive reminder system prevents deadline misses.
+**Rationale:** Pure read-only layer. All data it visualises must exist first. Building charts before GPS data and compliance score history are populated produces empty or misleading dashboards. This is the last phase because it depends on all upstream data being captured and the compliance score formula being frozen.
 
 **Delivers:**
-- Certification database schema (certification_type, issue_date, expiry_date, renewal_status)
-- Progressive notification schedule (30 days, 14 days, 7 days, 1 day before expiry; day-of; 1 day overdue)
-- Multi-recipient notifications (worker, site manager, compliance officer)
-- Server-side scheduled jobs for daily expiry checking (not device-local notifications)
-- Expiry validation at point of use (worker with expired cert can't log incidents until renewed)
-- Visual indicators on worker profiles (green: valid, yellow: expiring <30 days, red: expired)
-- Dashboard for managers ("3 medics with certifications expiring this month")
-- Grace period handling (cert expires March 15, renewal submitted March 1, allow continued work)
-- Compliance report generation ("All site medics certified as of [date]")
+- Compliance score formula defined in a PostgreSQL view with `formula_version` column — frozen before chart is built
+- `ComplianceScoreChart` component (Recharts `LineChart`, reads from `compliance_score_history`)
+- `IncidentFrequencyChart` component (Recharts `AreaChart`, incident counts by vertical framework per week)
+- `generate-weekly-report` Edge Function updated to upsert into `compliance_score_history` table
+- `NearMissHeatMap` component (Leaflet + `leaflet.heat`, GPS from near-misses and treatments)
+- Heat map page in web dashboard
 
-**Uses stack elements:**
-- Supabase cron jobs for daily expiry checks
-- Email + Push notifications (Expo Notifications)
-- PostgreSQL date functions for expiry calculations
+**Avoids:** Pitfall 13 (compliance score formula must be frozen before first data point is recorded)
 
-**Implements architecture components:**
-- Certification expiry service (scheduled job)
-- Notification service extension (progressive reminders)
-- Dashboard compliance reporting
-
-**Addresses features:**
-- Certification/license tracking (table stakes, UK construction regulatory requirement)
-- Automated alerts for certification expiry (table stakes)
-- Compliance dashboard enhancement (certification status visibility)
-
-**Avoids pitfalls:**
-- Pitfall 7: Certification expiry missed deadlines (progressive reminders, multi-recipient, server-side scheduling)
-- Technical debt: Don't rely on device-local notifications (can fail if app uninstalled)
-
-**Research flag:** Phase 7 uses standard patterns (cron scheduling, notification services). Well-documented; no additional research needed.
-
----
+**Research flag:** Verify `leaflet.heat` compatibility with `react-leaflet@5.0.0` before starting. The plugin targets Leaflet 1.x which should work with Leaflet 1.9.4, but confirm before investing in the component. Fallback: Leaflet `CircleMarker` components scaled by severity (zero new dependencies, ships today with existing packages).
 
 ### Phase Ordering Rationale
 
-**Why this order:**
-1. **Backend foundation first (Phase 1)** — Mobile and web both depend on API, auth, database. Sync architecture must be rock-solid before features built on top. Retrofitting encryption, audit logging, or sync queue after launch is extremely difficult and risks GDPR violations.
-
-2. **Mobile core before sync (Phase 2 → Phase 3)** — Must work 100% offline first, then add connectivity. Validates offline-first architecture in isolation before introducing sync complexity. Allows focus on medic UX without network variability.
-
-3. **Sync before dashboard (Phase 3 → Phase 4)** — Dashboard needs data flowing from mobile app. Testing sync with flaky networks critical before managers depend on real-time visibility.
-
-4. **PDF generation after dashboard (Phase 4 → Phase 5)** — Requires mature data queries and validated data model from dashboard. Server-side generation depends on stable API.
-
-5. **Smart features last (Phase 6, 7)** — RIDDOR auto-flagging and certification tracking enhance core workflow but aren't blockers for launch. Can iterate based on real usage patterns.
-
-**Dependency chains discovered:**
-- Sync queue (Phase 1) → Photo upload (Phase 2) → Background upload queue (Phase 3)
-- Database schema (Phase 1) → Treatment models (Phase 2) → Sync logic (Phase 3) → Dashboard queries (Phase 4)
-- Notification infrastructure (Phase 1) → Email alerts (Phase 5) → RIDDOR deadlines (Phase 6) → Cert expiry (Phase 7)
-
-**How this avoids pitfalls:**
-- All 5 critical pitfalls addressed in Phase 1-3 (foundation, mobile core, sync engine)
-- Photo upload blocking prevented in Phase 2 (compression) and Phase 3 (background queue)
-- GDPR compliance built from Day 1 (Phase 1 encryption, audit logging)
-- Offline UX foundational to Phase 1-3 (sync status indicators, error handling)
-- Secondary pitfalls (RIDDOR flagging, PDF performance, cert expiry) addressed in later phases where iterative refinement acceptable
-
-**Grouping rationale:**
-- Phase 1-3 form "offline-first mobile foundation" (must ship together for working mobile app)
-- Phase 4-5 form "manager reporting layer" (web dashboard + PDF generation)
-- Phase 6-7 form "smart compliance features" (auto-flagging + proactive tracking)
+- Schema v4 migration must precede all form changes: WatermelonDB requires device migration before new columns exist
+- Mobile context must precede form work: `useVerticalLabels()` depends on `OrgContext`
+- RIDDOR detector fix must precede any non-construction vertical activating: one false RIDDOR flag sent to an HSE-aware client will damage credibility immediately
+- Motorsport before Festivals: concussion protocol carries higher clinical liability than Purple Guide triage; isolate highest-risk vertical first
+- PDF Edge Functions come after form changes: they need accurate `event_vertical` in the treatment record to dispatch correctly
+- Analytics last: pure read layer requiring all upstream data to exist and the score formula to be stable
 
 ### Research Flags
 
-**Phases likely needing deeper research during planning:**
-- **Phase 5 (PDF Generation):** pdfmake compatibility with Supabase Edge Functions (Deno runtime) needs validation. Official docs confirm npm packages work in Deno but edge cases exist. Test pdfmake import and font handling during phase planning. MEDIUM confidence.
+**Needs human input or additional research before implementation:**
 
-**Phases with standard patterns (skip research-phase):**
-- **Phase 1 (Foundation):** Supabase + WatermelonDB offline sync is well-documented with official guide from Supabase. Authentication, RLS, encryption patterns are industry standard. HIGH confidence.
-- **Phase 2 (Mobile Core):** Expo modules (image-picker, signature-canvas, secure-store) have official documentation and verified npm versions. Form validation with react-hook-form + zod is standard pattern. HIGH confidence.
-- **Phase 3 (Sync Engine):** Offline-first sync architecture heavily documented in research (delta sync, conflict resolution, WorkManager patterns). Supabase + WatermelonDB sync guide provides reference implementation. HIGH confidence.
-- **Phase 4 (Web Dashboard):** React 19 + Vite + shadcn/ui + React Query is 2026 industry standard with extensive documentation. Supabase client integration straightforward. HIGH confidence.
-- **Phase 6 (RIDDOR Auto-Flagging):** HSE official RIDDOR criteria are publicly documented. Decision tree logic is custom but well-defined regulatory requirements. MEDIUM confidence (implementation patterns clear, tuning requires iteration).
-- **Phase 7 (Certification Tracking):** Cron scheduling, notification services, expiry calculations are standard patterns. Well-documented across multiple sources. HIGH confidence.
+- **Phase 3 (Motorsport PDF):** Obtain physical copy of Motorsport UK Accident Form from Motorsport UK Incident Pack V8.0. The exact field names and injury code taxonomy were confirmed to exist but the PDF was not machine-readable during research. Do not build the PDF template without the actual form.
+- **Phase 5 (Football scope):** Confirm with client whether they target professional clubs (SGSA form mandatory) or only grassroots (FA form sufficient). This is a product decision that determines whether `fa-incident-generator` must output two form formats.
+- **Phase 6 (compliance score formula):** The compliance score formula is not yet defined. Must be agreed and documented before building the chart — changing the formula after data is collected makes historical scores incomparable.
+
+**Standard patterns (no research-phase needed):**
+- Phase 1: implementation fully specified in ARCHITECTURE.md and PITFALLS.md
+- Phase 2: TypeScript shapes, provider tree, and hook patterns fully specified in ARCHITECTURE.md
+- Phase 4: Purple Guide requirements publicly documented to high confidence
+- Phase 6: Recharts and Leaflet patterns are established in the existing codebase with 4+ active usage sites
+
+---
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Core technologies verified with official documentation (Expo SDK 54, Supabase, WatermelonDB). npm versions checked. Supabase + WatermelonDB sync pattern has official guide. Supporting libraries (TanStack Query, Zustand, react-hook-form) are 2026 industry standards. |
-| Features | HIGH | Validated against 50+ industry sources (construction safety platforms, RIDDOR compliance systems, occupational health software). All MVP features have regulatory drivers or table stakes status. Competitive analysis confirms SiteMedic differentiators (RIDDOR auto-flagging, clinical workflow) are unique. |
-| Architecture | HIGH | Offline-first patterns extensively documented. Supabase multi-tenant RLS, WatermelonDB sync, photo compression, server-side PDF generation all have proven implementations. Project structure follows best practices from official guides and 2026 ecosystem standards. |
-| Pitfalls | HIGH | Research synthesizes GDPR compliance requirements (official ICO guidance), RIDDOR regulations (HSE documentation), offline-first pitfalls (Android/iOS official docs, industry case studies), and 2026 battery optimization policies (Google Play Store). Critical pitfalls well-understood with concrete prevention strategies. |
+| Stack | HIGH | All claims verified by direct codebase inspection. No new packages needed except `leaflet.heat`. Version pins confirmed in `package.json`. |
+| Features — Film/TV | HIGH | HSE INDG360 and RIDDOR 2013 are official HSE sources. Film/TV is RIDDOR-applicable with vocabulary changes. |
+| Features — Festivals | HIGH | Purple Guide 2024 (Events Industry Forum) is the authoritative source. TST triage confirmed via peer-reviewed Glastonbury Festival study (PMC11035920). |
+| Features — Motorsport | MEDIUM-HIGH | NCR Chapter 11 confirmed official. Specific field names on Motorsport UK Accident Form inferred from regulatory text — PDF not machine-readable. Concussion policy confirmed HIGH. |
+| Features — Football | HIGH | FA and SGSA sources are official. Two-track framework (player vs. spectator) confirmed from multiple official FA and SGSA pages. |
+| Architecture | HIGH | Every "already exists" claim verified against a specific file and line number read during research. No hypotheticals. |
+| Pitfalls | HIGH | All pitfalls grounded in direct code inspection of the shipped codebase. Each pitfall cites the specific file and line where the gap was found. |
 
 **Overall confidence:** HIGH
 
-Research is comprehensive with official sources for regulatory requirements (RIDDOR, UK GDPR), stack components (Expo, Supabase, WatermelonDB), and architectural patterns (offline-first, multi-tenant). Medium confidence areas (pdfmake + Edge Functions compatibility) are bounded and testable during implementation.
-
 ### Gaps to Address
 
-**Gap: pdfmake + Supabase Edge Functions (Deno) compatibility**
-- Research confirms npm packages work in Deno (Edge Functions runtime) but specific pdfmake font handling and buffer manipulation needs validation
-- How to handle: Test pdfmake import and basic PDF generation in Edge Function during Phase 5 planning. If incompatible, fall back to PDFKit (lighter alternative) or server-side Node.js (not serverless)
-- Risk level: LOW (multiple PDF library alternatives available; server-side generation approach validated)
+- **Motorsport UK Accident Form exact fields:** The form must be obtained before building the PDF Edge Function. Field names were inferred from regulatory text only.
+- **Compliance score formula:** Not defined anywhere in the codebase. Must be agreed before `compliance_score_history` records are meaningful. Recommend: define as a PostgreSQL view with `formula_version` so historical scores remain interpretable after formula updates.
+- **Multi-vertical org UX:** If an org has two active verticals (e.g., `["construction", "festivals"]`), the treatment form defaults to `industry_verticals[0]`. Confirm whether the medic should be prompted to select the active vertical at shift start, or whether the `booking_id` route param is always sufficient to resolve the correct vertical.
+- **Booking-to-treatment navigation path:** Confirm whether the mobile app currently passes `booking_id` as a route param when navigating to `new.tsx` from a booking detail screen. If absent, Phase 2 must add the navigation path before the booking vertical cascade can work.
 
-**Gap: RIDDOR auto-flagging accuracy thresholds**
-- HSE criteria are well-documented but acceptable false positive/negative rates for auto-flagging are product decisions, not technical constraints
-- How to handle: Start conservative (flag broadly, require supervisor review). Track override patterns in production. Iteratively tune decision tree based on real medic feedback. Plan for Phase 6 to include A/B testing different sensitivity levels.
-- Risk level: LOW (manual RIDDOR review is acceptable MVP; smart flagging is enhancement)
-
-**Gap: SQLCipher performance impact on older iOS devices**
-- WatermelonDB with SQLCipher encryption adds ~10-15% query overhead vs plain SQLite
-- Research confirms approach is sound but specific performance on 3-year-old iPhones (minimum target) needs real-world testing
-- How to handle: Performance test Phase 2 mobile app with 1,000+ treatment records on older devices. If unacceptable, consider selective encryption (encrypt health data fields only, not entire database)
-- Risk level: LOW (encryption is non-negotiable for GDPR; selective encryption is fallback)
-
-**Gap: Background sync execution limits on iOS**
-- iOS Background Tasks framework has 30-second execution limit (shorter than Android WorkManager)
-- Research confirms pattern exists but specific SiteMedic photo upload batch sizing needs tuning
-- How to handle: Test Phase 3 sync with multiple photo uploads (4+ photos per incident). If 30 seconds insufficient, batch uploads into smaller chunks or use URLSession background transfer service for large files.
-- Risk level: LOW (workarounds well-documented; photo compression reduces file size)
-
-**Gap: UK-specific CSCS/CPCS certification card formats**
-- Certification tracking (Phase 7) needs to handle UK construction card types (CSCS, CPCS, IPAF, Gas Safe)
-- Research confirms these are standard but specific data fields (card number format, issuing bodies, grace periods) need validation
-- How to handle: Consult with SiteMedic domain expert (construction medic) during Phase 7 planning. Document certification schemas before implementation.
-- Risk level: LOW (data modeling, not technical risk; domain expert can provide requirements)
+---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-
-**Official Documentation:**
-- [Expo SDK 54 Documentation](https://docs.expo.dev/) — Mobile framework, SDK modules (image-picker, secure-store, notifications)
-- [Supabase + WatermelonDB Offline-First Guide](https://supabase.com/blog/react-native-offline-first-watermelon-db) — Official Supabase sync pattern
-- [WatermelonDB GitHub](https://github.com/Nozbe/WatermelonDB) — Offline-first reactive database
-- [Supabase Documentation](https://supabase.com/docs) — PostgreSQL, Auth, Storage, Edge Functions, RLS
-- [React Query Documentation](https://tanstack.com/query/latest) — Server state management, offline persistence
-- [shadcn/ui Documentation](https://ui.shadcn.com/docs) — React component library for web dashboard
-- [HSE RIDDOR Regulations](https://www.hse.gov.uk/riddor/) — Official UK regulatory requirements
-- [ICO GDPR Guidance](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/) — UK data protection authority
-- [Android WorkManager Documentation](https://developer.android.com/develop/background-work) — Background task scheduling, battery optimization
-- [iOS Background Tasks Framework](https://developer.apple.com/documentation/backgroundtasks) — iOS background execution
-
-**npm Registry (Version Verification):**
-- [@nozbe/watermelondb 0.28.0](https://www.npmjs.com/package/@nozbe/watermelondb)
-- [expo-image-picker 17.0.10](https://www.npmjs.com/package/expo-image-picker)
-- [react-native-signature-canvas 5.0.2](https://www.npmjs.com/package/react-native-signature-canvas)
-- [@tanstack/react-query 5.x](https://www.npmjs.com/package/@tanstack/react-query)
-- [zustand 5.x](https://www.npmjs.com/package/zustand)
+- Direct codebase inspection (all "already exists" claims): `services/taxonomy/`, `src/database/schema.ts`, `app/treatment/new.tsx`, `web/contexts/org-context.tsx`, `supabase/functions/riddor-*/`, `supabase/migrations/121, 123`, `web/package.json`, `app/_layout.tsx`
+- HSE RIDDOR 2013 and HSE INDG360 (`hse.gov.uk`) — Film/TV regulatory framework
+- The Purple Guide, Events Industry Forum (2024 edition, `thepurpleguide.co.uk`) — Festivals framework
+- Motorsport UK NCR 2025 Chapter 11 and Concussion Policy 2024 (`motorsportuk.org`) — Motorsport requirements
+- England Football Learning, official FA platform (`learn.englandfootball.com`) — Football cert requirements
+- SGSA Standard Medical Incident Report Form and guidance (`sgsa.org.uk`) — Football spectator framework
+- Glastonbury Festival Electronic Patient Record study, Prehospital and Disaster Medicine 2024 (PMC11035920) — Purple Guide triage fields
 
 ### Secondary (MEDIUM confidence)
+- Premier Medics UK, MEDIREK, Location Medical Services — Film/TV medic practice and cert requirements
+- Team Medic, Event First Aid UK — Purple Guide practical interpretation
+- SMMC Motorsport Medical Group, D4U Medical — Motorsport UK cert requirements in practice
+- Nexus Medical — Ten Second Triage (TST) 2024 rollout
+- BASEM, FMPA — Football sports medicine context
 
-**Industry Guides & Case Studies:**
-- [Offline-First Architecture: Designing for Reality](https://medium.com/@jusuftopic/offline-first-architecture-designing-for-reality-not-just-the-cloud-e5fd18e50a79) — Architectural patterns
-- [React Native 2026: Mastering Offline-First Architecture](https://javascript.plainenglish.io/react-native-2026-mastering-offline-first-architecture-ad9df4cb61ae) — Best practices
-- [Building Offline-First React Native Apps: Complete Guide 2026](https://javascript.plainenglish.io/building-offline-first-react-native-apps-the-complete-guide-2026-68ff77c7bb06) — Implementation patterns
-- [GDPR Compliance for Developers: Practical Implementation 2026](https://dasroot.net/posts/2026/02/gdpr-compliance-developers-practical-implementation-2026/) — Encryption, audit logging
-- [GDPR in Healthcare: A Practical Guide](https://www.dpo-consulting.com/blog/gdpr-healthcare) — Health data special category requirements
-- [Procore Construction Management Software](https://www.procore.com/quality-safety) — Competitor feature analysis
-- [HammerTech Construction Safety](https://www.hammertech.com/en-us/) — Competitor feature analysis
-- [SafetyCulture iAuditor](https://safetyculture.com/apps/construction) — Competitor feature analysis
-
-**Construction Safety & Medical Compliance:**
-- [7 Best Construction Safety Software 2026](https://www.compliancequest.com/bloglet/best-construction-safety-software/) — Feature landscape
-- [Understanding RIDDOR Reporting in Construction](https://www.novade.net/en/riddor-reporting-timescales/) — Compliance requirements
-- [RIDDOR Accident and Incident Reporting Guide](https://opsbase.com/riddor-accident-incident-reporting/) — Regulatory timelines
-- [Apollo Professional Occupational Health Software](https://apollopro.co.uk/) — UK medical compliance platforms
-- [Civica Occupational Health Software](https://www.civica.com/en-gb/product-pages/occupational-health-software/) — UK NHS-grade systems
-
-**Offline Sync & Performance:**
-- [Data Sync and Conflict Resolution Patterns](https://www.adalo.com/posts/offline-vs-real-time-sync-managing-data-conflicts) — Conflict resolution strategies
-- [Complete Guide to Offline-First Architecture in Android](https://www.droidcon.com/2025/12/16/the-complete-guide-to-offline-first-architecture-in-android/) — WorkManager patterns
-- [Offline-First Mobile Background Sync UX](https://appmaster.io/blog/offline-first-background-sync-conflict-retries-ux) — User experience patterns
-- [Design Guidelines for Offline & Sync](https://developers.google.com/open-health-stack/design/offline-sync-guideline) — Google health stack patterns
-
-**Battery Optimization & Background Tasks:**
-- [Google Play Store Battery-Draining App Warnings 2026](https://www.webpronews.com/google-play-store-to-warn-users-of-battery-draining-apps-in-2026/) — Policy changes
-- [Background Task Patterns Destroying Battery Life](https://medium.com/@hiren6997/these-background-task-patterns-are-destroying-your-apps-battery-life-cc51318826ff) — Anti-patterns
-- [Optimize Battery Use for Task Scheduling](https://developer.android.com/develop/background-work/background-tasks/optimize-battery) — Official Android guidance
-
-### Tertiary (LOW confidence - WebSearch inferences)
-
-**Emerging Trends (Not MVP-Relevant):**
-- [AI in Construction Safety 2026](https://ohsonline.com/articles/2026/02/10/ai-is-transforming-construction-safety-but-implementation-may-be-the-biggest-risk.aspx) — AI risk prediction (Phase 3+ future consideration)
-- [Digital Twins in Workplace Safety 2026](https://www.vanguardehs.com/articles/top-new-trends-in-workplace-safety-for-2026-what-leading-programs-are-adopting-now) — Emerging features (not SiteMedic scope)
-- [Wearable Integration for Construction Safety](https://www.intenseye.com/products-reporting/safety-heatmaps) — IoT sensors (Phase 3+ future consideration)
-
-**PDF Generation Libraries:**
-- [6 Best PDF Generation APIs 2026](https://craftmypdf.com/blog/best-pdf-generation-apis/) — pdfmake, PDFKit, Puppeteer comparison
-- [Why Server-Side PDF Generation](https://www.textcontrol.com/blog/2021/12/30/generating-pdf-documents-in-the-browser/) — Client vs server trade-offs
+### Tertiary (LOW confidence — needs verification)
+- Motorsport UK Incident Pack V8.0 field names — PDF confirmed to exist; content not extractable. Field names inferred from regulatory description text only.
+- `leaflet.heat` compatibility with `react-leaflet@5.0.0` — package exists on npm; cross-version compatibility not explicitly verified.
 
 ---
 
-*Research completed: 2026-02-15*
-*Ready for roadmap: YES*
+*v1.0 research (Construction baseline): 2026-02-15*
+*v2.0 research (multi-vertical addendum): 2026-02-17*
+*Synthesized by: SUMMARY agent after STACK, FEATURES, ARCHITECTURE, PITFALLS agents completed in parallel*
+*Ready for roadmap: yes*
