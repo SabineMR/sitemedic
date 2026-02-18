@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 18 of 23 (Vertical Infrastructure & RIDDOR Fix)
-Plan: 5 of N in current phase
+Plan: 4 of N in current phase (18-04 complete; 18-05 also complete — plans completed out of order)
 Status: In progress
-Last activity: 2026-02-18 — Completed 18-05-PLAN.md (VERT-06 API gap: eventVertical wired into both booking creation routes)
+Last activity: 2026-02-18 — Completed 18-04-PLAN.md (OrgContext wiring + booking vertical override in treatment form)
 
-Progress: [██████████] v1.1 complete | [██░░░░░░░░] v2.0 5/25 plans
+Progress: [██████████] v1.1 complete | [███░░░░░░░] v2.0 6/25 plans
 
 ## Performance Metrics
 
@@ -29,12 +29,12 @@ Progress: [██████████] v1.1 complete | [██░░░░�
 |-------|-------|-------|----------|
 | 01–07.5 (v1.0) | 84/84 | ~5.5 hrs | ~4 min |
 | 08–17 (v1.1) | 35/35 | ~2.4 hrs | ~4.1 min |
-| 18–23 (v2.0) | 5/25 | ~5 min | ~1 min |
+| 18–23 (v2.0) | 6/25 | ~7 min | ~1 min |
 
 **Recent Trend:**
-- Last plan: 18-05 — VERT-06 API gap fix: eventVertical wired into both booking creation routes (1 min)
+- Last plan: 18-04 — OrgContext wiring + booking vertical override in treatment form (2 min)
 - v1.1 last 5: geofence coverage analytics, compliance exports, RIDDOR auto-save, contract detail, geofence exit alerts
-- Trend: Stable — consistent 3–4 min average
+- Trend: Stable — consistent 1–2 min for Phase 18 surgical refactors
 
 *Updated after each plan completion*
 
@@ -54,6 +54,8 @@ Key decisions affecting v2.0:
 - 18-03: OrgContext cache key `sitemedic.org.vertical_cache` stores `{ orgId, verticals }` — cache invalidates if org changes; `primaryVertical` defaults to `'general'`; cache-first pattern chosen for zero-signal construction sites
 - 18-05: `eventVertical` placed before `pricing` in BookingRequest interfaces — groups identity/context fields before financial fields
 - 18-05: `?? null` used for eventVertical (not `|| null`) — preserves distinction between undefined and empty string
+- 18-04: `orgVertical` variable name preserved in new.tsx — downstream usages (getMechanismPresets, getVerticalOutcomeCategories, getPatientLabel, getVerticalCompliance) unchanged
+- 18-04: `t.bookingId = bookingId ?? undefined` (not null) — WatermelonDB optional field; sync payload uses `?? null` for Supabase NULL compatibility
 
 ### Research Flags (Phase-Blocking)
 
@@ -71,6 +73,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T02:55:51Z
-Stopped at: Completed 18-02-PLAN.md — RIDDOR vertical gate + three Edge Function stubs + incident-report-dispatcher
+Last session: 2026-02-18T03:00:23Z
+Stopped at: Completed 18-04-PLAN.md — OrgContext wiring + booking vertical override in treatment form
 Resume file: None
