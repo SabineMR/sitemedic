@@ -545,7 +545,7 @@ export async function sendDeadlineEmail(
 
       <p>This incident has been flagged as RIDDOR-reportable and must be submitted to HSE by the deadline.</p>
 
-      <a href="https://app.sitemedic.com/riddor/${incident.id}" style="background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
+      <a href="https://app.sitemedic.co.uk/riddor/${incident.id}" style="background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
         Review & Generate F2508
       </a>
 

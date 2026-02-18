@@ -184,13 +184,13 @@ The public URL is deterministic: `${SUPABASE_URL}/storage/v1/object/public/org-l
 
 **Must happen before code changes are deployed to production:**
 
-1. Add wildcard domain `*.sitemedic.com` in Vercel Project Settings → Domains
+1. Add wildcard domain `*.sitemedic.co.uk` in Vercel Project Settings → Domains
 2. Point DNS to Vercel nameservers: `ns1.vercel-dns.com` and `ns2.vercel-dns.com`
    - Required for Vercel to issue wildcard SSL certificates automatically
    - Without this, individual subdomain SSL will not work
-3. Apex domain `sitemedic.com` also registered in the same Vercel project
+3. Apex domain `sitemedic.co.uk` also registered in the same Vercel project
 
-Once the wildcard is configured, any `tenant.sitemedic.com` resolves to the same Next.js deployment. Vercel issues individual SSL certificates per subdomain on demand.
+Once the wildcard is configured, any `tenant.sitemedic.co.uk` resolves to the same Next.js deployment. Vercel issues individual SSL certificates per subdomain on demand.
 
 Source: [Vercel Wildcard Domains](https://vercel.com/blog/wildcard-domains), [Vercel Multi-Tenant Domain Management](https://vercel.com/docs/multi-tenant/domain-management) — both official Vercel documentation, HIGH confidence.
 
@@ -201,7 +201,7 @@ Source: [Vercel Wildcard Domains](https://vercel.com/blog/wildcard-domains), [Ve
 
 function extractSubdomain(request: NextRequest): string | null {
   const hostname = request.headers.get('host') ?? '';
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? 'sitemedic.com';
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? 'sitemedic.co.uk';
 
   // Skip apex and www
   if (hostname === rootDomain || hostname === `www.${rootDomain}`) {
@@ -219,7 +219,7 @@ function extractSubdomain(request: NextRequest): string | null {
     return parts.length >= 2 ? parts[0] : null;
   }
 
-  // Production: tenant.sitemedic.com → 'tenant'
+  // Production: tenant.sitemedic.co.uk → 'tenant'
   const parts = hostname.split('.');
   if (parts.length >= 3) {
     return parts[0];
@@ -390,7 +390,7 @@ The existing matcher already excludes `api/`. The billing webhook at `/api/strip
 ### 4a. SSR pages
 
 ```
-Request to tenant.sitemedic.com/admin
+Request to tenant.sitemedic.co.uk/admin
   └─ Middleware: resolve slug → org → branding → inject x-org-* headers
        └─ app/(dashboard)/layout.tsx (server component): headers() → branding object
             └─ BrandingProvider (new client component): React context
@@ -683,14 +683,14 @@ STRIPE_BILLING_WEBHOOK_SECRET=whsec_billing_...
 STRIPE_PRICE_STARTER=price_...
 STRIPE_PRICE_GROWTH=price_...
 STRIPE_PRICE_ENTERPRISE=price_...
-NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.com
+NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.co.uk
 ```
 
 ### 5d. Stripe Dashboard setup for billing webhook
 
 In Stripe Dashboard (Production account, not Connect):
 1. Webhooks → Add endpoint
-2. URL: `https://sitemedic.com/api/stripe/billing-webhooks`
+2. URL: `https://sitemedic.co.uk/api/stripe/billing-webhooks`
 3. Events to listen for: `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`, `checkout.session.completed`
 4. Do NOT enable "Connect" toggle — this is a platform-level webhook, not a Connect webhook
 5. Copy the signing secret → set as `STRIPE_BILLING_WEBHOOK_SECRET` in Vercel

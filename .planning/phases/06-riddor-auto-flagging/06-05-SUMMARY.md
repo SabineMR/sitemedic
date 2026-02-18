@@ -135,7 +135,7 @@ None - existing files needed completion of site manager lookup and addition of m
 ### Environment Variables
 Ensure these are set in Supabase Edge Function environment:
 - `RESEND_API_KEY` - API key from Resend dashboard
-- `NEXT_PUBLIC_APP_URL` - Production app URL (e.g., https://app.sitemedic.com)
+- `NEXT_PUBLIC_APP_URL` - Production app URL (e.g., https://app.sitemedic.co.uk)
 
 ### Vault Secrets
 Configure in Supabase Dashboard → Project Settings → Vault:

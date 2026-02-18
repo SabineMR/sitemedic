@@ -45,14 +45,14 @@ Progress: [██████████] v1.0 complete | [██████�
 - Tier never stored in JWT — middleware reads `organizations.subscription_tier` on every request for immediate effect after webhook fires
 - `BrandingContext` is separate from `OrgContext` — SSR headers vs client-side mount; merging creates a race condition
 - CSS custom properties are the only correct pattern for per-org colours — Tailwind JIT cannot use runtime-constructed class names
-- Cookie domain NOT widened to `.sitemedic.com` — each subdomain requires its own sign-in to prevent cross-org session leak
+- Cookie domain NOT widened to `.sitemedic.co.uk` — each subdomain requires its own sign-in to prevent cross-org session leak
 - Legacy orgs (NULL stripe_customer_id) get access granted until they go through onboarding — Apex is Growth tier, all others Starter
 
 ### Pending Todos
 
 - Configure external services for production deployment (Stripe, Google Maps, Resend, webhooks, pg_cron, Vault) — carried from v1.1
 - Obtain DPA template + solicitor review before first org onboarding (non-code blocker for v3.0 launch)
-- Initiate Vercel wildcard `*.sitemedic.com` DNS at Phase 26 start — 72h propagation lead time
+- Initiate Vercel wildcard `*.sitemedic.co.uk` DNS at Phase 26 start — 72h propagation lead time
 
 ### Blockers/Concerns
 

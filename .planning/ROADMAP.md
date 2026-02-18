@@ -36,7 +36,7 @@ See: `.planning/milestones/v2.0-ROADMAP.md`
 
 ## 📋 v3.0 White-Label Platform & Subscription Engine (Phases 24–31)
 
-**Milestone Goal:** Transform SiteMedic into a white-label SaaS engine — each subscribing medic business gets their own branded portal, subdomain, and subscription plan. Apex Safety Solutions is the first live deployment and the v3.0 launch target. Every org gets per-org branding (logo, primary colour, company name) applied consistently across the web portal, PDFs, and emails. Growth and Enterprise orgs get a subdomain at `slug.sitemedic.com`. Three Stripe Billing tiers (Starter £149/mo, Growth £299/mo, Enterprise £599/mo) with a hybrid onboarding flow — pay online, platform admin activates.
+**Milestone Goal:** Transform SiteMedic into a white-label SaaS engine — each subscribing medic business gets their own branded portal, subdomain, and subscription plan. Apex Safety Solutions is the first live deployment and the v3.0 launch target. Every org gets per-org branding (logo, primary colour, company name) applied consistently across the web portal, PDFs, and emails. Growth and Enterprise orgs get a subdomain at `slug.sitemedic.co.uk`. Three Stripe Billing tiers (Starter £149/mo, Growth £299/mo, Enterprise £599/mo) with a hybrid onboarding flow — pay online, platform admin activates.
 
 **Phase list:**
 
@@ -102,27 +102,27 @@ Plans:
 
 ### Phase 26: Subdomain Routing
 
-**Goal:** Each org on Growth or Enterprise tier is accessible at `slug.sitemedic.com`. The Next.js middleware securely extracts the subdomain, resolves the org, and injects `x-org-*` headers that all SSR pages consume. The branded login page shows the org's own identity to unauthenticated visitors.
+**Goal:** Each org on Growth or Enterprise tier is accessible at `slug.sitemedic.co.uk`. The Next.js middleware securely extracts the subdomain, resolves the org, and injects `x-org-*` headers that all SSR pages consume. The branded login page shows the org's own identity to unauthenticated visitors.
 
 **Depends on:** Phase 24 (Next.js ≥15.2.3 must be in place before middleware changes expand the attack surface — CVE-2025-29927)
 
-**Note on DNS:** Vercel wildcard domain `*.sitemedic.com` must be configured and the DNS CNAME initiated at the START of this phase — not at deployment. DNS propagation takes up to 72 hours. Middleware changes can be developed and deployed to Vercel before DNS is live; test locally with `/etc/hosts` subdomain simulation in the interim.
+**Note on DNS:** Vercel wildcard domain `*.sitemedic.co.uk` must be configured and the DNS CNAME initiated at the START of this phase — not at deployment. DNS propagation takes up to 72 hours. Middleware changes can be developed and deployed to Vercel before DNS is live; test locally with `/etc/hosts` subdomain simulation in the interim.
 
 **Requirements:** ROUTE-01, ROUTE-02, ROUTE-03, ROUTE-04
 
 **Success Criteria** (what must be TRUE when this phase completes):
-1. Visiting `apex.sitemedic.com/login` in a browser shows the Apex Safety Solutions login page — the org's company name appears in the header, not "SiteMedic", and no 404 or generic fallback is served
+1. Visiting `apex.sitemedic.co.uk/login` in a browser shows the Apex Safety Solutions login page — the org's company name appears in the header, not "SiteMedic", and no 404 or generic fallback is served
 2. The Next.js middleware strips any incoming `x-org-*` headers before setting its own — an HTTP request crafted with a forged `x-org-id` header does not inject a false org context into the route handler
-3. Visiting a slug that does not match any org (`notexist.sitemedic.com`) redirects to the apex domain root rather than serving a blank or broken page
-4. Each org subdomain requires its own sign-in — a session obtained at `app.sitemedic.com` does not carry over to `apex.sitemedic.com` (cookie domain is not widened to `.sitemedic.com`)
+3. Visiting a slug that does not match any org (`notexist.sitemedic.co.uk`) redirects to the apex domain root rather than serving a blank or broken page
+4. Each org subdomain requires its own sign-in — a session obtained at `app.sitemedic.co.uk` does not carry over to `apex.sitemedic.co.uk` (cookie domain is not widened to `.sitemedic.co.uk`)
 
 **Plans:** TBD
 
 Plans:
-- [ ] 26-01: Vercel wildcard domain — add `*.sitemedic.com` in Vercel Project Settings; configure DNS CNAME at registrar; note 72h propagation; set `NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.com` env var
+- [ ] 26-01: Vercel wildcard domain — add `*.sitemedic.co.uk` in Vercel Project Settings; configure DNS CNAME at registrar; note 72h propagation; set `NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.co.uk` env var
 - [ ] 26-02: Middleware subdomain extraction — add `extractSubdomain()` helper to `web/lib/supabase/middleware.ts`; strip incoming `x-org-*` headers at top of middleware before any processing (CVE-2025-29927 mitigation); service-role org lookup by slug; inject `x-org-id`, `x-org-slug`, `x-org-tier`, `x-org-branding-*` request headers; redirect unknown slugs to apex root
 - [ ] 26-03: Branded login page — update `web/app/login/page.tsx` to read `x-org-*` headers via `next/headers`; render org company name and logo when present; fallback to SiteMedic defaults on apex domain; "Powered by SiteMedic" footer disclosure
-- [ ] 26-04: Auth cookie scope verification — confirm Supabase SSR cookie is NOT set with `.sitemedic.com` domain; regression-test existing login flow on apex domain after middleware changes; test with `/etc/hosts` subdomain simulation before DNS propagates
+- [ ] 26-04: Auth cookie scope verification — confirm Supabase SSR cookie is NOT set with `.sitemedic.co.uk` domain; regression-test existing login flow on apex domain after middleware changes; test with `/etc/hosts` subdomain simulation before DNS propagates
 
 ---
 
@@ -135,7 +135,7 @@ Plans:
 **Requirements:** BRAND-03, BRAND-06
 
 **Success Criteria** (what must be TRUE when this phase completes):
-1. Loading `apex.sitemedic.com/dashboard` in a browser shows "Apex Safety Solutions" in the portal header and the Apex logo replaces the SiteMedic logo — no client-side fetch for branding occurs after page load (verify in Network tab: no `/api/branding` request on page load)
+1. Loading `apex.sitemedic.co.uk/dashboard` in a browser shows "Apex Safety Solutions" in the portal header and the Apex logo replaces the SiteMedic logo — no client-side fetch for branding occurs after page load (verify in Network tab: no `/api/branding` request on page load)
 2. The primary accent colour throughout the portal (sidebar highlights, buttons, active states) matches the org's configured hex colour — changing `primary_colour_hex` in the `org_branding` table and hard-refreshing the page shows the new colour immediately
 3. An org with no branding configured (null logo, null colour) sees the SiteMedic defaults throughout — no broken image placeholders, no missing colour variables
 4. The browser tab title for an org portal reads "[Company Name] — SiteMedic" — not the generic "SiteMedic" title
@@ -184,7 +184,7 @@ Plans:
 **Requirements:** SUB-02, SUB-04, ONBOARD-01, ONBOARD-02, ONBOARD-03, ONBOARD-04
 
 **Success Criteria** (what must be TRUE when this phase completes):
-1. A new user visiting `sitemedic.com/signup` can select a plan, complete Stripe Checkout in test mode, and land on a post-payment page confirming their payment is received and their account is pending activation — the entire flow completes without any manual step from Sabine
+1. A new user visiting `sitemedic.co.uk/signup` can select a plan, complete Stripe Checkout in test mode, and land on a post-payment page confirming their payment is received and their account is pending activation — the entire flow completes without any manual step from Sabine
 2. After the Stripe `checkout.session.completed` webhook fires, the platform admin dashboard shows the new org in a "Pending Activation" queue with the plan tier, Stripe invoice link, and signup timestamp — the queue updates within seconds of checkout completion
 3. Platform admin can click "Activate" on a pending org, assign a subdomain slug, and trigger the welcome email — after activation the org's `subscription_status` is `active` and users can log in to their org portal
 4. The new org admin receives a welcome email containing their login URL (including subdomain), their chosen plan, and a getting-started guide — the email uses the org's branding if already configured, or SiteMedic defaults

@@ -992,9 +992,9 @@ Features a white-label subscription must have for the product to be credible. Mi
 | Per-org logo upload | Client-facing portal, PDFs, and emails must show the org's logo, not SiteMedic's | Medium | Storage bucket per org (Supabase storage already in use). Enforce max file size and dimensions. PNG/SVG preferred for PDF quality. |
 | Per-org primary colour | Portal accent colours, button colours, PDF accent bar | Medium | CSS variable injection on subdomain render. PDF requires passing hex to react-pdf styles at generation time — dynamic style object, not static StyleSheet. |
 | Per-org company name | Displayed in portal header, PDF issuer name, email `from` display name | Low | New `company_name` column on `organizations` or in `org_settings`. Currently `org_settings` has `admin_email` but no company name. |
-| Subdomain routing | `{slug}.sitemedic.com` resolves to the org's branded portal | High | Next.js middleware hostname detection. Requires unique, validated slug stored on org. Requires wildcard DNS `*.sitemedic.com`. One-time DNS setup, then per-org slug management. |
+| Subdomain routing | `{slug}.sitemedic.co.uk` resolves to the org's branded portal | High | Next.js middleware hostname detection. Requires unique, validated slug stored on org. Requires wildcard DNS `*.sitemedic.co.uk`. One-time DNS setup, then per-org slug management. |
 | Branded PDF output | Invoices, payslips, RIDDOR reports all show org logo and colour | High | react-pdf already in use (`@react-pdf/renderer`). Currently hardcoded. Requires dynamic style injection per PDF render call. All three PDF types (invoice, payslip, RIDDOR) need updating. |
-| Branded transactional emails | Booking confirmations, compliance alerts, payslip delivery show org name and reply-to | Medium | Resend supports per-send `from` display name and `reply_to`. Org emails should appear as `"Acme Medics <noreply@mail.sitemedic.com>"` not `"SiteMedic <noreply@mail.sitemedic.com>"`. Custom sender domains are Enterprise-only. |
+| Branded transactional emails | Booking confirmations, compliance alerts, payslip delivery show org name and reply-to | Medium | Resend supports per-send `from` display name and `reply_to`. Org emails should appear as `"Acme Medics <noreply@mail.sitemedic.co.uk>"` not `"SiteMedic <noreply@mail.sitemedic.co.uk>"`. Custom sender domains are Enterprise-only. |
 | Subscription plan stored on org | Platform admin and org can see which plan is active | Low | New `subscription_plan` enum on `organizations` or a separate `org_subscriptions` table. Values: `trial`, `starter`, `growth`, `enterprise`, `suspended`, `cancelled`. |
 | Plan-based feature gating | Certain features are inaccessible on lower tiers | Medium | Entitlement check utility called from server-side middleware and API routes. Must be server-side enforced — never client-only. A single `PLAN_ENTITLEMENTS` constant maps plan names to boolean flags. |
 | Stripe Billing for org subscriptions | Orgs pay monthly by card; invoices auto-generated | High | This is a second distinct Stripe integration. Existing Stripe Connect handles medic payouts. Org subscription billing requires a separate Stripe Customer per org, separate Stripe Prices (Starter / Growth), and a subscription object per org. These must not be confused with the Connect account. |
@@ -1012,7 +1012,7 @@ Features that make SiteMedic's white-label stand out in the UK medic staffing ni
 | Feature | Value Proposition | Complexity | Notes |
 |---|---|---|---|
 | Branded compliance certificate PDFs | Compliance certificates show the org's logo — client-presentable and professional | Medium | Extends existing PDF infrastructure. High perceived value for credibility with end-clients (event promoters, construction principals). |
-| Custom email sender domain | Emails come from `noreply@their-company.com` not `noreply@sitemedic.com` | High | Requires DNS verification via Resend or AWS SES domain setup per org. Enterprise-only due to ops overhead per org. |
+| Custom email sender domain | Emails come from `noreply@their-company.com` not `noreply@sitemedic.co.uk` | High | Requires DNS verification via Resend or AWS SES domain setup per org. Enterprise-only due to ops overhead per org. |
 | Tier-gated compliance analytics | Compliance trend charts, org-level scoring visible on Growth+ only. Starter gets basic counts. | Medium | Compliance history infrastructure already built (migration 130). Gating suppresses analytics route group for Starter orgs. |
 | Per-org onboarding email sequence | After activation, org gets a branded welcome + setup guide from SiteMedic (but on behalf of the new org) | Low | Simple Resend template triggered on org activation. Low effort, high first impression value. |
 | Usage analytics for Sabine (platform admin) | Platform admin sees which features each org uses — identifies upgrade trigger moments | Medium | Useful for Sabine to identify when to suggest Growth → Enterprise upgrade. Not urgent for launch. Defer to post-MVP. |
@@ -1028,10 +1028,10 @@ Features that seem like good ideas but must be explicitly excluded to control sc
 
 | Anti-Feature | Why Avoid | What to Do Instead |
 |---|---|---|
-| White-labeling the login page | Fully white-labeled login (no Supabase branding visible) is an auth architecture overhaul. It requires custom auth UI per org, custom OAuth flows, and per-org auth configuration. | Keep Supabase auth on `app.sitemedic.com`. The portal (post-login) is fully branded. Login page branding is a future Enterprise add-on. |
+| White-labeling the login page | Fully white-labeled login (no Supabase branding visible) is an auth architecture overhaul. It requires custom auth UI per org, custom OAuth flows, and per-org auth configuration. | Keep Supabase auth on `app.sitemedic.co.uk`. The portal (post-login) is fully branded. Login page branding is a future Enterprise add-on. |
 | Per-org custom feature development | "Can you add X just for us?" from larger orgs | Write a clear scope statement at onboarding: white-label means branding and access tiers, not bespoke features. Custom work is out of scope for all tiers. |
 | Reseller / multi-level white-label | An org reselling SiteMedic to their clients as a sub-SaaS (org acting as a SaaS vendor itself) | SiteMedic is B2B direct. Do not build org-to-sub-org white-label. This is a different business model requiring a different architecture. |
-| Custom domain CNAME pointing | `their-company.com` pointing directly to SiteMedic, with SSL cert auto-provisioning | Generating and renewing SSL certificates for arbitrary customer domains requires Let's Encrypt automation or a CDN proxy (Cloudflare for SaaS). This is 2-3 sprints of ops infrastructure. Use `*.sitemedic.com` subdomains for MVP. Custom domain support can be an Enterprise roadmap item. |
+| Custom domain CNAME pointing | `their-company.com` pointing directly to SiteMedic, with SSL cert auto-provisioning | Generating and renewing SSL certificates for arbitrary customer domains requires Let's Encrypt automation or a CDN proxy (Cloudflare for SaaS). This is 2-3 sprints of ops infrastructure. Use `*.sitemedic.co.uk` subdomains for MVP. Custom domain support can be an Enterprise roadmap item. |
 | White-labeling the mobile app | The React Native / Expo app also shows SiteMedic branding | App store submission for each org is prohibitive and not scalable. Mobile app branding is out of scope for all tiers permanently at this scale. |
 | Free tier (permanent) | Orgs with no payment commitment generate support overhead and inflate metrics | No free tier. There may be a 14-day trial (card required), but no permanent free plan. Card-required trials filter out zero-intent signups. |
 | Unlimited medic seats on Starter | Per-seat billing is tempting but increases billing complexity and support questions | Flat-rate per tier with a medic count hard cap. Track active medic count on org. Block adding medics above cap with a clear upgrade prompt. |
@@ -1063,9 +1063,9 @@ For SiteMedic's audience (UK medic staffing companies with 2-50 medics), medic c
 | **Annual price (GBP, ex-VAT)** | £1,490/yr (2 months free) | £2,990/yr | Custom |
 | **Active medic cap** | Up to 10 medics | Up to 30 medics | Unlimited |
 | **White-label branding** (logo, colour, company name) | Yes | Yes | Yes |
-| **Subdomain** (`slug.sitemedic.com`) | Yes | Yes | Yes |
+| **Subdomain** (`slug.sitemedic.co.uk`) | Yes | Yes | Yes |
 | **Branded PDF output** (invoices, payslips, compliance reports) | Yes | Yes | Yes |
-| **Branded emails** (org name in `from` display, from `mail.sitemedic.com`) | Yes | Yes | Yes |
+| **Branded emails** (org name in `from` display, from `mail.sitemedic.co.uk`) | Yes | Yes | Yes |
 | **Custom email sender domain** (org's own `@their-company.com`) | No | No | Yes |
 | **Booking system** | Yes | Yes | Yes |
 | **Timesheets + Payslips** | Yes | Yes | Yes |

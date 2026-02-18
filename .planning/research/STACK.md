@@ -128,13 +128,13 @@ The Next.js middleware (already at `/web/middleware.ts`) runs at the Edge on eve
 ```typescript
 // In middleware.ts — extract subdomain from Host header
 const hostname = request.headers.get('host') ?? '';
-const rootDomain = process.env.ROOT_DOMAIN ?? 'sitemedic.com';
+const rootDomain = process.env.ROOT_DOMAIN ?? 'sitemedic.co.uk';
 
 // Strip port in local dev: "localhost:30500" → "localhost"
 const hostnameWithoutPort = hostname.split(':')[0];
 
-// Extract subdomain: "apex.sitemedic.com" → "apex"
-// In production: hostnameWithoutPort = "apex.sitemedic.com"
+// Extract subdomain: "apex.sitemedic.co.uk" → "apex"
+// In production: hostnameWithoutPort = "apex.sitemedic.co.uk"
 // In local dev: hostnameWithoutPort = "localhost" (no subdomain)
 const subdomain =
   hostnameWithoutPort !== rootDomain &&
@@ -148,7 +148,7 @@ const subdomain =
 
 ```typescript
 if (subdomain) {
-  // Rewrite: apex.sitemedic.com/dashboard → /org/apex/dashboard
+  // Rewrite: apex.sitemedic.co.uk/dashboard → /org/apex/dashboard
   const url = request.nextUrl.clone();
   url.pathname = `/org/${subdomain}${request.nextUrl.pathname}`;
   return NextResponse.rewrite(url);
@@ -164,7 +164,7 @@ web/app/
     admin/
     ...
   org/
-    [slug]/         ← catches apex.sitemedic.com/* rewrites
+    [slug]/         ← catches apex.sitemedic.co.uk/* rewrites
       layout.tsx    ← fetches org branding by slug, provides BrandingContext
       page.tsx      ← org home page
       dashboard/
@@ -214,12 +214,12 @@ Alternatively: prefix-based routing during development (`/org/apex/dashboard` ac
 **Required Vercel setup:**
 
 1. In Vercel Dashboard → Project Settings → Domains, add:
-   - `sitemedic.com` (root domain)
-   - `*.sitemedic.com` (wildcard subdomain — covers all org subdomains)
+   - `sitemedic.co.uk` (root domain)
+   - `*.sitemedic.co.uk` (wildcard subdomain — covers all org subdomains)
 2. Add DNS records at your registrar:
-   - `A` record: `sitemedic.com` → Vercel IP
-   - `CNAME` record: `*.sitemedic.com` → `cname.vercel-dns.com`
-3. Set environment variable: `ROOT_DOMAIN=sitemedic.com`
+   - `A` record: `sitemedic.co.uk` → Vercel IP
+   - `CNAME` record: `*.sitemedic.co.uk` → `cname.vercel-dns.com`
+3. Set environment variable: `ROOT_DOMAIN=sitemedic.co.uk`
 
 **Vercel supports wildcard domains on all plans** (Hobby, Pro, Enterprise). No plan upgrade required for this feature.
 
@@ -231,7 +231,7 @@ Alternatively: prefix-based routing during development (`/org/apex/dashboard` ac
 |--------|---------|
 | `next-domains` library | Adds a package for something two lines of middleware accomplish |
 | Separate Vercel deployments per org | Requires separate deploys per org — operationally impossible at scale |
-| Path-prefix routing only (`/org/apex/...`) | Works but gives clients a branded URL like `sitemedic.com/org/apex` rather than `apex.sitemedic.com` — defeats the white-label purpose |
+| Path-prefix routing only (`/org/apex/...`) | Works but gives clients a branded URL like `sitemedic.co.uk/org/apex` rather than `apex.sitemedic.co.uk` — defeats the white-label purpose |
 | Node.js middleware runtime | Edge runtime is correct here. Node.js runtime for middleware is now stable in Next.js 15.5 but is unnecessary — subdomain parsing only needs `request.headers.get('host')`, which the Edge runtime fully supports |
 
 ---
@@ -354,7 +354,7 @@ Stripe provides a hosted UI for customers to manage their own subscriptions (upg
 // web/app/api/billing/portal/route.ts
 const session = await stripe.billingPortal.sessions.create({
   customer: orgSettings.stripe_customer_id,
-  return_url: `https://${orgSlug}.sitemedic.com/admin/billing`,
+  return_url: `https://${orgSlug}.sitemedic.co.uk/admin/billing`,
 });
 return NextResponse.redirect(session.url);
 ```
@@ -587,8 +587,8 @@ All five feature areas are implemented using the existing stack. This is a HIGH 
 | `org-logos` Supabase Storage bucket | Supabase Dashboard or migration | Public bucket, RLS on write |
 | Stripe Products + Prices | Stripe Dashboard (one-time) | Starter, Pro, Enterprise tiers |
 | Stripe Customer Portal | Stripe Dashboard configuration | Enable and configure redirect URL |
-| Wildcard domain `*.sitemedic.com` | Vercel Dashboard + DNS registrar | Required for subdomain routing in production |
-| `ROOT_DOMAIN=sitemedic.com` env var | Vercel environment variables | Used by middleware subdomain parser |
+| Wildcard domain `*.sitemedic.co.uk` | Vercel Dashboard + DNS registrar | Required for subdomain routing in production |
+| `ROOT_DOMAIN=sitemedic.co.uk` env var | Vercel environment variables | Used by middleware subdomain parser |
 | Separate `stripe-billing-webhooks` Edge Function | Supabase Edge Functions | Separate from existing `stripe-webhooks` (Connect) |
 
 ### New Migrations Required

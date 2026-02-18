@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-SiteMedic v3.0 adds a white-label subscription layer on top of an already-shipped multi-tenant medic staffing platform. The milestone has three interlocking concerns: (1) per-org visual identity — logo, primary colour, company name — applied consistently across the web portal, PDFs, and transactional emails; (2) subdomain routing so each Growth/Enterprise org gets `slug.sitemedic.com`; and (3) Stripe Billing subscription tiers (Starter £149/mo, Growth £299/mo, Enterprise £599/mo) with a hybrid onboarding flow where payment happens online but a platform admin manually activates each new org. The recommended approach is entirely additive: no new npm packages are required, no existing tables or RLS policies need changing, and the Stripe Billing integration coexists cleanly with the existing Stripe Connect medic payout system.
+SiteMedic v3.0 adds a white-label subscription layer on top of an already-shipped multi-tenant medic staffing platform. The milestone has three interlocking concerns: (1) per-org visual identity — logo, primary colour, company name — applied consistently across the web portal, PDFs, and transactional emails; (2) subdomain routing so each Growth/Enterprise org gets `slug.sitemedic.co.uk`; and (3) Stripe Billing subscription tiers (Starter £149/mo, Growth £299/mo, Enterprise £599/mo) with a hybrid onboarding flow where payment happens online but a platform admin manually activates each new org. The recommended approach is entirely additive: no new npm packages are required, no existing tables or RLS policies need changing, and the Stripe Billing integration coexists cleanly with the existing Stripe Connect medic payout system.
 
 The core architecture rests on three new database objects: an `org_branding` table (logo path, primary colour, company name, tagline), four new subscription columns on `organizations` (Stripe customer ID, subscription ID, tier, status), and a public Supabase Storage bucket `org-logos`. Subdomain routing is implemented by extending the existing Next.js middleware to parse the `Host` header, resolve the org via service role lookup, and inject branding data as `x-org-*` request headers — which SSR layouts consume via `next/headers` without any client-side fetch. Feature gating reads tier from the DB on every request (never from the JWT), ensuring tier changes take effect immediately after a webhook fires.
 
@@ -38,7 +38,7 @@ No new npm packages are required. Every white-label capability is implementable 
 | `org-logos` Supabase Storage bucket (public) | Supabase Dashboard or migration 134 | Stores org logo files; public so PDFs and emails can load logos without expiring signed URLs |
 | Stripe Products + Prices (3 tiers) | Stripe Dashboard, one-time setup | Starter/Growth/Enterprise price IDs referenced by checkout route and webhook handler |
 | Stripe Customer Portal configuration | Stripe Dashboard | Hosted UI for upgrade/downgrade/cancel; no custom billing UI needed |
-| Wildcard domain `*.sitemedic.com` in Vercel | Vercel Project Settings + DNS registrar | Routes all org subdomains to the same Next.js deployment; 72h DNS propagation lead time required |
+| Wildcard domain `*.sitemedic.co.uk` in Vercel | Vercel Project Settings + DNS registrar | Routes all org subdomains to the same Next.js deployment; 72h DNS propagation lead time required |
 | `stripe-billing-webhooks` route handler | `web/app/api/stripe/billing-webhooks/` | Separate from existing Connect webhook; different signing secret env var |
 
 **New environment variables required:**
@@ -48,7 +48,7 @@ STRIPE_BILLING_WEBHOOK_SECRET=whsec_billing_...
 STRIPE_PRICE_STARTER=price_...
 STRIPE_PRICE_GROWTH=price_...
 STRIPE_PRICE_ENTERPRISE=price_...
-NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.com
+NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.co.uk
 ```
 
 **New migrations required:**
@@ -65,7 +65,7 @@ NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.com
 
 **Must-have for v3.0 launch:**
 - Per-org branding (logo, primary colour, company name) across web portal, PDFs, and all email templates
-- Subdomain routing: `slug.sitemedic.com` for Growth and Enterprise tiers
+- Subdomain routing: `slug.sitemedic.co.uk` for Growth and Enterprise tiers
 - Stripe Billing subscription tiers: Starter £149/mo / Growth £299/mo / Enterprise £599/mo
 - Hybrid onboarding: online Stripe Checkout + platform admin manual activation
 - Feature gating by tier — server-side enforcement (not UI-only)
@@ -115,7 +115,7 @@ The architecture is middleware-centric. Subdomain resolution, service-role org l
 
 1. **Mixing Stripe Connect (medic payouts) with Stripe Billing (org subscriptions).** Same SDK instance, different product lines with incompatible event namespaces. Prevention: separate webhook endpoint (`/api/stripe/billing-webhooks`), separate Stripe Dashboard registration, separate signing secret env var (`STRIPE_BILLING_WEBHOOK_SECRET`), column named with explicit `stripe_customer_id` comment clarifying it is a Billing Customer (not a Connect Customer). Must be decided before any webhook handler code is written.
 
-2. **Subdomain routing breaks the existing auth cookie.** Supabase SSR cookies are scoped to the current hostname with no `domain` override. A session from `app.sitemedic.com` does not carry to `apex.sitemedic.com`. Setting cookie domain to `.sitemedic.com` (the wide fix) creates cross-org session leak. Prevention: each org subdomain requires its own sign-in; cookie domain is not widened. Also: Next.js versions below 15.2.3 are vulnerable to CVE-2025-29927 middleware bypass — verify version and strip `x-org-*` headers at the top of middleware before setting them.
+2. **Subdomain routing breaks the existing auth cookie.** Supabase SSR cookies are scoped to the current hostname with no `domain` override. A session from `app.sitemedic.co.uk` does not carry to `apex.sitemedic.co.uk`. Setting cookie domain to `.sitemedic.co.uk` (the wide fix) creates cross-org session leak. Prevention: each org subdomain requires its own sign-in; cookie domain is not widened. Also: Next.js versions below 15.2.3 are vulnerable to CVE-2025-29927 middleware bypass — verify version and strip `x-org-*` headers at the top of middleware before setting them.
 
 3. **Branding data leaking across orgs via miscached lookups.** If branding is cached without the org slug as a cache key, Org A's logo renders on Org B's portal. Prevention: include hostname in all cache keys; `Vary: Host` header on subdomain responses; integration test that loads two different org subdomains and asserts each shows only its own branding.
 
@@ -161,9 +161,9 @@ The 9-step build order from ARCHITECTURE.md is the recommended phase structure. 
 
 **Delivers:** `extractSubdomain()` helper in `web/lib/supabase/middleware.ts`, service-role org lookup by slug (with unknown slug redirecting to apex `/`), `x-org-*` header injection, security: strip all incoming `x-org-*` headers at the top of middleware before setting them (CVE-2025-29927 mitigation), `NEXT_PUBLIC_ROOT_DOMAIN` env var.
 
-**Pitfalls addressed:** Pitfall 2 (auth cookie scoping — each subdomain gets its own session, no `.sitemedic.com` widening). CVE-2025-29927 — strip before set. Pitfall 3 (cache leak — `Vary: Host` strategy established here).
+**Pitfalls addressed:** Pitfall 2 (auth cookie scoping — each subdomain gets its own session, no `.sitemedic.co.uk` widening). CVE-2025-29927 — strip before set. Pitfall 3 (cache leak — `Vary: Host` strategy established here).
 
-**Infrastructure prerequisite:** Wildcard `*.sitemedic.com` in Vercel + DNS CNAME record must be initiated at Phase 3 start. Deploy middleware changes before DNS is live in production but test locally first using `/etc/hosts` subdomain simulation.
+**Infrastructure prerequisite:** Wildcard `*.sitemedic.co.uk` in Vercel + DNS CNAME record must be initiated at Phase 3 start. Deploy middleware changes before DNS is live in production but test locally first using `/etc/hosts` subdomain simulation.
 
 **Research flag:** Well-documented Next.js + Vercel Platforms pattern. No additional research needed. Regression-test existing login and auth redirect flows thoroughly after deploying — this touches the auth middleware.
 
@@ -271,7 +271,7 @@ The 9-step build order from ARCHITECTURE.md is the recommended phase structure. 
 
 2. **Define legacy tier for existing orgs before Phase 1 migration runs on production.** `NULL stripe_customer_id` must have documented behaviour: which tier do existing orgs get? Which features are accessible? This decision must be communicated to Apex Safety Solutions before the migration deploys.
 
-3. **Clarify auth UX for org subdomain users.** Do medics and site managers sign in at `apex.sitemedic.com/login` (subdomain-scoped session) or at `app.sitemedic.com/login` (then redirect)? The cookie scoping architecture in Phase 3 depends on this answer. ARCHITECTURE.md recommends per-subdomain sign-in — confirm this is the intended UX before implementing.
+3. **Clarify auth UX for org subdomain users.** Do medics and site managers sign in at `apex.sitemedic.co.uk/login` (subdomain-scoped session) or at `app.sitemedic.co.uk/login` (then redirect)? The cookie scoping architecture in Phase 3 depends on this answer. ARCHITECTURE.md recommends per-subdomain sign-in — confirm this is the intended UX before implementing.
 
 4. **DPA and "Powered by SiteMedic" footer before first org onboarding.** A Data Processing Agreement must be signed before any white-label org is activated. The platform admin activation flow (Phase 7) must include a DPA confirmation step. UK data protection solicitor review of the DPA template is a non-code blocker for the first live customer.
 

@@ -227,7 +227,7 @@ ALTER TABLE bookings ADD COLUMN site_manager_id UUID REFERENCES auth.users(id);
 **Implementation**:
 ```sql
 -- Add admin role to existing users table
-UPDATE auth.users SET role = 'admin' WHERE email = 'admin@sitemedic.com';
+UPDATE auth.users SET role = 'admin' WHERE email = 'admin@sitemedic.co.uk';
 
 -- RLS policy for admin-only access
 CREATE POLICY "Admins only" ON bookings

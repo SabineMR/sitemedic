@@ -26,15 +26,15 @@ Foundation work that all subsequent phases depend on. No user-visible output —
 
 ### ROUTE — Subdomain Routing
 
-- [ ] **ROUTE-01**: Each org on Growth or Enterprise tier is accessible at `slug.sitemedic.com` (e.g. `apex.sitemedic.com`) — Vercel wildcard domain `*.sitemedic.com` configured
+- [ ] **ROUTE-01**: Each org on Growth or Enterprise tier is accessible at `slug.sitemedic.co.uk` (e.g. `apex.sitemedic.co.uk`) — Vercel wildcard domain `*.sitemedic.co.uk` configured
 - [ ] **ROUTE-02**: Next.js middleware extracts the subdomain from the `host` header, looks up the org by slug using service role, and injects org context as `x-org-*` request headers
 - [ ] **ROUTE-03**: Incoming `x-org-*` headers are stripped at the top of middleware before being re-set (prevents external header injection)
-- [ ] **ROUTE-04**: The branded login page at `slug.sitemedic.com/login` shows the org's logo and company name — unauthenticated visitors see the org's brand, not SiteMedic's
+- [ ] **ROUTE-04**: The branded login page at `slug.sitemedic.co.uk/login` shows the org's logo and company name — unauthenticated visitors see the org's brand, not SiteMedic's
 
 ### SUB — Subscription Engine
 
 - [ ] **SUB-01**: Three Stripe Products/Prices exist in Stripe Dashboard: Starter £149/mo, Growth £299/mo, Enterprise £599/mo — price IDs stored as env vars (`STRIPE_PRICE_STARTER`, `STRIPE_PRICE_GROWTH`, `STRIPE_PRICE_ENTERPRISE`)
-- [ ] **SUB-02**: A new medic business can sign up at `sitemedic.com/signup`, select a plan, and complete payment via Stripe Checkout — flow works end-to-end in test mode
+- [ ] **SUB-02**: A new medic business can sign up at `sitemedic.co.uk/signup`, select a plan, and complete payment via Stripe Checkout — flow works end-to-end in test mode
 - [ ] **SUB-03**: A dedicated `/api/stripe/billing-webhooks` endpoint (separate signing secret from Connect webhooks) handles subscription lifecycle events: `checkout.session.completed` creates the org record; `customer.subscription.updated` updates tier; `customer.subscription.deleted` suspends org access
 - [ ] **SUB-04**: Platform admin receives a notification and sees a pending activation queue when a new org signs up — can activate the org, assign slug, and trigger branding setup
 - [ ] **SUB-05**: Org admin can access the Stripe Customer Portal from their settings page to manage billing (upgrade plan, update payment method, view invoices, cancel)
@@ -50,7 +50,7 @@ Foundation work that all subsequent phases depend on. No user-visible output —
 
 ### ONBOARD — Org Onboarding Flow
 
-- [ ] **ONBOARD-01**: A public signup page at `sitemedic.com/signup` allows a new medic business to create an account and select a subscription tier
+- [ ] **ONBOARD-01**: A public signup page at `sitemedic.co.uk/signup` allows a new medic business to create an account and select a subscription tier
 - [ ] **ONBOARD-02**: After Stripe Checkout completes, the new org admin is guided through a post-payment setup wizard: upload logo, pick brand colour, set company name, invite first medic
 - [ ] **ONBOARD-03**: Platform admin receives an email notification when a new org signs up and can activate the org from the platform admin panel (hybrid: org pays online, Sabine configures and activates)
 - [ ] **ONBOARD-04**: New org admin receives a welcome email after platform admin activation with login URL, subdomain, and getting-started guide

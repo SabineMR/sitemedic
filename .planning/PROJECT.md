@@ -81,7 +81,7 @@ Documentation happens automatically as the medic does their job, not as separate
 - [ ] Branding applied to web portal — header, login page, sidebar all reflect org brand
 - [ ] Branded PDFs — org logo injected into weekly reports, RIDDOR PDFs, payslips
 - [ ] Branded emails — org logo + primary colour in all Resend transactional emails
-- [ ] Subdomain routing — `slug.sitemedic.com` resolves to correct org in Next.js middleware
+- [ ] Subdomain routing — `slug.sitemedic.co.uk` resolves to correct org in Next.js middleware
 
 **Subscription Engine:**
 - [ ] Stripe Billing integration — subscription plans (Starter/Growth/Enterprise) per org
@@ -182,7 +182,7 @@ Documentation happens automatically as the medic does their job, not as separate
 
 **Target features:**
 - Per-org branding: logo, primary colour, company name — applied across portal, PDFs, and emails
-- Subdomain routing: `apex.sitemedic.com` per org (Pro), full custom domain (Enterprise)
+- Subdomain routing: `apex.sitemedic.co.uk` per org (Pro), full custom domain (Enterprise)
 - Tiered subscription plans: Starter / Growth / Enterprise via Stripe Billing
 - Hybrid onboarding: online signup + Stripe Checkout → platform admin activates + configures branding
 - Subscription management: upgrade/downgrade, billing portal, cancellation

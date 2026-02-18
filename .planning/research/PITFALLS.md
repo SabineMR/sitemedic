@@ -70,11 +70,11 @@ Stripe Billing integration phase — before any webhook handler is written. The 
 **Severity:** CRITICAL
 
 **What goes wrong:**
-The current middleware (`web/middleware.ts` → `web/lib/supabase/middleware.ts`) creates Supabase auth cookies that are scoped to the current hostname. When a user signs in at `app.sitemedic.com`, the Supabase SSR client (`@supabase/ssr`) sets cookies with no explicit `domain` option — which defaults to the current hostname only. When subdomain routing is added and an org accesses `acmecorp.sitemedic.com`, the browser will not send the `app.sitemedic.com` session cookie to the subdomain. The user is forced to re-authenticate on every subdomain, and if the auth redirect points back to `app.sitemedic.com`, they enter an infinite redirect loop.
+The current middleware (`web/middleware.ts` → `web/lib/supabase/middleware.ts`) creates Supabase auth cookies that are scoped to the current hostname. When a user signs in at `app.sitemedic.co.uk`, the Supabase SSR client (`@supabase/ssr`) sets cookies with no explicit `domain` option — which defaults to the current hostname only. When subdomain routing is added and an org accesses `acmecorp.sitemedic.co.uk`, the browser will not send the `app.sitemedic.co.uk` session cookie to the subdomain. The user is forced to re-authenticate on every subdomain, and if the auth redirect points back to `app.sitemedic.co.uk`, they enter an infinite redirect loop.
 
-The reverse problem also occurs: if the cookie domain is set to `.sitemedic.com` (the apex with a leading dot, which shares the cookie across all subdomains), then a session cookie from `acmecorp.sitemedic.com` is readable by `othercorp.sitemedic.com`. In the white-label context this is a cross-org session leak — a user signed into Org A's subdomain should never have their session cookie sent to Org B's subdomain.
+The reverse problem also occurs: if the cookie domain is set to `.sitemedic.co.uk` (the apex with a leading dot, which shares the cookie across all subdomains), then a session cookie from `acmecorp.sitemedic.co.uk` is readable by `othercorp.sitemedic.co.uk`. In the white-label context this is a cross-org session leak — a user signed into Org A's subdomain should never have their session cookie sent to Org B's subdomain.
 
-There is a third variant: the middleware's `publicRoutes` list in `web/lib/supabase/middleware.ts` checks `request.nextUrl.pathname`. When subdomain routing is added and the middleware uses `NextResponse.rewrite()` to map `acmecorp.sitemedic.com/dashboard` to an internal path, the pathname the middleware sees is the rewritten path, not the original. The public route check may pass or fail incorrectly depending on whether it runs before or after the rewrite.
+There is a third variant: the middleware's `publicRoutes` list in `web/lib/supabase/middleware.ts` checks `request.nextUrl.pathname`. When subdomain routing is added and the middleware uses `NextResponse.rewrite()` to map `acmecorp.sitemedic.co.uk/dashboard` to an internal path, the pathname the middleware sees is the rewritten path, not the original. The public route check may pass or fail incorrectly depending on whether it runs before or after the rewrite.
 
 Additionally, CVE-2025-29927 is a confirmed critical vulnerability (CVSS 9.1) in Next.js versions prior to 15.2.3 that allows attackers to bypass middleware authentication entirely by sending the `x-middleware-subrequest` header. If this system runs on a version below 15.2.3 on a self-hosted deployment, adding more routes via subdomain routing expands the attack surface without fixing the underlying bypass.
 
@@ -82,14 +82,14 @@ Additionally, CVE-2025-29927 is a confirmed critical vulnerability (CVSS 9.1) in
 `web/lib/supabase/middleware.ts` `setAll()` callback calls `supabaseResponse.cookies.set(name, value, options)` but the `options` object comes directly from Supabase SSR — no `domain` override is applied. The middleware has no hostname parsing logic today. All routing decisions use `request.nextUrl.pathname` with no subdomain awareness.
 
 **Warning signs:**
-- User signs in at `acmecorp.sitemedic.com`, is redirected to `/dashboard`, middleware does not find a session, redirects to `/login` — infinite loop
-- Browser devtools show the auth cookie domain is `acmecorp.sitemedic.com` but the request is going to `app.sitemedic.com`
-- Setting cookie domain to `.sitemedic.com` and noticing in devtools that the cookie appears in requests to multiple org subdomains simultaneously
+- User signs in at `acmecorp.sitemedic.co.uk`, is redirected to `/dashboard`, middleware does not find a session, redirects to `/login` — infinite loop
+- Browser devtools show the auth cookie domain is `acmecorp.sitemedic.co.uk` but the request is going to `app.sitemedic.co.uk`
+- Setting cookie domain to `.sitemedic.co.uk` and noticing in devtools that the cookie appears in requests to multiple org subdomains simultaneously
 - A test reveals that a user authenticated on Org A's subdomain can access Org B's subdomain without re-authenticating
 
 **Prevention strategy:**
 1. Subdomain routing middleware must run before auth cookie logic. Parse the hostname at the top of `middleware.ts` to extract the org subdomain slug. Use `NextResponse.rewrite()` to map the subdomain to an internal path before the Supabase session refresh runs.
-2. **Do not share session cookies across subdomains.** Each org subdomain should require its own sign-in. The Supabase auth cookie should be scoped to the specific subdomain (no leading dot). A user who is signed into the main app (`app.sitemedic.com`) must re-authenticate on `acmecorp.sitemedic.com` — this is correct behaviour for white-label isolation.
+2. **Do not share session cookies across subdomains.** Each org subdomain should require its own sign-in. The Supabase auth cookie should be scoped to the specific subdomain (no leading dot). A user who is signed into the main app (`app.sitemedic.co.uk`) must re-authenticate on `acmecorp.sitemedic.co.uk` — this is correct behaviour for white-label isolation.
 3. Set `cookieOptions.domain` explicitly in the Supabase SSR client constructor for each context: for the main app, omit the `domain` (defaults to current host); for subdomain contexts, set to the current subdomain only.
 4. Audit the Next.js version. If running below 15.2.3, update before adding subdomain routing. Block the `x-middleware-subrequest` header at the reverse proxy (nginx/Vercel edge) regardless of version. This header should never arrive from external clients.
 5. The public routes check in middleware must account for the rewrite: check `request.nextUrl.pathname` before the rewrite takes effect, or use the original URL object.
@@ -225,7 +225,7 @@ Specifically, the `InvoiceDocument` component renders:
 - Hardcoded footer: `Bank details: Sort Code 12-34-56, Account 12345678` (line 127) — this is placeholder but will be wrong for white-label orgs that have their own bank details
 - No primary colour — all grey/neutral
 
-For email, the `from` address is set per email send call. If the `from` is `noreply@sitemedic.com`, a white-label org's client will see "SiteMedic" as the sender — breaking the white-label illusion.
+For email, the `from` address is set per email send call. If the `from` is `noreply@sitemedic.co.uk`, a white-label org's client will see "SiteMedic" as the sender — breaking the white-label illusion.
 
 The risk compounds in server-side generation: `generateInvoicePDF()` is called asynchronously on a server. If there is any module-level caching of the PDF template (e.g., a singleton component or a cached style object), one org's logo URL could be rendered in another org's PDF if the server processes two concurrent PDF generation requests.
 
@@ -236,7 +236,7 @@ The risk compounds in server-side generation: `generateInvoicePDF()` is called a
 
 **Warning signs:**
 - A white-label client receives an invoice PDF with the footer saying "SiteMedic Bank Details" or with placeholder bank info
-- The `from` address on booking confirmation emails reads `noreply@sitemedic.com` for an org that expects `noreply@acmemedicalsupport.com`
+- The `from` address on booking confirmation emails reads `noreply@sitemedic.co.uk` for an org that expects `noreply@acmemedicalsupport.com`
 - Two concurrent PDF generation requests: one org's logo appears in the other org's PDF (if logo is set as a module-level variable)
 - Client complaint: "Our clients can see this is SiteMedic software — we need our own branding"
 
@@ -292,10 +292,10 @@ Feature gating phase. Must be done in one coordinated pass — adding UI gates w
 **Severity:** HIGH
 
 **What goes wrong:**
-Stripe Checkout requires a `success_url` and `cancel_url`. When building the subscription flow, developers typically hardcode or environment-variable these URLs as `https://app.sitemedic.com/billing/success`. This works in production but fails in:
+Stripe Checkout requires a `success_url` and `cancel_url`. When building the subscription flow, developers typically hardcode or environment-variable these URLs as `https://app.sitemedic.co.uk/billing/success`. This works in production but fails in:
 
 - **Review apps / preview deployments**: The URL is `https://sitemedic-pr-123.vercel.app/billing/success` — the Stripe Checkout session returns to the wrong URL, and the platform admin cannot test the activation flow
-- **Subdomain contexts**: If the Stripe Checkout is initiated from `acmecorp.sitemedic.com/billing`, the redirect should return to `acmecorp.sitemedic.com/billing/success` — not to the generic app URL
+- **Subdomain contexts**: If the Stripe Checkout is initiated from `acmecorp.sitemedic.co.uk/billing`, the redirect should return to `acmecorp.sitemedic.co.uk/billing/success` — not to the generic app URL
 
 A related problem: after Stripe Checkout completes, the `checkout.session.completed` webhook fires. The webhook handler creates the Stripe Customer and subscription, then sets the org's `billing_status`. But the `success_url` redirect happens before the webhook is processed. If the success page immediately checks `billing_status`, it may show "Payment failed" because the webhook hasn't fired yet. This is a race condition — the redirect arrives faster than the webhook.
 
@@ -365,17 +365,17 @@ Mistakes that create annoying but recoverable problems.
 **Severity:** MEDIUM
 
 **What goes wrong:**
-Vercel wildcard subdomain support requires the `*.sitemedic.com` wildcard DNS record to be added before Vercel can verify the domain. The verification process can take 24–72 hours. If the subdomain routing code is deployed before DNS propagation completes, any test of the feature against production will return DNS errors — and developers will incorrectly conclude the middleware code is wrong and start debugging the wrong thing.
+Vercel wildcard subdomain support requires the `*.sitemedic.co.uk` wildcard DNS record to be added before Vercel can verify the domain. The verification process can take 24–72 hours. If the subdomain routing code is deployed before DNS propagation completes, any test of the feature against production will return DNS errors — and developers will incorrectly conclude the middleware code is wrong and start debugging the wrong thing.
 
-A second ordering problem: Vercel requires the wildcard domain to be added via Nameserver delegation (not A records). If the current DNS is configured with A records (common for existing domains), switching to Nameserver delegation requires a DNS provider change that has a propagation window during which the main `sitemedic.com` domain may be unreachable.
+A second ordering problem: Vercel requires the wildcard domain to be added via Nameserver delegation (not A records). If the current DNS is configured with A records (common for existing domains), switching to Nameserver delegation requires a DNS provider change that has a propagation window during which the main `sitemedic.co.uk` domain may be unreachable.
 
 **Evidence in this codebase:**
 No Vercel wildcard domain configuration exists yet (the current app uses a single domain). The DNS change is a deployment infrastructure task, not a code task — but it has a long lead time that is easy to forget until the last moment.
 
 **Warning signs:**
-- The middleware rewrite code is deployed but `acmecorp.sitemedic.com` returns NXDOMAIN
+- The middleware rewrite code is deployed but `acmecorp.sitemedic.co.uk` returns NXDOMAIN
 - The team spends time debugging `middleware.ts` when the actual problem is DNS propagation
-- The main `sitemedic.com` has a DNS downtime window during the Nameserver migration
+- The main `sitemedic.co.uk` has a DNS downtime window during the Nameserver migration
 
 **Prevention strategy:**
 1. Add the wildcard DNS record and Vercel domain configuration at least 72 hours before the first subdomain routing test against production.
@@ -470,7 +470,7 @@ If a developer adds the `logos` bucket without RLS (the default Supabase Storage
 
 **Warning signs:**
 - The `logos` bucket is created without an explicit RLS policy and defaults to the bucket's public/private setting
-- A logo URL from `acmecorp.sitemedic.com` can be loaded in a browser when the user is not authenticated to any org
+- A logo URL from `acmecorp.sitemedic.co.uk` can be loaded in a browser when the user is not authenticated to any org
 - An org admin uploads a logo successfully but it cannot be displayed on the unauthenticated login page
 
 **Prevention strategy:**
