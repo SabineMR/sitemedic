@@ -941,3 +941,361 @@ The SGSA Standard Medical Incident Report Form is used by Premier League and EFL
 *Feature research for: SiteMedic (Medical Compliance & Multi-Vertical Medic Platform)*
 *v1.0 researched: 2026-02-15 | v1.1 multi-vertical addendum: 2026-02-17*
 *v1.0 Confidence: HIGH | v1.1 Confidence: MEDIUM–HIGH (regulatory frameworks HIGH; specific form schemas MEDIUM where not publicly standardised)*
+
+---
+
+---
+
+## v2.0 Addendum — White-Label + Subscription Tiers (Subsequent Milestone)
+
+**Researched:** 2026-02-18
+**Scope:** Adding white-label branding and tiered SaaS subscriptions to an existing platform. This is a new commercial layer on top of the medic compliance platform — not a replacement of any existing features.
+**Confidence:** HIGH (table stakes, billing edge cases — verified via Stripe official docs + multiple SaaS benchmark studies) / MEDIUM (tier pricing benchmarks — verified against 100+ company studies; no UK medic SaaS competitors publish pricing) / LOW (UK medic staffing market-specific pricing — market uses custom quoting)
+
+---
+
+### Context: What Already Exists (Do Not Re-Research or Re-Build)
+
+The following features are already built and are noted here only so the feature gating model knows what it has to work with when deciding what to expose per tier.
+
+| Already Built | Notes |
+|---|---|
+| Multi-tenant org isolation | JWT app_metadata org_id, RLS policies throughout |
+| org_settings table | Per-org: base_rate, geofence_radius, urgency_premiums, admin_email, net30_eligible, credit_limit |
+| Org industry verticals | 10 verticals with context-aware UI labels (org-labels.ts) |
+| Booking system | Full booking flow, pricing, urgency premiums |
+| Medic profiles + certifications | Certification expiry tracking, compliance scoring |
+| Timesheets + payslips | PDF payslip generation, Stripe Connect payouts |
+| RIDDOR compliance | Auto-detect triggers, status history, PDF reports |
+| Client portal | Client-facing bookings view |
+| Stripe Connect | Medic payouts (platform-to-medic), revenue split |
+| Analytics dashboard | Admin analytics: revenue, compliance, territories |
+| PDF generation | Invoices via react-pdf — currently hardcoded: Helvetica font, grey (#f3f4f6) accent, no org logo |
+| Email via Resend | Transactional emails — single Resend API key, no per-org `from` address or branding |
+| Territory management | Auto-assignment, geofencing, coverage gap analysis |
+| Platform admin role | Cross-org admin, separate from org admin |
+
+**Critical branding gaps identified from codebase inspection:**
+- `web/lib/invoices/pdf-generator.ts`: The PDF document renders "INVOICE" as a hardcoded title with Helvetica font and `#f3f4f6` background. No org logo, no org colour. This is the highest-priority branding gap — every invoice and payslip sent to clients is unbranded.
+- `web/lib/email/resend.ts`: Sends all emails from a single Resend API key. No per-org `from` name, reply-to address, or template branding. Every booking confirmation and compliance alert looks like it comes from SiteMedic, not from the org's own business.
+
+---
+
+### Table Stakes (White-Label Must-Haves)
+
+Features a white-label subscription must have for the product to be credible. Missing any of these means org admins feel they have a generic SaaS with a logo added on top, not a genuine white-label product.
+
+**Confidence: HIGH** — verified across white-label SaaS architecture guides and multiple market research sources.
+
+| Feature | Why Expected | Complexity | Notes |
+|---|---|---|---|
+| Per-org logo upload | Client-facing portal, PDFs, and emails must show the org's logo, not SiteMedic's | Medium | Storage bucket per org (Supabase storage already in use). Enforce max file size and dimensions. PNG/SVG preferred for PDF quality. |
+| Per-org primary colour | Portal accent colours, button colours, PDF accent bar | Medium | CSS variable injection on subdomain render. PDF requires passing hex to react-pdf styles at generation time — dynamic style object, not static StyleSheet. |
+| Per-org company name | Displayed in portal header, PDF issuer name, email `from` display name | Low | New `company_name` column on `organizations` or in `org_settings`. Currently `org_settings` has `admin_email` but no company name. |
+| Subdomain routing | `{slug}.sitemedic.com` resolves to the org's branded portal | High | Next.js middleware hostname detection. Requires unique, validated slug stored on org. Requires wildcard DNS `*.sitemedic.com`. One-time DNS setup, then per-org slug management. |
+| Branded PDF output | Invoices, payslips, RIDDOR reports all show org logo and colour | High | react-pdf already in use (`@react-pdf/renderer`). Currently hardcoded. Requires dynamic style injection per PDF render call. All three PDF types (invoice, payslip, RIDDOR) need updating. |
+| Branded transactional emails | Booking confirmations, compliance alerts, payslip delivery show org name and reply-to | Medium | Resend supports per-send `from` display name and `reply_to`. Org emails should appear as `"Acme Medics <noreply@mail.sitemedic.com>"` not `"SiteMedic <noreply@mail.sitemedic.com>"`. Custom sender domains are Enterprise-only. |
+| Subscription plan stored on org | Platform admin and org can see which plan is active | Low | New `subscription_plan` enum on `organizations` or a separate `org_subscriptions` table. Values: `trial`, `starter`, `growth`, `enterprise`, `suspended`, `cancelled`. |
+| Plan-based feature gating | Certain features are inaccessible on lower tiers | Medium | Entitlement check utility called from server-side middleware and API routes. Must be server-side enforced — never client-only. A single `PLAN_ENTITLEMENTS` constant maps plan names to boolean flags. |
+| Stripe Billing for org subscriptions | Orgs pay monthly by card; invoices auto-generated | High | This is a second distinct Stripe integration. Existing Stripe Connect handles medic payouts. Org subscription billing requires a separate Stripe Customer per org, separate Stripe Prices (Starter / Growth), and a subscription object per org. These must not be confused with the Connect account. |
+| Self-serve billing portal | Orgs can update their card, download invoices without contacting Sabine | Medium | Stripe Customer Portal — configurable via Stripe Dashboard with no code. One API call from the app generates a session URL. Orgs are redirected to Stripe-hosted portal. |
+| Admin activation gate | Sabine reviews and activates new orgs before they go live | Low | A `status` enum on `organizations` with values: `pending_activation`, `active`, `suspended`, `cancelled`. Portal and subdomain only function when `status = 'active'`. |
+
+---
+
+### Differentiators (White-Label Stand-Out Features)
+
+Features that make SiteMedic's white-label stand out in the UK medic staffing niche. Not required to be credible but add meaningful value and justify higher tier pricing.
+
+**Confidence: MEDIUM** — inferred from domain context (UK medic staffing compliance requirements) and general SaaS differentiation research.
+
+| Feature | Value Proposition | Complexity | Notes |
+|---|---|---|---|
+| Branded compliance certificate PDFs | Compliance certificates show the org's logo — client-presentable and professional | Medium | Extends existing PDF infrastructure. High perceived value for credibility with end-clients (event promoters, construction principals). |
+| Custom email sender domain | Emails come from `noreply@their-company.com` not `noreply@sitemedic.com` | High | Requires DNS verification via Resend or AWS SES domain setup per org. Enterprise-only due to ops overhead per org. |
+| Tier-gated compliance analytics | Compliance trend charts, org-level scoring visible on Growth+ only. Starter gets basic counts. | Medium | Compliance history infrastructure already built (migration 130). Gating suppresses analytics route group for Starter orgs. |
+| Per-org onboarding email sequence | After activation, org gets a branded welcome + setup guide from SiteMedic (but on behalf of the new org) | Low | Simple Resend template triggered on org activation. Low effort, high first impression value. |
+| Usage analytics for Sabine (platform admin) | Platform admin sees which features each org uses — identifies upgrade trigger moments | Medium | Useful for Sabine to identify when to suggest Growth → Enterprise upgrade. Not urgent for launch. Defer to post-MVP. |
+| Referral program for orgs | An org can share a referral link for a subscription discount | Medium | Referral infrastructure exists for medics (migration 115) but org-level referral is a separate concern. Defer to post-MVP. |
+
+---
+
+### Anti-Features (Explicitly Out of Scope)
+
+Features that seem like good ideas but must be explicitly excluded to control scope.
+
+**Confidence: HIGH** — grounded in scope control principles and white-label SaaS pitfalls research.
+
+| Anti-Feature | Why Avoid | What to Do Instead |
+|---|---|---|
+| White-labeling the login page | Fully white-labeled login (no Supabase branding visible) is an auth architecture overhaul. It requires custom auth UI per org, custom OAuth flows, and per-org auth configuration. | Keep Supabase auth on `app.sitemedic.com`. The portal (post-login) is fully branded. Login page branding is a future Enterprise add-on. |
+| Per-org custom feature development | "Can you add X just for us?" from larger orgs | Write a clear scope statement at onboarding: white-label means branding and access tiers, not bespoke features. Custom work is out of scope for all tiers. |
+| Reseller / multi-level white-label | An org reselling SiteMedic to their clients as a sub-SaaS (org acting as a SaaS vendor itself) | SiteMedic is B2B direct. Do not build org-to-sub-org white-label. This is a different business model requiring a different architecture. |
+| Custom domain CNAME pointing | `their-company.com` pointing directly to SiteMedic, with SSL cert auto-provisioning | Generating and renewing SSL certificates for arbitrary customer domains requires Let's Encrypt automation or a CDN proxy (Cloudflare for SaaS). This is 2-3 sprints of ops infrastructure. Use `*.sitemedic.com` subdomains for MVP. Custom domain support can be an Enterprise roadmap item. |
+| White-labeling the mobile app | The React Native / Expo app also shows SiteMedic branding | App store submission for each org is prohibitive and not scalable. Mobile app branding is out of scope for all tiers permanently at this scale. |
+| Free tier (permanent) | Orgs with no payment commitment generate support overhead and inflate metrics | No free tier. There may be a 14-day trial (card required), but no permanent free plan. Card-required trials filter out zero-intent signups. |
+| Unlimited medic seats on Starter | Per-seat billing is tempting but increases billing complexity and support questions | Flat-rate per tier with a medic count hard cap. Track active medic count on org. Block adding medics above cap with a clear upgrade prompt. |
+| Real-time feature enforcement | Checking entitlements on every keystroke or websocket message | Check entitlements on page load and on server-side API calls. Cache the plan lookup (short TTL). Do not build real-time enforcement polling. |
+
+---
+
+### Suggested Tier Breakdown
+
+#### Naming Convention
+
+Use **Starter / Growth / Enterprise**. This naming is widely recognised in UK B2B SaaS, maps clearly to business stage, and creates a natural upgrade path. Avoid: Basic/Pro/Business (overused and vague), Free/Paid/Custom (misleading for this model).
+
+#### Primary Gating Dimension: Active Medic Count
+
+For SiteMedic's audience (UK medic staffing companies with 2-50 medics), medic count is the most natural scaling dimension. It:
+- Is easy to explain ("you can manage up to X medics")
+- Scales with the org's actual revenue (more medics = more shifts = more revenue)
+- Is straightforward to enforce (`SELECT COUNT(*) FROM medics WHERE org_id = ? AND status = 'active'`)
+- Is hard to game (compliance use cases require real medics)
+
+**Confidence: MEDIUM** — inferred from domain context. No UK medic staffing SaaS competitors publish pricing. Benchmarked against UK B2B SaaS SME pricing studies (100+ company dataset, median Starter at £29/user/month = approximately £149-199/mo flat for small-team tools).
+
+#### Tier Structure
+
+| | **Starter** | **Growth** | **Enterprise** |
+|---|---|---|---|
+| **Monthly price (GBP, ex-VAT)** | £149/mo | £299/mo | Custom / ~£499+ |
+| **Annual price (GBP, ex-VAT)** | £1,490/yr (2 months free) | £2,990/yr | Custom |
+| **Active medic cap** | Up to 10 medics | Up to 30 medics | Unlimited |
+| **White-label branding** (logo, colour, company name) | Yes | Yes | Yes |
+| **Subdomain** (`slug.sitemedic.com`) | Yes | Yes | Yes |
+| **Branded PDF output** (invoices, payslips, compliance reports) | Yes | Yes | Yes |
+| **Branded emails** (org name in `from` display, from `mail.sitemedic.com`) | Yes | Yes | Yes |
+| **Custom email sender domain** (org's own `@their-company.com`) | No | No | Yes |
+| **Booking system** | Yes | Yes | Yes |
+| **Timesheets + Payslips** | Yes | Yes | Yes |
+| **RIDDOR compliance** | Yes | Yes | Yes |
+| **Compliance analytics** (trend charts, scoring history) | No | Yes | Yes |
+| **Advanced territory analytics** (coverage gaps, hiring triggers) | No | Yes | Yes |
+| **Priority support** (SLA response time) | No | No | Yes |
+| **Dedicated onboarding call** (with Sabine) | No | No | Yes |
+| **API access** (future) | No | No | Yes |
+| **Trial period** | 14 days (card required) | 14 days (card required) | Demo call only |
+
+#### Tier Rationale
+
+**Starter — £149/mo:**
+- Targets new or small medic businesses (2-10 medics) moving off paper-based compliance.
+- Core compliance (RIDDOR, timesheets, payslips, booking) must be in Starter — it is the whole product value prop. A Starter that cannot do compliance is not viable.
+- Branding is in Starter because it is the fundamental proposition of the milestone. An unbranded Starter tier defeats the purpose of white-label.
+- Excludes analytics because small orgs (under 10 medics) often don't have enough data volume to make compliance trend charts meaningful. This also creates a clear and honest upgrade trigger.
+
+**Growth — £299/mo:**
+- Targets established medic businesses (10-30 medics) who need data-driven decisions.
+- Unlocks compliance trend charts and territory analytics — features that require data volume to be useful.
+- 2x price increase is justified by 3x medic seat expansion plus analytics access. The value/price ratio is comparable to or better than Starter.
+
+**Enterprise — Custom:**
+- Targets larger medic businesses or staffing agencies (30+ medics).
+- Custom pricing avoids a ceiling effect: an org with 50 medics should not hit "too expensive to scale."
+- Custom email domain is Enterprise because it requires DNS setup work by Sabine per org (not self-serve).
+- Priority support and onboarding call justify the premium for compliance-sensitive clients where downtime has regulatory consequences.
+
+---
+
+### Feature Gating Complexity Analysis
+
+Understanding what is easy vs hard to gate before building the entitlement system.
+
+#### Easy to Gate (Build First)
+
+These features have a clean on/off switch at the data or route level:
+
+| Feature | Gating Mechanism |
+|---|---|
+| Medic count cap | `SELECT COUNT(*) FROM medics WHERE org_id = ? AND status = 'active'` compared to plan limit. Block the add-medic form server-side if at cap. Show inline upgrade prompt. |
+| Compliance analytics routes | Server-side plan check in the route handler before data is fetched. Redirect to `/upgrade` with the reason if plan insufficient. |
+| Territory analytics routes | Same pattern as compliance analytics. Both analytics route groups are gated at Growth+. |
+| Custom email sender domain | Only configurable by platform admin (Sabine). Not self-serve. Sabine enables per org after DNS verification. |
+
+#### Moderate Complexity to Gate
+
+| Feature | Gating Mechanism | Notes |
+|---|---|---|
+| Subdomain routing | Middleware checks `org.status = 'active'` and `org.subscription_plan != null`. Inactive or cancelled orgs receive a "subscription required" page instead of the portal. | Must degrade gracefully mid-month if org is suspended for failed payment. Show a recovery page rather than a generic 404. |
+| Branded PDF output | Branding parameters (logo URL, primary colour, company name) passed to PDF generator at render time. If org has no branding configured, PDFs render with SiteMedic defaults. | For MVP, all tiers get branding capability. Not recommended to gate PDF branding by tier — it reduces trust in Starter. |
+| API access | Route group protected by plan check. Future feature. | Not in scope for this milestone. Document the plan but do not build. |
+
+#### Hard to Gate (Avoid or Defer)
+
+| Feature | Why Hard | Recommendation |
+|---|---|---|
+| Custom domain SSL | Requires cert provisioning infrastructure (Let's Encrypt automation, Cloudflare for SaaS, or Nginx per-org config) | Enterprise add-on, deferred indefinitely from this milestone |
+| Mobile app branding | App store submission complexity and per-org build process | Out of scope permanently for subscription tiers |
+| Per-feature analytics granularity | Hard to define where "basic counts" end and "advanced analytics" begins | Keep it binary: Starter gets no analytics pages at all. Growth gets all analytics pages. This avoids arguments. |
+
+#### Entitlement Architecture Recommendation
+
+Store the active plan as an enum column on `organizations`:
+
+```
+org.subscription_plan: 'trial' | 'starter' | 'growth' | 'enterprise' | 'suspended' | null
+```
+
+Define a single flat `PLAN_ENTITLEMENTS` constant that maps plan names to boolean feature flags. Example structure (not production code):
+
+```
+PLAN_ENTITLEMENTS = {
+  starter: {
+    branding: true,
+    subdomain: true,
+    brandedPdfs: true,
+    brandedEmails: true,
+    complianceAnalytics: false,
+    territoryAnalytics: false,
+    customEmailDomain: false,
+    apiAccess: false,
+    maxMedics: 10,
+  },
+  growth: {
+    branding: true,
+    subdomain: true,
+    brandedPdfs: true,
+    brandedEmails: true,
+    complianceAnalytics: true,
+    territoryAnalytics: true,
+    customEmailDomain: false,
+    apiAccess: false,
+    maxMedics: 30,
+  },
+  enterprise: { ... all true, maxMedics: Infinity },
+  trial: { ... same as growth, maxMedics: 10 },
+  suspended: { ... all false },
+}
+```
+
+This makes future tier changes a one-file edit. Enforcement is always server-side. Client components may read entitlements to show/hide UI elements but must never be the only enforcement layer.
+
+---
+
+### Billing Edge Cases
+
+These must be handled correctly for subscription billing to work reliably. All Stripe behaviours cited are from official Stripe documentation.
+
+**Confidence: HIGH** — sourced from Stripe official documentation. Stripe Billing was named a Leader in Forrester Wave Recurring Billing Solutions Q1 2025.
+
+#### Upgrade Mid-Cycle
+
+- Stripe prorates upgrades immediately by default.
+- Org is charged the difference for the remaining days in the billing period.
+- Org gets access to new plan features immediately after Stripe processes the change.
+- **SiteMedic action required:** On `customer.subscription.updated` webhook, read the new price's metadata (`price.metadata.plan_name`) and update `org.subscription_plan` in Supabase. New entitlements take effect on next page load.
+
+#### Downgrade Mid-Cycle
+
+- Two options: immediate downgrade (credit applied) or schedule for end of billing period.
+- **Recommendation:** Schedule downgrades for end of billing period (pattern used by GitHub, Zoom, Notion). Org retains current plan access through the period they already paid for.
+- This reduces churn-inducing friction and gives Sabine time to intervene with a retention conversation.
+- **SiteMedic action required:** Set `proration_behavior: 'none'` on the subscription update. Store `pending_downgrade_plan` on the org. Apply the new plan on `invoice.payment_succeeded` at next billing cycle. Until then, org retains current plan.
+
+#### Trial Period
+
+- 14-day trial, card required at signup. Card-required trials reduce zero-intent signups by filtering out people who are not serious prospects.
+- Stripe supports `trial_period_days` on subscription creation.
+- Trial orgs get `subscription_plan: 'trial'` — treat as Growth-equivalent access during trial.
+- On trial end, Stripe auto-charges. If card declines, `customer.subscription.trial_will_end` fires 3 days before end — send a dunning warning email.
+- **SiteMedic action required:** On `customer.subscription.trial_will_end` webhook, send Sabine a notification (not just the org) so she can personally follow up on high-value prospects.
+
+#### Failed Payment / Dunning
+
+- Stripe Smart Retries run over 2-3 weeks (up to 4 attempts, ML-optimised timing).
+- Industry benchmark: 60-70% B2B recovery rate with 4 well-timed retries.
+- Configure Stripe to send 1 pre-due + 3 post-due reminder emails via Stripe Billing dashboard settings. This yields 18% higher collection rates vs post-due only.
+- After all retries fail: set `org.subscription_plan = 'suspended'` on `customer.subscription.deleted` webhook.
+- Suspended orgs see a "subscription required" page. All data is retained. Data must NOT be deleted — org may pay and return.
+- **Grace period:** 7-day grace after first failure before suspending portal access. Full suspension only after all Stripe retries exhausted (approximately 21 days from first failure).
+
+#### Cancellation
+
+- Always use Cancel at Period End (`cancel_at_period_end: true` in Stripe).
+- Org retains access through the end of the billing period they paid for.
+- On `customer.subscription.deleted` webhook: set `org.subscription_plan = 'cancelled'` and `org.status = 'suspended'`.
+- Retain all org data for 90 days post-cancellation. Delete on explicit GDPR request or automatically after 90 days.
+- **Minimum email sequence on cancellation:** (1) Immediate cancellation confirmation; (2) 7 days before expiry — "access ending soon, reactivate here"; (3) On expiry — "your portal is now suspended, click here to reactivate."
+
+#### VAT on Org Subscriptions (UK)
+
+- SiteMedic is a UK business selling to UK businesses. Standard rate: 20% VAT.
+- Stripe Billing supports UK VAT collection — requires adding VAT registration details to the Stripe account.
+- For UK-to-UK B2B: charge 20% VAT as normal. UK domestic B2B does not use reverse charge.
+- For EU customers (if any arise): do not charge UK VAT. EU reverse charge applies. Mark invoice with "Reverse Charge — VAT to be accounted for by the recipient." Capture the customer's EU VAT number at signup.
+- **Recommendation:** Enable Stripe Tax to automate VAT calculation and collection. Avoids manual VAT management errors.
+- Record keeping: All subscription invoices must be retained for 6 years (HMRC requirement).
+- **Confidence:** MEDIUM — UK VAT rules verified via multiple UK accountancy sources; Stripe Tax recommendation is LOW confidence (not verified via Stripe docs directly, but well-documented community practice requiring validation).
+
+#### Hybrid Onboarding Flow (Self-Serve + Admin Activation)
+
+The intended flow: org signs up and pays online; Sabine then activates them manually.
+
+This is a well-established "sales-assisted self-serve" pattern in B2B SaaS:
+
+1. Org completes signup form and enters card details on SiteMedic's website.
+2. Stripe subscription is created immediately with `trial_period_days: 14`. No charge yet.
+3. Org status is set to `pending_activation` in Supabase. Subdomain and portal are inactive.
+4. Sabine receives a notification (email + platform admin dashboard) with the org's details.
+5. Sabine reviews the org, verifies legitimacy, and clicks Activate in platform admin.
+6. Org status changes to `active`. Subdomain goes live. Onboarding welcome email is sent to org admin.
+7. At trial end (14 days from signup), Stripe charges the first month automatically.
+
+**Edge case:** If Sabine does not activate within 5 days of signup, she receives an escalation reminder. If not activated before trial end, the subscription is cancelled automatically (no charge since still in trial) and the org receives a "we could not complete your activation" email.
+
+**Edge case:** If org cancels before Sabine activates, cancel the Stripe subscription immediately via API. Since still in trial, no charge is made.
+
+**Edge case:** If Sabine rejects the org (e.g., the org does not exist or is a bad actor), cancel the subscription immediately. Send a polite rejection email. Full refund is not needed (trial — no charge occurred).
+
+---
+
+### MVP Scope for This Milestone
+
+For the first shipped version of white-label and subscription tiers, prioritise in this order:
+
+1. **Per-org branding storage** — New `org_branding` table (or columns on `org_settings`): logo_url, primary_colour, company_name. Platform admin UI to set these per org.
+2. **Branded PDF output** — Dynamic style injection into react-pdf for invoices, payslips, and RIDDOR reports. Logo URL and primary colour passed at render time.
+3. **Branded email `from` display** — Pass org company name as `from` display name in Resend send calls. No custom domain yet.
+4. **Subdomain routing** — Next.js middleware hostname detection. Unique slug on org. Wildcard DNS. Org portal renders when `status = 'active'`.
+5. **Stripe subscription billing** — Separate from Stripe Connect. Starter + Growth Stripe Products and Prices. Subscription object per org. Webhook handlers for lifecycle events.
+6. **Hybrid onboarding flow** — Signup form collects org details and payment method. Creates Stripe subscription in trial. Sets org status to `pending_activation`. Platform admin activates.
+7. **Medic count enforcement** — Server-side check on add-medic flow. Inline upgrade prompt when at cap.
+8. **Stripe Customer Portal** — Self-serve card update and invoice download. One `POST /api/billing/portal-session` endpoint.
+9. **Plan-based analytics gating** — Starter orgs: analytics routes return 403 with upgrade prompt. Growth+: full access.
+
+**Defer to post-MVP:**
+- Custom email sender domain (DNS setup per org — Enterprise-only when built)
+- Custom domain CNAME pointing and SSL provisioning (significant infrastructure)
+- Full cancellation email sequence (Stripe handles basics; lifecycle emails post-MVP)
+- Referral program for orgs
+- API access tier
+- Usage analytics for Sabine
+
+---
+
+### v2.0 Sources
+
+- Stripe subscription models guide: [https://stripe.com/gb/resources/more/saas-subscription-models-101-a-guide-for-getting-started](https://stripe.com/gb/resources/more/saas-subscription-models-101-a-guide-for-getting-started) (HIGH confidence — official Stripe)
+- Stripe Customer Portal: [https://docs.stripe.com/customer-management](https://docs.stripe.com/customer-management) (HIGH confidence — official Stripe docs)
+- Stripe cancel subscriptions: [https://docs.stripe.com/billing/subscriptions/cancel](https://docs.stripe.com/billing/subscriptions/cancel) (HIGH confidence — official Stripe docs)
+- Stripe trial periods: [https://docs.stripe.com/billing/subscriptions/trials](https://docs.stripe.com/billing/subscriptions/trials) (HIGH confidence — official Stripe docs)
+- White-label SaaS architecture guide 2026: [https://developex.com/blog/building-scalable-white-label-saas/](https://developex.com/blog/building-scalable-white-label-saas/) (MEDIUM confidence)
+- SaaS pricing benchmark study 2025 (100+ companies): [https://www.getmonetizely.com/articles/saas-pricing-benchmark-study-2025-key-insights-from-100-companies-analyzed](https://www.getmonetizely.com/articles/saas-pricing-benchmark-study-2025-key-insights-from-100-companies-analyzed) (MEDIUM confidence)
+- Feature gating patterns 2025: [https://www.withorb.com/blog/feature-gating](https://www.withorb.com/blog/feature-gating) (MEDIUM confidence)
+- Upgrade/downgrade flows: [https://www.stigg.io/blog-posts/the-only-guide-youll-ever-need-to-implement-upgrade-downgrade-flows-part-2](https://www.stigg.io/blog-posts/the-only-guide-youll-ever-need-to-implement-upgrade-downgrade-flows-part-2) (MEDIUM confidence)
+- UK VAT on SaaS digital services: [https://sprintlaw.co.uk/articles/vat-on-software-and-saas-in-the-uk/](https://sprintlaw.co.uk/articles/vat-on-software-and-saas-in-the-uk/) (MEDIUM confidence)
+- UK VAT digital services guide: [https://www.swiftvatpro.co.uk/vat-on-digital-services-a-complete-guide-for-uk-sellers/](https://www.swiftvatpro.co.uk/vat-on-digital-services-a-complete-guide-for-uk-sellers/) (MEDIUM confidence)
+- Stripe dunning benchmarks 2025: [https://www.quantledger.app/blog/how-to-automate-dunning-stripe](https://www.quantledger.app/blog/how-to-automate-dunning-stripe) (MEDIUM confidence)
+- B2B SaaS onboarding admin-first activation: [https://workos.com/blog/b2b-saas-onboarding-organizations-users](https://workos.com/blog/b2b-saas-onboarding-organizations-users) (MEDIUM confidence)
+- White-label SaaS common mistakes: [https://3veta.com/blog/business-advice/the-most-common-mistakes-to-avoid-when-using-white-label-software/](https://3veta.com/blog/business-advice/the-most-common-mistakes-to-avoid-when-using-white-label-software/) (MEDIUM confidence)
+- Codebase inspection (HIGH confidence — source of truth for existing state):
+  - `web/lib/invoices/pdf-generator.ts` — hardcoded PDF styles confirmed
+  - `web/lib/email/resend.ts` — single Resend client confirmed, no per-org from address
+  - `web/lib/organizations/org-resolver.ts` — JWT app_metadata org_id pattern confirmed
+  - `supabase/migrations/118_org_settings.sql` — org_settings table schema confirmed (no company_name column)
+  - `supabase/migrations/00001_organizations.sql` — organizations table schema confirmed (name, no slug, no subscription_plan)
+
+---
+*v2.0 White-Label + Subscription Tiers addendum researched: 2026-02-18*
+*v2.0 Confidence: HIGH (billing edge cases, table stakes) / MEDIUM (tier pricing benchmarks) / LOW (UK medic market pricing specifics)*

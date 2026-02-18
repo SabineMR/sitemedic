@@ -21,8 +21,11 @@
  */
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-// Use the rolling alias — it always points to the latest stable snapshot.
-const OPENAI_REALTIME_URL =
+// Base URL — API key is appended as a query param below.
+// The local supabase-edge-runtime silently drops custom headers on outgoing
+// WebSocket connections, so we pass the key in the URL instead of the
+// Authorization header. OpenAI Realtime API supports both methods.
+const OPENAI_REALTIME_BASE =
   'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview';
 
 Deno.serve(async (req: Request) => {
@@ -49,13 +52,19 @@ Deno.serve(async (req: Request) => {
   const { socket: appWs, response } = Deno.upgradeWebSocket(req);
 
   // ── Open connection to OpenAI Realtime API ────────────────────────────────
-  // Deno v2 supports a 3rd-arg options object with `headers` for WebSocket clients.
-  const openaiWs = new WebSocket(OPENAI_REALTIME_URL, ['realtime'], {
-    headers: {
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-      'OpenAI-Beta': 'realtime=v1',
-    },
-  } as any);
+  // Pass the API key as a query param — the local edge runtime silently drops
+  // custom headers on outgoing WebSocket connections. OpenAI supports both.
+  // The Authorization header is kept for production robustness.
+  const openaiWs = new WebSocket(
+    `${OPENAI_REALTIME_BASE}&api_key=${OPENAI_API_KEY}`,
+    ['realtime'],
+    {
+      headers: {
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        'OpenAI-Beta': 'realtime=v1',
+      },
+    } as any,
+  );
 
   let openaiReady = false;
   const pendingAudio: string[] = []; // chunks buffered before OpenAI is ready
