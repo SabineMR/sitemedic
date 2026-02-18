@@ -2,7 +2,7 @@
  * Signature Block Component
  * Phase 4.6: Customer Onboarding & Contract Management - Plan 02
  *
- * Renders dual-column signature section for Provider (SiteMedic) and Client
+ * Renders dual-column signature section for Provider and Client
  * Shows signature image if provided, otherwise "Awaiting signature" placeholder
  */
 
@@ -13,6 +13,7 @@ import { styles } from '../styles.ts';
 interface SignatureBlockProps {
   signature?: ContractPDFData['signature'];
   clientName: string;
+  providerName?: string;
 }
 
 /**
@@ -26,7 +27,7 @@ function formatDateLong(isoDate: string): string {
   return `${day} ${month} ${year}`;
 }
 
-export function SignatureBlock({ signature, clientName }: SignatureBlockProps) {
+export function SignatureBlock({ signature, clientName, providerName = 'SiteMedic Ltd' }: SignatureBlockProps) {
   return (
     <View style={styles.section}>
       <Text style={styles.subheader}>SIGNATURES</Text>
@@ -36,7 +37,7 @@ export function SignatureBlock({ signature, clientName }: SignatureBlockProps) {
         {/* Provider Signature */}
         <View style={styles.signatureBox}>
           <Text style={styles.signatureLabel}>PROVIDER</Text>
-          <Text style={[styles.signatureText, styles.mb5]}>SiteMedic Ltd</Text>
+          <Text style={[styles.signatureText, styles.mb5]}>{providerName}</Text>
 
           {/* Signature Line */}
           <View style={styles.signatureLine}>

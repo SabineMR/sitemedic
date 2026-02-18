@@ -44,7 +44,7 @@ export async function sendCertificationExpiryEmail(data: CertExpiryEmailData): P
 
   try {
     const response = await resend.emails.send({
-      from: 'SiteMedic Compliance <notifications@sitemedic.app>',
+      from: `${data.orgName} <notifications@sitemedic.app>`,
       to: data.recipientEmail,
       subject: `${urgencyLabel}: ${data.certType} Certification Expires in ${data.daysRemaining} Day${data.daysRemaining > 1 ? 's' : ''}`,
       html: `
@@ -213,7 +213,7 @@ export async function sendCertificationExpiryEmail(data: CertExpiryEmailData): P
 
             <div class="footer">
               <p style="margin: 0 0 8px 0;">
-                <strong>Apex Safety Group Ltd</strong> - Keeping you compliant and working
+                <strong>${data.orgName}</strong>
               </p>
               <p style="margin: 0;">
                 This is an automated compliance reminder from SiteMedic

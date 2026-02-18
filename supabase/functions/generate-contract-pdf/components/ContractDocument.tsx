@@ -95,7 +95,7 @@ export function ContractDocument({ data }: ContractDocumentProps) {
             {/* Provider */}
             <View style={styles.partyBox}>
               <Text style={styles.partyLabel}>PROVIDER:</Text>
-              <Text style={styles.partyText}>SiteMedic Ltd</Text>
+              <Text style={styles.partyText}>{data.providerName || 'SiteMedic Ltd'}</Text>
               <Text style={styles.partyText}>123 Medical Way</Text>
               <Text style={styles.partyText}>London, SW1A 1AA</Text>
               <Text style={styles.partyText}>VAT: GB123456789</Text>
@@ -247,12 +247,12 @@ export function ContractDocument({ data }: ContractDocumentProps) {
         <ServiceTerms template={template} />
 
         {/* Signature Block */}
-        <SignatureBlock signature={signature} clientName={client.contactName} />
+        <SignatureBlock signature={signature} clientName={client.contactName} providerName={data.providerName} />
 
         {/* Footer */}
         <View style={styles.footer}>
           <Text>
-            SiteMedic Ltd - Registered in England & Wales - Company No: 12345678
+            {data.providerName || 'SiteMedic Ltd'} - Registered in England & Wales
           </Text>
           <Text>This is a legally binding agreement. Please retain a copy for your records.</Text>
         </View>

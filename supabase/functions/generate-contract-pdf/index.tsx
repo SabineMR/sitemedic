@@ -18,6 +18,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { renderToBuffer } from 'npm:@react-pdf/renderer@4.3.2';
 import { ContractDocument } from './components/ContractDocument.tsx';
 import { ContractPDFData } from './types.ts';
+import { fetchOrgBranding } from '../_shared/branding-helpers.ts';
 
 // CORS headers for dashboard access
 const corsHeaders = {
@@ -235,6 +236,24 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
+    }
+
+    // Fetch org branding for provider name
+    if (!contractData.providerName && contractId) {
+      try {
+        const { data: contract } = await supabase
+          .from('contracts')
+          .select('booking:bookings!booking_id(org_id)')
+          .eq('id', contractId)
+          .single();
+        const orgId = (contract?.booking as any)?.org_id;
+        if (orgId) {
+          const branding = await fetchOrgBranding(supabase, orgId);
+          contractData.providerName = branding.company_name;
+        }
+      } catch (e) {
+        console.warn('Could not fetch org branding for contract PDF:', e);
+      }
     }
 
     // Generate PDF buffer using React-PDF

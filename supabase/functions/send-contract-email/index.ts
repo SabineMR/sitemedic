@@ -9,6 +9,9 @@
  * - Email tracking tags for webhook correlation
  */
 
+import { createClient } from 'npm:@supabase/supabase-js@2';
+import { fetchOrgBranding } from '../_shared/branding-helpers.ts';
+
 // CORS headers for cross-origin requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,6 +33,7 @@ interface SendContractEmailRequest {
   companyName: string;
   totalAmount: number;
   paymentTerms: string;
+  providerName?: string;
 }
 
 interface EmailResult {
@@ -51,6 +55,7 @@ function buildEmailHtml(params: SendContractEmailRequest): string {
     paymentTerms,
     signingUrl,
     personalMessage,
+    providerName = 'SiteMedic',
   } = params;
 
   // Format amount as GBP
@@ -71,7 +76,7 @@ function buildEmailHtml(params: SendContractEmailRequest): string {
   <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
     <!-- Header -->
     <div style="background-color: #003366; padding: 32px 24px; text-align: center;">
-      <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">SiteMedic</h1>
+      <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">${providerName}</h1>
       <p style="margin: 8px 0 0 0; color: #93C5FD; font-size: 14px;">Service Agreement</p>
     </div>
 
@@ -148,7 +153,7 @@ function buildEmailHtml(params: SendContractEmailRequest): string {
     <!-- Footer -->
     <div style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
       <p style="margin: 0; color: #9ca3af; font-size: 12px;">
-        © ${new Date().getFullYear()} SiteMedic Ltd. All rights reserved.
+        © ${new Date().getFullYear()} ${providerName}. All rights reserved.
       </p>
       <p style="margin: 8px 0 0 0; color: #9ca3af; font-size: 12px;">
         Professional medical services for construction sites
@@ -188,6 +193,30 @@ Deno.serve(async (req) => {
 
     console.log(`📧 Sending contract ${contractNumber} to ${recipientEmail}...`);
 
+    // Fetch org branding from contract's booking
+    let providerName = body.providerName;
+    if (!providerName) {
+      try {
+        const supabase = createClient(
+          Deno.env.get('SUPABASE_URL')!,
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+        );
+        const { data: contract } = await supabase
+          .from('contracts')
+          .select('booking:bookings!booking_id(org_id)')
+          .eq('id', contractId)
+          .single();
+        const orgId = (contract?.booking as any)?.org_id;
+        if (orgId) {
+          const branding = await fetchOrgBranding(supabase, orgId);
+          providerName = branding.company_name;
+        }
+      } catch (e) {
+        console.warn('Could not fetch org branding for contract email:', e);
+      }
+    }
+    body.providerName = providerName;
+
     // Get Resend API key from environment
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
@@ -223,10 +252,10 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'SiteMedic <contracts@sitemedic.co.uk>',
+        from: `${providerName || 'SiteMedic'} <contracts@sitemedic.co.uk>`,
         to: recipients,
         cc: ccRecipients,
-        subject: `Service Agreement ${contractNumber} - SiteMedic`,
+        subject: `Service Agreement ${contractNumber} - ${providerName || 'SiteMedic'}`,
         html: htmlContent,
         tags: [{ name: 'contractId', value: contractId }],
       }),

@@ -72,4 +72,6 @@ export interface ContractPDFData {
     signedAt: string;
     signedByEmail: string;
   };
+
+  providerName?: string; // Org company name from branding (defaults to 'SiteMedic Ltd')
 }

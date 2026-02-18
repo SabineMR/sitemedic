@@ -265,6 +265,7 @@ Deno.serve(async (req: Request) => {
           treatmentCount: reportData.weeklyStats.treatmentCount,
           nearMissCount: reportData.weeklyStats.nearMissCount,
           projectName: reportData.projectName,
+          companyName: branding.company_name,
         });
 
         // Update email_sent status
