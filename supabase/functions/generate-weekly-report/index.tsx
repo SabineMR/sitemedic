@@ -164,6 +164,45 @@ Deno.serve(async (req: Request) => {
     console.log('🔍 Fetching report data...');
     const reportData = await fetchWeeklyReportData(supabase, weekEnding);
 
+    // Persist compliance score to compliance_score_history (non-blocking)
+    // Formula v1: 100 - penalty for each compliance failure
+    const complianceNumericScore = 100
+      - (reportData.complianceScore.dailyCheckDone ? 0 : 40)
+      - (reportData.complianceScore.riddorDeadlines > 0 ? 30 : 0)
+      - (reportData.complianceScore.overdueFollowups > 0 ? 20 : 0)
+      - (reportData.complianceScore.expiredCerts > 0 ? 10 : 0);
+
+    const periodEnd = weekEnding.split('T')[0];
+    const periodStartDate = new Date(weekEnding);
+    periodStartDate.setDate(periodStartDate.getDate() - 7);
+    const periodStart = periodStartDate.toISOString().split('T')[0];
+
+    const { error: complianceUpsertError } = await supabase
+      .from('compliance_score_history')
+      .upsert(
+        {
+          org_id: orgId,
+          vertical: 'general',
+          score: complianceNumericScore,
+          period_start: periodStart,
+          period_end: periodEnd,
+          details: {
+            formula_version: 'v1',
+            daily_check_done: reportData.complianceScore.dailyCheckDone,
+            riddor_deadlines: reportData.complianceScore.riddorDeadlines,
+            overdue_followups: reportData.complianceScore.overdueFollowups,
+            expired_certs: reportData.complianceScore.expiredCerts,
+          },
+        },
+        { onConflict: 'org_id,vertical,period_start' }
+      );
+
+    if (complianceUpsertError) {
+      console.error('Failed to upsert compliance score:', complianceUpsertError.message);
+    } else {
+      console.log(`Compliance score ${complianceNumericScore}/100 persisted for period ${periodStart} to ${periodEnd}`);
+    }
+
     // Generate PDF buffer using React-PDF
     console.log('📝 Rendering PDF...');
     const pdfBuffer = await renderToBuffer(<ReportDocument data={reportData} />);
