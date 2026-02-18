@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Phase: 22 of 23 (Football / Sports Vertical) — Phase 21 complete
-Plan: — (ready to plan)
-Status: Phase 21 complete — all 2/2 plans executed and verified (10/10 must-haves); Film/TV vertical fully wired
-Last activity: 2026-02-17 — Phase 21 complete: Film/TV form fields, Cast & Crew terminology across 7 screens, cert ordering, FILM-04 confirmed
+Phase: 22 of 23 (Football / Sports Vertical)
+Plan: 22-02 of 4 in current phase complete
+Status: In progress — 22-01 (UI) and 22-02 (FOOT-04 RIDDOR gate) complete; 22-03 and 22-04 remain
+Last activity: 2026-02-18 — Completed 22-02-PLAN.md: FOOT-04 RIDDOR gate verified, annotated, and test-locked
 
-Progress: [██████████] v1.1 complete | [██████░░░░] v2.0 10/27 plans (Phase 18 + 18.5 + 21 complete)
+Progress: [██████████] v1.1 complete | [██████░░░░] v2.0 11/27 plans (Phase 18 + 18.5 + 21 + 22-02 complete)
 
 ## Performance Metrics
 
@@ -29,12 +29,12 @@ Progress: [██████████] v1.1 complete | [██████�
 |-------|-------|-------|----------|
 | 01–07.5 (v1.0) | 84/84 | ~5.5 hrs | ~4 min |
 | 08–17 (v1.1) | 35/35 | ~2.4 hrs | ~4.1 min |
-| 18–23 (v2.0) | 6/25 | ~7 min | ~1 min |
+| 18–23 (v2.0) | 7/25 | ~8 min | ~1 min |
 
 **Recent Trend:**
-- Last plan: 21-02 — Film/TV Cast & Crew terminology + cert ordering (4 min)
-- Phase 21 plans: 21-01 (treatment form section + cert registry entries), 21-02 (terminology + cert ordering)
-- Trend: Stable — consistent 2–4 min for vertical surgical additions
+- Last plan: 22-02 — FOOT-04 RIDDOR gate verify + annotate + Deno test block (1 min)
+- Phase 22 plans so far: 22-01 (football patient type UI), 22-02 (RIDDOR gate FOOT-04)
+- Trend: Stable — consistent 1–4 min for vertical surgical additions
 
 *Updated after each plan completion*
 
@@ -68,6 +68,7 @@ Key decisions affecting v2.0:
 - 21-02: getLocationLabel and getEventLabel placed in vertical-outcome-labels.ts alongside getPatientLabel — single file for all vertical noun helpers
 - 21-02: CSCS + IPAF removed from tv_film VERTICAL_CERT_TYPES ordering only — remain in master CERT_TYPES arrays
 - 21-02: FILM-04 confirmed — incident-report-dispatcher.ts already routes tv_film to riddor-f2508-generator; no code change needed
+- 22-02: FOOT-04 confirmed — 'sporting_events' is in NON_RIDDOR_VERTICALS at index.ts:78; KNOWN_NON_RIDDOR_VERTICALS literal used in test.ts (cannot import local const from serve() handler; grep verify catches drift)
 
 ### Research Flags (Phase-Blocking)
 
@@ -85,6 +86,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-17T00:00:00Z
-Stopped at: Phase 21 complete — Film/TV vertical executed and verified (10/10 must-haves)
+Last session: 2026-02-18T04:12:12Z
+Stopped at: Completed 22-02-PLAN.md — FOOT-04 RIDDOR gate verified, annotated, and test-locked
 Resume file: None
