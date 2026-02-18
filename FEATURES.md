@@ -2,8 +2,96 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Org Admin Payout Configuration — mileage, referral, pay guidelines)
+**Last Updated**: 2026-02-18 (Org Onboarding — Welcome Email)
 **Audience**: Web developers, technical reviewers, product team
+
+---
+
+## Recent Updates — Org Onboarding Welcome Email (2026-02-18)
+
+### Overview
+
+Welcome email infrastructure for the org onboarding flow. When platform admin activates a new organisation, the org admin receives a branded welcome email with their login URL, plan details, and a 3-step getting-started guide.
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/lib/email/templates/welcome-email.tsx` | React Email welcome template. Supports org branding (logo, primary colour) with SiteMedic defaults. Sections: branded header, greeting, plan info details box, 3-step getting-started guide, CTA button linking to login URL, footer |
+| `web/lib/email/send-welcome.ts` | `sendWelcomeEmail()` function. Creates service-role Supabase client, fetches `org_branding` for the org, builds login URL with subdomain support (Growth/Enterprise get `https://{slug}.sitemedic.co.uk/login`), renders template, sends via Resend. Fire-and-forget pattern (logs errors, never throws) |
+
+### Key Features
+
+- **Org branding support**: Template renders org logo (from Supabase Storage public bucket) and uses org primary colour for CTA button. Falls back to SiteMedic blue (#2563eb) when no branding configured
+- **Subdomain login URL**: Growth/Enterprise orgs with a slug get `https://{slug}.{ROOT_DOMAIN}/login`; Starter orgs get the default site URL
+- **Getting-started guide**: Three numbered onboarding steps (set up branding, invite team, create first booking) guide new org admins
+- **Service-role database access**: Sender uses `@supabase/supabase-js` directly with `SUPABASE_SERVICE_ROLE_KEY` (not request-context client) since it's called from API routes
+- **Fire-and-forget pattern**: Matches existing `sendBookingReceivedEmail()` pattern — catches all errors, logs them, never throws to avoid blocking the activation flow
+
+---
+
+## Previous Updates — 2-Way Google Calendar Sync + Manual Busy Blocks (2026-02-18)
+
+### Overview
+
+Full 2-way Google Calendar integration and manual busy blocks for medic scheduling. Admins see medic unavailability on the schedule board (Google Calendar events, personal busy blocks, approved time-off). When bookings are confirmed, they automatically appear on the medic's Google Calendar. Conflict detection warns admins about Google Calendar clashes during assignment.
+
+**No database changes** — uses existing `medic_preferences` (Google Calendar OAuth columns), `medic_availability` (manual busy blocks), and `booking_conflicts` (`google_calendar_conflict` type) infrastructure from migration 013.
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/app/api/google-calendar/auth/route.ts` | Initiates Google OAuth 2.0 flow — generates consent URL with `calendar.readonly` + `calendar.events` scopes, redirects medic to Google. Uses `state` param = user ID for callback verification |
+| `web/app/api/google-calendar/callback/route.ts` | Handles OAuth redirect from Google — exchanges authorization code for access + refresh tokens, upserts tokens into `medic_preferences`, redirects to medic profile with `?gcal=connected` |
+| `web/app/api/google-calendar/disconnect/route.ts` | Revokes Google OAuth token (best-effort), clears all `google_calendar_*` columns in `medic_preferences`. Called from medic profile disconnect button |
+| `web/app/api/google-calendar/busy-blocks/route.ts` | Combined busy blocks endpoint for admin schedule board. Takes `?weekStart=YYYY-MM-DD`, returns `{ busyBlocks: { [medicId]: BusyBlock[] } }` combining Google Calendar FreeBusy API results + `medic_availability` manual blocks + approved time-off. Sources labelled `google_calendar`, `manual`, or `time_off` |
+| `web/app/api/google-calendar/push-event/route.ts` | Creates Google Calendar event on medic's primary calendar when booking is assigned. Event title: "SiteMedic: {site_name}", includes location, times, booking reference, client name. Stores `google_calendar_event_id` on booking for future updates |
+| `web/lib/google-calendar/client.ts` | Shared utility library: `getValidAccessToken(medicId)` — auto-refreshes expired tokens; `fetchFreeBusy(accessToken, timeMin, timeMax)` — Google Calendar FreeBusy API; `createCalendarEvent(accessToken, event)` — creates event; `deleteCalendarEvent(accessToken, eventId)` — deletes event |
+| `web/lib/google-calendar/types.ts` | TypeScript interfaces: `GoogleFreeBusyResponse`, `GoogleCalendarEvent`, `GoogleTokenResponse`, `BusyBlock`, `BusyBlocksResponse` |
+| `web/components/medic/busy-block-form.tsx` | Form component for medics to add manual busy blocks. Writes to `medic_availability` with `is_available=false`, `request_type='personal'`, `status='approved'` (no admin approval needed). Fields: date, reason (optional) |
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `web/app/medic/profile/page.tsx` | Added Google Calendar integration card between Availability Toggle and Personal Info sections. Two states: **Not connected** (purple "Connect Google Calendar" button → OAuth redirect) / **Connected** (green badge, description text, "Disconnect" button with loading state). Handles `?gcal=connected/denied/error` query params from OAuth callback with toast notifications. New state: `gcalConnected`, `gcalDisconnecting`. Fetches `medic_preferences.google_calendar_enabled` on mount |
+| `web/app/medic/shifts/page.tsx` | Added "My Busy Blocks" section below shifts list. Shows existing upcoming busy blocks as orange cards with date, reason, and delete button. "Add Busy Block" button opens `BusyBlockForm` inline. Fetches from `medic_availability` where `is_available=false` and `date >= today`. New state: `busyBlocks`, `showBusyForm`, `medicId` |
+| `web/types/schedule.ts` | Added `BusyBlock` interface with fields: `id`, `medicId`, `source` (`google_calendar` / `manual` / `time_off`), `title`, `date`, `startTime`, `endTime`, `reason?` |
+| `web/stores/useScheduleBoardStore.ts` | Added `busyBlocks` state (Record keyed by medicId), `fetchBusyBlocks()` action (calls `/api/google-calendar/busy-blocks`), `getBusyBlocksForMedicOnDate()` getter. `fetchScheduleData()` now also triggers `fetchBusyBlocks()`. `assignMedicToBooking()` now fires a fire-and-forget POST to `/api/google-calendar/push-event` after successful assignment |
+| `web/components/admin/schedule/DayCell.tsx` | Renders busy block chips above booking cards. Color-coded by source: **purple** (Google Calendar), **orange** (manual), **red** (time-off). Each chip shows title and time range (if not all-day). Uses `getBusyBlocksForMedicOnDate()` from store |
+| `supabase/functions/conflict-detector/index.ts` | Added Check 7: `checkGoogleCalendarConflict()`. Fetches medic's Google Calendar tokens from `medic_preferences`, auto-refreshes if expired, calls FreeBusy API for shift time range. Returns `warning` severity (not critical — admin can override external calendar events). Best-effort: Google API failures don't block assignment |
+| `web/.env.example` | Added `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` environment variables for Google Calendar OAuth configuration |
+
+### Key Features
+
+- **Google OAuth 2.0 flow**: Medics connect Google Calendar from their profile page. Scopes: `calendar.readonly` (read events for busy display) + `calendar.events` (create/delete events for booking push). Refresh tokens stored in `medic_preferences` and auto-refreshed on expiry
+- **Medic profile card**: Purple-themed card shows connection status. Connected state shows green badge + disconnect button. Not-connected state shows descriptive text + connect button
+- **Manual busy blocks**: Medics can mark specific dates as unavailable from their Shifts page. No admin approval required for self-reported personal blocks. Stored as `medic_availability` records with `request_type='personal'`
+- **Schedule board integration**: Admin schedule board fetches combined busy blocks via `/api/google-calendar/busy-blocks`. DayCell renders color-coded chips: purple (GCal), orange (manual), red (time-off). Chips show title and time range
+- **Booking push to Google Calendar**: When admin assigns a medic to a booking, a Google Calendar event is automatically created with site name, address, times, booking reference, and client name
+- **Conflict detection**: When assigning a medic, the conflict detector checks Google Calendar for overlapping events. Returns `warning` severity (overridable) — external events may not be blocking work
+
+### Environment Variables Required
+
+| Variable | Description |
+|----------|-------------|
+| `GOOGLE_CLIENT_ID` | From Google Cloud Console → APIs & Services → Credentials |
+| `GOOGLE_CLIENT_SECRET` | OAuth 2.0 client secret from Google Cloud Console |
+| `GOOGLE_REDIRECT_URI` | Callback URL: `https://<domain>/api/google-calendar/callback` |
+
+### Schedule Board Busy Block Visual Design
+
+```
+┌────────────────┐
+│ Mon 15         │
+│ [purple] GCal: Busy    │  ← Google Calendar event
+│   10:00-12:00  │
+│ [orange] Dentist        │  ← Manual busy block
+│ [green] Booking         │  ← SiteMedic booking (existing)
+│   07:00-15:00  │
+└────────────────┘
+```
 
 ---
 
