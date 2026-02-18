@@ -199,7 +199,7 @@ Plans:
 
 **Requirements:** ANLT-01, ANLT-02, ANLT-03, ANLT-04, ANLT-05, ANLT-06
 
-**Research flag:** Verify `leaflet.heat` compatibility with `react-leaflet@5.0.0` before building `NearMissHeatMap`. Fallback: use Leaflet `CircleMarker` components scaled by severity (no new dependencies). Compliance score formula must be agreed and frozen before building the trend chart — changing the formula after data is collected makes historical scores incomparable.
+**Research flag resolved:** `leaflet.heat` is incompatible with `react-leaflet@5.0.0` — using `CircleMarker` fallback with severity-based sizing and colouring (zero new dependencies). Compliance score formula frozen as v1: `100 - 40(no daily check) - 30(riddor deadlines) - 20(overdue followups) - 10(expired certs)`. `formula_version` stored in `details` JSONB column (not a separate column).
 
 **Success Criteria** (what must be TRUE when this phase completes):
 1. A site manager on the org dashboard can view a Leaflet heat map of near-miss incidents — GPS-clustered points appear for their org's near-miss records, with density colouring showing concentration areas
@@ -209,14 +209,14 @@ Plans:
 5. A site manager on the org dashboard can view an incident frequency trend chart — treatment count and near-miss count per week over the last 12 months are plotted, making volume trends visible
 6. A platform admin can view aggregate compliance trends across all orgs and identify the top and bottom performing orgs by compliance score
 
-**Plans:** TBD
+**Plans:** 5 plans
 
 Plans:
-- [ ] 23-01: Compliance score history — `generate-weekly-report` Edge Function updated to upsert into `compliance_score_history` table; compliance score formula defined as a PostgreSQL view with `formula_version` column
-- [ ] 23-02: Near-miss heat map (org) — `NearMissHeatMap` component using Leaflet + `leaflet.heat` (or `CircleMarker` fallback); heat map page on org dashboard; reads GPS from `near_misses` table filtered by org
-- [ ] 23-03: Near-miss heat map (platform admin) — aggregate heat map on admin dashboard; org colour-coding; reads GPS from all orgs
-- [ ] 23-04: Compliance trend charts (org) — `ComplianceScoreChart` (Recharts LineChart, 12-month weekly scores from `compliance_score_history`); `IncidentFrequencyChart` (Recharts AreaChart, treatment + near-miss counts per week)
-- [ ] 23-05: Platform admin compliance analytics — aggregate compliance trend across all orgs; top/bottom performing orgs table by compliance score
+- [ ] 23-01-PLAN.md — Compliance score history: migration 130 (UNIQUE index + platform admin RLS policy on compliance_score_history); generate-weekly-report Edge Function upsert of numeric score 0-100 with v1 formula; formula_version in details JSONB
+- [ ] 23-02-PLAN.md — Near-miss heat map (org): NearMissHeatMap component using react-leaflet CircleMarker (severity-coded); TanStack Query hook for GPS data; heat-map page on org dashboard at /analytics/heat-map; Analytics nav link in DashboardNav
+- [ ] 23-03-PLAN.md — Near-miss heat map (platform admin): AdminNearMissHeatMap with org colour-coding; admin query hook; Heat Map tab added to admin analytics page
+- [ ] 23-04-PLAN.md — Compliance trend charts (org): ComplianceScoreChart (Recharts LineChart, 12-month weekly scores); IncidentFrequencyChart (Recharts AreaChart, treatment + near-miss counts per week); compliance page at /analytics/compliance
+- [ ] 23-05-PLAN.md — Platform admin compliance analytics: AdminComplianceTrend (aggregate score across all orgs); OrgComplianceTable (top/bottom performers with trend arrows); Compliance tab on admin analytics page
 
 ---
 
