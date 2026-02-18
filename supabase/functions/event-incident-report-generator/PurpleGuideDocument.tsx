@@ -9,10 +9,15 @@
 import React from 'npm:react@18.3.1';
 import { Document, Page, Text, View, StyleSheet } from 'npm:@react-pdf/renderer@4.3.2';
 import type { PurpleGuideData } from './types.ts';
+import type { OrgBranding } from '../_shared/branding-helpers.ts';
+import { BrandedPdfHeader, BrandedPdfFooter } from '../_shared/pdf-branding.tsx';
+import { showPoweredBySiteMedic } from '../_shared/branding-helpers.ts';
 
 interface PurpleGuideDocumentProps {
   data: PurpleGuideData;
   generatedAt: string;
+  branding?: OrgBranding;
+  logoSrc?: string | null;
 }
 
 const TRIAGE_BADGE_COLOURS: Record<string, string> = {
@@ -22,15 +27,26 @@ const TRIAGE_BADGE_COLOURS: Record<string, string> = {
   P4: '#1F2937',
 };
 
-export function PurpleGuideDocument({ data, generatedAt }: PurpleGuideDocumentProps) {
+export function PurpleGuideDocument({ data, generatedAt, branding, logoSrc }: PurpleGuideDocumentProps) {
   const badgeColour = TRIAGE_BADGE_COLOURS[data.triageCategory] ?? '#6B7280';
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header */}
+        {/* Branded Header */}
+        {branding ? (
+          <BrandedPdfHeader
+            companyName={branding.company_name}
+            documentType="Incident Report"
+            logoSrc={logoSrc}
+            primaryColour={branding.primary_colour_hex}
+          />
+        ) : (
+          <View style={styles.header}>
+            <Text style={styles.title}>Purple Guide — Patient Contact Log</Text>
+          </View>
+        )}
         <View style={styles.header}>
-          <Text style={styles.title}>Purple Guide — Patient Contact Log</Text>
           <Text style={styles.subtitle}>
             Events Industry Forum — Health, Safety and Welfare at Events
           </Text>
@@ -155,10 +171,13 @@ export function PurpleGuideDocument({ data, generatedAt }: PurpleGuideDocumentPr
         </View>
 
         {/* Footer */}
+        {branding && (
+          <BrandedPdfFooter
+            companyName={branding.company_name}
+            showPoweredBy={showPoweredBySiteMedic(branding.subscription_tier)}
+          />
+        )}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            This report has been auto-generated from SiteMedic treatment records.
-          </Text>
           <Text style={styles.footerText}>
             Purple Guide framework — Events Industry Forum: Health, Safety and Welfare at Events (8th edition).
           </Text>

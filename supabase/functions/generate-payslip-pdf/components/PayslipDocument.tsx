@@ -1,5 +1,8 @@
 import React from 'npm:react@18.2.0';
 import { Document, Page, Text, View, StyleSheet } from 'npm:@react-pdf/renderer@4.3.2';
+import type { OrgBranding } from '../../_shared/branding-helpers.ts';
+import { BrandedPdfHeader, BrandedPdfFooter } from '../../_shared/pdf-branding.tsx';
+import { showPoweredBySiteMedic } from '../../_shared/branding-helpers.ts';
 
 interface PayslipData {
   medic_name: string;
@@ -86,14 +89,23 @@ const styles = StyleSheet.create({
   },
 });
 
-export const PayslipDocument = ({ data }: { data: PayslipData }) => (
+export const PayslipDocument = ({ data, branding, logoSrc }: { data: PayslipData; branding?: OrgBranding; logoSrc?: string | null }) => (
   <Document>
     <Page size="A4" style={styles.page}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.companyName}>SiteMedic</Text>
-        <Text style={styles.title}>PAYSLIP</Text>
-      </View>
+      {/* Branded Header */}
+      {branding ? (
+        <BrandedPdfHeader
+          companyName={branding.company_name}
+          documentType="Payslip"
+          logoSrc={logoSrc}
+          primaryColour={branding.primary_colour_hex}
+        />
+      ) : (
+        <View style={styles.header}>
+          <Text style={styles.companyName}>SiteMedic</Text>
+          <Text style={styles.title}>PAYSLIP</Text>
+        </View>
+      )}
 
       {/* Medic Details */}
       <View style={styles.section}>
@@ -207,8 +219,14 @@ export const PayslipDocument = ({ data }: { data: PayslipData }) => (
       </View>
 
       {/* Footer */}
+      {branding && (
+        <BrandedPdfFooter
+          companyName={branding.company_name}
+          showPoweredBy={showPoweredBySiteMedic(branding.subscription_tier)}
+        />
+      )}
       <View style={styles.footer}>
-        <Text>This payslip is for your records. SiteMedic does not deduct tax or National Insurance for self-employed contractors.</Text>
+        <Text>This payslip is for your records. {branding?.company_name || 'SiteMedic'} does not deduct tax or National Insurance for self-employed contractors.</Text>
         <Text style={{ marginTop: 5 }}>Generated: {new Date().toLocaleDateString('en-GB')}</Text>
       </View>
     </Page>

@@ -16,6 +16,7 @@ import { renderToBuffer } from 'npm:@react-pdf/renderer@4.3.2';
 import { PurpleGuideDocument } from './PurpleGuideDocument.tsx';
 import { mapTreatmentToPurpleGuide } from './purple-guide-mapping.ts';
 import type { EventIncidentData } from './types.ts';
+import { fetchOrgBranding, fetchLogoAsDataUri } from '../_shared/branding-helpers.ts';
 
 // CORS headers for dashboard access
 const corsHeaders = {
@@ -100,6 +101,14 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // Fetch org branding
+    const branding = treatment.org_id ? await fetchOrgBranding(supabase, treatment.org_id) : undefined;
+    let logoSrc = branding?.logo_url ?? null;
+    if (logoSrc) {
+      const dataUri = await fetchLogoAsDataUri(logoSrc);
+      if (dataUri) logoSrc = dataUri;
+    }
+
     // Map treatment data to Purple Guide fields
     const data = mapTreatmentToPurpleGuide(treatment);
 
@@ -115,7 +124,7 @@ Deno.serve(async (req: Request) => {
     });
 
     const pdfBuffer = await renderToBuffer(
-      React.createElement(PurpleGuideDocument, { data, generatedAt })
+      React.createElement(PurpleGuideDocument, { data, generatedAt, branding, logoSrc })
     );
 
     console.log(`PDF generated (${pdfBuffer.byteLength} bytes), uploading to storage...`);

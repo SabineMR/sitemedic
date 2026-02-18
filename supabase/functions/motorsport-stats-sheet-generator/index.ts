@@ -17,6 +17,7 @@ import { renderToBuffer } from 'npm:@react-pdf/renderer@4.3.2';
 import { MotorsportStatsDocument } from './MotorsportStatsDocument.tsx';
 import { mapBookingToStats } from './stats-mapping.ts';
 import type { MotorsportStatsRequest } from './types.ts';
+import { fetchOrgBranding, fetchLogoAsDataUri } from '../_shared/branding-helpers.ts';
 
 // CORS headers for dashboard access
 const corsHeaders = {
@@ -56,6 +57,7 @@ Deno.serve(async (req: Request) => {
       .from('bookings')
       .select(`
         id,
+        org_id,
         site_name,
         site_address,
         shift_date,
@@ -114,6 +116,14 @@ Deno.serve(async (req: Request) => {
       ? `${firstWorker.first_name ?? ''} ${firstWorker.last_name ?? ''}`.trim()
       : 'Unknown';
 
+    // Fetch org branding
+    const branding = booking.org_id ? await fetchOrgBranding(supabase, booking.org_id) : undefined;
+    let logoSrc = branding?.logo_url ?? null;
+    if (logoSrc) {
+      const dataUri = await fetchLogoAsDataUri(logoSrc);
+      if (dataUri) logoSrc = dataUri;
+    }
+
     // Aggregate treatment data into stats
     const statsData = mapBookingToStats(
       booking as Parameters<typeof mapBookingToStats>[0],
@@ -125,7 +135,7 @@ Deno.serve(async (req: Request) => {
 
     // Render PDF using @react-pdf/renderer
     const pdfBuffer = await renderToBuffer(
-      React.createElement(MotorsportStatsDocument, { data: statsData })
+      React.createElement(MotorsportStatsDocument, { data: statsData, branding, logoSrc })
     );
 
     console.log(`PDF generated (${pdfBuffer.byteLength} bytes), uploading to motorsport-reports...`);

@@ -8,19 +8,29 @@
 import React from 'npm:react@18.3.1';
 import { Document, Page, Text, View, StyleSheet } from 'npm:@react-pdf/renderer@4.3.2';
 import type { F2508Data } from './types.ts';
+import type { OrgBranding } from '../_shared/branding-helpers.ts';
+import { BrandedPdfHeader, BrandedPdfFooter } from '../_shared/pdf-branding.tsx';
+import { showPoweredBySiteMedic } from '../_shared/branding-helpers.ts';
 
 interface F2508DocumentProps {
   data: F2508Data;
   generatedAt: string;
+  branding: OrgBranding;
+  logoSrc?: string | null;
 }
 
-export function F2508Document({ data, generatedAt }: F2508DocumentProps) {
+export function F2508Document({ data, generatedAt, branding, logoSrc }: F2508DocumentProps) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header */}
+        {/* Branded Header */}
+        <BrandedPdfHeader
+          companyName={branding.company_name}
+          documentType="F2508 RIDDOR Report"
+          logoSrc={logoSrc}
+          primaryColour={branding.primary_colour_hex}
+        />
         <View style={styles.header}>
-          <Text style={styles.title}>HSE F2508 - Report of an Injury</Text>
           <Text style={styles.subtitle}>
             Reporting of Injuries, Diseases and Dangerous Occurrences Regulations 2013
           </Text>
@@ -117,10 +127,11 @@ export function F2508Document({ data, generatedAt }: F2508DocumentProps) {
         </View>
 
         {/* Footer */}
+        <BrandedPdfFooter
+          companyName={branding.company_name}
+          showPoweredBy={showPoweredBySiteMedic(branding.subscription_tier)}
+        />
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            This report has been auto-generated from SiteMedic treatment records.
-          </Text>
           <Text style={styles.footerText}>
             Please review all information for accuracy before submitting to HSE.
           </Text>

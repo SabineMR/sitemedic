@@ -14,9 +14,14 @@
 import React from 'npm:react@18.3.1';
 import { Document, Page, Text, View, StyleSheet } from 'npm:@react-pdf/renderer@4.3.2';
 import type { MotorsportFormData } from './types.ts';
+import type { OrgBranding } from '../_shared/branding-helpers.ts';
+import { BrandedPdfHeader, BrandedPdfFooter } from '../_shared/pdf-branding.tsx';
+import { showPoweredBySiteMedic } from '../_shared/branding-helpers.ts';
 
 interface MotorsportIncidentDocumentProps {
   data: MotorsportFormData;
+  branding?: OrgBranding;
+  logoSrc?: string | null;
 }
 
 /** Motorsport UK brand red */
@@ -32,7 +37,7 @@ function boolLabel(value: boolean): string {
   return value ? TRUE_VALUE : FALSE_VALUE;
 }
 
-export function MotorsportIncidentDocument({ data }: MotorsportIncidentDocumentProps) {
+export function MotorsportIncidentDocument({ data, branding, logoSrc }: MotorsportIncidentDocumentProps) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -44,9 +49,20 @@ export function MotorsportIncidentDocument({ data }: MotorsportIncidentDocumentP
           </Text>
         </View>
 
-        {/* Header */}
+        {/* Branded Header */}
+        {branding ? (
+          <BrandedPdfHeader
+            companyName={branding.company_name}
+            documentType="Motorsport Incident Report"
+            logoSrc={logoSrc}
+            primaryColour={branding.primary_colour_hex}
+          />
+        ) : (
+          <View style={styles.header}>
+            <Text style={styles.title}>Motorsport Incident Report</Text>
+          </View>
+        )}
         <View style={styles.header}>
-          <Text style={styles.title}>Motorsport Incident Report</Text>
           <Text style={styles.subtitle}>
             Motorsport UK — Competitor Accident / Medical Incident Form
           </Text>
@@ -260,9 +276,14 @@ export function MotorsportIncidentDocument({ data }: MotorsportIncidentDocumentP
               <Text style={styles.footerValue}>{data.generated_at}</Text>
             </View>
           </View>
+          {branding && (
+            <BrandedPdfFooter
+              companyName={branding.company_name}
+              showPoweredBy={showPoweredBySiteMedic(branding.subscription_tier)}
+            />
+          )}
           <Text style={styles.footerDisclaimer}>
-            Auto-generated from SiteMedic treatment records. Review all
-            information before submitting to Motorsport UK or the Clerk of Course.
+            Review all information before submitting to Motorsport UK or the Clerk of Course.
           </Text>
         </View>
 

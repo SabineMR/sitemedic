@@ -24,6 +24,7 @@ import type {
   FootballPlayerFields,
   FootballSpectatorFields,
 } from './types.ts';
+import { fetchOrgBranding, fetchLogoAsDataUri } from '../_shared/branding-helpers.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -66,6 +67,7 @@ Deno.serve(async (req: Request) => {
       .from('treatments')
       .select(`
         id,
+        org_id,
         reference_number,
         injury_type,
         body_part,
@@ -103,6 +105,14 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // Fetch org branding
+    const branding = treatment.org_id ? await fetchOrgBranding(supabase, treatment.org_id) : undefined;
+    let logoSrc = branding?.logo_url ?? null;
+    if (logoSrc) {
+      const dataUri = await fetchLogoAsDataUri(logoSrc);
+      if (dataUri) logoSrc = dataUri;
+    }
+
     const generatedAt = new Date().toISOString();
     let pdfBuffer: ArrayBuffer;
     let fileName: string;
@@ -113,7 +123,7 @@ Deno.serve(async (req: Request) => {
         extraFields as FootballPlayerFields,
       );
       pdfBuffer = await renderToBuffer(
-        React.createElement(FAPlayerDocument, { data, generatedAt })
+        React.createElement(FAPlayerDocument, { data, generatedAt, branding, logoSrc })
       );
       fileName = `${body.incident_id}/FA-Player-${Date.now()}.pdf`;
     } else {
@@ -123,7 +133,7 @@ Deno.serve(async (req: Request) => {
         extraFields as FootballSpectatorFields,
       );
       pdfBuffer = await renderToBuffer(
-        React.createElement(FASpectatorDocument, { data, generatedAt })
+        React.createElement(FASpectatorDocument, { data, generatedAt, branding, logoSrc })
       );
       fileName = `${body.incident_id}/SGSA-Spectator-${Date.now()}.pdf`;
     }

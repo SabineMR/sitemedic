@@ -19,6 +19,7 @@ import { renderToBuffer } from 'npm:@react-pdf/renderer@4.3.2';
 import { MotorsportIncidentDocument } from './MotorsportIncidentDocument.tsx';
 import { mapTreatmentToMotorsportForm } from './motorsport-mapping.ts';
 import type { MotorsportIncidentRequest } from './types.ts';
+import { fetchOrgBranding, fetchLogoAsDataUri } from '../_shared/branding-helpers.ts';
 
 // CORS headers for dashboard access
 const corsHeaders = {
@@ -67,6 +68,7 @@ Deno.serve(async (req: Request) => {
       .from('treatments')
       .select(`
         id,
+        org_id,
         injury_type,
         body_part,
         severity,
@@ -106,6 +108,14 @@ Deno.serve(async (req: Request) => {
       extraFields = null;
     }
 
+    // Fetch org branding
+    const branding = treatment.org_id ? await fetchOrgBranding(supabase, treatment.org_id) : undefined;
+    let logoSrc = branding?.logo_url ?? null;
+    if (logoSrc) {
+      const dataUri = await fetchLogoAsDataUri(logoSrc);
+      if (dataUri) logoSrc = dataUri;
+    }
+
     // Map to MotorsportFormData
     const formData = mapTreatmentToMotorsportForm(
       treatment,
@@ -118,7 +128,7 @@ Deno.serve(async (req: Request) => {
 
     // Render PDF
     const pdfBuffer = await renderToBuffer(
-      <MotorsportIncidentDocument data={formData} />
+      <MotorsportIncidentDocument data={formData} branding={branding} logoSrc={logoSrc} />
     );
 
     console.log(`PDF generated (${pdfBuffer.byteLength} bytes), uploading to motorsport-reports...`);

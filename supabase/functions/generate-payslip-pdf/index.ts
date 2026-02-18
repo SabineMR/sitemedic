@@ -8,6 +8,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { renderToBuffer } from 'npm:@react-pdf/renderer@4.3.2';
 import React from 'npm:react@18.2.0';
 import { PayslipDocument } from './components/PayslipDocument.tsx';
+import { fetchOrgBranding, fetchLogoAsDataUri } from '../_shared/branding-helpers.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -61,7 +62,7 @@ serve(async (req: Request) => {
       .from('payslips')
       .select(`
         *,
-        medics(first_name, last_name, employment_status, utr, umbrella_company_name),
+        medics(first_name, last_name, employment_status, utr, umbrella_company_name, org_id),
         timesheets(hours_worked, hourly_rate, bookings(site_name))
       `)
       .eq('id', payslipId)
@@ -107,11 +108,20 @@ serve(async (req: Request) => {
       payslip_reference: payslip.payslip_reference,
     };
 
+    // Fetch org branding
+    const orgId = payslip.medics?.org_id;
+    const branding = orgId ? await fetchOrgBranding(supabase, orgId) : undefined;
+    let logoSrc = branding?.logo_url ?? null;
+    if (logoSrc) {
+      const dataUri = await fetchLogoAsDataUri(logoSrc);
+      if (dataUri) logoSrc = dataUri;
+    }
+
     console.log('📝 Rendering payslip PDF...');
 
     // Generate PDF using React-PDF
     const pdfBuffer = await renderToBuffer(
-      React.createElement(PayslipDocument, { data: payslipData })
+      React.createElement(PayslipDocument, { data: payslipData, branding, logoSrc })
     );
 
     console.log('✓ PDF rendered, size:', pdfBuffer.byteLength, 'bytes');

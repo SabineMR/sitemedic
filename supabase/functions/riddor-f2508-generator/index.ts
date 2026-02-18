@@ -13,6 +13,7 @@ import { renderToBuffer } from 'npm:@react-pdf/renderer@4.3.2';
 import { F2508Document } from './F2508Document.tsx';
 import { mapTreatmentToF2508 } from './f2508-mapping.ts';
 import type { RIDDORIncidentData } from './types.ts';
+import { fetchOrgBranding, fetchLogoAsDataUri } from '../_shared/branding-helpers.ts';
 
 // CORS headers for dashboard access
 const corsHeaders = {
@@ -56,6 +57,7 @@ Deno.serve(async (req: Request) => {
       .from('riddor_incidents')
       .select(`
         id,
+        org_id,
         category,
         confidence_level,
         deadline_date,
@@ -110,6 +112,14 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // Fetch org branding
+    const branding = await fetchOrgBranding(supabase, incident.org_id);
+    let logoSrc = branding.logo_url;
+    if (logoSrc) {
+      const dataUri = await fetchLogoAsDataUri(logoSrc);
+      if (dataUri) logoSrc = dataUri;
+    }
+
     // Map treatment data to F2508 fields
     const f2508Data = mapTreatmentToF2508(incident as unknown as RIDDORIncidentData);
 
@@ -125,7 +135,7 @@ Deno.serve(async (req: Request) => {
     });
 
     const pdfBuffer = await renderToBuffer(
-      <F2508Document data={f2508Data} generatedAt={generatedAt} />
+      <F2508Document data={f2508Data} generatedAt={generatedAt} branding={branding} logoSrc={logoSrc} />
     );
 
     console.log(`PDF generated (${pdfBuffer.byteLength} bytes), uploading to storage...`);
