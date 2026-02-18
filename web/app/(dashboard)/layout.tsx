@@ -7,6 +7,7 @@
  */
 
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { QueryProvider } from '@/components/providers/query-provider';
 import {
@@ -43,6 +44,12 @@ export default async function DashboardLayout({
   // Get user email for display
   const userEmail = user.email || 'Unknown';
 
+  // Read org branding from middleware headers (server component — direct access)
+  const headersList = await headers();
+  const companyName = headersList.get('x-org-company-name') || 'SiteMedic';
+  const logoUrl = headersList.get('x-org-logo-url') || '';
+  const tagline = headersList.get('x-org-tagline') || 'Dashboard';
+
   return (
     <QueryProvider>
       <SidebarProvider>
@@ -51,8 +58,26 @@ export default async function DashboardLayout({
           <Sidebar>
             <SidebarHeader>
               <div className="px-4 py-3">
-                <h2 className="text-lg font-semibold">SiteMedic</h2>
-                <p className="text-sm text-muted-foreground">Dashboard</p>
+                <div className="flex items-center gap-3">
+                  {logoUrl ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={logoUrl}
+                      alt={companyName}
+                      className="max-h-10 w-auto object-contain"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-[color:var(--org-primary)] rounded-xl flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">
+                        {companyName.slice(0, 2).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <div>
+                    <h2 className="text-lg font-semibold">{companyName}</h2>
+                    <p className="text-sm text-muted-foreground">{tagline}</p>
+                  </div>
+                </div>
               </div>
             </SidebarHeader>
 
