@@ -2,8 +2,49 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Org Onboarding — Stripe Checkout API)
+**Last Updated**: 2026-02-18 (Org Onboarding — Signup Page with Plan Selection)
 **Audience**: Web developers, technical reviewers, product team
+
+---
+
+## Recent Updates — Signup Page with Plan Selection & Checkout Flow (2026-02-18)
+
+### Overview
+
+The `/signup` page has been rebuilt as a multi-step onboarding flow that guides prospective medic businesses from plan selection through to Stripe Checkout. The previous simple magic-link signup form is replaced with a 4-step state machine: plan selection, account + org details, email verification, and org provisioning with Stripe redirect.
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/app/(auth)/signup/page.tsx` | Complete rewrite — multi-step signup with plan selection, org details, magic link auth, and Stripe Checkout redirect |
+
+### Key Features
+
+- **Plan Selection (Step 1)**: 3-tier pricing cards (Starter GBP149/mo, Growth GBP299/mo, Enterprise GBP599/mo) in responsive grid layout. Growth card has "Most Popular" badge. Each card shows features with green check marks. Dark theme matching org setup page
+- **Account + Org Details (Step 2)**: Combined form with "Your Account" section (name, email) and "Your Organisation" section (org name, contact email pre-filled from account email, phone, address, postcode). Back navigation to plan selection with selected plan displayed
+- **Magic Link Verification (Step 3)**: Sends OTP via `supabase.auth.signInWithOtp()` with all pending org data stored in `user_metadata` (pending_tier, pending_org_name, pending_contact_email, pending_contact_phone, pending_address, pending_postcode). Email redirect URL includes `?next=/signup?step=creating-org` for post-auth redirect
+- **Org Provisioning (Step 4)**: After magic link auth, reads pending data from `user.user_metadata`, calls `POST /api/billing/checkout` (from 29-01), then redirects to Stripe Checkout hosted page via `window.location.href = response.url`
+- **Cancellation Handling**: `?cancelled=true` query param shows an info banner ("Payment was cancelled. You can try again below.") and displays plan selection
+- **Error Recovery**: Each step has error states with "Try Again" and "Start Over" buttons. Creating-org step handles missing metadata gracefully
+- **No localStorage**: All pending data stored in Supabase user_metadata via signInWithOtp data option — survives the magic link redirect without relying on browser storage
+
+### Data Flow
+
+```
+Plan Selection -> Details Form -> signInWithOtp (stores metadata) -> Magic Link Email
+-> Auth Callback (?next=/signup?step=creating-org) -> Read user_metadata
+-> POST /api/billing/checkout -> Stripe Checkout hosted page
+-> Success: /onboarding?session_id=... | Cancel: /signup?cancelled=true
+```
+
+### Technical Notes
+
+- Step state machine: `'plan' | 'details' | 'email-sent' | 'creating-org'`
+- Contact email auto-fills from account email but can be changed independently
+- Uses `encodeURIComponent()` for the `next` query param to handle nested query strings in auth callback URL
+- Dark theme consistent with `/setup/organization` page (gray-900 gradient, gray-800/50 cards, blue-600 accents)
+- Existing auth callback route supports `?next=` param for custom post-auth redirects
 
 ---
 
