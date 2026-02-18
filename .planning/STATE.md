@@ -45,9 +45,9 @@ Progress: [██████████] v1.1 complete | [██░░░░�
 Key decisions affecting v2.0:
 - Vertical config storage: TypeScript static `Record<string, Config>` files, vertical ID string in DB — no DB config table needed
 - WatermelonDB schema v4: single coordinated migration before any vertical form work begins — all columns `isOptional: true`
-- RIDDOR gate: `getVerticalCompliance(vertical).riddorApplies` check at top of `riddor-detector/index.ts` — early-return `{ detected: false }` for non-RIDDOR verticals
+- RIDDOR gate (18-02): `NON_RIDDOR_VERTICALS` array + early-return in `riddor-detector/index.ts` before `detectRIDDOR()`; vertical resolved from `treatment.event_vertical` or `org_settings.industry_verticals[0]`
 - Motorsport concussion protocol: mandatory three-part clearance checklist before form submission — cannot be deferred
-- PDF dispatch: `incident-report-dispatcher.ts` routes to correct Edge Function based on treatment vertical; F2508 validates vertical and returns 400 for non-RIDDOR verticals
+- PDF dispatch (18-02): `incident-report-dispatcher.ts` FUNCTION_BY_VERTICAL routing table; F2508 returns 400 for non-RIDDOR verticals; three Edge Function stubs (event-incident/motorsport-incident/fa-incident) return 501 until Phase 19+/22+
 - 18-01: `verticalExtraFields` uses `@text` not `@json` in Treatment model — raw JSON string, parsed at call site; keeps model agnostic of vertical-specific data shapes
 - 18-01: `compliance_score_history` created in migration 124 (not deferred to Phase 23) — table must exist before Phase 23 analytics can write to it
 - 18-01: `booking_id` uses `ON DELETE SET NULL` — treatments survive booking deletion (audit trail preserved)
@@ -71,6 +71,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T02:55:25Z
-Stopped at: Completed 18-05-PLAN.md — VERT-06 API gap: eventVertical wired into both booking creation routes; VERT-05 admin vertical selector confirmed complete
+Last session: 2026-02-18T02:55:51Z
+Stopped at: Completed 18-02-PLAN.md — RIDDOR vertical gate + three Edge Function stubs + incident-report-dispatcher
 Resume file: None
