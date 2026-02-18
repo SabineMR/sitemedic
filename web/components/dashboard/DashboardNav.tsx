@@ -23,6 +23,7 @@ import {
   FileSignature,
   ShieldCheck,
   ShieldAlert,
+  BarChart3,
 } from 'lucide-react';
 
 const navigation = [
@@ -66,6 +67,11 @@ const navigation = [
     href: '/reports',
     icon: FileText,
   },
+  {
+    name: 'Analytics',
+    href: '/analytics/heat-map',
+    icon: BarChart3,
+  },
 ];
 
 export function DashboardNav() {
@@ -74,6 +80,10 @@ export function DashboardNav() {
   const isActive = (href: string) => {
     if (href === '/dashboard') {
       return pathname === '/dashboard';
+    }
+    // Highlight Analytics nav item for all /analytics/* sub-pages
+    if (href === '/analytics/heat-map') {
+      return pathname?.startsWith('/analytics');
     }
     return pathname?.startsWith(href);
   };
