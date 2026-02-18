@@ -132,13 +132,13 @@ Plans:
 4. An event organiser can download a Purple Guide-format event incident report PDF for any festival treatment record — the document includes triage priority, presenting complaint, safeguarding flag, and disposition
 5. The app displays "Attendee" instead of "Worker", "Venue" instead of "Site", and "Organiser" instead of "Client" throughout all screens when the festivals vertical is active
 
-**Plans:** TBD
+**Plans:** 4 plans
 
 Plans:
-- [ ] 20-01: Festival form fields — TST triage priority (P1/P2/P3/P4) as required field; alcohol/substance flag; safeguarding flag; festival-specific outcome labels (attendee disposition); all written to `vertical_extra_fields` JSONB
-- [ ] 20-02: Festivals RIDDOR gate — verify Phase 18 detector gate is active for `vertical: 'festivals'`; regression test: no RIDDOR badge appears on any festival treatment in the dashboard
-- [ ] 20-03: Purple Guide PDF Edge Function — `event-incident-report-generator` producing Purple Guide Patient Contact Log format per incident; `incident-report-dispatcher` routes to it for festival treatments
-- [ ] 20-04: Festivals vertical wiring — terminology: "Attendee", "Venue", "Organiser"; cert profile `getRecommendedCertTypes('festivals')` ordering (FREC 3 minimum, IHCD Ambulance Aid, EFR); event incident report accessible from dashboard
+- [ ] 20-01-PLAN.md — Festival form fields: TST triage priority (P1/P2/P3/P4) required field, alcohol/substance flag, safeguarding flag, attendee disposition; RIDDOR banner gate for festivals; all written to vertical_extra_fields JSONB
+- [ ] 20-02-PLAN.md — RIDDOR gate verification: confirm festivals in NON_RIDDOR_VERTICALS in riddor-detector and F2508 generator; confirm VERTICAL_COMPLIANCE.festivals.riddorApplies is false; read-only verification
+- [ ] 20-03-PLAN.md — Purple Guide PDF Edge Function: replace 501 stub with full PurpleGuideDocument React-PDF generation; purple-guide-mapping.ts; storage bucket migration 125
+- [ ] 20-04-PLAN.md — Dashboard wiring: EventIncidentReportCard client component, generateEventIncidentPDF query, vertical-aware terminology (Attendee/Organiser) on treatment detail page
 
 ---
 
