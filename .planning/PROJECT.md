@@ -65,19 +65,21 @@ Documentation happens automatically as the medic does their job, not as separate
 - ✓ Critical bug fixes — payslip medic_id FK corrected, RIDDOR draft inputs wired — v1.1
 - ✓ Geofence coverage analytics — "X of Y active sites covered" stat card with 60s polling — v1.1
 
-### Active (v2.0 — Multi-Vertical Platform Expansion)
+### Active (v3.0 — White-Label Platform & Subscription Engine)
 
-**Multi-Vertical Support:**
-- [ ] Per-vertical incident form fields — Film/TV, Festivals, Motorsport, Football each see different injury categories, mechanisms, and post-treatment guidance
-- [ ] Per-vertical shared document templates — Film/TV uses Purple Guide PDF; Motorsport uses Motorsport UK form; Football uses FA form; Festivals use event incident report
-- [ ] Per-vertical certification requirements — each vertical shows the cert types relevant to that industry on medic profiles
-- [ ] Per-vertical terminology throughout app — Film/TV sees "Cast & Crew", "Scene", "Production" not "Worker", "Site", "Client"
-- [ ] Per-org default vertical — admin sets vertical when creating org; all medics in that org use it as default
-- [ ] Per-booking vertical override — client selects event type on booking; medic's app adapts to that booking's vertical
+**White-Label Branding:**
+- [ ] Per-org branding storage — logo (Supabase Storage), primary colour (hex), company name, tagline
+- [ ] Branding applied to web portal — header, login page, sidebar all reflect org brand
+- [ ] Branded PDFs — org logo injected into weekly reports, RIDDOR PDFs, payslips
+- [ ] Branded emails — org logo + primary colour in all Resend transactional emails
+- [ ] Subdomain routing — `slug.sitemedic.com` resolves to correct org in Next.js middleware
 
-**Analytics (org + platform level):**
-- [ ] Near-miss heat map — geographic pattern visualisation for site managers (org) and platform admin (aggregate)
-- [ ] Trend analysis charts — compliance score history, incident frequency trends over time (org + platform level)
+**Subscription Engine:**
+- [ ] Stripe Billing integration — subscription plans (Starter/Growth/Enterprise) per org
+- [ ] Tiered feature gating — certain features locked to Growth/Enterprise tier
+- [ ] Hybrid onboarding flow — signup page → Stripe Checkout → webhook creates org → platform admin activates
+- [ ] Subscription management — upgrade/downgrade, Stripe billing portal, cancellation flow
+- [ ] Platform admin subscription dashboard — view all org subscriptions, MRR, churn
 
 ### Out of Scope
 
@@ -165,16 +167,22 @@ Documentation happens automatically as the medic does their job, not as separate
 | Territory-based assignment | UK postcode sectors enable geographic optimization and coverage tracking | ✓ Good (v1.0 - 100% auto-assignment) |
 | Stripe Connect for medics | Express accounts handle UK Faster Payments without custom bank integration | ✓ Good (v1.0 - weekly payouts working) |
 
-## Current Milestone: v2.0 Multi-Vertical Platform Expansion
+## Current Milestone: v3.0 White-Label Platform & Subscription Engine
 
-**Goal:** Expand SiteMedic from a construction-only platform to a multi-vertical medic compliance platform — Film/TV, Festivals, Motorsport, and Football each get their own incident forms, compliance documents, cert types, and in-app terminology. Add heat map and trend analytics visible at both org and platform level.
+**Goal:** Transform SiteMedic into a white-label SaaS engine — each subscribing medic business gets their own branded portal, subdomain, and subscription plan. Apex Safety Solutions (Sabine's own business) is the first live deployment and the v3.0 launch target.
 
 **Target features:**
-- Multi-vertical support (Film/TV, Festivals & Events, Motorsport, Football/Sports)
-- Per-org default vertical + per-booking override
-- Per-vertical: incident fields, PDF templates, cert types, terminology
-- Near-miss heat maps (org + platform level)
-- Trend analysis charts (org + platform level)
+- Per-org branding: logo, primary colour, company name — applied across portal, PDFs, and emails
+- Subdomain routing: `apex.sitemedic.com` per org (Pro), full custom domain (Enterprise)
+- Tiered subscription plans: Starter / Growth / Enterprise via Stripe Billing
+- Hybrid onboarding: online signup + Stripe Checkout → platform admin activates + configures branding
+- Subscription management: upgrade/downgrade, billing portal, cancellation
+- Feature gating: certain features unlocked per tier
+
+**Build priority:**
+1. Apex Safety Solutions white-label (Sabine's real business — goes live first)
+2. Subscription + self-serve onboarding (opens platform to paying customers)
+3. Feature gating by tier
 
 ---
-*Last updated: 2026-02-17 after v2.0 milestone initialized*
+*Last updated: 2026-02-18 after v3.0 milestone initialized*

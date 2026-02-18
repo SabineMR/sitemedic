@@ -2,19 +2,19 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-17)
+See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 23: Analytics — Heat Maps & Trend Charts + Gap Closures (COMPLETE — 7/7 plans done including gap-closure 23-06 and 23-07)
+**Current focus:** v3.0 White-Label Platform & Subscription Engine — defining requirements (research in progress)
 
 ## Current Position
 
-Phase: 23 of 23 (Analytics — Heat Maps & Trend Charts + Gap Closures) — COMPLETE (7/7 plans)
-Plan: 23-07 complete (GAP Flow 3 closed: competitor_cleared_to_return checkbox added to motorsport section in app/treatment/new.tsx — outside concussion gate, visible for all motorsport treatments)
-Status: Phase 23 complete — v2.0 roadmap fully complete (29/29 plans including gap closures)
-Last activity: 2026-02-18 — Completed 23-07-PLAN.md: MOTO-07 checkbox added; medics can now set competitor_cleared_to_return=true; 'Concussion clearance required' badge resolvable
+Phase: Not started (defining requirements)
+Plan: —
+Status: Researching — 4 parallel agents running (Stack, Features, Architecture, Pitfalls)
+Last activity: 2026-02-18 — Milestone v3.0 started; Apex Safety Solutions confirmed as first live deployment target
 
-Progress: [██████████] v1.1 complete | [██████████] v2.0 29/29 plans (Phase 18 + 18.5 + 19-01…05 + 20-01…04 + 21 + 22-01…05 + 23-01…07 complete)
+Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [░░░░░░░░░░] v3.0 0% (requirements phase)
 
 ## Performance Metrics
 
