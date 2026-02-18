@@ -156,11 +156,11 @@ Plans:
 3. A crew member injury that meets RIDDOR criteria is flagged as RIDDOR-reportable — the existing F2508 generator and RIDDOR workflow runs unchanged for Film/TV vertical treatments
 4. A medic's certification profile when the Film/TV vertical is active shows HCPC registration, ScreenSkills Production Safety Passport, and FREC 4 / EFR at the top of the cert selector
 
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 21-01: Film/TV form fields — Production Title, Patient Role (Cast/Stunt Performer/Crew), SFX/Pyrotechnic Involved flag, scene context; written to `vertical_extra_fields` JSONB; FILM-04 confirmed via existing RIDDOR gate (`riddorApplies: true` for film vertical)
-- [ ] 21-02: Film/TV vertical wiring — terminology: "Cast & Crew", "Set", "Production"; cert profile `getRecommendedCertTypes('film-tv')` ordering; verify F2508 PDF dispatch still routes correctly via incident-report-dispatcher; cross-cutting terminology cleanup for Film/TV screens
+- [ ] 21-01-PLAN.md — Film/TV form fields: Production Title, Patient Role picker (9 roles), SFX/Pyrotechnic Involved toggle, Scene/Shot Context; verticalExtraFields wired to auto-save and enqueueSyncItem; ScreenSkills Production Safety Passport and EFR cert types added to both cert registries
+- [ ] 21-02-PLAN.md — Film/TV vertical wiring: tv_film cert ordering updated (HCPC Paramedic first, ScreenSkills, FREC 4, EFR; CSCS/IPAF removed); getLocationLabel/getEventLabel helpers added; "Cast & Crew" terminology applied across 7 screens; F2508 dispatch confirmed unchanged for tv_film (FILM-04)
 
 ---
 
