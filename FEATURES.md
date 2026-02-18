@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Phase 20-03: Purple Guide Patient Contact Log PDF generation backend; event-incident-report-generator Edge Function fully implemented with triage colour badges, alcohol/safeguarding flags, disposition, Supabase Storage bucket, and 7-day signed URL)
+**Last Updated**: 2026-02-18 (Phase 22-03: FA/SGSA incident PDF generation for football vertical; fa-incident-generator Edge Function fully implemented — FA Match Day Injury Form for players, SGSA Medical Incident Report for spectators, routed by patient_type, with fa-incident-reports storage bucket and 7-day signed URL)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -16,6 +16,69 @@ SiteMedic is a comprehensive platform combining **mobile medic software** (offli
 - High-value add-ons: Corporate Events, Private Events (weddings/parties/galas), Education & Youth (DBS-checked), Outdoor Adventure & Endurance
 
 **Business Model**: Software bundled with medic staffing service (no separate software charge). Revenue from medic bookings with a configurable platform/medic split (default 60% platform / 40% medic, overridable per employee). Weekly medic payouts via UK Faster Payments, Net 30 invoicing for established corporate clients. Referral bookings (jobs recommended by a third party who cannot take them) trigger a 10% referral payout (configurable) deducted from the platform's share — medic payout is unaffected.
+
+---
+
+## Recent Updates — Football / Sports Vertical: FA & SGSA Incident PDF Generation (2026-02-18)
+
+### Phase 22-03: FA Match Day Injury Form and SGSA Medical Incident Report PDF Generation (FOOT-07) ✅
+
+The `fa-incident-generator` Supabase Edge Function now produces two PDF formats for football incidents, routed by `patient_type` in `vertical_extra_fields`. Previously it returned a 501 Not Implemented stub.
+
+**PDF routing logic:**
+- `patient_type === 'player'` → FA Match Day Injury Form (`FA-Player-*.pdf`) stored in `fa-incident-reports` bucket
+- `patient_type === 'spectator'` → SGSA Medical Incident Report (`SGSA-Spectator-*.pdf`) stored in `fa-incident-reports` bucket
+- Missing `patient_type` → HTTP 400
+- `event_vertical !== 'sporting_events'` → HTTP 400
+
+**FA Match Day Injury Form PDF (`FAPlayerDocument.tsx`):**
+- Title: "FA Match Day Injury Report"
+- Accent colour: `#1E3A5F` (FA navy blue)
+- Four sections: Player Details (name, squad number, club), Injury Classification (type, body part, phase of play, mechanism, FA severity), Head Injury Assessment / HIA (conducted Y/N, outcome, concussion warning box in amber), Treatment and Outcome
+- HIA concussion warning box (amber): shown when HIA outcome includes 'Concussion' — states player must not return to play same day
+- Footer: SiteMedic attribution + FA governance note
+- FA severity labels: Medical Attention Only, Minor (1–7 days), Moderate (8–28 days), Severe (29–89 days), Major (90+ days)
+- Phase of play labels: In Play, Set Piece, Warm-up, Half-time, Training, Post-match
+
+**SGSA Medical Incident Report PDF (`FASpectatorDocument.tsx`):**
+- Title: "SGSA Medical Incident Report"
+- Accent colour: `#1E3A5F` (navy blue)
+- Four sections: Incident Location (stand/area, row/seat), Clinical Details (injury/illness, treatment given, referral outcome, alcohol factor), Safeguarding (conditional — red warning box only when safeguarding_flag is true), Treating Medic
+- Safeguarding warning box (red): shown only when flagged — includes notes + instruction to refer to designated safeguarding lead
+- Footer: SiteMedic attribution + SGSA ground record retention note
+- Referral labels: Treated on Site, Referred to Hospital, Ambulance Conveyed, Self-Discharged
+
+**Data mapping:**
+- `fa-player-mapping.ts`: `mapTreatmentToFAPlayer()` — maps treatment + `FootballPlayerFields` to `FAPlayerPDFData`; label lookups for phase_of_play, contact_type, hia_outcome, fa_severity
+- `fa-spectator-mapping.ts`: `mapTreatmentToSGSASpectator()` — maps treatment + `FootballSpectatorFields` to `SGSASpectatorPDFData`; referral_outcome label lookup
+- Treatment fetched with `workers(first_name, last_name, role, company)` and `organizations(company_name, site_address)` joins
+- `vertical_extra_fields` is already a parsed JS object from Supabase (JSONB) — no `JSON.parse()` needed
+
+**Types (`types.ts`):**
+- `FAIncidentRequest`: request body interface (incident_id, event_vertical)
+- `FootballPlayerFields`: patient_type, squad_number, phase_of_play, contact_type, hia_performed, hia_outcome, fa_severity
+- `FootballSpectatorFields`: patient_type, stand_location, stand_row_seat, referral_outcome, safeguarding_flag, safeguarding_notes, alcohol_involvement
+- `FootballExtraFields`: union of player | spectator fields
+- `FAPlayerPDFData`: normalised data for player PDF component
+- `SGSASpectatorPDFData`: normalised data for spectator PDF component
+
+**Storage bucket (`127_fa_incident_storage.sql`):**
+- Private bucket `fa-incident-reports` (patient data)
+- RLS SELECT: authenticated users who are members of the treatment's org can view (via profiles + treatments join)
+- RLS INSERT/UPDATE: service_role only (Edge Function uses service role key)
+- Returns 7-day signed URL on success
+
+**Dispatcher wiring:**
+- `web/lib/pdf/incident-report-dispatcher.ts` `FUNCTION_BY_VERTICAL['sporting_events']` → `'fa-incident-generator'` (pre-existing from Phase 18 — no change needed)
+
+**Files created/modified:**
+- `supabase/functions/fa-incident-generator/FAPlayerDocument.tsx` — new (React-PDF FA player component)
+- `supabase/functions/fa-incident-generator/FASpectatorDocument.tsx` — new (React-PDF SGSA spectator component)
+- `supabase/functions/fa-incident-generator/fa-player-mapping.ts` — new (player data mapper)
+- `supabase/functions/fa-incident-generator/fa-spectator-mapping.ts` — new (spectator data mapper)
+- `supabase/functions/fa-incident-generator/types.ts` — replaced (full type set replacing Phase 18 stub types)
+- `supabase/functions/fa-incident-generator/index.ts` — replaced (501 stub → full PDF routing implementation)
+- `supabase/migrations/127_fa_incident_storage.sql` — new (fa-incident-reports storage bucket + RLS)
 
 ---
 
