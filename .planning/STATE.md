@@ -57,6 +57,8 @@ Progress: [██████████] v1.0 complete | [██████�
 - **24-04:** Public bucket chosen for org-logos — logos in PDFs/emails need stable URLs; signed URLs expire mid-render
 - **24-04:** Separate platform admin policies (no folder check) — platform admin org_id is NULL in JWT; folder check would always block them
 - **24-04:** 1-indexed Postgres array: (storage.foldername(name))[1] — NOT [0]; [0] returns NULL
+- **24-01:** VerticalId union must include 'general' — used as fallback vertical in 8+ places; BookingVerticalId already included it
+- **24-01:** CVE-2025-29927 floor specifier-only (pnpm lock already resolved 15.5.12); next version bump pre-dates Phase 26 middleware expansion
 
 ### Pending Todos
 
@@ -72,5 +74,5 @@ Progress: [██████████] v1.0 complete | [██████�
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 24-04-PLAN.md — migration 134_org_logos_bucket.sql committed (96a8d20)
+Stopped at: Completed 24-01-SUMMARY.md — CVE-2025-29927 patch documented; build clean (78db00e, eed0961)
 Resume file: None
