@@ -99,6 +99,9 @@ Core plumbing that all four new verticals depend on. Must ship before any vertic
 | VERT-04 | Phase 18 | Complete |
 | VERT-05 | Phase 18 | Complete |
 | VERT-06 | Phase 18 | Complete |
+| CONST-01 | Phase 18.5 | Complete |
+| CONST-02 | Phase 18.5 | Complete |
+| CONST-03 | Phase 18.5 | Complete |
 | FILM-01 | Phase 21 | Pending |
 | FILM-02 | Phase 21 | Pending |
 | FILM-03 | Phase 21 | Pending |

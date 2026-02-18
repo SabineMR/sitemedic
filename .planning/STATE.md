@@ -60,6 +60,7 @@ Key decisions affecting v2.0:
 - 18-05: `?? null` used for eventVertical (not `|| null`) — preserves distinction between undefined and empty string
 - 18-04: `orgVertical` variable name preserved in new.tsx — downstream usages (getMechanismPresets, getVerticalOutcomeCategories, getPatientLabel, getVerticalCompliance) unchanged
 - 18-04: `t.bookingId = bookingId ?? undefined` (not null) — WatermelonDB optional field; sync payload uses `?? null` for Supabase NULL compatibility
+- 18.5-01: `services/taxonomy/verticals.ts` created as NEW canonical `VERTICAL_CONFIG` file — construction is the reference entry; Phases 19–22 add their verticals here; does NOT replace existing taxonomy files (vertical-compliance.ts, certification-types.ts remain the runtime sources)
 
 ### Research Flags (Phase-Blocking)
 

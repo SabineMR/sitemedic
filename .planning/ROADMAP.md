@@ -84,8 +84,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 18.5-01-PLAN.md — Create services/taxonomy/verticals.ts: new canonical VERTICAL_CONFIG file with VerticalConfig interface; construction as reference entry (riddorApplies: true, patientTerm Worker, locationTerm Site, clientTerm Client, certOrdering CSCS-first, pdfGenerator riddor-f2508-generator)
-- [ ] 18.5-02-PLAN.md — Smoke-test verification: confirm FUNCTION_BY_VERTICAL['construction'] routes to riddor-f2508-generator; confirm construction absent from NON_RIDDOR_VERTICALS; confirm getRecommendedCertTypes includes CSCS/CPCS/IPAF/Gas Safe/PASMA; no code changes
+- [x] 18.5-01-PLAN.md — Create services/taxonomy/verticals.ts: new canonical VERTICAL_CONFIG file with VerticalConfig interface; construction as reference entry (riddorApplies: true, patientTerm Worker, locationTerm Site, clientTerm Client, certOrdering CSCS-first, pdfGenerator riddor-f2508-generator)
+- [x] 18.5-02-PLAN.md — Smoke-test verification: confirm FUNCTION_BY_VERTICAL['construction'] routes to riddor-f2508-generator; confirm construction absent from NON_RIDDOR_VERTICALS; confirm getRecommendedCertTypes includes CSCS/CPCS/IPAF/Gas Safe/PASMA; no code changes
 
 ---
 
@@ -250,7 +250,7 @@ Plans:
 | 16. Contract Detail | v1.1 | 2/2 | Complete | 2026-02-17 |
 | 17. Geofence Coverage | v1.1 | 1/1 | Complete | 2026-02-17 |
 | 18. Vertical Infrastructure & RIDDOR Fix | v2.0 | 5/5 | Complete | 2026-02-18 |
-| 18.5. Construction & Infrastructure Vertical | v2.0 | 0/2 | Not started | - |
+| 18.5. Construction & Infrastructure Vertical | v2.0 | 2/2 | Complete | 2026-02-18 |
 | 19. Motorsport Vertical | v2.0 | 0/5 | Not started | - |
 | 20. Festivals & Events Vertical | v2.0 | 0/4 | Not started | - |
 | 21. Film/TV Production Vertical | v2.0 | 0/2 | Not started | - |
