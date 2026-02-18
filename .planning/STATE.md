@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 22: Football / Sports Vertical — 4/4 plans executed, 1 gap pending (admin PDF download card for sporting_events)
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 19: Motorsport Vertical 19-04 complete; Phase 19-05 next
 
 ## Current Position
 
-Phase: 22 of 23 (Football / Sports Vertical) — plans complete, 1 gap pending
-Plan: 22-01, 22-02, 22-03, 22-04 all complete; 1 gap: FAIncidentReportCard missing from web admin treatment detail page
-Status: Phase 22 plans complete — verifier found gap: admin UI trigger for fa-incident-generator not present on sporting_events treatment detail page; gap closure plan needed
-Last activity: 2026-02-18 — Phase 22 executed; 4/5 must-haves pass; gap: no FAIncidentReportCard in web/app/(dashboard)/treatments/[id]/page.tsx for sporting_events
+Phase: 19 of 23 (Motorsport Vertical) — 19-04 complete
+Plan: 19-01, 19-02, 19-03, 19-04 complete; 19-05 remains
+Status: In progress — 19-04 (Medical Statistics Sheet PDF + concussion badge + stats button) complete
+Last activity: 2026-02-18 — Completed 19-04-PLAN.md: motorsport-stats-sheet-generator Edge Function (4 files) + concussion badge in treatments-columns + Generate Medical Statistics Sheet button on booking detail page
 
-Progress: [██████████] v1.1 complete | [████████░░] v2.0 19/27 plans (Phase 18 + 18.5 + 19-01 + 19-02 + 19-03 + 20-01 + 20-02 + 20-03 + 20-04 + 21 + 22-01 + 22-02 + 22-03 + 22-04 complete)
+Progress: [██████████] v1.1 complete | [████████░░] v2.0 20/27 plans (Phase 18 + 18.5 + 19-01 + 19-02 + 19-03 + 19-04 + 20-01 + 20-02 + 20-03 + 20-04 + 21 + 22-01 + 22-02 + 22-03 + 22-04 complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 87 (v1.0 + v1.1)
+- Total plans completed: 88 (v1.0 + v1.1 + v2.0 so far)
 - Average duration: 4.1 min
 - Total execution time: ~6.0 hours
 
@@ -29,11 +29,11 @@ Progress: [██████████] v1.1 complete | [██████�
 |-------|-------|-------|----------|
 | 01–07.5 (v1.0) | 84/84 | ~5.5 hrs | ~4 min |
 | 08–17 (v1.1) | 35/35 | ~2.4 hrs | ~4.1 min |
-| 18–23 (v2.0) | 8/25 | ~10 min | ~1 min |
+| 18–23 (v2.0) | 9/25 | ~15 min | ~1.7 min |
 
 **Recent Trend:**
-- Last plan: 19-03 — MotorsportIncidentDocument + mapping + storage bucket + 501 stub replaced (4 min)
-- Phase 19 plans: 19-01 (MOTO-01/02/03 form + gate + alert), 19-02 (cert taxonomy + TreatmentWithWorker), 19-03 (PDF generator) — 3 of 5 complete
+- Last plan: 19-04 — motorsport-stats-sheet-generator Edge Function (4 files) + concussion badge + stats button (5 min)
+- Phase 19 plans: 19-01 (MOTO-01/02/03 form + gate + alert), 19-02 (cert taxonomy + TreatmentWithWorker), 19-03 (PDF generator), 19-04 (stats sheet + badge + button) — 4 of 5 complete
 - Phase 20 plans: 20-01 (FEST-01/02 form fields), 20-02 (RIDDOR gate), 20-03 (Purple Guide PDF backend), 20-04 (compliance frontend) — ALL COMPLETE
 - Phase 22 plans: 22-01 (football dual patient type form + HIA + FA severity), 22-02 (RIDDOR gate FOOT-04), 22-03 (FA/SGSA PDF), 22-04 (cert types + terminology) — ALL COMPLETE
 - Trend: Stable — consistent 1–8 min for vertical surgical additions
@@ -97,6 +97,12 @@ Key decisions affecting v2.0:
 - 19-03: motorsport-reports bucket uses migration 128 (not 125 as planned) — 125/126/127 already occupied by event-incident-reports, motorsport concussion alert, and fa-incident-reports respectively
 - 19-03: Concussion clearance section always rendered in motorsport PDF even when hia_conducted=false — blank fields visible for completeness
 - 19-03: upsert:true for motorsport-reports storage — allows PDF regeneration; consistent with event-incident-reports pattern (20-03)
+- 19-04: React.createElement used in motorsport-stats-sheet-generator index.ts (not JSX) — consistent with event-incident-report-generator pattern; avoids JSX pragma in .ts Edge Function files
+- 19-04: upsert:true for stats sheet PDF upload — allows regeneration on same booking (same pattern as motorsport-incident-generator and event-incident-report-generator)
+- 19-04: CMO name from first treatment's worker — no separate medic query; fallback 'Unknown'
+- 19-04: competitor_cleared_to_return !== true in concussion badge (not === false) — undefined and null treated as not cleared (safety-first default)
+- 19-04: createClient from @/lib/supabase/client used in booking detail page — matches gdpr/page.tsx and payslips pattern (not createClientComponentClient)
+- 19-04: Stats sheet button placed between Site Details and Pre-Event Medical Brief sections — visible without scrolling on typical booking
 
 ### Research Flags (Phase-Blocking)
 
@@ -114,6 +120,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T04:30:08Z
-Stopped at: Completed 19-03-PLAN.md (MotorsportIncidentDocument.tsx + motorsport-mapping.ts + types.ts expansion + 501 stub replaced in index.ts + migration 128 motorsport-reports bucket)
+Last session: 2026-02-18T04:39:19Z
+Stopped at: Completed 19-04-PLAN.md (motorsport-stats-sheet-generator Edge Function 4 files + concussion badge in treatments-columns.tsx + Generate Medical Statistics Sheet button on booking detail page)
 Resume file: None
