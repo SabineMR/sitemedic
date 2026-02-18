@@ -165,7 +165,7 @@ export async function POST(request: Request) {
             name: `${medic.first_name} ${medic.last_name}`,
           },
           pricing: {
-            total: booking.total_price || 0,
+            total: booking.total || 0,
           },
           confirmationUrl,
           branding,
