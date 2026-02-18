@@ -20,6 +20,11 @@
  * The router stores exact leg miles on timesheets.mileage_miles.
  * No doubling happens here — the router has already accounted for every
  * mile driven, including the return journey home.
+ *
+ * --- NEW: Hourly Model (migration 129) ---
+ * New bookings use pay_model = 'hourly'. Medic pay = hourly_rate × hours worked.
+ * The hourly rate is set manually by admin per medic (no auto-calculation).
+ * Classification is used for categorisation and reporting only.
  */
 
 export type ExperienceLevel = 'junior' | 'senior' | 'lead';
@@ -67,6 +72,51 @@ export const EXPERIENCE_TIER_LIST: ExperienceTier[] = [
   EXPERIENCE_TIERS.junior,
   EXPERIENCE_TIERS.senior,
   EXPERIENCE_TIERS.lead,
+];
+
+// ============================================================
+// UK Medical Classification System (migration 129)
+// Used for categorisation and reporting — hourly rate is set
+// manually per medic by admin, not auto-calculated from this.
+// ============================================================
+
+export type MedicClassification =
+  | 'first_aider'
+  | 'eca'
+  | 'efr'
+  | 'emt'
+  | 'aap'
+  | 'paramedic'
+  | 'specialist_paramedic'
+  | 'critical_care_paramedic'
+  | 'registered_nurse'
+  | 'doctor';
+
+export const CLASSIFICATION_LABELS: Record<MedicClassification, string> = {
+  first_aider:             'First Aider (FREC 3 / FPOS)',
+  eca:                     'Emergency Care Assistant (FREC 3+)',
+  efr:                     'Emergency First Responder (FREC 4)',
+  emt:                     'Emergency Medical Technician (FREC 4)',
+  aap:                     'Assistant Ambulance Practitioner',
+  paramedic:               'Paramedic (HCPC)',
+  specialist_paramedic:    'Specialist / Advanced Paramedic',
+  critical_care_paramedic: 'Critical Care Paramedic',
+  registered_nurse:        'Registered Nurse / ENP',
+  doctor:                  'Doctor (GP / A&E / BASICS)',
+};
+
+/** Ordered list of classifications from least to most advanced */
+export const CLASSIFICATION_LIST: MedicClassification[] = [
+  'first_aider',
+  'eca',
+  'efr',
+  'emt',
+  'aap',
+  'paramedic',
+  'specialist_paramedic',
+  'critical_care_paramedic',
+  'registered_nurse',
+  'doctor',
 ];
 
 /** Get the ExperienceTier config for a given level */

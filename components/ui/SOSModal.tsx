@@ -45,6 +45,7 @@ export default function SOSModal({ visible, onClose }: Props) {
   const [isRecording, setIsRecording] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(MAX_RECORDING_SECONDS);
   const [transcript, setTranscript] = useState('');
+  const [transcriptUnavailable, setTranscriptUnavailable] = useState(false);
   const [textMessage, setTextMessage] = useState('EMERGENCY: ');
   const [audioUri, setAudioUri] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -117,6 +118,7 @@ export default function SOSModal({ visible, onClose }: Props) {
     setIsRecording(false);
     setSecondsLeft(MAX_RECORDING_SECONDS);
     setTranscript('');
+    setTranscriptUnavailable(false);
     setTextMessage('EMERGENCY: ');
     setAudioUri(null);
     audioUriRef.current = null;
@@ -132,8 +134,12 @@ export default function SOSModal({ visible, onClose }: Props) {
 
     try {
       await emergencyAlertService.startRecording(
-        (chunk) => setTranscript((prev) => prev + ' ' + chunk),
+        (chunk) => {
+          setTranscript((prev) => prev + ' ' + chunk);
+          setTranscriptUnavailable(false);
+        },
         () => stopRecording(), // auto-stop at 90s
+        () => setTranscriptUnavailable(true),
       );
 
       // Start countdown
@@ -283,12 +289,20 @@ export default function SOSModal({ visible, onClose }: Props) {
       {/* Live transcript */}
       <View style={styles.transcriptContainer}>
         <Text style={styles.transcriptLabel}>
-          {isRecording && transcript.length === 0 ? 'Transcribing...' : 'Live Transcript:'}
+          {isRecording && transcript.length === 0 && !transcriptUnavailable
+            ? 'Transcribing...'
+            : 'Live Transcript:'}
         </Text>
         <ScrollView style={styles.transcriptScroll} bounces={false}>
-          <Text style={styles.transcriptText}>
-            {transcript || (isRecording ? '' : 'No transcript yet')}
-          </Text>
+          {transcriptUnavailable && !transcript ? (
+            <Text style={styles.transcriptUnavailableText}>
+              Live transcription unavailable — audio is still being recorded.
+            </Text>
+          ) : (
+            <Text style={styles.transcriptText}>
+              {transcript || (isRecording ? '' : 'No transcript yet')}
+            </Text>
+          )}
         </ScrollView>
       </View>
 
@@ -378,7 +392,7 @@ export default function SOSModal({ visible, onClose }: Props) {
           Call directly: {selectedContact.phone}
         </Text>
       ) : null}
-      <TouchableOpacity style={styles.retryButton} onPress={() => setStep('choose')}>
+      <TouchableOpacity style={styles.retryButton} onPress={() => startRecording()}>
         <Text style={styles.retryButtonText}>Try Again</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.doneButton} onPress={onClose}>
@@ -576,6 +590,12 @@ const styles = StyleSheet.create({
     color: '#F9FAFB',
     fontSize: 14,
     lineHeight: 20,
+  },
+  transcriptUnavailableText: {
+    color: '#F59E0B',
+    fontSize: 13,
+    lineHeight: 18,
+    fontStyle: 'italic',
   },
   textInput: {
     backgroundColor: 'rgba(255,255,255,0.08)',

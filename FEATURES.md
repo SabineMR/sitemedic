@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Phase 23-02: Analytics — Near-Miss Heat Map with CircleMarker Leaflet map, severity colour-coding, AnalyticsSubNav tab bar, Analytics sidebar link)
+**Last Updated**: 2026-02-17 (Emergency SOS — storage bucket migration fix, transcription error feedback)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -775,6 +775,36 @@ Hardened `getUserProfile()` in `src/lib/auth-manager.ts` to use a three-stage fa
 | File | Change |
 |------|--------|
 | `src/lib/auth-manager.ts` | `getUserProfile()` rewritten with 3-stage fallback; new `getProfileFromCacheOrJwt()` private helper |
+
+---
+
+## Recent Updates — Emergency SOS Bugfixes (2026-02-17)
+
+### Storage Bucket + Transcription Error Feedback — Bug Fixes ✅
+
+Two bugs identified and fixed in the Emergency SOS system:
+
+**Bug 1 — Upload error (`StorageApiError`):**
+The `emergency-recordings` Supabase Storage bucket was never created. The original migration `060_emergency_alerts.sql` created the DB tables but omitted the bucket. Every upload call returned `StorageApiError` immediately.
+
+| File | Change |
+|------|--------|
+| `supabase/migrations/131_emergency_recordings_bucket.sql` | **New** — Creates the `emergency-recordings` private Storage bucket (50 MB limit, audio MIME types only). Adds three RLS policies: medics can upload to their own `<user_id>/` folder; authenticated users can read; medics can delete their own files. |
+
+**Bug 2 — Live transcript silently shows "No transcript yet":**
+When the Whisper transcription edge function was unavailable (not running locally, or `OPENAI_API_KEY` not set as a Supabase secret), the transcript area showed "No transcript yet" with no indication of a problem. Now the UI surfaces the failure so the user knows the audio is still recording even if transcription is down.
+
+| File | Change |
+|------|--------|
+| `services/EmergencyAlertService.ts` | Added optional `onTranscriptError?: () => void` parameter to `startRecording()`. Stored as `private onTranscriptError`. Called in `transcribeChunk()` when the edge function returns an HTTP error or throws a network exception. Cleared on `stopRecording()` alongside the existing callbacks. |
+| `components/ui/SOSModal.tsx` | Added `transcriptUnavailable` state. Passes error callback to `startRecording()`. When `transcriptUnavailable` is true and no transcript has arrived, shows an amber italic message: *"Live transcription unavailable — audio is still being recorded."* Also fixed the "Try Again" button in the error step, which incorrectly called `setStep('choose')` (the Choose step was removed); it now calls `startRecording()` directly. |
+
+**Root cause note for infrastructure:**
+Transcription requires `supabase functions serve` to be running during local development (reads `OPENAI_API_KEY` from `supabase/functions/.env`). For a cloud/production Supabase project, run:
+```
+supabase secrets set OPENAI_API_KEY=<your-key>
+supabase functions deploy send-emergency-sms
+```
 
 ---
 

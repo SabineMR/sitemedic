@@ -63,5 +63,38 @@ export interface PricingBreakdown {
 
 export type UrgencyLevel = 'standard' | 'short_notice' | 'urgent' | 'emergency';
 
-/** Medic experience tier — determines payout percentage */
+/** Medic experience tier — determines payout percentage (legacy percentage model) */
 export type ExperienceLevel = 'junior' | 'senior' | 'lead';
+
+// ============================================================
+// Hourly Pay Model + 4-Way Split types (migration 129)
+// ============================================================
+
+/** UK medical classification — used for categorisation and reporting */
+export type MedicClassification =
+  | 'first_aider'
+  | 'eca'
+  | 'efr'
+  | 'emt'
+  | 'aap'
+  | 'paramedic'
+  | 'specialist_paramedic'
+  | 'critical_care_paramedic'
+  | 'registered_nurse'
+  | 'doctor';
+
+/** Pay model for a booking — 'percentage' = legacy, 'hourly' = new model */
+export type PayModel = 'percentage' | 'hourly';
+
+/** Result of the 4-way profit split calculation (hourly model only) */
+export interface FourWaySplit {
+  grossRevenue: number;
+  medicPay: number;           // medicHourlyRate × hoursWorked
+  mileageReimbursement: number;
+  referralCommission: number;
+  net: number;                // gross - medicPay - mileage - referral
+  sabineShare: number;        // net / 4
+  kaiShare: number;           // net / 4
+  operationalAmount: number;  // net / 4
+  reserveAmount: number;      // net / 4
+}

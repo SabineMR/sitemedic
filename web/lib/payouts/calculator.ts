@@ -9,6 +9,12 @@
  * medic_payout_percent stored on the medics table (migration 116).
  * The experience tier trigger (trg_payout_from_experience_level) keeps
  * medic_payout_percent in sync when experience_level changes.
+ *
+ * --- NEW: Hourly Model + 4-Way Split (migration 129) ---
+ * calculateFourWaySplit() replaces calculatePayout() for new bookings.
+ * Old bookings (pay_model = 'percentage') still use calculatePayout().
+ * Net after medic pay + mileage + referral is split equally 4 ways:
+ *   ¼ Sabine / ¼ Kai / ¼ operational costs / ¼ equipment/emergency reserve
  */
 
 import { calculateTotalMedicPayout, HMRC_MILEAGE_RATE_PENCE } from '@/lib/medics/experience';
@@ -93,4 +99,77 @@ export function validatePayout(
 ): boolean {
   const expected = calculatePayout(bookingTotal, medicPayoutPercent, mileageMiles);
   return Math.abs(expected.totalPayout - timesheetPayoutAmount) <= 0.01;
+}
+
+// ============================================================
+// Hourly Model + 4-Way Profit Split (migration 129)
+// ============================================================
+
+export interface FourWaySplit {
+  grossRevenue: number;
+  medicPay: number;           // medicHourlyRate × hoursWorked
+  mileageReimbursement: number;
+  referralCommission: number;
+  net: number;                // gross - medicPay - mileage - referral
+  sabineShare: number;        // net / 4
+  kaiShare: number;           // net / 4
+  operationalAmount: number;  // net / 4
+  reserveAmount: number;      // net / 4
+}
+
+/**
+ * Calculate the 4-way profit split for a booking on the hourly pay model.
+ *
+ * Flow:
+ *   gross_revenue
+ *   − medic_pay (hourly_rate × hours_worked)
+ *   − mileage_reimbursement (miles × 45p)
+ *   − referral_commission (10% of pre-VAT subtotal, if applicable)
+ *   = net
+ *   net / 4 → Sabine | Kai | Operational | Reserve
+ *
+ * @param grossRevenue      Total the client paid (inc. VAT), in GBP
+ * @param medicHourlyRate   Medic's hourly rate in GBP (from medics.hourly_rate)
+ * @param hoursWorked       Actual hours worked (from approved timesheet)
+ * @param mileageMiles      Exact leg miles from mileage router (0 if not tracked)
+ * @param mileageRatePence  HMRC rate in pence (default 45)
+ * @param referralCommission  Pre-calculated referral payout in GBP (default 0)
+ */
+export function calculateFourWaySplit(params: {
+  grossRevenue: number;
+  medicHourlyRate: number;
+  hoursWorked: number;
+  mileageMiles?: number | null;
+  mileageRatePence?: number;
+  referralCommission?: number;
+}): FourWaySplit {
+  const {
+    grossRevenue,
+    medicHourlyRate,
+    hoursWorked,
+    mileageMiles = 0,
+    mileageRatePence = HMRC_MILEAGE_RATE_PENCE,
+    referralCommission = 0,
+  } = params;
+
+  const medicPay = parseFloat((medicHourlyRate * hoursWorked).toFixed(2));
+  const mileageReimbursement = parseFloat(
+    ((mileageMiles ?? 0) * (mileageRatePence / 100)).toFixed(2)
+  );
+  const net = parseFloat(
+    (grossRevenue - medicPay - mileageReimbursement - referralCommission).toFixed(2)
+  );
+  const quarter = parseFloat((net / 4).toFixed(2));
+
+  return {
+    grossRevenue,
+    medicPay,
+    mileageReimbursement,
+    referralCommission,
+    net,
+    sabineShare: quarter,
+    kaiShare: quarter,
+    operationalAmount: quarter,
+    reserveAmount: quarter,
+  };
 }

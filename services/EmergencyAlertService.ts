@@ -78,6 +78,7 @@ class EmergencyAlertService {
   private rotationInterval: ReturnType<typeof setInterval> | null = null;
   private stopRecordingTimeout: ReturnType<typeof setTimeout> | null = null;
   private onTranscriptChunk: ((text: string) => void) | null = null;
+  private onTranscriptError: (() => void) | null = null;
   private isActive = false; // true while medic is recording (across rotations)
 
   /**
@@ -184,6 +185,7 @@ class EmergencyAlertService {
   async startRecording(
     onTranscript: (text: string) => void,
     onAutoStop: () => void,
+    onTranscriptError?: () => void,
   ): Promise<void> {
     if (!Audio) {
       console.warn('[EmergencyAlert] expo-av unavailable — cannot record');
@@ -201,6 +203,7 @@ class EmergencyAlertService {
 
     this.isActive = true;
     this.onTranscriptChunk = onTranscript;
+    this.onTranscriptError = onTranscriptError || null;
     await this.startNewRecording();
 
     console.log('[EmergencyAlert] Recording started (rotation mode)');
@@ -270,6 +273,7 @@ class EmergencyAlertService {
     }
 
     this.onTranscriptChunk = null;
+    this.onTranscriptError = null;
 
     if (Audio) {
       await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
@@ -286,9 +290,10 @@ class EmergencyAlertService {
    *      Reading a live recording returns corrupted data that Whisper cannot process.
    */
   private async transcribeChunk(uri: string): Promise<void> {
-    // Capture callback immediately — stopRecording() sets this.onTranscriptChunk to null
-    // and we must not call it after the recording session has ended.
+    // Capture callbacks immediately — stopRecording() nulls them out and we
+    // must not invoke them after the recording session has ended.
     const onChunk = this.onTranscriptChunk;
+    const onError = this.onTranscriptError;
     if (!onChunk) return;
     try {
       if (!FileSystem) return;
@@ -306,6 +311,7 @@ class EmergencyAlertService {
 
       if (error) {
         console.warn('[EmergencyAlert] Transcription error:', error);
+        onError?.();
         return;
       }
 
@@ -315,6 +321,7 @@ class EmergencyAlertService {
       }
     } catch (err) {
       console.warn('[EmergencyAlert] Chunk transcription failed:', err);
+      onError?.();
     }
   }
 
