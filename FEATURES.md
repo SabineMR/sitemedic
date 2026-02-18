@@ -2,12 +2,47 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Phase 27: Branding — Web Portal — BrandingProvider, CSS custom properties, portal rebrand)
+**Last Updated**: 2026-02-18 (Profit Split Dashboard — Platform Admin combined ASG + SiteMedic profit view)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
 
-## Recent Updates — Phase 27: Branding — Web Portal (2026-02-18)
+## Recent Updates — Profit Split Dashboard (2026-02-18)
+
+### Platform Admin Profit Split Dashboard (`/platform/profit-split`)
+
+New platform-admin-only dashboard showing combined profit from both ASG medic bookings and SiteMedic software subscriptions, with a 4-way equal split (Sabine / Kai / Operational / Reserve).
+
+**New Files:**
+
+| File | Purpose |
+|------|---------|
+| `web/lib/queries/platform/profit-split.ts` | Data fetching hook — aggregates completed bookings (gross, medic pay, referrals, mileage) across all orgs; counts active subscription tiers with Stripe fee deductions; computes 4-way split for each revenue stream |
+| `web/app/platform/profit-split/page.tsx` | Dashboard page — summary cards, 2x2 partner grid with source-labeled breakdown, ASG cost breakdown, SiteMedic subscription breakdown |
+
+**Modified Files:**
+
+| File | Change |
+|------|--------|
+| `web/app/platform/layout.tsx` | Added `PieChart` icon import; added "Profit Split" nav item after "Revenue" in platform sidebar |
+
+**Key Features:**
+- **Two revenue streams**: ASG booking profit (completed bookings across all orgs) + SiteMedic subscription profit (active org tiers × monthly pricing)
+- **ASG cost deductions**: Medic pay, referral commissions, mileage reimbursements — then 4-way split on net
+- **SiteMedic cost deductions**: Stripe fees (2.9% + £0.30/subscription) — then 4-way split on net
+- **Partner cards**: Each of the 4 recipients shows total amount with source labels (£X from ASG + £Y from SiteMedic = £Z total)
+- **Dual pay model support**: Hourly model bookings use pre-calculated `sabine_share`/`kai_share`/`operational_bucket_amount`/`reserve_bucket_amount` columns; percentage model bookings calculate split from `platform_fee` minus deductions
+- **Time range filter**: 4 weeks / 12 weeks / 52 weeks — filters ASG booking data; subscription data is always current snapshot
+- **Subscription tier pricing**: Defined as constants (Starter £49, Growth £149, Enterprise £349/mo) — no DB changes required
+- **React Query polling**: 60s refresh interval, 30s stale time (matches existing platform revenue pattern)
+- **No database changes**: Reads from existing `bookings` and `organizations` tables only
+
+**Platform Sidebar Nav Order (updated):**
+1. Dashboard → 2. Organizations → 3. Revenue → 4. **Profit Split** → 5. Analytics → 6. Users → 7. Settings
+
+---
+
+## Previous Updates — Phase 27: Branding — Web Portal (2026-02-18)
 
 ### White-label branding applied to web portal
 

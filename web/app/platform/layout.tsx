@@ -17,6 +17,7 @@ import {
   Building2,
   TrendingUp,
   BarChart3,
+  PieChart,
   Settings,
   Users,
   Shield,
@@ -110,6 +111,11 @@ export default function PlatformLayout({ children }: PlatformLayoutProps) {
       name: 'Revenue',
       href: '/platform/revenue',
       icon: <TrendingUp className="w-5 h-5" />,
+    },
+    {
+      name: 'Profit Split',
+      href: '/platform/profit-split',
+      icon: <PieChart className="w-5 h-5" />,
     },
     {
       name: 'Analytics',
