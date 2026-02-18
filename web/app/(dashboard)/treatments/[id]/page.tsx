@@ -131,7 +131,7 @@ export default async function TreatmentDetailPage({
               treatment.vertical_extra_fields &&
               typeof treatment.vertical_extra_fields === 'object' &&
               'venue_name' in treatment.vertical_extra_fields &&
-              treatment.vertical_extra_fields.venue_name && (
+              !!treatment.vertical_extra_fields.venue_name && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Venue</p>
                   <p>{String(treatment.vertical_extra_fields.venue_name)}</p>
@@ -141,7 +141,7 @@ export default async function TreatmentDetailPage({
               treatment.vertical_extra_fields &&
               typeof treatment.vertical_extra_fields === 'object' &&
               'site_name' in treatment.vertical_extra_fields &&
-              treatment.vertical_extra_fields.site_name && (
+              !!treatment.vertical_extra_fields.site_name && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Site</p>
                   <p>{String(treatment.vertical_extra_fields.site_name)}</p>

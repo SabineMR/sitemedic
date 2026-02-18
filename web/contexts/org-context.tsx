@@ -25,7 +25,8 @@ export type UserRole = 'medic' | 'site_manager' | 'org_admin' | 'platform_admin'
 export type VerticalId =
   | 'construction' | 'tv_film' | 'motorsport' | 'festivals'
   | 'sporting_events' | 'fairs_shows' | 'corporate'
-  | 'private_events' | 'education' | 'outdoor_adventure';
+  | 'private_events' | 'education' | 'outdoor_adventure'
+  | 'general';
 
 /**
  * Organization context value shape

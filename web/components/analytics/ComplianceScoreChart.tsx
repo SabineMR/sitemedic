@@ -67,7 +67,7 @@ export function ComplianceScoreChart() {
             borderRadius: '8px',
             color: '#F3F4F6',
           }}
-          formatter={(value: number) => [`${value}`, 'Score']}
+          formatter={(value: number | undefined) => [`${value ?? ''}`, 'Score']}
           labelStyle={{ color: '#D1D5DB' }}
         />
         {/* Amber threshold */}

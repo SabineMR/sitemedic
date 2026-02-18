@@ -117,6 +117,14 @@ const LABEL_MAP: Record<VerticalId, OrgLabels> = {
     eventTerm:      'Booking',
     primaryVertical: 'construction',
   },
+  general: {
+    personSingular: 'Attendee',
+    personPlural:   'Attendees',
+    locationTerm:   'Venue',
+    periodTerm:     'Day',
+    eventTerm:      'Event',
+    primaryVertical: 'general',
+  },
 };
 
 /** Priority order when an org has multiple verticals */
