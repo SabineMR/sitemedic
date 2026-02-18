@@ -96,6 +96,26 @@ export const treatmentColumns: ColumnDef<TreatmentWithWorker>[] = [
     },
   },
   {
+    id: 'motorsport_clearance',
+    header: 'Clearance',
+    cell: ({ row }) => {
+      const vertical = row.original.event_vertical;
+      const extraFields = row.original.vertical_extra_fields as Record<string, unknown> | null;
+      if (vertical !== 'motorsport' || !extraFields) return null;
+      if (
+        extraFields.concussion_suspected === true &&
+        extraFields.competitor_cleared_to_return !== true
+      ) {
+        return (
+          <Badge variant="destructive" className="text-xs whitespace-nowrap">
+            Concussion clearance required
+          </Badge>
+        );
+      }
+      return null;
+    },
+  },
+  {
     id: 'actions',
     header: 'Actions',
     cell: ({ row }) => {

@@ -15,6 +15,8 @@ import {
   Loader2, ClipboardList, Tag, Phone,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
+import { Button } from '@/components/ui/button';
 import { useOrg } from '@/contexts/org-context';
 import BookingBriefForm from '@/components/bookings/booking-brief-form';
 import { VERTICAL_LABELS } from '@/lib/booking/vertical-requirements';
@@ -79,6 +81,7 @@ export default function BookingDetailPage() {
 
   const [detail, setDetail] = useState<BookingDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(false);
 
   useEffect(() => {
     async function fetchBooking() {
@@ -95,6 +98,26 @@ export default function BookingDetailPage() {
     }
     fetchBooking();
   }, [bookingId]);
+
+  const handleGenerateStatsSheet = async () => {
+    setStatsLoading(true);
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.functions.invoke('motorsport-stats-sheet-generator', {
+        body: { booking_id: bookingId },
+      });
+      if (error) throw error;
+      if (data?.signed_url) {
+        window.open(data.signed_url, '_blank');
+        toast.success('Medical Statistics Sheet generated');
+      }
+    } catch (err: unknown) {
+      toast.error('Failed to generate Medical Statistics Sheet');
+      console.error('Stats sheet error:', err);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
 
   // Resolve the vertical: booking.event_vertical → org primary → 'general'
   const resolvedVertical =
@@ -268,6 +291,30 @@ export default function BookingDetailPage() {
                 {booking.special_notes}
               </p>
             )}
+          </div>
+        )}
+
+        {/* ── Motorsport Stats Sheet ───────────────────────────────────────── */}
+        {detail?.booking.event_vertical === 'motorsport' && (
+          <div className="flex">
+            <Button
+              onClick={handleGenerateStatsSheet}
+              disabled={statsLoading}
+              variant="outline"
+              className="mt-0"
+            >
+              {statsLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <ClipboardList className="h-4 w-4 mr-2" />
+                  Generate Medical Statistics Sheet
+                </>
+              )}
+            </Button>
           </div>
         )}
 
