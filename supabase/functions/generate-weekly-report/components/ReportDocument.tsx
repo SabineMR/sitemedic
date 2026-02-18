@@ -6,6 +6,7 @@
 import { Document, Page } from 'npm:@react-pdf/renderer@4.3.2';
 import { styles } from '../styles.ts';
 import type { WeeklyReportData } from '../types.ts';
+import type { OrgBranding } from '../../_shared/branding-helpers.ts';
 
 import { Header } from './Header.tsx';
 import { ComplianceSummary } from './ComplianceSummary.tsx';
@@ -16,9 +17,11 @@ import { Footer } from './Footer.tsx';
 
 interface ReportDocumentProps {
   data: WeeklyReportData;
+  branding: OrgBranding;
+  logoSrc?: string | null;
 }
 
-export function ReportDocument({ data }: ReportDocumentProps) {
+export function ReportDocument({ data, branding, logoSrc }: ReportDocumentProps) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -28,6 +31,8 @@ export function ReportDocument({ data }: ReportDocumentProps) {
           weekEnding={data.weekEnding}
           medicName={data.medicName}
           generatedAt={data.generatedAt}
+          branding={branding}
+          logoSrc={logoSrc}
         />
 
         {/* Compliance summary with traffic light and weekly stats */}
@@ -50,7 +55,7 @@ export function ReportDocument({ data }: ReportDocumentProps) {
         />
 
         {/* Page footer with page numbers and generation date */}
-        <Footer projectName={data.projectName} />
+        <Footer projectName={data.projectName} branding={branding} />
       </Page>
     </Document>
   );

@@ -16,6 +16,7 @@ import { ReportDocument } from './components/ReportDocument.tsx';
 import { fetchWeeklyReportData } from './queries.ts';
 import { uploadReportPDF, saveReportMetadata } from './storage.ts';
 import { sendReportEmail } from './email.ts';
+import { fetchOrgBranding, fetchLogoAsDataUri } from '../_shared/branding-helpers.ts';
 
 // CORS headers for dashboard access
 const corsHeaders = {
@@ -160,6 +161,14 @@ Deno.serve(async (req: Request) => {
       orgId = org.id;
     }
 
+    // Fetch org branding for PDF header/footer
+    const branding = await fetchOrgBranding(supabase, orgId);
+    let logoSrc = branding.logo_url;
+    if (logoSrc) {
+      const dataUri = await fetchLogoAsDataUri(logoSrc);
+      if (dataUri) logoSrc = dataUri;
+    }
+
     // Fetch all report data from Supabase
     console.log('🔍 Fetching report data...');
     const reportData = await fetchWeeklyReportData(supabase, weekEnding);
@@ -205,7 +214,7 @@ Deno.serve(async (req: Request) => {
 
     // Generate PDF buffer using React-PDF
     console.log('📝 Rendering PDF...');
-    const pdfBuffer = await renderToBuffer(<ReportDocument data={reportData} />);
+    const pdfBuffer = await renderToBuffer(<ReportDocument data={reportData} branding={branding} logoSrc={logoSrc} />);
 
     console.log(`✅ PDF generated successfully (${pdfBuffer.length} bytes)`);
 
