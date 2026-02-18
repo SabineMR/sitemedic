@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-18)
 ## Current Position
 
 Phase: 24 of 31 (DB Foundation — in progress)
-Plan: 3 of 5 in Phase 24
-Status: In progress — 24-01, 24-02, 24-03 complete; 24-04, 24-05 remaining
-Last activity: 2026-02-18 — Completed 24-03-PLAN.md (migration 133: subscription columns on organizations)
+Plan: 4 of 5 in Phase 24
+Status: In progress — 24-01, 24-02, 24-03, 24-04 complete; 24-05 remaining
+Last activity: 2026-02-18 — Completed 24-04-PLAN.md (migration 134: public org-logos storage bucket, 7 RLS policies)
 
-Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [█░░░░░░░░░] v3.0 ~10% (Phase 24: 3/5 plans done)
+Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [█░░░░░░░░░] v3.0 ~13% (Phase 24: 4/5 plans done)
 
 ## Performance Metrics
 
@@ -32,7 +32,7 @@ Progress: [██████████] v1.0 complete | [██████�
 | 18–23 (v2.0) | 30/30 | ~22 min | ~1.8 min |
 
 **Recent Trend:**
-- Last plan: 24-03 — migration 133_subscription_columns.sql; 4 columns + backfill on organizations (~1 min)
+- Last plan: 24-04 — migration 134_org_logos_bucket.sql; public bucket + 7 org-scoped RLS policies (~1 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -54,6 +54,9 @@ Progress: [██████████] v1.0 complete | [██████�
 - **24-03:** Apex identified by slug = 'apex' for backfill; second UPDATE uses AND subscription_tier IS NULL for idempotency
 - **24-03:** No new RLS policies needed — migration 102 FOR ALL + migration 00004 SELECT cover the new columns automatically
 - **24-03:** Tier values: 'starter' | 'growth' | 'enterprise'; Status values: 'active' | 'past_due' | 'cancelled'
+- **24-04:** Public bucket chosen for org-logos — logos in PDFs/emails need stable URLs; signed URLs expire mid-render
+- **24-04:** Separate platform admin policies (no folder check) — platform admin org_id is NULL in JWT; folder check would always block them
+- **24-04:** 1-indexed Postgres array: (storage.foldername(name))[1] — NOT [0]; [0] returns NULL
 
 ### Pending Todos
 
@@ -69,5 +72,5 @@ Progress: [██████████] v1.0 complete | [██████�
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 24-03-PLAN.md — migration 133_subscription_columns.sql committed (ab3c1b9)
+Stopped at: Completed 24-04-PLAN.md — migration 134_org_logos_bucket.sql committed (96a8d20)
 Resume file: None
