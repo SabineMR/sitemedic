@@ -2,8 +2,53 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Phase 19-05: RIDDOR UI gate fix — motorsport and all non-RIDDOR verticals now correctly suppressed in mobile form banner and web dashboard badge; Phase 19 Motorsport Vertical complete)
+**Last Updated**: 2026-02-18 (Phase 23-02: Analytics — Near-Miss Heat Map with CircleMarker Leaflet map, severity colour-coding, AnalyticsSubNav tab bar, Analytics sidebar link)
 **Audience**: Web developers, technical reviewers, product team
+
+---
+
+## Recent Updates — Analytics: Near-Miss Heat Map (2026-02-18)
+
+### Phase 23-02: Near-Miss Geographic Heat Map ✅
+
+Site managers can now view a geographic map of near-miss incidents from the dashboard sidebar under **Analytics**.
+
+**Dashboard Navigation:**
+- New **Analytics** sidebar nav item (BarChart3 icon) at `/analytics/heat-map`
+- Active state highlights across all `/analytics/*` sub-pages
+- File: `web/components/dashboard/DashboardNav.tsx`
+
+**`NearMissHeatMap` Component (`web/components/analytics/NearMissHeatMap.tsx`):**
+- CircleMarker-based Leaflet map (no leaflet.heat dependency — uses react-leaflet 5.0.0 already installed)
+- Severity colour coding: low=blue (#3B82F6), medium=amber (#F59E0B), high=red (#EF4444), critical=purple (#7C3AED)
+- Severity radius scaling: low=6px, medium=10px, high=14px, critical=18px radius
+- Each marker has a Popup: category (bold), severity, description (truncated at 120 chars), date (en-GB locale)
+- MapBoundsAdjuster sub-component auto-fits UK bounds when data present; defaults to centre UK (54.0, -2.5) zoom 6
+- Severity legend: absolute-positioned bottom-right, dark background, four severity levels with colour swatches
+- Loading state: pulse skeleton `h-[500px]`
+- Empty state: centred message when no GPS data recorded
+- SSR-safe: must be imported via `dynamic({ ssr: false })`
+
+**`useNearMissGeoData` Hook (`web/lib/queries/analytics/near-miss-geo.ts`):**
+- TanStack Query hook; queryKey `['near-miss-geo']`
+- Selects: `id, gps_lat, gps_lng, severity, category, description, created_at` from `near_misses`
+- Filters: `gps_lat IS NOT NULL`, `gps_lng IS NOT NULL`, `deleted_at IS NULL`
+- Order: `created_at DESC`, limit 500
+- staleTime: 5 minutes
+- RLS handles org-level access — no explicit `org_id` WHERE clause
+
+**`AnalyticsSubNav` Component (`web/components/analytics/AnalyticsSubNav.tsx`):**
+- Shared tab bar for analytics pages
+- Two tabs: "Heat Map" → `/analytics/heat-map`, "Compliance Trends" → `/analytics/compliance`
+- Active tab: `bg-gray-700 text-white font-medium` styling; inactive: `text-gray-400 hover:text-white hover:bg-gray-800`
+- Named export `AnalyticsSubNav`
+
+**Heat Map Page (`web/app/(dashboard)/analytics/heat-map/page.tsx`):**
+- Dashboard page at `/analytics/heat-map`
+- Dynamic import of NearMissHeatMap with `ssr: false`; loading skeleton `h-[500px] bg-gray-900 rounded-xl animate-pulse`
+- Page header: "Near-Miss Heat Map" + subtitle
+- AnalyticsSubNav rendered below header
+- Map container: `h-[500px] rounded-xl overflow-hidden`
 
 ---
 

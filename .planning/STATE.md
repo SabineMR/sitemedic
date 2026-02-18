@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 23: Analytics — Heat Maps & Trend Charts (in progress, plan 23-01 complete)
+**Current focus:** v2.0 Multi-Vertical Platform Expansion — Phase 23: Analytics — Heat Maps & Trend Charts (in progress, plan 23-02 complete)
 
 ## Current Position
 
-Phase: 23 of 23 (Analytics — Heat Maps & Trend Charts) — In progress (1/5 plans)
-Plan: 23-01 complete (compliance score history writer + migration 130)
-Status: In progress — compliance_score_history now populated on every weekly report run
-Last activity: 2026-02-18 — Completed 23-01-PLAN.md: migration 130 (UNIQUE index + platform admin RLS) + generate-weekly-report compliance score upsert
+Phase: 23 of 23 (Analytics — Heat Maps & Trend Charts) — In progress (2/5 plans)
+Plan: 23-02 complete (near-miss heat map: NearMissHeatMap + useNearMissGeoData + AnalyticsSubNav + heat-map page + DashboardNav Analytics link)
+Status: In progress — heat map at /analytics/heat-map live; Analytics link in dashboard sidebar
+Last activity: 2026-02-18 — Completed 23-02-PLAN.md: CircleMarker heat map, geo query hook, sub-nav, page, DashboardNav update
 
-Progress: [██████████] v1.1 complete | [█████████░] v2.0 23/27 plans (Phase 18 + 18.5 + 19-01…05 + 20-01…04 + 21 + 22-01…05 + 23-01 complete)
+Progress: [██████████] v1.1 complete | [█████████░] v2.0 24/27 plans (Phase 18 + 18.5 + 19-01…05 + 20-01…04 + 21 + 22-01…05 + 23-01 + 23-02 complete)
 
 ## Performance Metrics
 
@@ -29,11 +29,11 @@ Progress: [██████████] v1.1 complete | [██████�
 |-------|-------|-------|----------|
 | 01–07.5 (v1.0) | 84/84 | ~5.5 hrs | ~4 min |
 | 08–17 (v1.1) | 35/35 | ~2.4 hrs | ~4.1 min |
-| 18–23 (v2.0) | 11/25 | ~20 min | ~1.8 min |
+| 18–23 (v2.0) | 12/25 | ~22 min | ~1.8 min |
 
 **Recent Trend:**
-- Last plan: 23-01 — compliance_score_history writer: migration 130 (UNIQUE index + platform admin RLS) + generate-weekly-report upsert (formula v1, 0-100) (~1 min)
-- Phase 23 plan 23-01: data foundation for trend charts — compliance_score_history now populated on every weekly run
+- Last plan: 23-02 — near-miss heat map: NearMissHeatMap (CircleMarker, severity colour/scale, legend), useNearMissGeoData hook, AnalyticsSubNav, heat-map page, DashboardNav Analytics link (~2 min)
+- Phase 23 plan 23-02: front-end analytics UI foundation — site managers can now see where near-misses are clustering geographically
 - Trend: Stable — consistent 1–8 min for vertical surgical additions
 
 *Updated after each plan completion*
@@ -105,6 +105,10 @@ Key decisions affecting v2.0:
 - 22-05: FAIncidentReportCard mirrors EventIncidentReportCard exactly — same useMutation, Card/Button layout, onSuccess opens signed_url; gap closure Truth 5 satisfied
 - 23-01: compliance_score_history writer: formula v1 = 100 - 40 (no daily check) - 30 (RIDDOR deadline) - 20 (overdue followup) - 10 (expired cert); formula_version stored in details JSONB not as column (table has no formula_version column); vertical='general' as NOT NULL sentinel for org-wide compliance; non-blocking upsert (failure logs, PDF continues); onConflict='org_id,vertical,period_start' matches UNIQUE INDEX from migration 130
 - 23-01: migration 130 drops compliance_score_history_period_idx (non-unique from migration 124) before creating compliance_score_history_period_unique UNIQUE INDEX — drop required because UNIQUE INDEX cannot coexist with plain index on same columns without conflict
+- 23-02: NearMissHeatMap fetches its own data internally via useNearMissGeoData — no data props needed; page stays clean
+- 23-02: DashboardNav isActive for /analytics/heat-map href checks pathname?.startsWith('/analytics') — entire analytics section stays highlighted regardless of sub-page
+- 23-02: AnalyticsSubNav uses pathname?.includes(tab.href) for active detection — works for exact and prefix matches
+- 23-02: Severity config (radius + color) as Record<severity, value> maps — TypeScript enforces all four severity levels; easy to update thresholds without structural change
 
 ### Research Flags (Phase-Blocking)
 
@@ -122,6 +126,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T05:25:42Z
-Stopped at: Completed 23-01-PLAN.md (compliance_score_history writer — migration 130 UNIQUE index + platform admin RLS + generate-weekly-report upsert; formula v1 frozen; data foundation ready for 23-04 and 23-05)
+Last session: 2026-02-18T05:27:31Z
+Stopped at: Completed 23-02-PLAN.md (near-miss heat map — NearMissHeatMap CircleMarker component, useNearMissGeoData hook, AnalyticsSubNav tab nav, /analytics/heat-map page, DashboardNav Analytics link; heat map live at /analytics/heat-map)
 Resume file: None
