@@ -71,6 +71,7 @@ Key decisions affecting v2.0:
 - 21-02: CSCS + IPAF removed from tv_film VERTICAL_CERT_TYPES ordering only — remain in master CERT_TYPES arrays
 - 21-02: FILM-04 confirmed — incident-report-dispatcher.ts already routes tv_film to riddor-f2508-generator; no code change needed
 - 22-02: FOOT-04 confirmed — 'sporting_events' is in NON_RIDDOR_VERTICALS at index.ts:78; KNOWN_NON_RIDDOR_VERTICALS literal used in test.ts (cannot import local const from serve() handler; grep verify catches drift)
+- 22-04: Football cert types use 'sporting_events' CertCategory (new union member) — not 'medical' or 'events'; ATMMiF leads VERTICAL_CERT_TYPES sporting_events list; locationTerm is 'Pitch / Ground' (not Stadium); eventTerm is 'Club' (not Event)
 - 19-02: Motorsport UK Medical Official Licence and BASM Diploma use 'motorsport' category — Motorsport UK Official Licence is administrative registration (not clinical); BASM Diploma is sport medicine diploma with motorsport-specific relevance
 - 19-02: vertical_extra_fields typed as Record<string, unknown> | null in web/types/database.types.ts (not string | null) — web layer parses JSON before type use; mobile WatermelonDB uses @text raw string per 18-01 decision
 - 19-02: All three Phase 18 Treatment columns (booking_id, event_vertical, vertical_extra_fields) added together to database.types.ts — one cohesive Phase 18 schema column set; TreatmentWithWorker inherits via extends Treatment
@@ -92,6 +93,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T04:14:13Z
-Stopped at: Completed 20-01-PLAN.md — Festival form fields (FEST-01/02): triage priority, alcohol/substance + safeguarding flags, disposition picker, RIDDOR suppression
+Last session: 2026-02-18T04:14:10Z (22-04) / 2026-02-18T04:14:13Z (20-01)
+Stopped at: Completed 22-04-PLAN.md (football terminology + cert types) and 20-01-PLAN.md (festival form fields) — parallel sessions
 Resume file: None
