@@ -1,19 +1,24 @@
 /**
  * Motorsport Incident Generator Edge Function
- * Phase 18: Vertical Infrastructure
- * Phase 19+: Full PDF implementation
+ * Phase 18: Vertical Infrastructure — initial 501 stub
+ * Phase 19: Full Motorsport UK Accident Form PDF implementation
  *
- * Purpose: Generate Motorsport UK Accident Form PDF for motorsport verticals.
- * Currently a stub — returns 501 Not Implemented until Phase 19+ PDF work.
+ * Purpose: Generate a pre-filled Motorsport UK Accident Form PDF from
+ * treatment data. Stores PDF in Supabase Storage (motorsport-reports bucket)
+ * and returns a signed URL for download.
  *
- * Note: Obtain physical Motorsport UK Accident Form from Incident Pack V8.0
- * before implementing PDF template (Phase 19 research flag).
+ * DRAFT: PDF fields are inferred from MOTO-01 requirements. A DRAFT
+ * watermark is applied until the form is validated against the official
+ * Motorsport UK Incident Pack V8.0.
  *
  * Authentication: Service role key or user JWT
  */
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import type { MotorsportIncidentData } from './types.ts';
+import { renderToBuffer } from 'npm:@react-pdf/renderer@4.3.2';
+import { MotorsportIncidentDocument } from './MotorsportIncidentDocument.tsx';
+import { mapTreatmentToMotorsportForm } from './motorsport-mapping.ts';
+import type { MotorsportIncidentRequest } from './types.ts';
 
 // CORS headers for dashboard access
 const corsHeaders = {
@@ -28,8 +33,9 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const body = await req.json() as Partial<MotorsportIncidentData>;
+    const body = await req.json() as Partial<MotorsportIncidentRequest>;
 
+    // Validate required fields
     if (!body.incident_id) {
       return new Response(
         JSON.stringify({ error: 'incident_id is required' }),
@@ -46,15 +52,110 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Phase 19+: Motorsport UK Accident Form PDF generation will be implemented here.
+    const { incident_id } = body;
+
+    // Create Supabase client with service role key
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    console.log(`Generating Motorsport UK Accident Form for treatment: ${incident_id}`);
+
+    // Fetch treatment with joined worker (medic) and organisation data
+    const { data: treatment, error: fetchError } = await supabase
+      .from('treatments')
+      .select(`
+        id,
+        injury_type,
+        body_part,
+        severity,
+        mechanism_of_injury,
+        treatment_types,
+        outcome,
+        created_at,
+        reference_number,
+        vertical_extra_fields,
+        worker:workers(first_name, last_name, role, company),
+        org:organizations(company_name, site_address)
+      `)
+      .eq('id', incident_id)
+      .single();
+
+    if (fetchError || !treatment) {
+      console.error('Error fetching treatment:', fetchError);
+      return new Response(
+        JSON.stringify({ error: 'Treatment not found' }),
+        { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    // Parse vertical_extra_fields JSONB safely
+    // Mobile WatermelonDB stores this as a raw JSON string (@text column type, Phase 18-01 decision).
+    // Supabase returns it as-is — parse defensively.
+    let extraFields: Record<string, unknown> | null = null;
+    try {
+      const raw = treatment.vertical_extra_fields;
+      if (typeof raw === 'string' && raw.length > 0) {
+        extraFields = JSON.parse(raw);
+      } else if (raw && typeof raw === 'object') {
+        extraFields = raw as Record<string, unknown>;
+      }
+    } catch (parseError) {
+      console.warn('Failed to parse vertical_extra_fields, proceeding with null:', parseError);
+      extraFields = null;
+    }
+
+    // Map to MotorsportFormData
+    const formData = mapTreatmentToMotorsportForm(
+      treatment,
+      treatment.worker as { first_name?: string; last_name?: string; role?: string; company?: string } | null,
+      treatment.org as { company_name?: string; site_address?: string } | null,
+      extraFields as Record<string, unknown> | null,
+    );
+
+    console.log('Motorsport form data mapped, generating PDF...');
+
+    // Render PDF
+    const pdfBuffer = await renderToBuffer(
+      <MotorsportIncidentDocument data={formData} />
+    );
+
+    console.log(`PDF generated (${pdfBuffer.byteLength} bytes), uploading to motorsport-reports...`);
+
+    // Upload to Supabase Storage
+    const fileName = `${incident_id}/MotorsportAccidentForm-${Date.now()}.pdf`;
+    const { error: uploadError } = await supabase.storage
+      .from('motorsport-reports')
+      .upload(fileName, pdfBuffer, {
+        contentType: 'application/pdf',
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to store PDF' }),
+        { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    console.log(`PDF uploaded to motorsport-reports: ${fileName}`);
+
+    // Generate signed URL (7-day expiry)
+    const { data: signedUrlData } = await supabase.storage
+      .from('motorsport-reports')
+      .createSignedUrl(fileName, 604800); // 604800 seconds = 7 days
+
+    console.log('Motorsport incident PDF generation complete');
+
     return new Response(
       JSON.stringify({
-        error: 'Not Implemented',
-        message: 'Motorsport incident PDF generation is not yet available. Scheduled for Phase 19+.',
-        incident_id: body.incident_id,
-        event_vertical: body.event_vertical,
+        success: true,
+        pdf_path: fileName,
+        signed_url: signedUrlData?.signedUrl,
       }),
-      { status: 501, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      { headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   } catch (error) {
     console.error('Motorsport incident generator error:', error);
