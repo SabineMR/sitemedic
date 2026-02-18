@@ -352,6 +352,50 @@ Multi-site days are handled efficiently: the daily mileage router (`routeDailyMi
 
 ---
 
+## Recent Updates — SOS Transcription Fixes (2026-02-18)
+
+### SOS Flow & AI Transcription — Bug Fixes ✅
+
+Full audit and repair of the Emergency SOS recording and Whisper transcription pipeline. The feature now works end-to-end: recording auto-starts on confirm, live transcript updates every 8 seconds, silent chunks are discarded, and Whisper hallucinations ("Thanks for watching!", "Silence.") are filtered out.
+
+#### `components/ui/SOSModal.tsx`
+
+| Fix | Detail |
+|-----|--------|
+| **Auto-record on open** | `useEffect` now calls `startRecording()` immediately when the modal opens. The "Choose Alert Type" step has been removed entirely — the medic goes straight to recording the moment SOS is confirmed. |
+| **Contact banner added** | The recording screen now shows who will receive the alert (name + phone from Settings) at the top, so the medic has confidence before speaking. |
+| **"Type a message instead" fallback** | A subtle link at the bottom of the recording screen lets the medic switch to the text input if they can't speak. |
+| **Stale `audioUri` state bug** | `messageType` was determined by the `audioUri` React state variable which could still be `null` due to batching immediately after `stopRecording()`. Fixed to use `audioUriRef.current` (always synchronous). |
+| **Reset state** | `resetState()` now resets `step` to `'record'` (not the removed `'choose'`) to avoid a flash of wrong UI on re-open. |
+| **Dead code removed** | Removed the unreachable `if (step !== 'sending')` block from `handleSend()`. |
+
+#### `services/EmergencyAlertService.ts`
+
+| Fix | Detail |
+|-----|--------|
+| **Race condition in `transcribeChunk`** | `this.onTranscriptChunk` was checked at the top of the function but called after two `await`s — `stopRecording()` could null it out in between, causing a crash. Fixed by capturing it in a local `const onChunk` before any awaits. |
+| **`FileSystem.EncodingType.Base64` crash** | `expo-file-system`'s `EncodingType` enum is `undefined` when the package is loaded via lazy `require()`. Replaced both usages with the string literal `'base64'`. |
+| **Wrong `expo-file-system` import path** | `expo-file-system` v54 deprecated `readAsStringAsync` on the main export. Updated lazy require to `expo-file-system/legacy` which still exposes the full legacy API. |
+| **Final chunk never transcribed** | `stopRecording()` returned the final audio URI but never sent it to Whisper. Short recordings (under one rotation interval) produced no transcript at all. Fixed: `transcribeChunk(uri)` is now called on the final segment before clearing the callback. |
+| **Rotation interval** | Increased from 5s → 8s. 5s caused a noticeable stop/restart gap every few seconds; 8s is a better balance between live feedback frequency and recording continuity. |
+| **React Strict Mode double-start** | `useEffect` fires twice in development (React Strict Mode), triggering `startRecording()` twice. The second call now silently returns instead of logging a console warning. |
+
+#### `supabase/functions/send-emergency-sms/index.ts`
+
+| Fix | Detail |
+|-----|--------|
+| **Whisper hallucinations ("Thanks for watching!")** | Whisper hallucinates common YouTube phrases when given near-silence. Fixed by (1) adding a `prompt` field biasing Whisper toward medical/emergency vocabulary, and (2) using `response_format: 'verbose_json'` to get per-segment `no_speech_prob` — chunks where the average `no_speech_prob > 0.6` are silently discarded. |
+| **"Silence." token in transcript** | Whisper outputs the word "Silence." literally for quiet sections that pass the speech threshold. Post-processing now strips known silence tokens (`Silence.`, `[BLANK_AUDIO]`, `(silence)`, `...`) from the returned transcript. |
+
+#### Environment / Config
+
+| File | Change |
+|------|--------|
+| `supabase/functions/.env` | Updated `OPENAI_API_KEY` with active key. |
+| `.env` | Added `OPENAI_API_KEY` entry with comment pointing to edge function usage. |
+
+---
+
 ## Recent Updates — Emergency SOS Alert System (2026-02-17)
 
 ### Emergency SOS Alert System ✅

@@ -228,6 +228,11 @@ async function transcribeAudio(audioBase64: string, mimeType = 'audio/m4a'): Pro
     formData.append('file', new Blob([bytes], { type: mimeType }), 'audio.m4a');
     formData.append('model', 'whisper-1');
     formData.append('language', 'en');
+    // Context prompt reduces hallucinations — Whisper uses it to bias towards
+    // medical/emergency vocabulary instead of YouTube-style filler phrases.
+    formData.append('prompt', 'Emergency medical situation. Site medic speaking.');
+    // verbose_json gives us per-segment no_speech_prob so we can discard silence.
+    formData.append('response_format', 'verbose_json');
 
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
@@ -244,7 +249,29 @@ async function transcribeAudio(audioBase64: string, mimeType = 'audio/m4a'): Pro
     }
 
     const result = await response.json();
-    return result.text || '';
+
+    // Filter out hallucinations: if the average no_speech_prob across segments
+    // is above 0.6, the chunk was mostly silence — discard it.
+    if (result.segments && result.segments.length > 0) {
+      const avgNoSpeech =
+        result.segments.reduce((sum: number, s: any) => sum + (s.no_speech_prob ?? 0), 0) /
+        result.segments.length;
+      if (avgNoSpeech > 0.6) {
+        console.log('[Whisper] Discarding silent chunk, no_speech_prob:', avgNoSpeech.toFixed(2));
+        return '';
+      }
+    }
+
+    // Strip known Whisper silence/filler tokens before returning.
+    const cleaned = (result.text || '')
+      .replace(/\bSilence\.?\b/gi, '')
+      .replace(/\[BLANK_AUDIO\]/gi, '')
+      .replace(/\(silence\)/gi, '')
+      .replace(/\.{3,}/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+
+    return cleaned;
   } catch (err) {
     console.error('[Whisper] Error:', err);
     return '';

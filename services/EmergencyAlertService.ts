@@ -26,12 +26,12 @@ let FileSystem: any = null;
 
 try { Notifications = require('expo-notifications'); } catch (_) {}
 try { Audio = require('expo-av').Audio; } catch (_) {}
-try { FileSystem = require('expo-file-system'); } catch (_) {}
+try { FileSystem = require('expo-file-system/legacy'); } catch (_) {}
 
 // Notification channel for emergency alerts (Android)
 const EMERGENCY_CHANNEL_ID = 'emergency';
 const MAX_RECORDING_DURATION_MS = 90_000; // 90 seconds
-const TRANSCRIPTION_CHUNK_INTERVAL_MS = 5_000; // 5 seconds
+const TRANSCRIPTION_CHUNK_INTERVAL_MS = 8_000; // 8 seconds — balance between live feedback and stop/restart gap
 const AUDIO_BUCKET = 'emergency-recordings';
 
 export interface EmergencyContact {
@@ -190,7 +190,7 @@ class EmergencyAlertService {
       return;
     }
     if (this.isActive) {
-      console.warn('[EmergencyAlert] Recording already in progress');
+      // Can happen in React dev (Strict Mode fires effects twice) — silently ignore.
       return;
     }
 
@@ -263,6 +263,12 @@ class EmergencyAlertService {
       this.recording = null;
     }
 
+    // Transcribe the final segment before clearing the callback.
+    // This ensures short recordings (< one rotation interval) still get transcribed.
+    if (uri) {
+      this.transcribeChunk(uri); // fire-and-forget — callback captured inside
+    }
+
     this.onTranscriptChunk = null;
 
     if (Audio) {
@@ -287,7 +293,7 @@ class EmergencyAlertService {
     try {
       if (!FileSystem) return;
       const base64Audio = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: 'base64', // EncodingType enum unavailable via lazy require
       });
 
       const { data, error } = await supabase.functions.invoke('send-emergency-sms', {
@@ -329,7 +335,7 @@ class EmergencyAlertService {
 
       // Read file as base64
       const base64 = await FileSystem.readAsStringAsync(localUri, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: 'base64', // EncodingType enum unavailable via lazy require
       });
 
       // Convert to ArrayBuffer for upload
