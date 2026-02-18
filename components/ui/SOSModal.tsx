@@ -51,13 +51,14 @@ export default function SOSModal({ visible, onClose }: Props) {
   const [medicInfo, setMedicInfo] = useState<{ name: string; siteName: string; orgId: string } | null>(null);
 
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audioUriRef = useRef<string | null>(null);
   const waveAnim = useRef(new Animated.Value(0.3)).current;
 
-  // Load contacts and medic info when modal opens, then auto-start recording
+  // Load contacts and medic info when modal opens. Show the choose step first
+  // so the medic can decide between voice and text — don't auto-start recording.
   useEffect(() => {
     if (visible) {
       loadData();
-      startRecording();
     } else {
       resetState();
     }
@@ -117,6 +118,7 @@ export default function SOSModal({ visible, onClose }: Props) {
     setTranscript('');
     setTextMessage('EMERGENCY: ');
     setAudioUri(null);
+    audioUriRef.current = null;
     setErrorMessage('');
     if (countdownRef.current) clearInterval(countdownRef.current);
   };
@@ -143,9 +145,15 @@ export default function SOSModal({ visible, onClose }: Props) {
           return s - 1;
         });
       }, 1000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('[SOSModal] Failed to start recording:', error);
       setIsRecording(false);
+      setErrorMessage(
+        error?.message?.includes('permission') || error?.message?.includes('denied')
+          ? 'Microphone permission denied. Please allow microphone access in Settings and try again.'
+          : `Recording failed: ${error?.message || 'Unknown error'}`,
+      );
+      setStep('error');
     }
   };
 
@@ -157,6 +165,7 @@ export default function SOSModal({ visible, onClose }: Props) {
     setIsRecording(false);
 
     const uri = await emergencyAlertService.stopRecording();
+    audioUriRef.current = uri;
     setAudioUri(uri);
   };
 
@@ -173,13 +182,10 @@ export default function SOSModal({ visible, onClose }: Props) {
       let uploadedAudioUrl: string | undefined;
       let finalTextMessage: string | undefined;
 
-      if (step !== 'sending') {
-        // This block won't run — handled by the calling step
-      }
-
-      // Upload audio if we have it
-      if (audioUri) {
-        uploadedAudioUrl = await emergencyAlertService.uploadAudio(audioUri) || undefined;
+      // Use ref to get the URI synchronously — audioUri state may lag behind
+      const currentAudioUri = audioUriRef.current;
+      if (currentAudioUri) {
+        uploadedAudioUrl = await emergencyAlertService.uploadAudio(currentAudioUri) || undefined;
         finalTextMessage = transcript.trim() || undefined;
       } else {
         finalTextMessage = textMessage.trim();
@@ -187,7 +193,9 @@ export default function SOSModal({ visible, onClose }: Props) {
 
       await emergencyAlertService.sendAlert({
         contactId: selectedContact.id,
-        messageType: audioUri ? 'voice' : 'text',
+        // Use ref — audioUri state may still be null due to React batching when called
+        // immediately after stopRecording() sets the ref.
+        messageType: audioUriRef.current ? 'voice' : 'text',
         textMessage: finalTextMessage,
         audioUrl: uploadedAudioUrl,
         medicName: medicInfo.name,

@@ -75,10 +75,10 @@ interface SendAlertParams {
 
 class EmergencyAlertService {
   private recording: any | null = null;
-  private transcriptionInterval: ReturnType<typeof setInterval> | null = null;
+  private rotationInterval: ReturnType<typeof setInterval> | null = null;
   private stopRecordingTimeout: ReturnType<typeof setTimeout> | null = null;
   private onTranscriptChunk: ((text: string) => void) | null = null;
-  private lastChunkPosition = 0;
+  private isActive = false; // true while medic is recording (across rotations)
 
   /**
    * Request notification and microphone permissions.
@@ -159,8 +159,24 @@ class EmergencyAlertService {
   }
 
   /**
-   * Start audio recording (up to 90 seconds).
-   * Begins chunked transcription every 5 seconds.
+   * Start a single underlying Audio.Recording instance.
+   * WHY: Separated so rotation can call it without resetting isActive/timers.
+   */
+  private async startNewRecording(): Promise<void> {
+    const { recording } = await Audio.Recording.createAsync(
+      Audio.RecordingOptionsPresets.HIGH_QUALITY,
+    );
+    this.recording = recording;
+  }
+
+  /**
+   * Start audio recording (up to 90 seconds) with live transcription.
+   *
+   * Live transcription strategy — rotation:
+   *   Every 5 seconds we stop the current recording (giving us a complete,
+   *   valid .m4a file), immediately start a new one, then send the finished
+   *   chunk to Whisper in the background. This avoids the iOS limitation
+   *   where an in-progress .m4a cannot be read (MOOV atom missing until stop).
    *
    * @param onTranscript - callback called with each new transcript chunk text
    * @param onAutoStop - callback called when 90s limit is reached
@@ -173,7 +189,7 @@ class EmergencyAlertService {
       console.warn('[EmergencyAlert] expo-av unavailable — cannot record');
       return;
     }
-    if (this.recording) {
+    if (this.isActive) {
       console.warn('[EmergencyAlert] Recording already in progress');
       return;
     }
@@ -183,85 +199,97 @@ class EmergencyAlertService {
       playsInSilentModeIOS: true,
     });
 
-    const { recording } = await Audio.Recording.createAsync(
-      Audio.RecordingOptionsPresets.HIGH_QUALITY,
-    );
-
-    this.recording = recording;
+    this.isActive = true;
     this.onTranscriptChunk = onTranscript;
-    this.lastChunkPosition = 0;
+    await this.startNewRecording();
 
-    console.log('[EmergencyAlert] Recording started');
+    console.log('[EmergencyAlert] Recording started (rotation mode)');
 
     // Auto-stop at 90 seconds
-    this.stopRecordingTimeout = setTimeout(async () => {
+    this.stopRecordingTimeout = setTimeout(() => {
       console.log('[EmergencyAlert] Auto-stopping recording at 90s');
       onAutoStop();
     }, MAX_RECORDING_DURATION_MS);
 
-    // Start chunked transcription every 5 seconds
-    this.transcriptionInterval = setInterval(() => {
-      this.transcribeLatestChunk();
+    // Rotate every 5 seconds: stop → read → start new → transcribe async
+    this.rotationInterval = setInterval(async () => {
+      if (!this.isActive || !this.recording) return;
+      try {
+        // Capture the finished recording
+        const finishedRecording = this.recording;
+        this.recording = null;
+
+        await finishedRecording.stopAndUnloadAsync();
+        const uri = finishedRecording.getURI();
+
+        // Start new recording immediately so there's minimal gap
+        await this.startNewRecording();
+
+        // Send completed chunk to Whisper in background
+        if (uri) {
+          this.transcribeChunk(uri);
+        }
+      } catch (err) {
+        console.warn('[EmergencyAlert] Rotation error:', err);
+      }
     }, TRANSCRIPTION_CHUNK_INTERVAL_MS);
   }
 
   /**
-   * Stop audio recording and return the local file URI.
+   * Stop audio recording and return the local file URI of the final chunk.
    */
   async stopRecording(): Promise<string | null> {
-    if (!this.recording) {
+    if (!this.isActive) {
       console.warn('[EmergencyAlert] No recording to stop');
       return null;
     }
 
-    // Cancel auto-stop and transcription timers
+    this.isActive = false;
+
+    // Cancel timers
     if (this.stopRecordingTimeout) {
       clearTimeout(this.stopRecordingTimeout);
       this.stopRecordingTimeout = null;
     }
-    if (this.transcriptionInterval) {
-      clearInterval(this.transcriptionInterval);
-      this.transcriptionInterval = null;
+    if (this.rotationInterval) {
+      clearInterval(this.rotationInterval);
+      this.rotationInterval = null;
     }
 
-    await this.recording.stopAndUnloadAsync();
-    const uri = this.recording.getURI();
-    this.recording = null;
+    let uri: string | null = null;
+    if (this.recording) {
+      await this.recording.stopAndUnloadAsync();
+      uri = this.recording.getURI() || null;
+      this.recording = null;
+    }
+
     this.onTranscriptChunk = null;
 
-    // Reset audio mode
     if (Audio) {
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-      });
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
     }
 
-    console.log('[EmergencyAlert] Recording stopped, URI:', uri);
-    return uri || null;
+    console.log('[EmergencyAlert] Recording stopped, final URI:', uri);
+    return uri;
   }
 
   /**
-   * Export current recording position as a chunk and send to transcription edge function.
-   * WHY: Gives the medic live confidence their voice is being captured accurately.
+   * Transcribe a completed audio chunk (file at uri) via the edge function.
+   * Called after a rotation stop — file is complete and readable.
+   * WHY: iOS .m4a files are only valid after stopAndUnloadAsync writes the MOOV atom.
+   *      Reading a live recording returns corrupted data that Whisper cannot process.
    */
-  private async transcribeLatestChunk(): Promise<void> {
-    if (!this.recording || !this.onTranscriptChunk) return;
-
+  private async transcribeChunk(uri: string): Promise<void> {
+    // Capture callback immediately — stopRecording() sets this.onTranscriptChunk to null
+    // and we must not call it after the recording session has ended.
+    const onChunk = this.onTranscriptChunk;
+    if (!onChunk) return;
     try {
-      const status = await this.recording.getStatusAsync();
-      if (!status.isRecording) return;
-
-      // Get the recording URI and send the full recording so far for incremental transcription
-      const uri = this.recording.getURI();
-      if (!uri) return;
-
-      // Read the audio file as base64
       if (!FileSystem) return;
       const base64Audio = await FileSystem.readAsStringAsync(uri, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      // POST to edge function for Whisper transcription
       const { data, error } = await supabase.functions.invoke('send-emergency-sms', {
         body: {
           action: 'transcribe',
@@ -270,12 +298,17 @@ class EmergencyAlertService {
         },
       });
 
-      if (!error && data?.transcript) {
-        this.onTranscriptChunk(data.transcript);
+      if (error) {
+        console.warn('[EmergencyAlert] Transcription error:', error);
+        return;
       }
-    } catch (error) {
-      // Non-fatal — transcription is best-effort
-      console.warn('[EmergencyAlert] Chunk transcription failed:', error);
+
+      if (data?.transcript?.trim()) {
+        console.log('[EmergencyAlert] Transcript chunk:', data.transcript);
+        onChunk(data.transcript);
+      }
+    } catch (err) {
+      console.warn('[EmergencyAlert] Chunk transcription failed:', err);
     }
   }
 

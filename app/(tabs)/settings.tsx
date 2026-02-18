@@ -6,11 +6,12 @@
  *
  * Features:
  * - Biometric authentication (Face ID / Touch ID) enable/disable
+ * - Emergency Contacts management (add/delete managers for SOS alerts)
  * - Account information display
  * - Sign out option
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -19,14 +20,105 @@ import {
   Pressable,
   Switch,
   Alert,
+  TextInput,
+  Modal,
+  ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { emergencyAlertService, EmergencyContact } from '../../services/EmergencyAlertService';
 
 export default function SettingsScreen() {
   const { state, signOut, enableBiometrics, disableBiometrics, biometricSupport } = useAuth();
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Emergency contacts state
+  const [contacts, setContacts] = useState<EmergencyContact[]>([]);
+  const [contactsLoading, setContactsLoading] = useState(true);
+  const [addModalVisible, setAddModalVisible] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [newRole, setNewRole] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    loadContacts();
+  }, []);
+
+  const loadContacts = useCallback(async () => {
+    setContactsLoading(true);
+    try {
+      const data = await emergencyAlertService.getContacts();
+      setContacts(data);
+    } catch (error) {
+      console.error('[Settings] Failed to load emergency contacts:', error);
+    } finally {
+      setContactsLoading(false);
+    }
+  }, []);
+
+  const handleAddContact = async () => {
+    if (!newName.trim() || !newPhone.trim()) {
+      Alert.alert('Missing fields', 'Please enter both a name and phone number.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { data: { user } } = await (await import('../../src/lib/supabase')).supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data: profile } = await (await import('../../src/lib/supabase')).supabase
+        .from('profiles')
+        .select('org_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.org_id) throw new Error('Could not load org');
+
+      await emergencyAlertService.upsertContactFromBooking({
+        orgId: profile.org_id,
+        name: newName.trim(),
+        phone: newPhone.trim(),
+        role: newRole.trim() || undefined,
+      });
+
+      setNewName('');
+      setNewPhone('');
+      setNewRole('');
+      setAddModalVisible(false);
+      await loadContacts();
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Failed to save contact.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteContact = (contact: EmergencyContact) => {
+    Alert.alert(
+      'Remove Contact',
+      `Remove ${contact.name} from emergency contacts?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { supabase } = await import('../../src/lib/supabase');
+              await supabase.from('emergency_contacts').delete().eq('id', contact.id);
+              await loadContacts();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to remove contact.');
+            }
+          },
+        },
+      ],
+    );
+  };
 
   async function toggleBiometric(value: boolean) {
     if (!biometricSupport.isSupported) {
@@ -124,6 +216,54 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Emergency Contacts Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Emergency Contacts</Text>
+            <TouchableOpacity style={styles.addButton} onPress={() => setAddModalVisible(true)}>
+              <Text style={styles.addButtonText}>+ Add</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.sectionDesc}>
+            These people receive an alert when you press SOS.
+          </Text>
+
+          <View style={styles.card}>
+            {contactsLoading ? (
+              <ActivityIndicator color="#EF4444" style={{ paddingVertical: 16 }} />
+            ) : contacts.length === 0 ? (
+              <View style={styles.emptyContacts}>
+                <Text style={styles.emptyContactsIcon}>🚨</Text>
+                <Text style={styles.emptyContactsText}>No emergency contacts yet.</Text>
+                <Text style={styles.emptyContactsSubtext}>
+                  Add a manager or site contact so SOS alerts are delivered.
+                </Text>
+              </View>
+            ) : (
+              contacts.map((contact, index) => (
+                <View key={contact.id}>
+                  {index > 0 && <View style={styles.divider} />}
+                  <View style={styles.contactRow}>
+                    <View style={styles.contactInfo}>
+                      <Text style={styles.contactName}>{contact.name}</Text>
+                      <Text style={styles.contactPhone}>{contact.phone}</Text>
+                      {contact.role ? (
+                        <Text style={styles.contactRole}>{contact.role}</Text>
+                      ) : null}
+                    </View>
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => handleDeleteContact(contact)}
+                    >
+                      <Text style={styles.deleteButtonText}>Remove</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))
+            )}
+          </View>
+        </View>
+
         {/* Security Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Security</Text>
@@ -194,6 +334,70 @@ export default function SettingsScreen() {
         {/* Footer */}
         <Text style={styles.footer}>SiteMedic v1.0</Text>
       </View>
+
+      {/* Add Contact Modal */}
+      <Modal
+        visible={addModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setAddModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Add Emergency Contact</Text>
+            <TouchableOpacity onPress={() => setAddModalVisible(false)}>
+              <Text style={styles.modalClose}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
+            <Text style={styles.fieldLabel}>Full Name *</Text>
+            <TextInput
+              style={styles.input}
+              value={newName}
+              onChangeText={setNewName}
+              placeholder="e.g. John Smith"
+              placeholderTextColor="#9CA3AF"
+              autoCapitalize="words"
+              returnKeyType="next"
+            />
+
+            <Text style={styles.fieldLabel}>Phone Number *</Text>
+            <TextInput
+              style={styles.input}
+              value={newPhone}
+              onChangeText={setNewPhone}
+              placeholder="e.g. +44 7700 900000"
+              placeholderTextColor="#9CA3AF"
+              keyboardType="phone-pad"
+              returnKeyType="next"
+            />
+
+            <Text style={styles.fieldLabel}>Role / Title (optional)</Text>
+            <TextInput
+              style={styles.input}
+              value={newRole}
+              onChangeText={setNewRole}
+              placeholder="e.g. Site Manager"
+              placeholderTextColor="#9CA3AF"
+              autoCapitalize="words"
+              returnKeyType="done"
+            />
+
+            <TouchableOpacity
+              style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+              onPress={handleAddContact}
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.saveButtonText}>Save Contact</Text>
+              )}
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -217,13 +421,34 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 24,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
   sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
     color: '#64748b',
-    marginBottom: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  sectionDesc: {
+    fontSize: 13,
+    color: '#94a3b8',
+    marginBottom: 12,
+  },
+  addButton: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -251,6 +476,61 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: '#f1f5f9',
+  },
+  emptyContacts: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  emptyContactsIcon: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  emptyContactsText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: 4,
+  },
+  emptyContactsSubtext: {
+    fontSize: 13,
+    color: '#64748b',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  contactInfo: {
+    flex: 1,
+  },
+  contactName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: 2,
+  },
+  contactPhone: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  contactRole: {
+    fontSize: 12,
+    color: '#94a3b8',
+    marginTop: 2,
+  },
+  deleteButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+  },
+  deleteButtonText: {
+    fontSize: 13,
+    color: '#EF4444',
+    fontWeight: '600',
   },
   settingRow: {
     flexDirection: 'row',
@@ -336,5 +616,64 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 32,
     marginBottom: 16,
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    paddingTop: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+    backgroundColor: '#FFFFFF',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  modalClose: {
+    fontSize: 16,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  modalBody: {
+    padding: 20,
+  },
+  fieldLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  input: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 10,
+    padding: 14,
+    fontSize: 16,
+    color: '#1e293b',
+  },
+  saveButton: {
+    backgroundColor: '#EF4444',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 32,
+  },
+  saveButtonDisabled: {
+    opacity: 0.5,
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });

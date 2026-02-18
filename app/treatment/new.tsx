@@ -41,6 +41,7 @@ import { TREATMENT_TYPES } from '../../services/taxonomy/treatment-types';
 import { OUTCOME_CATEGORIES } from '../../services/taxonomy/outcome-categories';
 import { getMechanismPresets } from '../../services/taxonomy/mechanism-presets';
 import { getVerticalOutcomeCategories, getPatientLabel } from '../../services/taxonomy/vertical-outcome-labels';
+import { getVerticalCompliance } from '../../services/taxonomy/vertical-compliance';
 import { useSync } from '../../src/contexts/SyncContext';
 import { photoUploadQueue } from '../../src/services/PhotoUploadQueue';
 import { supabase } from '../../src/lib/supabase';
@@ -370,12 +371,12 @@ export default function NewTreatmentScreen() {
           }
         }
 
-        Alert.alert('Success', 'Treatment logged successfully', [
-          {
-            text: 'OK',
-            onPress: () => router.back(),
-          },
-        ]);
+        const compliance = getVerticalCompliance(orgVertical);
+        Alert.alert(
+          'Treatment Logged',
+          compliance.postTreatmentGuidance,
+          [{ text: 'OK', onPress: () => router.back() }]
+        );
       }
     } catch (error) {
       console.error('Failed to complete treatment:', error);

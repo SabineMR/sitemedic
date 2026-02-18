@@ -85,45 +85,23 @@ CREATE TRIGGER trg_booking_briefs_updated_at
 -- ── RLS Policies ──────────────────────────────────────────────────────────────
 ALTER TABLE booking_briefs ENABLE ROW LEVEL SECURITY;
 
--- Org admins and site managers can read briefs for their org
+-- Org users: read briefs belonging to their org
 CREATE POLICY "org_read_booking_briefs"
   ON booking_briefs FOR SELECT
-  USING (
-    org_id IN (
-      SELECT (app_metadata->>'org_id')::uuid
-      FROM auth.users
-      WHERE id = auth.uid()
-    )
-  );
+  USING (org_id = get_user_org_id());
 
--- Org admins can insert and update
+-- Org users: insert briefs for their org
 CREATE POLICY "org_write_booking_briefs"
   ON booking_briefs FOR INSERT
-  WITH CHECK (
-    org_id IN (
-      SELECT (app_metadata->>'org_id')::uuid
-      FROM auth.users
-      WHERE id = auth.uid()
-    )
-  );
+  WITH CHECK (org_id = get_user_org_id());
 
+-- Org users: update briefs belonging to their org
 CREATE POLICY "org_update_booking_briefs"
   ON booking_briefs FOR UPDATE
-  USING (
-    org_id IN (
-      SELECT (app_metadata->>'org_id')::uuid
-      FROM auth.users
-      WHERE id = auth.uid()
-    )
-  );
+  USING (org_id = get_user_org_id());
 
--- Platform admins have full access
+-- Platform admins: full access across all orgs
 CREATE POLICY "platform_admin_all_booking_briefs"
   ON booking_briefs FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM auth.users
-      WHERE id = auth.uid()
-        AND (app_metadata->>'role') = 'platform_admin'
-    )
-  );
+  USING (is_platform_admin())
+  WITH CHECK (is_platform_admin());

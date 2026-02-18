@@ -14,14 +14,7 @@ import { StripeOnboardingStatus } from '@/components/medics/stripe-onboarding-st
 import { User, CheckCircle2, XCircle, ToggleLeft, ToggleRight, AlertTriangle, ExternalLink, FileDown, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-
-const RENEWAL_URLS: Record<string, string> = {
-  'CSCS': 'https://www.cscs.uk.com/apply-for-card/',
-  'CPCS': 'https://www.cpcscards.com/renewal',
-  'IPAF': 'https://www.ipaf.org/en/training',
-  'PASMA': 'https://www.pasma.co.uk/training',
-  'Gas Safe': 'https://www.gassaferegister.co.uk/',
-};
+import { CERT_TYPE_METADATA } from '@/types/certification.types';
 
 interface CertExpiry {
   type: string;
@@ -155,21 +148,24 @@ export default function MedicProfilePage() {
             <AlertTriangle className="w-5 h-5" />
             Urgent: Certification{critical.length > 1 ? 's' : ''} Expiring
           </div>
-          {critical.map((cert) => (
-            <div key={cert.cert_number} className="flex items-center justify-between text-sm">
-              <span className="text-red-300">
-                {cert.type} {cert.days_remaining <= 0
-                  ? 'has EXPIRED'
-                  : `expires in ${cert.days_remaining} day${cert.days_remaining !== 1 ? 's' : ''}`}
-              </span>
-              {RENEWAL_URLS[cert.type] && (
-                <a href={RENEWAL_URLS[cert.type]} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-red-400 hover:text-red-300 underline text-sm">
-                  Renew now <ExternalLink className="w-3 h-3" />
-                </a>
-              )}
-            </div>
-          ))}
+          {critical.map((cert) => {
+            const renewalUrl = CERT_TYPE_METADATA[cert.type as keyof typeof CERT_TYPE_METADATA]?.renewalUrl;
+            return (
+              <div key={cert.cert_number} className="flex items-center justify-between text-sm">
+                <span className="text-red-300">
+                  {cert.type} {cert.days_remaining <= 0
+                    ? 'has EXPIRED'
+                    : `expires in ${cert.days_remaining} day${cert.days_remaining !== 1 ? 's' : ''}`}
+                </span>
+                {renewalUrl && (
+                  <a href={renewalUrl} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-red-400 hover:text-red-300 underline text-sm">
+                    Renew now <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -180,19 +176,22 @@ export default function MedicProfilePage() {
             <AlertTriangle className="w-5 h-5" />
             Certification{warning.length > 1 ? 's' : ''} Expiring Soon
           </div>
-          {warning.map((cert) => (
-            <div key={cert.cert_number} className="flex items-center justify-between text-sm">
-              <span className="text-yellow-300">
-                {cert.type} expires in {cert.days_remaining} day{cert.days_remaining !== 1 ? 's' : ''}
-              </span>
-              {RENEWAL_URLS[cert.type] && (
-                <a href={RENEWAL_URLS[cert.type]} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-yellow-400 hover:text-yellow-300 underline text-sm">
-                  Renew now <ExternalLink className="w-3 h-3" />
-                </a>
-              )}
-            </div>
-          ))}
+          {warning.map((cert) => {
+            const renewalUrl = CERT_TYPE_METADATA[cert.type as keyof typeof CERT_TYPE_METADATA]?.renewalUrl;
+            return (
+              <div key={cert.cert_number} className="flex items-center justify-between text-sm">
+                <span className="text-yellow-300">
+                  {cert.type} expires in {cert.days_remaining} day{cert.days_remaining !== 1 ? 's' : ''}
+                </span>
+                {renewalUrl && (
+                  <a href={renewalUrl} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-yellow-400 hover:text-yellow-300 underline text-sm">
+                    Renew now <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 

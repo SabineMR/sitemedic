@@ -17,11 +17,16 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useOrg } from '@/contexts/org-context';
 import { exportRIDDORIncidentsPDF } from '@/lib/utils/export-pdf';
-import { Download } from 'lucide-react';
+import { getVerticalCompliance } from '@/lib/compliance/vertical-compliance';
+import { Download, Info } from 'lucide-react';
 
 export default function RIDDORPage() {
-  const { orgId, loading: orgLoading } = useOrg();
+  const { orgId, loading: orgLoading, industryVerticals } = useOrg();
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'submitted' | 'confirmed'>('all');
+
+  // Resolve compliance framework from the org's primary vertical
+  const primaryVertical = industryVerticals?.[0] ?? 'general';
+  const compliance = getVerticalCompliance(primaryVertical);
 
   // Fetch RIDDOR incidents with 60-second polling
   const { data: incidents = [], isLoading } = useQuery({
@@ -52,10 +57,24 @@ export default function RIDDORPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">RIDDOR Incidents</h1>
-        <p className="text-muted-foreground">
-          HSE-reportable incidents with deadline tracking
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="text-3xl font-bold">{compliance.incidentPageLabel}</h1>
+          <Badge variant="outline" className="text-xs font-medium px-2 py-0.5">
+            {compliance.complianceBadgeLabel}
+          </Badge>
+        </div>
+        <p className="text-muted-foreground mt-1">
+          {compliance.frameworkDescription}
         </p>
+        {!compliance.riddorApplies && (
+          <div className="flex items-start gap-2 mt-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 max-w-2xl">
+            <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <span>
+              RIDDOR (HSE) does not apply to {compliance.patientIsWorker ? 'workers' : 'public attendees'} in this vertical.
+              These incidents are logged for internal record-keeping. Staff/crew injuries may still require RIDDOR reporting.
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -66,7 +85,9 @@ export default function RIDDORPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{pendingCount}</div>
-            <p className="text-xs text-muted-foreground">Awaiting submission to HSE</p>
+            <p className="text-xs text-muted-foreground">
+              {compliance.riddorApplies ? 'Awaiting submission to HSE' : `Awaiting ${compliance.reportFormLabel}`}
+            </p>
           </CardContent>
         </Card>
 
@@ -76,7 +97,7 @@ export default function RIDDORPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{overdueCount}</div>
-            <p className="text-xs text-muted-foreground">Past HSE deadline</p>
+            <p className="text-xs text-muted-foreground">Past reporting deadline</p>
           </CardContent>
         </Card>
 
@@ -86,7 +107,7 @@ export default function RIDDORPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{incidents.length}</div>
-            <p className="text-xs text-muted-foreground">All RIDDOR-flagged</p>
+            <p className="text-xs text-muted-foreground">All flagged incidents</p>
           </CardContent>
         </Card>
       </div>
@@ -96,7 +117,7 @@ export default function RIDDORPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>RIDDOR Incidents</CardTitle>
+              <CardTitle>{compliance.incidentPageLabel}</CardTitle>
               <CardDescription>
                 Filter by status and view deadline countdown
               </CardDescription>
@@ -133,7 +154,7 @@ export default function RIDDORPage() {
             <div className="text-center py-8 text-muted-foreground">Loading incidents...</div>
           ) : incidents.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No RIDDOR incidents found
+              No incidents found
             </div>
           ) : (
             <div className="space-y-4">

@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-17 (Website rework: multi-vertical positioning across TV/film, motorsport, festivals, sporting events, construction and more)
+**Last Updated**: 2026-02-17 (Multi-vertical compliance framework: vertical-aware certifications API, RIDDOR page, post-treatment guidance, and certification renewal URLs across all 10 industry verticals)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -46,6 +46,151 @@ The public-facing Apex Safety Group marketing website has been completely rework
 - Motorsport UK / MSA — circuit medical
 - FA Governance — football events
 - ISO 45001 — occupational safety standard
+
+---
+
+## Recent Updates — Industry Vertical Paperwork System (2026-02-17)
+
+A full end-to-end vertical-awareness layer has been added to SiteMedic, making the platform aware of which industry sector each medic is working in and adapting all forms, compliance documents, and certification requirements accordingly.
+
+---
+
+### Phase 18A: Org Industry Vertical Settings ✅
+
+Each organisation can now declare one or more industry verticals it operates in. This drives vertical-specific behaviour throughout the platform.
+
+**Database:** Migration `121_org_industry_verticals.sql` adds `industry_verticals JSONB NOT NULL DEFAULT '["construction"]'` to `org_settings` with a GIN index for efficient JSONB array queries.
+
+**Admin Settings UI:** The `/admin/settings` page now includes an "Industry & Verticals" section where admins can select their active verticals from a multi-select list of all 10 supported verticals.
+
+**Platform-wide context:** The `OrgContext` (`web/contexts/org-context.tsx`) now exposes `industryVerticals: VerticalId[]`. All client components can read the org's verticals via `useOrg()` without additional API calls.
+
+| File | Change |
+|------|--------|
+| `supabase/migrations/121_org_industry_verticals.sql` | **New** — `industry_verticals` JSONB column on `org_settings` |
+| `web/app/admin/settings/page.tsx` | **Modified** — Industry & Verticals multi-select section |
+| `web/contexts/org-context.tsx` | **Modified** — `industryVerticals` added to context |
+
+---
+
+### Phase 18B: Vertical-Aware Booking Requirements ✅
+
+The booking form's "Special Requirements" section now adapts to the selected industry vertical instead of showing two hardcoded construction checkboxes. Each vertical has 4–6 relevant requirement options (e.g., Trauma Specialist, Confined Space Access, DBS Check, Race Control Radio, Helicopter LZ, etc.). Requirements that appear in multiple verticals (shared requirements) use the same stable ID string so they don't create duplicate data.
+
+**Key files:**
+
+| File | Change |
+|------|--------|
+| `web/lib/booking/vertical-requirements.ts` | **New** — Per-vertical requirement maps. Exports `VERTICAL_LABELS`, `VERTICAL_REQUIREMENTS`, `requirementsToBooleans()`, `requirementsToNotes()`. Requirements with a `dbField` map directly to DB boolean columns (`confined_space_required`, `trauma_specialist_required`); others are serialised into `special_notes`. |
+| `web/lib/booking/types.ts` | **Modified** — Added `eventVertical: string` and `selectedRequirements: string[]` to `BookingFormData`. Backward-compatible boolean fields retained. |
+| `web/components/booking/shift-config.tsx` | **Rewritten** — Dynamic requirements checklist. Selecting a vertical resets requirements; toggling a requirement auto-syncs DB booleans via `requirementsToBooleans()`. |
+| `web/components/booking/booking-form.tsx` | **Modified** — Reads org's primary vertical via `useOrg()` and pre-fills the vertical selector. Non-boolean requirements appended to `specialNotes` via `requirementsToNotes()`. |
+
+**Vertical requirements overview:**
+
+| Vertical | Example Requirements |
+|----------|---------------------|
+| Construction | Confined Space, Trauma Specialist, Height Work, CSCS Site |
+| TV & Film | Trauma Specialist, Stunt Coverage, Confined Space, Night Shoot |
+| Motorsport | Race Control Radio, Helicopter LZ, Driver Extraction, Trauma Specialist |
+| Festivals | Crowd Medicine, DBS Check, Helicopter LZ, Trauma Specialist |
+| Education | DBS Check (Children), Paediatric First Aid, Safeguarding Lead |
+| Outdoor & Adventure | Wilderness/Remote Access, Helicopter LZ, Trauma Specialist, DBS Check |
+
+---
+
+### Phase 18C: Pre-Event Medical Brief ✅
+
+Each booking now has a pre-event medical brief / Event Medical Plan that the admin or medic completes before the shift. Common fields (A&E location, helicopter LZ, rendezvous point, on-site contact, hazards) are always shown. Vertical-specific fields are additionally shown based on the booking's event vertical.
+
+**Database:** Migration `123_booking_briefs.sql` creates the `booking_briefs` table (one-to-one with `bookings`) and adds `event_vertical TEXT` to the `bookings` table. The brief has a status workflow: `not_started → in_progress → complete`.
+
+**Admin UI:** A new booking detail page at `/admin/bookings/[id]` hosts the brief form alongside key booking details (shift, client, medic, pricing, site details). This is the first dedicated booking detail page in the admin dashboard.
+
+**Common brief fields (all verticals):**
+- Nearest A&E name and address
+- A&E travel time (minutes)
+- Helicopter landing zone description / what3words
+- Emergency services rendezvous point
+- On-site contact (name + phone)
+- Known site hazards (free text)
+
+**Vertical-specific extra fields (examples):**
+
+| Vertical | Extra Fields |
+|----------|-------------|
+| Construction | Site manager emergency number, Confined space rescue plan, Site safety induction completed |
+| Motorsport | Race Control radio channel, CMO name and contact, Extrication equipment at event |
+| Festivals | Medical Information Point reference, Crowd capacity, Festival wristband medical code |
+| Education | Safeguarding lead name and contact, Parent/guardian consent protocol, School nurse on site |
+| Outdoor Adventure | Grid reference / what3words of activity area, Nearest mountain rescue post, Activity lead contact |
+
+| File | Change |
+|------|--------|
+| `supabase/migrations/123_booking_briefs.sql` | **New** — `booking_briefs` table + `event_vertical` column on `bookings`. RLS uses `get_user_org_id()` + `is_platform_admin()` helpers. |
+| `web/app/api/admin/bookings/[id]/brief/route.ts` | **New** — GET (fetch/empty brief) + PUT (upsert brief fields + event_vertical) API route. Auto-detects `in_progress` status. |
+| `web/components/bookings/booking-brief-form.tsx` | **New** — Full brief form with 8 common fields + vertical-specific collapsible section (11 verticals × 4–6 extra fields). "Save Draft" and "Mark Brief Complete" buttons. |
+| `web/app/admin/bookings/[id]/page.tsx` | **New** — Admin booking detail page: back link, header with status badge, 3-col key details grid, pricing grid, site details, and brief form. |
+
+---
+
+### Phase 18D: Vertical-Aware Treatment Form (Mobile) ✅
+
+The mobile treatment logging form now adapts to the medic's organisation vertical. Two elements are dynamically loaded per vertical: mechanism-of-injury presets (quick-tap chips) and outcome labels/patient terminology.
+
+**Mechanism presets:** Each of 11 verticals has 8 tailored presets. For example, motorsport = `['Vehicle collision', 'Motorcycle / bicycle off', 'Rollover', 'Driver extraction required', ...]`; festivals = `['Crush injury (crowd)', 'Hyperthermia / heat illness', 'Substance intoxication', ...]`.
+
+**Outcome labels:** The "returned to work (same duties)" and "returned to work (light duties)" outcomes are relabelled per vertical. For motorsport: "Returned to race / event duties". For festivals: "Returned to festival / event". The "patient" term changes to "Worker", "Crew member", "Driver / Competitor", "Attendee", etc.
+
+| File | Change |
+|------|--------|
+| `services/taxonomy/mechanism-presets.ts` | **New** — `MECHANISM_PRESETS_BY_VERTICAL` (11 verticals × 8 presets), `getMechanismPresets(verticalId)` |
+| `services/taxonomy/vertical-outcome-labels.ts` | **New** — `OUTCOME_LABEL_OVERRIDES`, `getVerticalOutcomeCategories()`, `getOutcomeLabel()`, `getPatientLabel()` |
+| `app/treatment/new.tsx` | **Modified** — Fetches org's primary vertical on mount. Derives mechanism presets, outcome categories, patient label dynamically. Post-treatment success alert shows vertical-appropriate compliance guidance. |
+
+---
+
+### Phase 18E: Per-Vertical Compliance Frameworks ✅
+
+The platform now understands which regulatory reporting framework applies per industry vertical and surfaces this information at key touchpoints.
+
+**Framework taxonomy:** Each vertical is mapped to its primary compliance framework: RIDDOR (HSE) for construction/TV film/corporate, Purple Guide for festivals, Motorsport UK / FIA for motorsport, FA / NGB Incident Report for sporting events, RIDDOR + Ofsted for education, Event Incident Report for fairs/private events.
+
+**Mobile treatment form:** After completing a treatment, the medic sees a vertical-appropriate guidance message instead of a generic "Treatment logged successfully." For example, a festival medic sees: *"Under Purple Guide guidelines, all patient contacts should be recorded in the Event Incident Log. For STAFF/CREW injuries, RIDDOR may still apply."*
+
+**Admin incidents page:** The `/riddor` page now reads the org's primary vertical and adapts its header title (e.g., "Race Incidents" for motorsport), compliance badge (e.g., "Motorsport UK / FIA"), and framework description. For non-RIDDOR verticals, a contextual amber info banner explains that RIDDOR applies to staff injuries only.
+
+| File | Change |
+|------|--------|
+| `services/taxonomy/vertical-compliance.ts` | **New** (mobile) — `VerticalComplianceConfig` interface, `getVerticalCompliance()`, `isRIDDORVertical()`, `getPostTreatmentGuidance()`. Maps all 11 verticals to their compliance config. |
+| `web/lib/compliance/vertical-compliance.ts` | **New** (web) — Identical taxonomy for web frontend use. |
+| `app/treatment/new.tsx` | **Modified** — Post-treatment Alert now uses `compliance.postTreatmentGuidance` instead of generic message. |
+| `web/app/(dashboard)/riddor/page.tsx` | **Modified** — Page title, badge, description, and empty states adapt to org's primary vertical. Non-RIDDOR verticals show amber info banner. |
+
+---
+
+### Phase 18F: Expanded Certification Types ✅
+
+Certification types have been expanded from 5 construction-specific types to 36 types covering all 10 industry verticals. Each cert type has metadata (label, category, description, renewal URL). A per-vertical recommended list surfaces the most relevant certs in the admin form first.
+
+**New cert categories added:**
+
+| Category | New Types |
+|----------|-----------|
+| Medical / Clinical | FREC 3, FREC 4, PHEC, PHTLS, HCPC Paramedic, EMT, ALS Provider, PALS Provider, ATLS, BLS Instructor, AED Trained |
+| DBS / Safeguarding | Enhanced DBS (Children), Enhanced DBS (Adults), Enhanced DBS (Barred Lists) |
+| Motorsport | FIA Grade 1, FIA Grade 2, FIA Grade 3, Motorsport UK CMO Letter, MSA First Aider |
+| Events & Festivals | SIA Door Supervisor, Purple Guide Certificate, Event Safety Awareness, NEBOSH General Certificate |
+| Education | Paediatric First Aid, Child Safeguarding Level 2, Child Safeguarding Level 3 |
+| Outdoor & Adventure | Mountain First Aid, Wilderness First Aid |
+| Construction (retained) | CSCS, CPCS, IPAF, PASMA, Gas Safe |
+
+**Vertical-aware cert recommendations:** `getRecommendedCertTypes(verticalId)` returns all cert types sorted with the most relevant for that vertical first (e.g., motorsport medics see FIA grades and ATLS before CSCS).
+
+| File | Change |
+|------|--------|
+| `web/types/certification.types.ts` | **Expanded** — `UK_CERT_TYPES` extended from 5 to 36 types. Added `CertTypeMetadata`, `CERT_TYPE_METADATA` record, `VERTICAL_CERT_TYPES` map, `getRecommendedCertTypes()`. `CERT_RENEWAL_URLS` now generated from metadata. `CertificationReminder.cert_type` widened to `string`. |
+| `services/taxonomy/certification-types.ts` | **New** (mobile) — Same 36 cert types + metadata + vertical mapping for use in the React Native app. |
 
 ---
 
@@ -222,6 +367,7 @@ One-tap emergency alert system for construction site medics. A floating red SOS 
 | `components/ui/EmergencyAlertReceiver.tsx` | **New** — Recipient-side component. Registers foreground + background notification listeners. On `type: 'emergency'` notification: plays `emergency-alert.wav` in a loop, shows full-screen red modal (covers all UI). Only dismissable via "ACKNOWLEDGED" button which calls `acknowledgeAlert()`. Handles both foreground and notification-tap flows. |
 | `supabase/functions/send-emergency-sms/index.ts` | **New** — Supabase Edge Function. Two modes: (1) `action: 'transcribe'` — receives base64 audio, calls OpenAI Whisper API, returns transcript; (2) `action: 'sms_fallback'` (pg_cron) — queries unacknowledged alerts where push was sent >60s ago, sends Twilio SMS to each contact, updates `sms_sent_at`. |
 | `assets/sounds/emergency-alert.wav` | **New** — 3-second loopable pulsing 880Hz alert tone (generated, bundled in app). Used by both push notification and `expo-av` in-app playback. |
+| `app/(tabs)/settings.tsx` | **Updated** — Added "Emergency Contacts" section. Lists all contacts for the org with name, phone, and role. "+ Add" button opens a slide-up modal to enter name (required), phone (required), and role/title (optional). Each contact has a "Remove" button with confirmation. Empty state prompts the user to add a contact before using SOS. |
 | `app/(tabs)/_layout.tsx` | **Modified** — Wrapped tabs in `<View>`, added `<SOSButton />` floating absolutely over all tab screens. |
 | `app/_layout.tsx` | **Modified** — Added `<EmergencyAlertReceiver />` inside `BottomSheetModalProvider`. Added permission + push token registration on DB init (non-fatal if denied). |
 | `app.json` | **Modified** — Added `expo-notifications` plugin with sound config and `#EF4444` color. Added `RECEIVE_BOOT_COMPLETED` and `SCHEDULE_EXACT_ALARM` Android permissions. |
@@ -4789,18 +4935,28 @@ A comprehensive customer account management page displaying all construction com
 
 ## Phase 7: Certification Tracking
 **Status**: Not started
-**Goal**: UK certification management with expiry alerts
+**Goal**: Multi-vertical UK certification management with expiry alerts
 
 ### Features:
-- **Certification Database**
-  - UK construction certifications tracked:
-    - CSCS (Construction Skills Certification Scheme)
-    - CPCS (Construction Plant Competence Scheme)
-    - IPAF (International Powered Access Federation)
-    - PASMA (Prefabricated Access Suppliers' and Manufacturers' Association)
-    - Gas Safe (gas work certification)
-  - Expiry date tracking
-  - Photo upload of certification card
+- **Certification Database (Multi-Vertical — 10 Industry Sectors)**
+  - 30 certification types across 7 categories:
+    - **Medical / Clinical** (all verticals): FREC 3, FREC 4, PHEC, PHTLS, HCPC Paramedic, EMT, ALS Provider, PALS Provider, ATLS, BLS Instructor, AED Trained
+    - **Construction**: CSCS, CPCS, IPAF, PASMA, Gas Safe
+    - **DBS / Safeguarding**: Enhanced DBS (Children), Enhanced DBS (Adults), Enhanced DBS (Barred Lists)
+    - **Motorsport**: FIA Grade 1/2/3, Motorsport UK CMO Letter, MSA First Aider
+    - **Events & Festivals**: SIA Door Supervisor, Purple Guide Certificate, Event Safety Awareness, NEBOSH General Certificate
+    - **Education**: Paediatric First Aid, Child Safeguarding Level 2/3
+    - **Outdoor & Adventure**: Mountain First Aid, Wilderness First Aid
+  - Per-vertical recommended cert types (e.g., motorsport shows FIA grades first; education shows DBS/Paediatric FA first)
+  - Expiry date tracking with computed `valid` / `expiring-soon` / `expired` status
+  - Renewal URLs for all 30 cert types (links to HCPC, Resuscitation Council, FIA, SIA, NEBOSH, etc.)
+  - `web/types/certification.types.ts` — canonical type definitions, metadata, renewal URLs
+  - `services/taxonomy/certification-types.ts` — mobile-side mirror (React Native app)
+
+- **API Routes**
+  - `GET /api/medics/[id]/certifications` — fetch a medic's certifications annotated with status + renewal URL (org-scoped via RLS)
+  - `PATCH /api/medics/[id]/certifications` — replace a medic's full certifications array (org-scoped via RLS)
+  - `POST /api/certifications/validate` — check if a medic has any expired certs; blocks incident logging (403) if so
 
 - **Progressive Expiry Alerts**
   - Email reminders sent:
