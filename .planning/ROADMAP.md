@@ -81,11 +81,11 @@ Plans:
 3. The `incident-report-dispatcher` routes construction treatments to the existing F2508 generator — RIDDOR continues to work exactly as in v1.0 with no regression
 4. The construction vertical can be selected in admin org settings and booking form — it behaves identically to a newly added vertical from a UI and data perspective
 
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 18.5-01: Construction vertical config — add `construction` to vertical config TypeScript file; define `riddorApplies: true`, terminology map, cert type ordering; verify existing RIDDOR path untouched
-- [ ] 18.5-02: Construction vertical wiring — `incident-report-dispatcher` construction route; `getRecommendedCertTypes('construction')` ordering (CSCS, CPCS, IPAF, Gas Safe, FAW); smoke-test end-to-end: log treatment → RIDDOR flag still appears → F2508 PDF generates
+- [ ] 18.5-01-PLAN.md — Create services/taxonomy/verticals.ts: new canonical VERTICAL_CONFIG file with VerticalConfig interface; construction as reference entry (riddorApplies: true, patientTerm Worker, locationTerm Site, clientTerm Client, certOrdering CSCS-first, pdfGenerator riddor-f2508-generator)
+- [ ] 18.5-02-PLAN.md — Smoke-test verification: confirm FUNCTION_BY_VERTICAL['construction'] routes to riddor-f2508-generator; confirm construction absent from NON_RIDDOR_VERTICALS; confirm getRecommendedCertTypes includes CSCS/CPCS/IPAF/Gas Safe/PASMA; no code changes
 
 ---
 
