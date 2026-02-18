@@ -2,12 +2,51 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Sprint 5 — Data Integrity, Contracts Fix & Cancellation Email)
+**Last Updated**: 2026-02-18 (Sprint 6 — Column Name Fixes, Client Support Page)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
 
-## Recent Updates — Sprint 5: Data Integrity, Contracts Fix & Cancellation Email (2026-02-18)
+## Recent Updates — Sprint 6: Column Name Fixes & Client Support Page (2026-02-18)
+
+### Overview
+
+Sprint 6 of the gap analysis: fixes widespread `total_amount` → `total` column name bugs across invoices, revenue dashboard, CSV exports, and out-of-territory approval. Also fixes wrong client column references in invoice emails. Adds a client support/help page with FAQs and contact info.
+
+### Critical Bug Fixes
+
+| File | Bug | Fix |
+|------|-----|-----|
+| `web/app/api/invoices/generate/route.ts` | Used `booking.total_amount` (non-existent column, 3 occurrences) — invoices would fail or show £0.00. Also used `client.email` and `client.name` which don't exist on clients table. VAT was reverse-calculated via `total / 1.2` instead of using actual `subtotal`/`vat` columns. | Changed `total_amount` → `total`, `client.email` → `client.contact_email`, `client.name` → `client.contact_name \|\| client.company_name`. Replaced VAT reverse-calculation with actual `subtotal`/`vat`/`total` column sums. |
+| `web/app/admin/revenue/page.tsx` | Supabase select query used `total_amount` (non-existent column) — CSV export would contain empty total fields | Changed to `total` in select string |
+| `web/lib/utils/export-csv.ts` | Both `exportBookingsCSV` and `exportInvoicesCSV` referenced `b.total_amount` — exported CSVs would have empty Total columns | Changed to `b.total` (2 occurrences) |
+| `web/components/admin/out-of-territory-approval.tsx` | `Booking` interface defined `total_amount: number` and display used `booking.total_amount` — component would show undefined for total | Changed interface to `total: number` and all display references to `booking.total` |
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/app/(client)/client/support/page.tsx` | Client self-service support page with FAQ accordion (11 questions across 4 categories), contact cards (email + phone), office hours banner, and category filter pills. Reduces admin support burden. |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/components/client/ClientNav.tsx` | Added "Help & Support" link with `HelpCircle` icon to client sidebar navigation |
+| `web/app/api/invoices/generate/route.ts` | Fixed 3x `total_amount` → `total`, fixed client field references, replaced VAT reverse-calculation with actual column sums |
+| `web/app/admin/revenue/page.tsx` | Fixed select query `total_amount` → `total` |
+| `web/lib/utils/export-csv.ts` | Fixed `b.total_amount` → `b.total` in both bookings and invoices CSV exports |
+| `web/components/admin/out-of-territory-approval.tsx` | Fixed `Booking` interface and display to use `total` instead of `total_amount` |
+
+### Key Details
+
+- **Column name pattern**: Multiple files across the codebase referenced `total_amount` which doesn't exist on the bookings table. The actual column is `total`. This was a widespread copy-paste error causing silent runtime failures (undefined values, £0.00 displays, empty CSV columns).
+- **Invoice VAT accuracy**: The invoice generator was calculating `subtotal = total / 1.2` which is a lossy approximation. Now uses actual `subtotal` and `vat` columns from each booking, which are computed correctly at booking creation time.
+- **Client support page**: 11 FAQs covering bookings (4), invoices (3), account (2), and general (2). Includes cancellation policy, payment methods, medic qualifications, and how-to guides. Category filter pills for quick navigation. Contact cards with email and phone. Office hours banner with urgent contact info.
+
+---
+
+## Previous Updates — Sprint 5: Data Integrity, Contracts Fix & Cancellation Email (2026-02-18)
 
 ### Overview
 
@@ -7863,11 +7902,23 @@ The system supports four primary user roles:
 - **JWT metadata**: `app_metadata` contains `role: "org_admin"`, `org_id`, and `org_slug: "apex"` — used by RLS policies and `useOrg()` context hook
 - **Difference from platform admin**: Platform admin (`sabineresoagli@gmail.com`) has cross-org access with `org_id = NULL`; org admin (`sabine@joinour.build`) is scoped to Apex Safety Solutions only
 
-**Admin Accounts Summary**:
+**Medic Setup Script** (Added 2026-02-18):
+- **Script**: `web/web/add-medic-kai.mjs` — Adds Kai Aufmkolk as a medic for Apex Safety Group
+- **How to run**: `cd web && node web/add-medic-kai.mjs`
+- **Account details**:
+  - Email: `firstcontactsolutions.intl@gmail.com`
+  - Password: `password123`
+  - Role: `medic`
+  - Organization: Apex Safety Group (slug: `apex`)
+  - Classification: Paramedic, 10 years experience
+  - Phone: +44 7584 639688
+
+**Admin & Medic Accounts Summary**:
 | Email | Role | Org | Routes | Purpose |
 |-------|------|-----|--------|---------|
 | `sabineresoagli@gmail.com` | `platform_admin` | None (cross-org) | `/platform` | Manage entire SiteMedic platform |
 | `sabine@joinour.build` | `org_admin` | Apex Safety Solutions | `/admin` | Manage Apex Safety Solutions org |
+| `firstcontactsolutions.intl@gmail.com` | `medic` | Apex Safety Group | Mobile app | Kai Aufmkolk — paramedic |
 
 **Error Handling**: `web/app/admin/error.tsx`
 - Catches "not assigned to an organization" errors
@@ -7896,6 +7947,7 @@ The system supports four primary user roles:
 - **Setup Scripts**:
   - `web/web/create-admin.mjs` (creates platform admin user via Supabase Admin API)
   - `web/web/create-org-admin.mjs` (creates org admin `sabine@joinour.build` for Apex Safety Solutions)
+  - `web/web/add-medic-kai.mjs` (adds Kai Aufmkolk as medic for Apex Safety Group)
 - **Error Handling**:
   - `web/app/admin/error.tsx` (catches org assignment errors and redirects)
 
