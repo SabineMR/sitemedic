@@ -69,12 +69,11 @@ class AuthManager {
           return;
         }
 
-        // If online, SIGNED_OUT may fire due to automatic token refresh failure (not a
-        // real logout). Only clear the session credential cache — preserve the profile
-        // cache so orgId survives token expiry. signOut() explicitly calls clearCache()
-        // to wipe everything when the user actually logs out.
-        console.log('[AuthManager] SIGNED_OUT while online - clearing session cache only');
-        await this.clearSessionCache();
+        // SIGNED_OUT while online may be due to automatic token refresh failure, not a
+        // real logout. signOut() calls clearCache() BEFORE supabase.auth.signOut(), so
+        // our cache is already empty for intentional logouts. Do not clear here — preserve
+        // the session cache so handleAddContact can attempt session restoration via setSession().
+        console.log('[AuthManager] SIGNED_OUT while online - preserving cache for session restoration');
       }
 
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
@@ -370,9 +369,9 @@ class AuthManager {
   }
 
   /**
-   * Get cached session from AsyncStorage
+   * Get cached session from AsyncStorage (public — used for session restoration in UI layer)
    */
-  private async getCachedSession(): Promise<Session | null> {
+  async getCachedSession(): Promise<Session | null> {
     try {
       const cached = await AsyncStorage.getItem(this.sessionCacheKey);
       if (!cached) {

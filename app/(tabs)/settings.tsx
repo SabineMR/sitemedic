@@ -11,7 +11,7 @@
  * - Sign out option
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -44,6 +44,7 @@ export default function SettingsScreen() {
   const [saving, setSaving] = useState(false);
   const [suggestions, setSuggestions] = useState<EmergencyContact[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const roleInputRef = useRef<any>(null);
 
   useEffect(() => {
     loadContacts();
