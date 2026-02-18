@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 21 of 23 (Film/TV Production Vertical)
-Plan: 1 of N in current phase
+Plan: 2 of N in current phase
 Status: In progress
-Last activity: 2026-02-18 — Completed 21-01-PLAN.md: Film/TV form section + cert types (ScreenSkills + EFR)
+Last activity: 2026-02-18 — Completed 21-02-PLAN.md: Film/TV Cast & Crew terminology + cert ordering + location/event label helpers
 
-Progress: [██████████] v1.1 complete | [█████░░░░░] v2.0 9/27 plans (Phase 18 + 18.5 + 21-01 complete)
+Progress: [██████████] v1.1 complete | [█████░░░░░] v2.0 10/27 plans (Phase 18 + 18.5 + 21-01 + 21-02 complete)
 
 ## Performance Metrics
 
@@ -32,9 +32,9 @@ Progress: [██████████] v1.1 complete | [█████░�
 | 18–23 (v2.0) | 6/25 | ~7 min | ~1 min |
 
 **Recent Trend:**
-- Last plan: 21-01 — Film/TV form section + ScreenSkills/EFR cert types (2 min)
-- Phase 21 plans: 21-01 (treatment form section + cert registry entries)
-- Trend: Stable — consistent 1–2 min for vertical surgical additions
+- Last plan: 21-02 — Film/TV Cast & Crew terminology + cert ordering (4 min)
+- Phase 21 plans: 21-01 (treatment form section + cert registry entries), 21-02 (terminology + cert ordering)
+- Trend: Stable — consistent 2–4 min for vertical surgical additions
 
 *Updated after each plan completion*
 
@@ -64,6 +64,10 @@ Key decisions affecting v2.0:
 - 21-01: Film/TV form section uses `orgVertical === 'tv_film'` guard; verticalExtraFields JSON string serialized at formValues build time (4 fields: production_title, patient_role, sfx_involved, scene_context)
 - 21-01: ScreenSkills Production Safety Passport and EFR use 'medical' category — no new CertCategory union member needed
 - 21-01: VERTICAL_CERT_TYPES for tv_film NOT updated — Plan 21-02 handles cert ordering; new cert types added to array + info/metadata records only
+- 21-02: Workers tab plural label uses 'Cast & Crew' directly for tv_film (not getPatientLabel + 's') — matches Film/TV industry convention
+- 21-02: getLocationLabel and getEventLabel placed in vertical-outcome-labels.ts alongside getPatientLabel — single file for all vertical noun helpers
+- 21-02: CSCS + IPAF removed from tv_film VERTICAL_CERT_TYPES ordering only — remain in master CERT_TYPES arrays
+- 21-02: FILM-04 confirmed — incident-report-dispatcher.ts already routes tv_film to riddor-f2508-generator; no code change needed
 
 ### Research Flags (Phase-Blocking)
 
@@ -81,6 +85,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T03:50:22Z
-Stopped at: Completed 21-01-PLAN.md — Film/TV form section + cert types
+Last session: 2026-02-18T03:58:12Z
+Stopped at: Completed 21-02-PLAN.md — Film/TV Cast & Crew terminology + cert ordering
 Resume file: None

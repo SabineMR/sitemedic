@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Phase 21-01: Film/TV production conditional form section + ScreenSkills Production Safety Passport & EFR cert types added to both cert registries)
+**Last Updated**: 2026-02-18 (Phase 21-02: Film/TV Cast & Crew terminology applied across workers tab, worker screens, and treatment screens; tv_film cert ordering updated; getLocationLabel/getEventLabel helpers added)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -16,6 +16,64 @@ SiteMedic is a comprehensive platform combining **mobile medic software** (offli
 - High-value add-ons: Corporate Events, Private Events (weddings/parties/galas), Education & Youth (DBS-checked), Outdoor Adventure & Endurance
 
 **Business Model**: Software bundled with medic staffing service (no separate software charge). Revenue from medic bookings with a configurable platform/medic split (default 60% platform / 40% medic, overridable per employee). Weekly medic payouts via UK Faster Payments, Net 30 invoicing for established corporate clients. Referral bookings (jobs recommended by a third party who cannot take them) trigger a 10% referral payout (configurable) deducted from the platform's share — medic payout is unaffected.
+
+---
+
+## Recent Updates — Film/TV Production Vertical: Terminology + Cert Ordering (2026-02-18)
+
+### Phase 21-02: Film/TV Cast & Crew Terminology and Cert Ordering ✅
+
+When a Film/TV org is active (`primaryVertical === 'tv_film'`), the mobile app now uses production-industry terminology throughout all worker and treatment screens.
+
+**Workers tab dynamic labelling (`app/(tabs)/_layout.tsx`):**
+- Tab bar label: `Workers` → `Cast & Crew`
+- Tab bar header title: `Worker Registry` → `Cast & Crew Registry`
+- Driven by `useOrg()` + `getPatientLabel()` — no hardcoded strings
+
+**Workers list dynamic labelling (`app/(tabs)/workers.tsx`):**
+- "Add Worker" button → "Add Cast & Crew"
+- Empty state "No Workers Registered" → "No Cast & Crew Registered"
+- Empty state subtitle uses vertical-aware wording
+
+**Worker creation screens:**
+- `app/worker/new.tsx` — form title: "Add Worker - Site Induction" → "Add Crew member - Site Induction"
+- `app/worker/quick-add.tsx` — title: "Quick Add Worker" → "Quick Add Crew member"; Add button label updated
+
+**Worker profile screen (`app/worker/[id].tsx`):**
+- Error text uses `personLabel` for consistency
+- `useOrg` and `getPatientLabel` imported for future vertical-aware section headings
+
+**Treatment detail screen (`app/treatment/[id].tsx`):**
+- "Worker Information" section heading → "Crew member Information" (for tv_film)
+- Driven by `patientLabel = getPatientLabel(primaryVertical)`
+
+**Treatment templates screen (`app/treatment/templates.tsx`):**
+- "1. Select Worker" heading → "1. Select Crew member" (for tv_film)
+- Search placeholder adapts to vertical person label
+
+**Updated cert profile ordering (`services/taxonomy/certification-types.ts` + `web/types/certification.types.ts`):**
+- `tv_film` `VERTICAL_CERT_TYPES` now starts: HCPC Paramedic, ScreenSkills Production Safety Passport, FREC 4, EFR
+- Followed by: PHEC, PHTLS, ALS Provider, ATLS, FREC 3
+- CSCS and IPAF removed from `tv_film` ordering (remain in master `CERT_TYPES` / `UK_CERT_TYPES` arrays)
+
+**New terminology helper functions (`services/taxonomy/vertical-outcome-labels.ts`):**
+- `getLocationLabel(verticalId)` — returns location noun: "Set" for tv_film, "Site" for construction, "Circuit" for motorsport, etc.
+- `getEventLabel(verticalId)` — returns event/booking noun: "Production" for tv_film, "Client" for construction, "Event" for motorsport, etc.
+
+**FILM-04 dispatch verification:**
+- `web/lib/pdf/incident-report-dispatcher.ts` confirmed: `tv_film` routes to `riddor-f2508-generator` — no code change needed
+
+**Files modified:**
+- `services/taxonomy/certification-types.ts` — tv_film cert ordering
+- `web/types/certification.types.ts` — tv_film cert ordering (mirrored)
+- `services/taxonomy/vertical-outcome-labels.ts` — getLocationLabel + getEventLabel added
+- `app/(tabs)/_layout.tsx` — dynamic Workers tab labels
+- `app/(tabs)/workers.tsx` — dynamic Add/empty state labels
+- `app/worker/new.tsx` — form title uses personLabel
+- `app/worker/quick-add.tsx` — title and button use personLabel
+- `app/worker/[id].tsx` — useOrg imported; error text uses personLabel
+- `app/treatment/[id].tsx` — "Worker Information" → "{patientLabel} Information"
+- `app/treatment/templates.tsx` — "1. Select Worker" and placeholder use personLabel
 
 ---
 
