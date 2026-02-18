@@ -61,15 +61,13 @@ verified: 2026-02-18
 | Booking confirmation email shows org branding | PASS |
 | All email templates have branding prop | PASS |
 
-## Known Out-of-Scope Items
+## Previously Out-of-Scope Items — Now Fixed
 
-The following Edge Functions still have hardcoded branding but were **not in the Phase 28 plan scope** (8 PDF functions + 4 email templates):
+The following 4 Edge Functions had hardcoded branding outside the original plan scope. All fixed in commit `15113ea`:
 
-1. **generate-weekly-report/email.ts** — The email body that accompanies the weekly PDF still has "SiteMedic" (the PDF itself is branded)
-2. **certification-expiry-checker/email-templates.ts** — "Apex Safety Group Ltd" in compliance notification emails
-3. **send-contract-email/index.ts** — "SiteMedic" and "SiteMedic Ltd" in contract emails
-4. **generate-contract-pdf** — "SiteMedic Ltd" as legal party name (arguably correct for contracts)
-
-These can be addressed in a future phase or todo.
+1. **generate-weekly-report/email.ts** — Now uses `companyName` param passed from index.tsx branding
+2. **certification-expiry-checker/email-templates.ts** — "Apex Safety Group Ltd" replaced with dynamic `data.orgName`
+3. **send-contract-email/index.ts** — Fetches org branding from contract's booking; uses `providerName` throughout
+4. **generate-contract-pdf** — Fetches org branding; passes `providerName` to ContractDocument and SignatureBlock
 
 ## Result: PASSED

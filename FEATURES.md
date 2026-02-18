@@ -84,6 +84,17 @@ All 8 PDF Edge Functions now: (1) resolve org_id, (2) call `fetchOrgBranding()`,
 - **Tier-based attribution**: `showPoweredBySiteMedic(tier)` returns true for null/starter, false for growth/enterprise. In Next.js routes: `!hasFeature(tier, 'white_label')`
 - **Platform alert emails excluded**: `payoutFailure` and `cashFlowAlert` are SiteMedic platform alerts — intentionally NOT branded per org
 
+### Additional Functions Branded (gap closure)
+
+4 additional Edge Functions that had hardcoded branding were also updated:
+
+| Function | What Changed |
+|----------|-------------|
+| `certification-expiry-checker/email-templates.ts` | Replaced "Apex Safety Group Ltd" with dynamic `orgName` (already passed); dynamic `from` name |
+| `generate-weekly-report/email.ts` | Added `companyName` param; email header, footer, and `from` now use org company name |
+| `send-contract-email/index.ts` | Added Supabase client + `fetchOrgBranding`; resolves org from contract's booking; `providerName` used in header, footer, from, subject |
+| `generate-contract-pdf` (ContractDocument + SignatureBlock) | Added `providerName` to `ContractPDFData`; fetches org branding from contract's booking; provider party name and footer use dynamic value |
+
 ---
 
 ## Previous Updates — Org Onboarding Welcome Email (2026-02-18)
