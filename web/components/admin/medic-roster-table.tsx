@@ -226,6 +226,30 @@ export function MedicRosterTable() {
       },
     },
     {
+      accessorKey: 'classification',
+      header: 'Classification',
+      cell: ({ row }) => {
+        const medic = row.original;
+        const label = medic.classification
+          ? medic.classification.replace(/_/g, ' ')
+          : medic.experience_level || '—';
+        return (
+          <div className="text-sm">
+            <div className="text-gray-200 capitalize">{label}</div>
+            {medic.years_experience != null && medic.years_experience > 0 && (
+              <div className="text-xs text-gray-500">{medic.years_experience} yrs exp</div>
+            )}
+            {medic.hourly_rate != null && (
+              <div className="text-xs text-green-400">£{Number(medic.hourly_rate).toFixed(2)}/hr</div>
+            )}
+            {medic.cqc_registration_number && (
+              <div className="text-xs text-blue-400 mt-0.5">CQC: {medic.cqc_registration_number}</div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: 'territories',
       header: 'Territories',
       cell: ({ row }) => {
@@ -370,8 +394,14 @@ export function MedicRosterTable() {
         return (
           <div className="flex gap-2">
             <Link
-              href={`/admin/medics/${medic.id}/onboarding`}
+              href={`/admin/medics/${medic.id}`}
               className="text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors"
+            >
+              Profile
+            </Link>
+            <Link
+              href={`/admin/medics/${medic.id}/onboarding`}
+              className="text-gray-400 hover:text-gray-200 text-xs font-medium transition-colors"
             >
               Onboarding
             </Link>

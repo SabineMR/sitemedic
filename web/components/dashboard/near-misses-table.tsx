@@ -120,6 +120,8 @@ export function NearMissesTable({ initialData }: NearMissesTableProps) {
         columns={nearMissesColumns}
         data={filteredData}
         globalFilterPlaceholder="Search near-misses..."
+        emptyTitle="No near-miss reports"
+        emptyDescription="Near-miss incidents will appear here once reported. Try adjusting date range or filters."
       />
     </div>
   );

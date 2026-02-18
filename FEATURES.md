@@ -2,8 +2,56 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Gap closure 23-06: MotorsportIncidentReportCard + generateMotorsportIncidentPDF — one-click Motorsport UK Accident Form PDF download on treatment detail page for motorsport vertical; MOTO-07 closed)
+**Last Updated**: 2026-02-18 (Gap analysis & fixes: 15 codebase gaps identified and resolved — payment form bug fix, admin settings persistence, postcode validation, empty states, medic detail page, branding UI, subscription billing, referral fields, booking confirmation verification)
 **Audience**: Web developers, technical reviewers, product team
+
+---
+
+## Recent Updates — Codebase Gap Analysis & Fixes (2026-02-18)
+
+### Gap Analysis: 15 fixes across UI, backend, and customer flows
+
+**Bug Fixes:**
+- Fixed `sessionStorage` key mismatch in payment form (`pricingBreakdown` → `bookingPricing`) that could silently fail bookings
+- Fixed booking confirmation page never verifying Stripe payment status — now checks `redirect_status` param
+- Fixed recurring booking creation failures being silently swallowed — now shows amber warning to user
+- Added UK postcode regex validation to booking form that blocks submission (previously only visual feedback)
+
+**Admin Settings Persistence:**
+- Wired up "Save Changes" button for billing email/emergency contact (previously no onClick handler)
+- Notification preference toggles now persist to localStorage (previously flip-only, no save)
+- Added branding section to settings: company name, brand colour picker, tagline (reads/writes org_branding table)
+- Added subscription billing section showing current tier (starter/growth/enterprise), status, and tier comparison
+- Created `/api/admin/branding` and `/api/admin/subscription` API routes
+
+**New Pages & Components:**
+- Created `/admin/medics/[id]/page.tsx` — medic detail page with editable CompensationSettings (previously only accessible during onboarding)
+- Added "Profile" link to medic roster table actions
+- Added classification, years_experience, hourly_rate, and CQC number columns to medic roster table
+- Added `is_referral` + `referred_by` fields to admin booking creation form
+
+**UX Improvements:**
+- Enhanced DataTable empty state with configurable `emptyTitle` and `emptyDescription` props
+- Added contextual empty state messages to treatments, near-misses, and workers tables
+- ComplianceScore component now shows loading spinner instead of returning null when data is loading
+
+| File | Change |
+|---|---|
+| `web/components/booking/payment-form.tsx` | Fixed sessionStorage key from `pricingBreakdown` to `bookingPricing` |
+| `web/components/booking/booking-form.tsx` | Added `isValidUkPostcode()` check to `isFormValid()` |
+| `web/app/admin/settings/page.tsx` | Added branding section, subscription section, wired contact details save, notification toggle persistence |
+| `web/app/api/admin/branding/route.ts` | **New** — GET/PUT org_branding API |
+| `web/app/api/admin/subscription/route.ts` | **New** — GET subscription tier/status API |
+| `web/app/admin/medics/[id]/page.tsx` | **New** — Medic detail page with editable compensation settings |
+| `web/app/admin/bookings/new/page.tsx` | Added referral section (is_referral checkbox + referred_by input) |
+| `web/components/admin/medic-roster-table.tsx` | Added Classification column + Profile link |
+| `web/lib/queries/admin/medics.ts` | Added classification, years_experience, hourly_rate, pay_model, experience_level, cqc_registration_number to MedicWithMetrics |
+| `web/components/dashboard/data-table.tsx` | Added emptyTitle/emptyDescription props to DataTable |
+| `web/components/dashboard/treatments-table.tsx` | Added contextual empty state message |
+| `web/components/dashboard/near-misses-table.tsx` | Added contextual empty state message |
+| `web/components/dashboard/workers-table.tsx` | Added contextual empty state message |
+| `web/components/dashboard/compliance-score.tsx` | Replaced null return with loading spinner |
+| `web/app/(booking)/book/confirmation/page.tsx` | Added payment verification + recurring booking error handling |
 
 ---
 

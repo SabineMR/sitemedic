@@ -102,6 +102,8 @@ export function WorkersTable({ initialData }: WorkersTableProps) {
         columns={workersColumns}
         data={filteredData}
         globalFilterPlaceholder="Search workers (name, company, role)..."
+        emptyTitle="No workers registered"
+        emptyDescription="Workers will appear here once added to the system. Use the mobile app or Quick Add to register workers."
       />
     </div>
   );

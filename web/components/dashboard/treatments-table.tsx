@@ -145,6 +145,8 @@ export function TreatmentsTable({ initialData }: TreatmentsTableProps) {
         columns={treatmentColumns}
         data={filteredTreatments}
         globalFilterPlaceholder="Search all fields..."
+        emptyTitle="No treatments recorded"
+        emptyDescription="Treatments will appear here once medics submit incident reports. Try adjusting filters if you expected results."
       />
     </div>
   );

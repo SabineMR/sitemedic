@@ -116,13 +116,13 @@ Plans:
 3. Visiting a slug that does not match any org (`notexist.sitemedic.co.uk`) redirects to the apex domain root rather than serving a blank or broken page
 4. Each org subdomain requires its own sign-in — a session obtained at `app.sitemedic.co.uk` does not carry over to `apex.sitemedic.co.uk` (cookie domain is not widened to `.sitemedic.co.uk`)
 
-**Plans:** TBD
+**Plans:** 4 plans
 
 Plans:
-- [ ] 26-01: Vercel wildcard domain — add `*.sitemedic.co.uk` in Vercel Project Settings; configure DNS CNAME at registrar; note 72h propagation; set `NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.co.uk` env var
-- [ ] 26-02: Middleware subdomain extraction — add `extractSubdomain()` helper to `web/lib/supabase/middleware.ts`; strip incoming `x-org-*` headers at top of middleware before any processing (CVE-2025-29927 mitigation); service-role org lookup by slug; inject `x-org-id`, `x-org-slug`, `x-org-tier`, `x-org-branding-*` request headers; redirect unknown slugs to apex root
-- [ ] 26-03: Branded login page — update `web/app/login/page.tsx` to read `x-org-*` headers via `next/headers`; render org company name and logo when present; fallback to SiteMedic defaults on apex domain; "Powered by SiteMedic" footer disclosure
-- [ ] 26-04: Auth cookie scope verification — confirm Supabase SSR cookie is NOT set with `.sitemedic.co.uk` domain; regression-test existing login flow on apex domain after middleware changes; test with `/etc/hosts` subdomain simulation before DNS propagates
+- [ ] 26-01-PLAN.md — Environment Setup & DNS Initiation: add NEXT_PUBLIC_ROOT_DOMAIN env var; checkpoint for Vercel wildcard domain + DNS CNAME configuration
+- [ ] 26-02-PLAN.md — Middleware Subdomain Extraction & Header Injection: extractSubdomain() helper, x-org-* header stripping (CVE-2025-29927), service-role org+branding lookup by slug, header injection, unknown slug redirect
+- [ ] 26-03-PLAN.md — Branded Login Page: convert login to server component + client form; read x-org-* headers for org branding; fallback to SiteMedic defaults; "Powered by SiteMedic" footer
+- [ ] 26-04-PLAN.md — Auth Cookie Scope Verification & Local Dev Testing: fix signout route for subdomain support; verify cookie scope isolation; regression-test auth redirects
 
 ---
 
@@ -270,7 +270,7 @@ Note: Phases 27 and 28 can be parallelised once Phase 26 is deployed. Phase 30 a
 | 23. Analytics — Heat Maps & Trend Charts | v2.0 | 7/7 | Complete | 2026-02-18 |
 | 24. DB Foundation | v3.0 | 0/5 | Not started | - |
 | 25. Billing Infrastructure | v3.0 | 0/3 | Not started | - |
-| 26. Subdomain Routing | v3.0 | 0/4 | Not started | - |
+| 26. Subdomain Routing | v3.0 | 0/4 | Planned | - |
 | 27. Branding — Web Portal | v3.0 | 0/3 | Not started | - |
 | 28. Branding — PDFs & Emails | v3.0 | 0/2 | Not started | - |
 | 29. Org Onboarding Flow | v3.0 | 0/5 | Not started | - |

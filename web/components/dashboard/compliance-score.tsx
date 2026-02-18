@@ -15,7 +15,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useComplianceData } from '@/lib/queries/compliance-hooks';
 import { calculateComplianceStatus, ComplianceData } from '@/lib/queries/compliance';
-import { CheckCircle2, XCircle, AlertTriangle, Clock } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertTriangle, Clock, Loader2 } from 'lucide-react';
 
 interface ComplianceScoreProps {
   initialData: ComplianceData;
@@ -25,7 +25,19 @@ export function ComplianceScore({ initialData }: ComplianceScoreProps) {
   const { data } = useComplianceData(initialData);
 
   if (!data) {
-    return null;
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Compliance Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center gap-2 py-6 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm">Loading compliance data...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   const status = calculateComplianceStatus(data);

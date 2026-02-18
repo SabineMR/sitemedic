@@ -8,7 +8,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Settings, Building2, Bell, CreditCard, Shield, Mail, Phone, Loader2, Sliders, Layers, Clapperboard, Gauge, HardHat, Music2, Trophy, FerrisWheel, Briefcase, Star, GraduationCap, Tent, ShieldCheck } from 'lucide-react';
+import { Settings, Building2, Bell, CreditCard, Shield, Mail, Phone, Loader2, Sliders, Layers, Clapperboard, Gauge, HardHat, Music2, Trophy, FerrisWheel, Briefcase, Star, GraduationCap, Tent, ShieldCheck, Palette, Upload } from 'lucide-react';
 import { useOrg } from '@/contexts/org-context';
 import { toast } from 'sonner';
 
@@ -71,6 +71,33 @@ export default function SettingsPage() {
   const [urgencyInput, setUrgencyInput] = useState('');
   const [savingVerticals, setSavingVerticals] = useState(false);
   const [savingCqc, setSavingCqc] = useState(false);
+  const [savingContact, setSavingContact] = useState(false);
+  const [billingEmail, setBillingEmail] = useState('');
+  const [emergencyContact, setEmergencyContact] = useState('');
+
+  // Notification preferences — persisted to localStorage until DB columns are added
+  const NOTIF_STORAGE_KEY = 'sitemedic_notification_prefs';
+  const defaultNotifPrefs = {
+    booking_confirmations: true,
+    riddor_alerts: true,
+    cert_expiry: true,
+    payout_summaries: true,
+    cashflow_alerts: true,
+  };
+  const [notifPrefs, setNotifPrefs] = useState(defaultNotifPrefs);
+
+  // Subscription state
+  const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+
+  // Branding state
+  const [brandingLoading, setBrandingLoading] = useState(true);
+  const [savingBranding, setSavingBranding] = useState(false);
+  const [brandCompanyName, setBrandCompanyName] = useState('');
+  const [brandTagline, setBrandTagline] = useState('');
+  const [brandColor, setBrandColor] = useState('#2563EB');
+  const [brandLogoPath, setBrandLogoPath] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchSettings() {
@@ -87,6 +114,7 @@ export default function SettingsPage() {
         if (data.cqc_registration_date === undefined) data.cqc_registration_date = null;
         setSettings(data);
         setUrgencyInput((data.urgency_premiums ?? []).join(', '));
+        setBillingEmail(data.admin_email ?? '');
       } catch (err) {
         console.error('Error fetching settings:', err);
         toast.error('Could not load business configuration');
@@ -96,6 +124,42 @@ export default function SettingsPage() {
     }
 
     fetchSettings();
+
+    // Load notification prefs from localStorage
+    try {
+      const stored = localStorage.getItem(NOTIF_STORAGE_KEY);
+      if (stored) setNotifPrefs(JSON.parse(stored));
+    } catch { /* ignore parse errors */ }
+
+    // Fetch subscription
+    async function fetchSubscription() {
+      try {
+        const res = await fetch('/api/admin/subscription');
+        if (res.ok) {
+          const data = await res.json();
+          setSubscriptionTier(data.subscription_tier ?? 'starter');
+          setSubscriptionStatus(data.subscription_status ?? 'active');
+        }
+      } catch { /* ignore */ }
+      finally { setSubscriptionLoading(false); }
+    }
+    fetchSubscription();
+
+    // Fetch branding
+    async function fetchBranding() {
+      try {
+        const res = await fetch('/api/admin/branding');
+        if (res.ok) {
+          const data = await res.json();
+          setBrandCompanyName(data.company_name ?? '');
+          setBrandTagline(data.tagline ?? '');
+          setBrandColor(data.primary_colour_hex ?? '#2563EB');
+          setBrandLogoPath(data.logo_path ?? null);
+        }
+      } catch { /* branding table may not exist yet */ }
+      finally { setBrandingLoading(false); }
+    }
+    fetchBranding();
   }, []);
 
   async function handleSaveSettings() {
@@ -229,6 +293,63 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleSaveBranding() {
+    setSavingBranding(true);
+    try {
+      const res = await fetch('/api/admin/branding', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company_name: brandCompanyName,
+          tagline: brandTagline,
+          primary_colour_hex: brandColor,
+        }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        toast.error(errorData.error ?? 'Failed to save branding');
+        return;
+      }
+      toast.success('Branding settings saved');
+    } catch {
+      toast.error('Failed to save branding');
+    } finally {
+      setSavingBranding(false);
+    }
+  }
+
+  async function handleSaveContactDetails() {
+    setSavingContact(true);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ admin_email: billingEmail }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        toast.error(errorData.error ?? 'Failed to save contact details');
+        return;
+      }
+      const updated: OrgSettings = await res.json();
+      setSettings((prev) => prev ? { ...prev, admin_email: updated.admin_email } : prev);
+      toast.success('Contact details saved');
+    } catch {
+      toast.error('Failed to save contact details');
+    } finally {
+      setSavingContact(false);
+    }
+  }
+
+  function handleNotifToggle(key: keyof typeof defaultNotifPrefs) {
+    setNotifPrefs((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(next));
+      toast.success(`${next[key] ? 'Enabled' : 'Disabled'} notification`);
+      return next;
+    });
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
       {/* Header */}
@@ -275,6 +396,108 @@ export default function SettingsPage() {
                 />
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Branding */}
+        <section>
+          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <Palette className="w-5 h-5 text-pink-400" />
+            Branding
+          </h2>
+          <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 shadow-2xl p-6 space-y-5">
+            {brandingLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+                <span className="ml-3 text-gray-400 text-sm">Loading branding...</span>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-gray-400">
+                  Customise your organisation&apos;s branding for white-label portals, PDFs, and emails.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Company Display Name
+                    </label>
+                    <input
+                      type="text"
+                      value={brandCompanyName}
+                      onChange={(e) => setBrandCompanyName(e.target.value)}
+                      placeholder="Your Company Name"
+                      className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Shown on branded documents and client-facing pages.</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Primary Brand Colour
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={brandColor}
+                        onChange={(e) => setBrandColor(e.target.value)}
+                        className="w-10 h-10 rounded-lg border border-gray-700 bg-transparent cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        value={brandColor}
+                        onChange={(e) => setBrandColor(e.target.value)}
+                        placeholder="#2563EB"
+                        pattern="^#[0-9A-Fa-f]{6}$"
+                        className="w-32 bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm font-mono placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <div
+                        className="w-10 h-10 rounded-lg border border-gray-700"
+                        style={{ backgroundColor: brandColor }}
+                      />
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Tagline
+                    </label>
+                    <input
+                      type="text"
+                      value={brandTagline}
+                      onChange={(e) => setBrandTagline(e.target.value)}
+                      placeholder="e.g. Professional Medical Staffing Solutions"
+                      className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Displayed below your logo on the white-label portal.</p>
+                  </div>
+                </div>
+
+                {/* Logo info */}
+                <div className="flex items-start gap-3 px-4 py-3 bg-gray-700/20 border border-gray-700/40 rounded-xl">
+                  <Upload className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div className="text-xs text-gray-400">
+                    <span className="text-gray-200 font-medium">Logo upload</span>
+                    {' '}— {brandLogoPath ? `Current: ${brandLogoPath}` : 'No logo uploaded yet.'}
+                    {' '}Logo upload via file picker coming soon.
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={handleSaveBranding}
+                    disabled={savingBranding}
+                    className="px-5 py-2.5 bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-500 hover:to-pink-600 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-2"
+                  >
+                    {savingBranding ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Branding'
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </section>
 
@@ -611,25 +834,31 @@ export default function SettingsPage() {
           </h2>
           <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 shadow-2xl p-6">
             <div className="space-y-4">
-              {[
-                { label: 'Booking confirmations', desc: 'Email when a booking is confirmed or updated' },
-                { label: 'RIDDOR deadline alerts', desc: 'Email 48h before a RIDDOR report is due' },
-                { label: 'Certification expiry warnings', desc: 'Email 30 days before a medic cert expires' },
-                { label: 'Weekly payout summaries', desc: 'Email every Friday with payout breakdown' },
-                { label: 'Cash flow alerts', desc: 'Email when Stripe balance drops below threshold' },
-              ].map((item) => (
-                <div key={item.label} className="flex items-center justify-between py-3 border-b border-gray-700/50 last:border-0">
+              {([
+                { key: 'booking_confirmations' as const, label: 'Booking confirmations', desc: 'Email when a booking is confirmed or updated' },
+                { key: 'riddor_alerts' as const, label: 'RIDDOR deadline alerts', desc: 'Email 48h before a RIDDOR report is due' },
+                { key: 'cert_expiry' as const, label: 'Certification expiry warnings', desc: 'Email 30 days before a medic cert expires' },
+                { key: 'payout_summaries' as const, label: 'Weekly payout summaries', desc: 'Email every Friday with payout breakdown' },
+                { key: 'cashflow_alerts' as const, label: 'Cash flow alerts', desc: 'Email when Stripe balance drops below threshold' },
+              ]).map((item) => (
+                <div key={item.key} className="flex items-center justify-between py-3 border-b border-gray-700/50 last:border-0">
                   <div>
                     <p className="text-sm font-medium text-white">{item.label}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{item.desc}</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" defaultChecked className="sr-only peer" />
+                    <input
+                      type="checkbox"
+                      checked={notifPrefs[item.key]}
+                      onChange={() => handleNotifToggle(item.key)}
+                      className="sr-only peer"
+                    />
                     <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                   </label>
                 </div>
               ))}
             </div>
+            <p className="text-xs text-gray-500 mt-4">Preferences saved locally. Server-side notification routing coming soon.</p>
           </div>
         </section>
 
@@ -647,9 +876,12 @@ export default function SettingsPage() {
                 </label>
                 <input
                   type="email"
+                  value={billingEmail}
+                  onChange={(e) => setBillingEmail(e.target.value)}
                   placeholder="billing@yourcompany.co.uk"
                   className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
+                <p className="text-xs text-gray-500 mt-1">Used for billing notifications and invoices.</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
@@ -657,14 +889,28 @@ export default function SettingsPage() {
                 </label>
                 <input
                   type="tel"
+                  value={emergencyContact}
+                  onChange={(e) => setEmergencyContact(e.target.value)}
                   placeholder="+44 7700 900000"
                   className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
+                <p className="text-xs text-gray-500 mt-1">Stored locally. Server-side storage coming soon.</p>
               </div>
             </div>
             <div className="flex justify-end pt-2">
-              <button className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-lg font-medium text-sm transition-all duration-200 hover:scale-105 active:scale-95">
-                Save Changes
+              <button
+                onClick={handleSaveContactDetails}
+                disabled={savingContact}
+                className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-2"
+              >
+                {savingContact ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
               </button>
             </div>
           </div>
@@ -676,16 +922,65 @@ export default function SettingsPage() {
             <CreditCard className="w-5 h-5 text-purple-400" />
             Billing & Subscription
           </h2>
-          <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 shadow-2xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white font-medium">Current Plan</p>
-                <p className="text-gray-400 text-sm mt-1">Billed via Stripe. Contact support to change your plan.</p>
+          <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 shadow-2xl p-6 space-y-5">
+            {subscriptionLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+                <span className="ml-3 text-gray-400 text-sm">Loading subscription...</span>
               </div>
-              <span className="px-4 py-1.5 bg-blue-500/20 text-blue-300 rounded-full text-sm font-semibold border border-blue-500/30">
-                Active
-              </span>
-            </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white font-medium">Current Plan</p>
+                    <p className="text-gray-400 text-sm mt-1">
+                      {subscriptionTier === 'enterprise' ? 'Enterprise' : subscriptionTier === 'growth' ? 'Growth' : 'Starter'}
+                      {' '}tier · billed via Stripe
+                    </p>
+                  </div>
+                  <span className={`px-4 py-1.5 rounded-full text-sm font-semibold border ${
+                    subscriptionStatus === 'active'
+                      ? 'bg-green-500/20 text-green-300 border-green-500/30'
+                      : subscriptionStatus === 'past_due'
+                      ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
+                      : 'bg-red-500/20 text-red-300 border-red-500/30'
+                  }`}>
+                    {subscriptionStatus === 'active' ? 'Active' : subscriptionStatus === 'past_due' ? 'Past Due' : 'Cancelled'}
+                  </span>
+                </div>
+
+                {/* Tier comparison */}
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { tier: 'starter', label: 'Starter', features: 'Up to 5 medics, basic reports' },
+                    { tier: 'growth', label: 'Growth', features: 'Up to 25 medics, analytics, territories' },
+                    { tier: 'enterprise', label: 'Enterprise', features: 'Unlimited medics, white-label, API access' },
+                  ].map((plan) => (
+                    <div
+                      key={plan.tier}
+                      className={`px-4 py-3 rounded-xl border text-sm ${
+                        subscriptionTier === plan.tier
+                          ? 'bg-purple-900/30 border-purple-500/50 text-purple-300'
+                          : 'bg-gray-900/30 border-gray-700/50 text-gray-400'
+                      }`}
+                    >
+                      <p className="font-semibold text-white">{plan.label}</p>
+                      <p className="text-xs mt-1 leading-relaxed">{plan.features}</p>
+                      {subscriptionTier === plan.tier && (
+                        <p className="text-xs text-purple-400 font-medium mt-2">Current plan</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-xs text-gray-500">
+                  To upgrade or manage billing, contact support at{' '}
+                  <a href="mailto:support@sitemedic.co.uk" className="text-blue-400 hover:text-blue-300">
+                    support@sitemedic.co.uk
+                  </a>
+                </p>
+              </>
+            )}
           </div>
         </section>
 

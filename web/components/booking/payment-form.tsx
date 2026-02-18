@@ -128,7 +128,7 @@ export function PaymentForm({ clientId }: PaymentFormProps) {
   useEffect(() => {
     // Retrieve booking data from sessionStorage
     const bookingDataStr = sessionStorage.getItem('bookingFormData');
-    const pricingDataStr = sessionStorage.getItem('pricingBreakdown');
+    const pricingDataStr = sessionStorage.getItem('bookingPricing');
 
     if (!bookingDataStr || !pricingDataStr) {
       setError('Booking data not found. Please return to the booking form.');

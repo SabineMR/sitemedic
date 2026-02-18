@@ -126,6 +126,12 @@ export function BookingForm({ prefillData }: BookingFormProps = {}) {
     }
   }, [formData.shiftDate, formData.shiftHours, baseRate]);
 
+  // UK postcode format validation
+  const isValidUkPostcode = (postcode: string): boolean => {
+    const ukPostcodePattern = /^[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}$/i;
+    return ukPostcodePattern.test(postcode.trim());
+  };
+
   // Check if all required fields are filled
   const isFormValid = (): boolean => {
     const baseValidation =
@@ -135,7 +141,7 @@ export function BookingForm({ prefillData }: BookingFormProps = {}) {
       formData.shiftHours >= 8 &&
       formData.siteName.trim() !== '' &&
       formData.siteAddress.trim() !== '' &&
-      formData.sitePostcode.trim() !== '' &&
+      isValidUkPostcode(formData.sitePostcode) &&
       formData.siteContactName.trim() !== '' &&
       formData.siteContactPhone.trim() !== '';
 

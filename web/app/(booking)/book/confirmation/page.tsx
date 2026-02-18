@@ -48,6 +48,8 @@ function ConfirmationContent() {
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
   const [bookingData, setBookingData] = useState<any>(null);
   const [recurringBookings, setRecurringBookings] = useState<any[]>([]);
+  const [recurringError, setRecurringError] = useState<string | null>(null);
+  const redirectStatus = searchParams.get('redirect_status');
 
   useEffect(() => {
     async function processBooking() {
@@ -58,10 +60,15 @@ function ConfirmationContent() {
       }
 
       try {
-        // Step 1: Verify payment status if coming from Stripe redirect
-        if (paymentIntentClientSecret) {
-          // Payment verification would use Stripe.js here
-          // For now, we assume payment succeeded if we got redirected back
+        // Step 1: Verify payment status from Stripe redirect
+        if (redirectStatus && redirectStatus !== 'succeeded') {
+          setError(
+            redirectStatus === 'processing'
+              ? 'Your payment is still processing. We will email you when confirmed.'
+              : 'Payment was not successful. Please try again or contact support.'
+          );
+          setLoading(false);
+          return;
         }
 
         // Step 2: Trigger auto-matching (which internally: assigns medic -> updates booking -> sends emails)
@@ -158,6 +165,8 @@ function ConfirmationContent() {
                 status: 'confirmed',
               }))
             );
+          } else {
+            setRecurringError('Your first booking is confirmed, but we could not create the recurring schedule. Our team will set these up manually.');
           }
         }
 
@@ -170,7 +179,7 @@ function ConfirmationContent() {
     }
 
     processBooking();
-  }, [bookingId, paymentIntentClientSecret]);
+  }, [bookingId, paymentIntentClientSecret, redirectStatus]);
 
   // Loading state
   if (loading) {
@@ -223,12 +232,22 @@ function ConfirmationContent() {
   // Success state - show confirmation
   if (bookingData && matchResult.matches.length > 0 && !matchResult.requiresManualApproval) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-4">
         <BookingConfirmation
           booking={bookingData}
           recurringBookings={recurringBookings.length > 0 ? recurringBookings : undefined}
           recurrencePattern={bookingData.recurrence_pattern}
         />
+        {recurringError && (
+          <Card className="border-amber-200 bg-amber-50">
+            <CardContent className="py-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-amber-800">{recurringError}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   }

@@ -35,12 +35,16 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   globalFilterPlaceholder?: string;
+  emptyTitle?: string;
+  emptyDescription?: string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   globalFilterPlaceholder = 'Search...',
+  emptyTitle = 'No records found',
+  emptyDescription = 'Try adjusting your filters or check back later.',
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -111,8 +115,11 @@ export function DataTable<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results found
+                <TableCell colSpan={columns.length} className="h-32 text-center">
+                  <div className="flex flex-col items-center gap-1.5 py-4">
+                    <p className="text-sm font-medium text-muted-foreground">{emptyTitle}</p>
+                    <p className="text-xs text-muted-foreground/70">{emptyDescription}</p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}

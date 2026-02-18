@@ -10,7 +10,7 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CalendarPlus, ArrowLeft, MapPin, Clock, Users, FileText } from 'lucide-react';
+import { CalendarPlus, ArrowLeft, MapPin, Clock, Users, FileText, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,6 +47,8 @@ function NewBookingForm() {
     confinedSpace: searchParams.get('confinedSpace') === '1',
     traumaSpecialist: searchParams.get('traumaSpecialist') === '1',
     specialNotes: searchParams.get('specialNotes') ?? '',
+    isReferral: false,
+    referredBy: '',
   });
 
   const set = (field: string, value: string | boolean) =>
@@ -269,6 +271,35 @@ function NewBookingForm() {
                 Trauma Specialist Required
               </label>
             </div>
+          </section>
+
+          {/* Referral */}
+          <section className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 shadow-2xl p-6 space-y-4">
+            <h2 className="text-base font-semibold text-white flex items-center gap-2">
+              <Share2 className="w-5 h-5 text-pink-400" />
+              Referral
+            </h2>
+            <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.isReferral}
+                onChange={(e) => set('isReferral', e.target.checked)}
+                className="w-4 h-4 rounded border-gray-600 bg-gray-900 text-blue-500"
+              />
+              This booking came from a referral
+            </label>
+            {form.isReferral && (
+              <div>
+                <Label className="text-gray-300">Referred By</Label>
+                <Input
+                  value={form.referredBy}
+                  onChange={(e) => set('referredBy', e.target.value)}
+                  placeholder="Referrer name or company"
+                  className="mt-1.5 bg-gray-900/50 border-gray-700 text-white placeholder-gray-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">10% referral payout applies from platform share.</p>
+              </div>
+            )}
           </section>
 
           {/* Notes */}

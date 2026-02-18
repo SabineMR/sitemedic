@@ -44,6 +44,14 @@ export interface MedicWithMetrics {
   // Employment
   employment_status: 'self_employed' | 'umbrella';
 
+  // Classification & Pay
+  classification: string | null;
+  years_experience: number | null;
+  hourly_rate: number | null;
+  pay_model: string | null;
+  experience_level: string | null;
+  cqc_registration_number: string | null;
+
   // Performance
   star_rating: number;
   total_shifts_completed: number;
