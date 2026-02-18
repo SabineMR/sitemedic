@@ -16,6 +16,7 @@
  * - Alert acknowledgment (clears the full-screen alert on recipient's device)
  */
 
+import { Platform } from 'react-native';
 import { supabase } from '../src/lib/supabase';
 
 // Lazily require native-backed packages so the service degrades gracefully
@@ -27,6 +28,40 @@ let FileSystem: any = null;
 try { Notifications = require('expo-notifications'); } catch (_) {}
 try { Audio = require('expo-av').Audio; } catch (_) {}
 try { FileSystem = require('expo-file-system/legacy'); } catch (_) {}
+
+// ── Streaming transcription constants ────────────────────────────────────────
+// iOS records LINEAR_PCM WAV at 24 kHz mono — exactly what the OpenAI Realtime
+// API expects (PCM16, 24 kHz, mono, little-endian).
+// Android MediaRecorder cannot write raw PCM, so we fall back to the
+// existing 3-second M4A chunked-HTTP path on Android.
+const STREAMING_CHUNK_INTERVAL_MS = 1_000; // 1-second PCM chunks → near-zero latency
+const PCM_RECORDING_OPTIONS = {
+  isMeteringEnabled: false,
+  ios: {
+    extension: '.wav',
+    outputFormat: 'lpcm',  // IOSOutputFormat.LINEARPCM
+    audioQuality: 127,     // IOSAudioQuality.MAX
+    sampleRate: 24000,     // OpenAI Realtime requires 24 kHz
+    numberOfChannels: 1,
+    bitRate: 384000,       // 24000 * 16 bits * 1 ch
+    linearPCMBitDepth: 16,
+    linearPCMIsBigEndian: false,
+    linearPCMIsFloat: false,
+  },
+  android: {
+    // Unused on Android (falls back to HTTP chunked path), but must be valid.
+    extension: '.m4a',
+    outputFormat: 2, // MPEG_4
+    audioEncoder: 3, // AAC
+    sampleRate: 24000,
+    numberOfChannels: 1,
+    bitRate: 64000,
+  },
+  web: {
+    mimeType: 'audio/wav',
+    bitsPerSecond: 384000,
+  },
+};
 
 // Notification channel for emergency alerts (Android)
 const EMERGENCY_CHANNEL_ID = 'emergency';
@@ -82,6 +117,12 @@ class EmergencyAlertService {
   private onTranscriptChunk: ((text: string) => void) | null = null;
   private onTranscriptError: (() => void) | null = null;
   private isActive = false; // true while medic is recording (across rotations)
+
+  // ── Streaming transcription state ───────────────────────────────────────
+  private streamWs: WebSocket | null = null;
+  private streamActive = false;
+  private streamOnTranscript: ((delta: string) => void) | null = null;
+  private streamOnError: (() => void) | null = null;
 
   /**
    * Request notification and microphone permissions.
@@ -543,6 +584,189 @@ class EmergencyAlertService {
     }
 
     return data as EmergencyContact[];
+  }
+
+  // ── Streaming transcription (OpenAI Realtime API) ─────────────────────────
+
+  /**
+   * Returns true if the device supports PCM streaming (iOS only for now).
+   * Android falls back to the standard HTTP chunked path.
+   */
+  supportsStreaming(): boolean {
+    return Platform.OS === 'ios';
+  }
+
+  /**
+   * Start real-time streaming transcription via the OpenAI Realtime API.
+   *
+   * iOS: Records LINEAR_PCM WAV at 24 kHz mono, sends 1-second raw PCM16 chunks
+   *      over a WebSocket to the `realtime-transcribe` edge function, receives
+   *      word-by-word transcript_delta events back.
+   *
+   * @param onTranscriptDelta  called with each word/phrase as it arrives
+   * @param onAutoStop         called when the 90-second limit is reached
+   * @param onError            called if the WebSocket or OpenAI connection fails
+   */
+  async startStreamingTranscription(
+    onTranscriptDelta: (delta: string) => void,
+    onAutoStop: () => void,
+    onError?: () => void,
+  ): Promise<void> {
+    if (!Audio || !FileSystem) {
+      console.warn('[EmergencyAlert] Streaming unavailable — native modules missing');
+      onError?.();
+      return;
+    }
+    if (this.streamActive) return;
+
+    await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
+
+    this.streamActive = true;
+    this.streamOnTranscript = onTranscriptDelta;
+    this.streamOnError = onError ?? null;
+
+    // Build the WebSocket URL from the Supabase URL
+    const supabaseUrl: string = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+    const wsUrl = supabaseUrl
+      .replace(/^https:\/\//, 'wss://')
+      .replace(/^http:\/\//, 'ws://')
+      + '/functions/v1/realtime-transcribe';
+
+    console.log('[EmergencyAlert] Connecting streaming WebSocket:', wsUrl);
+    const ws = new WebSocket(wsUrl);
+    this.streamWs = ws;
+
+    ws.onopen = () => console.log('[EmergencyAlert] Streaming WS open');
+
+    ws.onmessage = (ev) => {
+      try {
+        const msg = JSON.parse(ev.data as string);
+        if (msg.type === 'transcript_delta' && msg.delta) {
+          this.streamOnTranscript?.(msg.delta);
+        } else if (msg.type === 'error') {
+          console.warn('[EmergencyAlert] Streaming error:', msg.message);
+          this.streamOnError?.();
+        }
+      } catch (_) {}
+    };
+
+    ws.onerror = () => {
+      console.warn('[EmergencyAlert] Streaming WS error');
+      this.streamOnError?.();
+    };
+
+    ws.onclose = () => console.log('[EmergencyAlert] Streaming WS closed');
+
+    // Start recording and rotation
+    await this._startPcmChunk();
+
+    this.stopRecordingTimeout = setTimeout(() => {
+      console.log('[EmergencyAlert] Streaming auto-stop at 90s');
+      onAutoStop();
+    }, MAX_RECORDING_DURATION_MS);
+
+    this.rotationInterval = setInterval(async () => {
+      if (!this.streamActive || !this.recording) return;
+      try {
+        const done = this.recording;
+        this.recording = null;
+        await done.stopAndUnloadAsync();
+        const uri = done.getURI();
+        await this._startPcmChunk();
+        if (uri) this._sendPcmChunk(uri);
+      } catch (err) {
+        console.warn('[EmergencyAlert] Streaming rotation error:', err);
+      }
+    }, STREAMING_CHUNK_INTERVAL_MS);
+  }
+
+  /** Create a new PCM recording instance. */
+  private async _startPcmChunk(): Promise<void> {
+    const { recording } = await Audio.Recording.createAsync(PCM_RECORDING_OPTIONS);
+    this.recording = recording;
+  }
+
+  /**
+   * Read a completed WAV file, strip the 44-byte header to extract raw PCM16,
+   * and send it to the edge function WebSocket.
+   */
+  private async _sendPcmChunk(uri: string): Promise<void> {
+    if (!this.streamWs || this.streamWs.readyState !== WebSocket.OPEN) return;
+    if (!FileSystem) return;
+    try {
+      const b64File = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
+
+      // Decode → strip 44-byte WAV header → re-encode as base64 PCM16
+      const raw = atob(b64File);
+      const bytes = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+
+      // Find the "data" chunk dynamically (handles non-standard WAV headers)
+      const dataOffset = this._wavDataOffset(bytes);
+      const pcm = bytes.slice(dataOffset);
+      if (pcm.length === 0) return;
+
+      let bin = '';
+      for (let i = 0; i < pcm.length; i++) bin += String.fromCharCode(pcm[i]);
+
+      this.streamWs.send(JSON.stringify({ type: 'audio', data: btoa(bin) }));
+    } catch (err) {
+      console.warn('[EmergencyAlert] PCM chunk send failed:', err);
+    }
+  }
+
+  /** Parse a RIFF/WAV header to find the byte offset of the "data" chunk payload. */
+  private _wavDataOffset(bytes: Uint8Array): number {
+    if (bytes.length < 12) return 44;
+    let offset = 12; // skip "RIFF" + fileSize + "WAVE"
+    while (offset + 8 <= bytes.length) {
+      const id = String.fromCharCode(bytes[offset], bytes[offset + 1], bytes[offset + 2], bytes[offset + 3]);
+      const size =
+        bytes[offset + 4] |
+        (bytes[offset + 5] << 8) |
+        (bytes[offset + 6] << 16) |
+        (bytes[offset + 7] << 24);
+      if (id === 'data') return offset + 8;
+      offset += 8 + size + (size % 2); // align to even bytes
+    }
+    return 44; // fallback
+  }
+
+  /**
+   * Stop streaming transcription and return the URI of the final audio chunk
+   * (for optional upload to Supabase Storage).
+   */
+  async stopStreamingTranscription(): Promise<string | null> {
+    this.streamActive = false;
+
+    if (this.stopRecordingTimeout) {
+      clearTimeout(this.stopRecordingTimeout);
+      this.stopRecordingTimeout = null;
+    }
+    if (this.rotationInterval) {
+      clearInterval(this.rotationInterval);
+      this.rotationInterval = null;
+    }
+
+    let uri: string | null = null;
+    if (this.recording) {
+      await this.recording.stopAndUnloadAsync();
+      uri = this.recording.getURI() || null;
+      this.recording = null;
+      if (uri) await this._sendPcmChunk(uri);
+    }
+
+    if (this.streamWs && this.streamWs.readyState === WebSocket.OPEN) {
+      this.streamWs.close();
+    }
+    this.streamWs = null;
+    this.streamOnTranscript = null;
+    this.streamOnError = null;
+
+    if (Audio) await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+
+    console.log('[EmergencyAlert] Streaming stopped, final URI:', uri);
+    return uri;
   }
 }
 

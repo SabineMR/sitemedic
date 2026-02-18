@@ -132,27 +132,41 @@ export default function SOSModal({ visible, onClose }: Props) {
     setSecondsLeft(MAX_RECORDING_SECONDS);
     setTranscript('');
 
-    try {
-      await emergencyAlertService.startRecording(
-        (chunk) => {
-          setTranscript((prev) => prev + ' ' + chunk);
-          setTranscriptUnavailable(false);
-        },
-        () => stopRecording(), // auto-stop at 90s
-        () => setTranscriptUnavailable(true),
-      );
+    // Start countdown timer
+    countdownRef.current = setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s <= 1) {
+          if (countdownRef.current) clearInterval(countdownRef.current);
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
 
-      // Start countdown
-      countdownRef.current = setInterval(() => {
-        setSecondsLeft((s) => {
-          if (s <= 1) {
-            if (countdownRef.current) clearInterval(countdownRef.current);
-            return 0;
-          }
-          return s - 1;
-        });
-      }, 1000);
+    try {
+      if (emergencyAlertService.supportsStreaming()) {
+        // iOS: real-time PCM streaming via OpenAI Realtime API (word-by-word)
+        await emergencyAlertService.startStreamingTranscription(
+          (delta) => {
+            setTranscript((prev) => prev + delta);
+            setTranscriptUnavailable(false);
+          },
+          () => stopRecording(),
+          () => setTranscriptUnavailable(true),
+        );
+      } else {
+        // Android / fallback: 5-second M4A chunks via HTTP
+        await emergencyAlertService.startRecording(
+          (chunk) => {
+            setTranscript((prev) => prev + ' ' + chunk);
+            setTranscriptUnavailable(false);
+          },
+          () => stopRecording(),
+          () => setTranscriptUnavailable(true),
+        );
+      }
     } catch (error: any) {
+      if (countdownRef.current) clearInterval(countdownRef.current);
       console.error('[SOSModal] Failed to start recording:', error);
       setIsRecording(false);
       setErrorMessage(
@@ -171,7 +185,12 @@ export default function SOSModal({ visible, onClose }: Props) {
     }
     setIsRecording(false);
 
-    const uri = await emergencyAlertService.stopRecording();
+    let uri: string | null;
+    if (emergencyAlertService.supportsStreaming()) {
+      uri = await emergencyAlertService.stopStreamingTranscription();
+    } else {
+      uri = await emergencyAlertService.stopRecording();
+    }
     audioUriRef.current = uri;
     setAudioUri(uri);
   };
