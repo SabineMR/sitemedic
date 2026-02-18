@@ -606,8 +606,9 @@ class EmergencyAlertService {
    * Start real-time streaming transcription via the OpenAI Realtime API.
    *
    * iOS: Records LINEAR_PCM WAV at 24 kHz mono, sends 1-second raw PCM16 chunks
-   *      over a WebSocket to the `realtime-transcribe` edge function, receives
-   *      word-by-word transcript_delta events back.
+   *      directly to OpenAI Realtime API (authenticated via an ephemeral token
+   *      fetched from the realtime-transcribe edge function), receives
+   *      word-by-word transcript delta events back.
    *
    * @param onTranscriptDelta  called with each word/phrase as it arrives
    * @param onAutoStop         called when the 90-second limit is reached
@@ -631,15 +632,31 @@ class EmergencyAlertService {
     this.streamOnTranscript = onTranscriptDelta;
     this.streamOnError = onError ?? null;
 
-    // Build the WebSocket URL from the Supabase URL
-    const supabaseUrl: string = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
-    const wsUrl = supabaseUrl
-      .replace(/^https:\/\//, 'wss://')
-      .replace(/^http:\/\//, 'ws://')
-      + '/functions/v1/realtime-transcribe';
+    // Step 1: Fetch an ephemeral token from our edge function.
+    // The real OpenAI API key stays server-side; the app only gets a 60-second token.
+    let ephemeralToken: string;
+    try {
+      const tokenResp = await supabase.functions.invoke('realtime-transcribe');
+      if (tokenResp.error || !tokenResp.data?.client_secret?.value) {
+        console.warn('[EmergencyAlert] Failed to get ephemeral token:', tokenResp.error);
+        this._activateHttpFallback(onAutoStop, onError);
+        return;
+      }
+      ephemeralToken = tokenResp.data.client_secret.value;
+      console.log('[EmergencyAlert] Got ephemeral token, connecting to OpenAI...');
+    } catch (err) {
+      console.warn('[EmergencyAlert] Ephemeral token fetch failed:', err);
+      this._activateHttpFallback(onAutoStop, onError);
+      return;
+    }
 
-    console.log('[EmergencyAlert] Connecting streaming WebSocket:', wsUrl);
-    const ws = new WebSocket(wsUrl);
+    // Step 2: Connect directly to OpenAI Realtime API with the ephemeral token.
+    // React Native WebSocket does not support custom headers, so we pass the
+    // token via the ?api_key= query param — OpenAI explicitly supports this
+    // for browser/client environments where headers cannot be set.
+    const openaiWsUrl = `wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview&api_key=${ephemeralToken}`;
+    console.log('[EmergencyAlert] Connecting streaming WebSocket directly to OpenAI');
+    const ws = new WebSocket(openaiWsUrl, ['realtime']);
     this.streamWs = ws;
 
     // Fallback: if no transcript arrives within 8s, the streaming path is
@@ -654,27 +671,35 @@ class EmergencyAlertService {
       }
     }, STREAMING_FALLBACK_MS);
 
-    ws.onopen = () => console.log('[EmergencyAlert] Streaming WS open');
+    ws.onopen = () => {
+      console.log('[EmergencyAlert] Streaming WS open — connected to OpenAI Realtime API');
+      // The session was pre-configured by the edge function (server VAD, whisper-1,
+      // transcription-only). No further session.update needed — just start streaming audio.
+    };
 
     ws.onmessage = (ev) => {
       try {
         const msg = JSON.parse(ev.data as string);
-        if (msg.type === 'transcript_delta' && msg.delta) {
-          this.streamHasTranscript = true;
-          if (this.streamFallbackTimer) {
-            clearTimeout(this.streamFallbackTimer);
-            this.streamFallbackTimer = null;
-          }
-          this.streamOnTranscript?.(msg.delta);
-        } else if (msg.type === 'transcript_done' && msg.transcript) {
-          this.streamHasTranscript = true;
-          if (this.streamFallbackTimer) {
-            clearTimeout(this.streamFallbackTimer);
-            this.streamFallbackTimer = null;
-          }
-        } else if (msg.type === 'error') {
-          console.warn('[EmergencyAlert] Streaming error from OpenAI:', msg.message);
-          this.streamOnError?.();
+        switch (msg.type) {
+          case 'conversation.item.input_audio_transcription.delta':
+            this.streamHasTranscript = true;
+            if (this.streamFallbackTimer) {
+              clearTimeout(this.streamFallbackTimer);
+              this.streamFallbackTimer = null;
+            }
+            if (msg.delta) this.streamOnTranscript?.(msg.delta);
+            break;
+          case 'conversation.item.input_audio_transcription.completed':
+            this.streamHasTranscript = true;
+            if (this.streamFallbackTimer) {
+              clearTimeout(this.streamFallbackTimer);
+              this.streamFallbackTimer = null;
+            }
+            break;
+          case 'error':
+            console.warn('[EmergencyAlert] Streaming error from OpenAI:', msg.error?.message);
+            this.streamOnError?.();
+            break;
         }
       } catch (_) {}
     };
@@ -745,7 +770,8 @@ class EmergencyAlertService {
       let bin = '';
       for (let i = 0; i < pcm.length; i++) bin += String.fromCharCode(pcm[i]);
 
-      this.streamWs.send(JSON.stringify({ type: 'audio', data: btoa(bin) }));
+      // Connecting directly to OpenAI — use the native input_audio_buffer.append event
+      this.streamWs.send(JSON.stringify({ type: 'input_audio_buffer.append', audio: btoa(bin) }));
     } catch (err) {
       console.warn('[EmergencyAlert] PCM chunk send failed:', err);
     }
