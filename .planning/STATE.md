@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 18 of 23 (Vertical Infrastructure & RIDDOR Fix)
-Plan: 1 of N in current phase
+Plan: 5 of N in current phase
 Status: In progress
-Last activity: 2026-02-18 — Completed 18-01-PLAN.md (WatermelonDB schema v4 + Supabase migration 124)
+Last activity: 2026-02-18 — Completed 18-05-PLAN.md (VERT-06 API gap: eventVertical wired into both booking creation routes)
 
-Progress: [██████████] v1.1 complete | [█░░░░░░░░░] v2.0 1/25 plans
+Progress: [██████████] v1.1 complete | [██░░░░░░░░] v2.0 5/25 plans
 
 ## Performance Metrics
 
@@ -29,10 +29,10 @@ Progress: [██████████] v1.1 complete | [█░░░░░�
 |-------|-------|-------|----------|
 | 01–07.5 (v1.0) | 84/84 | ~5.5 hrs | ~4 min |
 | 08–17 (v1.1) | 35/35 | ~2.4 hrs | ~4.1 min |
-| 18–23 (v2.0) | 1/25 | 3 min | 3 min |
+| 18–23 (v2.0) | 5/25 | ~5 min | ~1 min |
 
 **Recent Trend:**
-- Last plan: 18-01 — WatermelonDB schema v4 + Supabase migration 124 (3 min)
+- Last plan: 18-05 — VERT-06 API gap fix: eventVertical wired into both booking creation routes (1 min)
 - v1.1 last 5: geofence coverage analytics, compliance exports, RIDDOR auto-save, contract detail, geofence exit alerts
 - Trend: Stable — consistent 3–4 min average
 
@@ -51,6 +51,8 @@ Key decisions affecting v2.0:
 - 18-01: `verticalExtraFields` uses `@text` not `@json` in Treatment model — raw JSON string, parsed at call site; keeps model agnostic of vertical-specific data shapes
 - 18-01: `compliance_score_history` created in migration 124 (not deferred to Phase 23) — table must exist before Phase 23 analytics can write to it
 - 18-01: `booking_id` uses `ON DELETE SET NULL` — treatments survive booking deletion (audit trail preserved)
+- 18-05: `eventVertical` placed before `pricing` in BookingRequest interfaces — groups identity/context fields before financial fields
+- 18-05: `?? null` used for eventVertical (not `|| null`) — preserves distinction between undefined and empty string
 
 ### Research Flags (Phase-Blocking)
 
@@ -68,6 +70,6 @@ None. v2.0 roadmap is complete and ready. Phase 18 has no external blockers — 
 
 ## Session Continuity
 
-Last session: 2026-02-18T02:50:07Z
-Stopped at: Completed 18-01-PLAN.md — WatermelonDB schema v4 + Supabase migration 124 + Treatment/NearMiss model updates
+Last session: 2026-02-18T02:55:25Z
+Stopped at: Completed 18-05-PLAN.md — VERT-06 API gap: eventVertical wired into both booking creation routes; VERT-05 admin vertical selector confirmed complete
 Resume file: None
