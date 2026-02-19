@@ -240,15 +240,23 @@ export default function EventDetailPage() {
 
       {/* Action bar */}
       <div className="mt-8 flex items-center gap-3">
-        <button
-          type="button"
-          disabled
-          className="rounded-md bg-blue-600 px-6 py-2.5 text-sm font-medium text-white opacity-50 cursor-not-allowed"
-          title="Quoting available soon"
-        >
-          Submit a Quote
-        </button>
-        <span className="text-xs text-gray-400">Quoting available soon (Phase 34)</span>
+        {event.status === 'open' && !isPastDeadline ? (
+          <Link
+            href={`/marketplace/events/${eventId}/quote`}
+            className="rounded-md bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+          >
+            Submit a Quote
+          </Link>
+        ) : (
+          <button
+            type="button"
+            disabled
+            className="rounded-md bg-blue-600 px-6 py-2.5 text-sm font-medium text-white opacity-50 cursor-not-allowed"
+            title={isPastDeadline ? 'Quote deadline has passed' : 'Event is not open'}
+          >
+            Submit a Quote
+          </button>
+        )}
       </div>
     </div>
   );
