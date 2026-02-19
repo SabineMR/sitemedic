@@ -74,6 +74,7 @@ export async function PUT(request: NextRequest) {
       company_name?: unknown;
       tagline?: unknown;
       primary_colour_hex?: unknown;
+      logo_path?: unknown;
     };
 
     try {
@@ -99,6 +100,7 @@ export async function PUT(request: NextRequest) {
     if (body.company_name !== undefined) updatePayload.company_name = body.company_name || null;
     if (body.tagline !== undefined) updatePayload.tagline = body.tagline || null;
     if (body.primary_colour_hex !== undefined) updatePayload.primary_colour_hex = body.primary_colour_hex || null;
+    if (body.logo_path !== undefined) updatePayload.logo_path = typeof body.logo_path === 'string' ? body.logo_path : null;
 
     const { data, error } = await supabase
       .from('org_branding')
