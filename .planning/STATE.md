@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v5.0 Internal Comms & Document Management — Phase 40 (Comms & Docs Foundation)
+**Current focus:** v5.0 Internal Comms & Document Management — Phase 41 (Web Messaging Core)
 
 ## Current Position
 
-Phase: 40 of 47 (Comms & Docs Foundation)
-Plan: 2 of 2 in current phase (Phase 40 complete)
-Status: Phase complete
-Last activity: 2026-02-19 — Completed 40-02-PLAN.md
+Phase: 41 of 47 (Web Messaging Core)
+Plan: 0 of 3 in current phase
+Status: Ready to plan
+Last activity: 2026-02-19 — Phase 40 complete (2 plans, 4/4 must-haves verified)
 
 Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [███░░░░░░░] v4.0 15% | [█░░░░░░░░░] v5.0 10%
 
@@ -86,5 +86,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 40-02-PLAN.md -- Phase 40 complete, ready for Phase 41 (Messaging UI)
+Stopped at: Phase 40 complete -- ready to plan Phase 41 (Web Messaging Core)
 Resume file: None

@@ -58,7 +58,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 
 **Milestone Goal:** Org admins can communicate with their field medics and collect compliance documents inside SiteMedic -- replacing scattered WhatsApp/email with an in-platform system tied to individual medic profiles. Messaging works across iOS app and web dashboard with offline support, real-time delivery, and push notifications. Document management handles upload, categorisation, expiry tracking, and progressive alerts.
 
-- [ ] **Phase 40: Comms & Docs Foundation** - Database schema for conversations, messages, and documents; Supabase Storage buckets; org-scoped RLS policies
+- [x] **Phase 40: Comms & Docs Foundation** - Database schema for conversations, messages, and documents; Supabase Storage buckets; org-scoped RLS policies
 - [ ] **Phase 41: Web Messaging Core** - 1:1 conversations between org admin and medics on the web dashboard with conversation list and message threads
 - [ ] **Phase 42: iOS Messaging & Offline** - WatermelonDB models for messages, offline send queue, cross-platform sync between iOS app and web
 - [ ] **Phase 43: Real-time & Push Notifications** - Supabase Realtime for live message delivery, iOS push notifications with GDPR-safe content
@@ -218,8 +218,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 40-01-PLAN.md — Database schema and RLS (migration 143: conversations, messages, message_recipients, conversation_read_status, document_categories, documents, document_versions; org_id RLS policies; indexes; triggers; default category seeding)
-- [ ] 40-02-PLAN.md — Storage buckets and TypeScript types (migration 144: medic-documents bucket, message-attachments bucket, storage RLS policies; web/types/comms.types.ts)
+- [x] 40-01-PLAN.md — Database schema and RLS (migration 143: conversations, messages, message_recipients, conversation_read_status, document_categories, documents, document_versions; org_id RLS policies; indexes; triggers; default category seeding)
+- [x] 40-02-PLAN.md — Storage buckets and TypeScript types (migration 144: medic-documents bucket, message-attachments bucket, storage RLS policies; web/types/comms.types.ts)
 
 ### Phase 41: Web Messaging Core
 **Goal**: Org admins and medics can have 1:1 text conversations through the web dashboard -- with a conversation list showing unread counts and a message thread view for sending and reading messages
@@ -364,7 +364,7 @@ Plans:
 | 37. Company Accounts | v4.0 | 0/3 | Not started | - |
 | 38. Notifications & Alerts | v4.0 | 0/3 | Not started | - |
 | 39. Admin Dashboard | v4.0 | 0/3 | Not started | - |
-| 40. Comms & Docs Foundation | v5.0 | 0/2 | Not started | - |
+| 40. Comms & Docs Foundation | v5.0 | 2/2 | Complete | 2026-02-19 |
 | 41. Web Messaging Core | v5.0 | 0/3 | Not started | - |
 | 42. iOS Messaging & Offline | v5.0 | 0/3 | Not started | - |
 | 43. Real-time & Push Notifications | v5.0 | 0/3 | Not started | - |
