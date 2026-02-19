@@ -43,14 +43,14 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 
 ### v4.0 MedBid Marketplace
 
-**Milestone Goal:** Add an RFQ marketplace to SiteMedic where UK clients post events needing medical cover, verified medics submit detailed quotes, clients award the job with a deposit payment, and SiteMedic takes commission from the medic's side. Awarded quotes auto-create bookings that flow into existing timesheets, payouts, and compliance reporting. Free to sign up, free to quote at launch.
+**Milestone Goal:** Add an RFQ marketplace to SiteMedic where UK clients post events needing medical cover, verified marketplace companies submit detailed quotes (companies only — no individual medic bidding), clients award the job with a deposit payment, and SiteMedic takes commission from the company's side. Awarded quotes auto-create bookings that flow into existing timesheets, payouts, and compliance reporting. Free to sign up, free to quote at launch.
 
 - [x] **Phase 32: Foundation Schema & Registration** - Database tables, RLS policies, race-condition prevention, and CQC-registered company/client registration with verification
 - [x] **Phase 33: Event Posting & Discovery** - Clients create event listings, medics browse and filter by location/qualifications
-- [ ] **Phase 34: Quote Submission & Comparison** - Medics submit priced quotes with breakdowns, clients compare anonymised profiles
+- [ ] **Phase 34: Quote Submission & Comparison** - Companies submit priced quotes with breakdowns, clients compare anonymised company profiles (companies only)
 - [ ] **Phase 35: Award Flow & Payment** - Client awards quote, deposit collected, booking auto-created, remainder charged after event, commission split, payouts
 - [ ] **Phase 36: Ratings, Messaging & Disputes** - Bidirectional ratings, per-quote messaging, cancellation policy, dispute resolution
-- [ ] **Phase 37: Company Accounts** - Company registration, roster management, company-level quoting, double-up prevention
+- [ ] **Phase 37: Company Accounts** - Company roster management, medic assignment to events, company profile display
 - [ ] **Phase 38: Notifications & Alerts** - Multi-channel notification system (dashboard feed, email, SMS) with medic preferences
 - [ ] **Phase 39: Admin Dashboard** - Platform admin marketplace metrics, event/quote/dispute management, configuration
 
@@ -105,21 +105,21 @@ Plans:
 - [x] 33-03-PLAN.md — Event discovery for medics (browse page with list/map toggle, dual search modes for company owners vs individual medics, filters by type/date/location/qualification, event detail page with approximate location)
 
 ### Phase 34: Quote Submission & Comparison
-**Goal**: Verified medics can submit detailed quotes on open events, and clients can compare quotes with anonymised medic profiles — no contact details visible until award and deposit
+**Goal**: Verified marketplace companies can submit detailed quotes on open events, and clients can compare quotes with anonymised company profiles — no contact details visible until award and deposit (companies only — individual medics cannot bid independently)
 **Depends on**: Phase 33
 **Requirements**: QUOT-01, QUOT-02, QUOT-03, QUOT-04, QUOT-05, QUOT-06, QUOT-07, QUOT-08
 **Success Criteria** (what must be TRUE):
-  1. A verified medic can submit a quote with total price, itemised breakdown (staff/equipment/transport/consumables), cover letter, staffing plan, and availability confirmation
-  2. A medic can withdraw a submitted quote at any time before the event is awarded
-  3. Client sees all received quotes with price, rating, qualification summary, and response time — but no contact details (phone, email hidden until award + deposit)
-  4. Client can view full medic profile (certifications, star rating, experience, past events) only after that medic has submitted a quote
-  5. A medic already quoted by their company on an event cannot submit an independent quote on the same event
+  1. A verified company can submit a quote with total price, itemised breakdown (staff/equipment/transport/consumables + custom line items), cover letter, staffing plan, and availability confirmation
+  2. A company can edit a submitted quote in place (client sees "revised" badge) or withdraw it at any time before the event is awarded
+  3. Client sees all received quotes in a ranked list sorted by best value (price + rating), with sort and filter options — but no contact details (phone, email, full names hidden until award + deposit)
+  4. Client can view full company profile (certifications, star rating, experience, past events, insurance/compliance, written reviews) only after that company has submitted a quote
+  5. Minimum rate enforcement: quote form displays guideline rates per qualification level and blocks quotes below the minimum
 **Plans**: TBD
 
 Plans:
-- [ ] 34-01: Quote submission form (pricing breakdown, cover letter, staffing plan, availability)
-- [ ] 34-02: Quote browsing and comparison (client view with anonymised profiles, sorting, filtering)
-- [ ] 34-03: Quote management (withdraw, double-up prevention, quote deadline enforcement)
+- [ ] 34-01: Quote submission form (pricing breakdown with custom lines, cover letter, staffing plan, draft saving, availability)
+- [ ] 34-02: Quote browsing and comparison (ranked list with best-value sort, filters, anonymised company profiles)
+- [ ] 34-03: Quote management (edit in place, withdraw, quote deadline with soft close + extend)
 
 ### Phase 35: Award Flow & Payment
 **Goal**: Clients can award their chosen quote, pay a deposit via Stripe, and the system auto-creates a SiteMedic booking — with the remainder auto-charged after event completion and the medic paid via the existing payout pipeline
@@ -157,21 +157,21 @@ Plans:
 - [ ] 36-03: Disputes and cancellations (dispute workflow, remainder hold, admin resolution, tiered cancellation policy)
 
 ### Phase 37: Company Accounts
-**Goal**: Medic companies can manage a roster of individual medics, submit quotes on behalf of the company specifying which medics would be assigned, and the system prevents double-up bidding between company and individual accounts
-**Depends on**: Phase 32 (registration foundation), Phase 34 (quoting works for individuals)
+**Goal**: Medic companies can manage a roster of individual medics, assign specific medics to events when quoting, and display rich company profiles — individual medics cannot bid independently on the marketplace (companies only)
+**Depends on**: Phase 32 (registration foundation), Phase 34 (quoting works for companies)
 **Requirements**: COMP-01, COMP-02, COMP-03, COMP-04, COMP-05
 **Success Criteria** (what must be TRUE):
   1. A company admin can add individual medics to their roster — each with their own profile, certifications, and ratings
-  2. Company admin can submit quotes on behalf of the company, specifying which medic(s) from their roster would be assigned to the event
-  3. When a company quotes with a specific medic on an event, that medic's independent account is locked out from quoting on the same event (and vice versa)
-  4. Company profiles display company name, roster size, average rating, total events completed, and insurance status
-  5. A medic can belong to one company AND have their own independent account — quoting independently unless their company has already included them
+  2. Company admin can assign specific medic(s) from their roster to events when quoting (named staff option from Phase 34)
+  3. Company profiles display company name, roster size, average rating, total events completed, and insurance status
+  4. Company admin can manage medic availability and qualifications within the roster
+  5. Roster changes are reflected in the company's quoting capabilities (e.g. removing a paramedic from roster means fewer paramedic-qualified staff available for quotes)
 **Plans**: TBD
 
 Plans:
 - [ ] 37-01: Company roster management (add/remove medics, individual profiles within company)
-- [ ] 37-02: Company quoting (quote as company with medic assignment, company profile display)
-- [ ] 37-03: Double-up prevention (cross-account lockout logic, UNIQUE constraints)
+- [ ] 37-02: Medic assignment and company profile (assign roster medics to events, company profile display)
+- [ ] 37-03: Roster availability management (medic availability tracking, qualification-based capacity)
 
 ### Phase 38: Notifications & Alerts
 **Goal**: Medics receive timely notifications about matching events through their preferred channels, and all marketplace actions (quotes, awards, payments, ratings, messages) generate appropriate alerts
