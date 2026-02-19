@@ -13,8 +13,8 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
-import { IR35Form } from '@/components/medics/ir35-form';
 import { StripeOnboardingStatus } from '@/components/medics/stripe-onboarding-status';
+import { IR35SectionClient } from '@/components/medics/ir35-section-client';
 import { CompensationSettings } from '@/components/medics/compensation-settings';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';

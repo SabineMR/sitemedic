@@ -13,35 +13,28 @@ import { IR35Form } from '@/components/medics/ir35-form';
 interface IR35SectionClientProps {
   medicId: string;
   hasIR35Status: boolean;
+  /** Content shown when IR35 is already completed (status details) */
   children?: React.ReactNode;
+  /** Message shown before the IR35 form when not completed */
+  notCompleteMessage?: React.ReactNode;
 }
 
-export function IR35SectionClient({ medicId, hasIR35Status, children }: IR35SectionClientProps) {
+export function IR35SectionClient({ medicId, hasIR35Status, children, notCompleteMessage }: IR35SectionClientProps) {
   const router = useRouter();
   const handleRefresh = () => router.refresh();
 
   if (!hasIR35Status) {
     return (
       <>
-        <p className="text-gray-600 mb-4 text-sm">
-          Medic must complete IR35 assessment before receiving payouts.
-        </p>
+        {notCompleteMessage ?? (
+          <p className="text-gray-600 mb-4 text-sm">
+            Medic must complete IR35 assessment before receiving payouts.
+          </p>
+        )}
         <IR35Form medicId={medicId} onComplete={handleRefresh} />
       </>
     );
   }
 
-  return (
-    <>
-      {children}
-      <div className="pt-3 border-t">
-        <button
-          onClick={handleRefresh}
-          className="text-sm text-blue-600 hover:underline"
-        >
-          Update IR35 Status
-        </button>
-      </div>
-    </>
-  );
+  return <>{children}</>;
 }
