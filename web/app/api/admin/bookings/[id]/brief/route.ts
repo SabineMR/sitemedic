@@ -64,8 +64,14 @@ export async function GET(
       },
       event_vertical: booking.event_vertical,
     });
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  } catch (err) {
+    console.error('GET /api/admin/bookings/[id]/brief error:', err);
+    const message = err instanceof Error ? err.message : '';
+    const isAuthError = message.includes('org') || message.includes('auth') || message.includes('Unauthorized');
+    return NextResponse.json(
+      { error: isAuthError ? 'Unauthorized' : 'Internal server error' },
+      { status: isAuthError ? 401 : 500 }
+    );
   }
 }
 
