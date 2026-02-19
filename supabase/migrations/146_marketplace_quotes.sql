@@ -195,8 +195,19 @@ CREATE INDEX idx_quotes_submitted_at ON marketplace_quotes(submitted_at DESC);
 CREATE INDEX idx_quotes_event_status_time ON marketplace_quotes(event_id, status, submitted_at DESC);
 
 -- =============================================================================
+-- COLUMN: marketplace_events.deadline_extended
+-- Purpose: Track whether the event poster has extended the quote deadline once
+-- Added by Phase 34-03: Deadline extension is one-time only
+-- =============================================================================
+
+ALTER TABLE marketplace_events ADD COLUMN IF NOT EXISTS deadline_extended BOOLEAN DEFAULT FALSE;
+
+COMMENT ON COLUMN marketplace_events.deadline_extended IS 'Whether the event poster has used their one-time deadline extension; prevents multiple extensions';
+
+-- =============================================================================
 -- SUMMARY
 -- Tables created: marketplace_quotes (1)
+-- Columns added: marketplace_events.deadline_extended (1)
 -- RLS policies: 3 (company, event_poster, platform_admin)
 -- Triggers: 2 (updated_at auto-update, quote_count sync)
 -- Indexes: 5
