@@ -16,7 +16,8 @@ export function useRole() {
 
   return {
     role,
-    isAdmin: role === 'admin',
+    isAdmin: role === 'admin' || role === 'org_admin',
+    isPlatformAdmin: role === 'platform_admin',
     isMedic: role === 'medic',
     isSiteManager: role === 'site_manager',
     isLoading: state.isLoading,

@@ -6,6 +6,7 @@
  * and active templates, then renders the CreateContractForm.
  */
 
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { CreateContractForm } from '@/components/contracts/create-contract-form';
 import { redirect } from 'next/navigation';
@@ -108,13 +109,13 @@ export default async function CreateContractPage() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-          <a href="/dashboard" className="hover:text-foreground">
+          <Link href="/dashboard" className="hover:text-foreground">
             Dashboard
-          </a>
+          </Link>
           <span>/</span>
-          <a href="/contracts" className="hover:text-foreground">
+          <Link href="/contracts" className="hover:text-foreground">
             Contracts
-          </a>
+          </Link>
           <span>/</span>
           <span className="text-foreground">Create</span>
         </div>

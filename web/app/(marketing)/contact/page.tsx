@@ -14,14 +14,8 @@ export const metadata: Metadata = {
   title: 'Contact',
   description: 'Get in touch with Apex Safety Group. Request a quote, discuss your requirements, or book a medic for your event or worksite.',
 };
-import type { Metadata } from 'next';
-import { ContactForm } from './contact-form';
 
-export const metadata: Metadata = {
-  title: 'Contact Us — Apex Safety Group',
-  description:
-    'Get in touch with Apex Safety Group to book an HCPC-registered paramedic for your event, film production, motorsport event, construction site, festival or sporting competition across England & Wales.',
-};
+import { ContactForm } from './contact-form';
 
 export default function ContactPage() {
   return (

@@ -188,10 +188,10 @@ export default function ClientSupportPage() {
             <div>
               <p className="font-medium text-sm">Phone Support</p>
               <a
-                href="tel:+443301234567"
+                href={`tel:${process.env.NEXT_PUBLIC_SUPPORT_PHONE ?? '+443301234567'}`}
                 className="text-sm text-blue-600 hover:underline"
               >
-                0330 123 4567
+                {process.env.NEXT_PUBLIC_SUPPORT_PHONE_DISPLAY ?? '0330 123 4567'}
               </a>
               <p className="text-xs text-muted-foreground mt-1">
                 Mon–Fri, 8am–6pm

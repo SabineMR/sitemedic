@@ -26,16 +26,18 @@ interface TeamMember {
   authUserId: string | null;
   full_name: string | null;
   email: string | null;
-  role: 'medic' | 'site_manager' | 'admin';
+  role: 'medic' | 'site_manager' | 'admin' | 'org_admin' | 'platform_admin';
   source: 'profiles' | 'medics';
   available_for_work?: boolean;
   classification?: string | null;
 }
 
 const ROLE_BADGE: Record<string, { bg: string; text: string; label: string }> = {
-  medic:        { bg: '#DBEAFE', text: '#1E40AF', label: 'Medic' },
-  site_manager: { bg: '#F3E8FF', text: '#6B21A8', label: 'Site Manager' },
-  admin:        { bg: '#FEF3C7', text: '#92400E', label: 'Admin' },
+  medic:          { bg: '#DBEAFE', text: '#1E40AF', label: 'Medic' },
+  site_manager:   { bg: '#F3E8FF', text: '#6B21A8', label: 'Site Manager' },
+  admin:          { bg: '#FEF3C7', text: '#92400E', label: 'Admin' },
+  org_admin:      { bg: '#FEF3C7', text: '#92400E', label: 'Org Admin' },
+  platform_admin: { bg: '#FEE2E2', text: '#991B1B', label: 'Platform Admin' },
 };
 
 export default function TeamScreen() {
@@ -169,9 +171,9 @@ export default function TeamScreen() {
                     <Text style={styles.memberEmail}>{state.user.email}</Text>
                   ) : null}
                 </View>
-                <View style={[styles.roleBadge, { backgroundColor: ROLE_BADGE.admin.bg }]}>
-                  <Text style={[styles.roleText, { color: ROLE_BADGE.admin.text }]}>
-                    {ROLE_BADGE.admin.label}
+                <View style={[styles.roleBadge, { backgroundColor: (ROLE_BADGE[state.user?.role ?? 'admin'] ?? ROLE_BADGE.admin).bg }]}>
+                  <Text style={[styles.roleText, { color: (ROLE_BADGE[state.user?.role ?? 'admin'] ?? ROLE_BADGE.admin).text }]}>
+                    {(ROLE_BADGE[state.user?.role ?? 'admin'] ?? ROLE_BADGE.admin).label}
                   </Text>
                 </View>
               </View>

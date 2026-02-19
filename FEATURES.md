@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Phase 30-05 — Subscription Suspension Enforcement)
+**Last Updated**: 2026-02-18 (Gap Analysis Sprint 11 — Loading States, Error Boundaries & Link Fixes)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -31,19 +31,29 @@ Phase 30 Plan 05 adds subscription suspension enforcement. When an organisation'
 
 ---
 
-## Previous Updates — Fix: Mobile App Team Screen Medics Integration (2026-02-18)
+## Previous Updates — Fix: Mobile App Team Screen Medics Integration + Role Mismatch (2026-02-18)
 
 ### Overview
 
-The mobile app's Team screen previously only queried the `profiles` table, which stores auth-linked user accounts (admins, site managers). Medics exist in a separate `medics` table and were invisible on the Team screen — it showed "No other team members yet" even when medics existed. This fix queries both tables in parallel, deduplicates by auth user ID, and merges results so all team members appear.
+Two bugs prevented the Team screen from working for org admins:
+
+1. **Role mismatch**: The mobile app's `UserRole` type only had `'admin'` but the database stores `'org_admin'` for organisation admins. This caused `isAdmin` to always be `false`, hiding the Team and Events tabs entirely.
+2. **Missing medics query**: The Team screen only queried the `profiles` table. Medics exist in a separate `medics` table and were invisible.
 
 ### Problem
 
-- Web app Medics page correctly queried the `medics` table and showed 2 medics (Kai Aufmkolk, Alex Turner)
-- Mobile app Team screen only queried `profiles` — a completely different table — and found no medics
-- The 2 medics had rows in `medics` but no corresponding rows in `profiles`
+- Mobile app `UserRole` type: `'medic' | 'site_manager' | 'admin'` — missing `'org_admin'` and `'platform_admin'`
+- `useRole()` hook checked `role === 'admin'` but DB value is `'org_admin'` → Team/Events tabs never shown
+- Web app correctly uses `'org_admin'` (see `web/contexts/org-context.tsx`)
+- Team screen only queried `profiles` table — medics in `medics` table were invisible
 
 ### Modified Files
+
+| File | Changes |
+|------|---------|
+| `src/types/auth.ts` | **Extended `UserRole`** from `'medic' \| 'site_manager' \| 'admin'` to include `'org_admin'` and `'platform_admin'` — matching web app's role types. |
+| `hooks/useRole.ts` | **Fixed `isAdmin`** check to `role === 'admin' \|\| role === 'org_admin'`. Added `isPlatformAdmin` flag for `'platform_admin'` role. |
+| `app/(tabs)/team.tsx` | **Added `org_admin` and `platform_admin`** to `ROLE_BADGE` map. **Fixed "You" row badge** to use actual user role instead of hardcoded `admin`. **Added medics table query** (see below). |
 
 | File | Changes |
 |------|---------|
@@ -139,6 +149,45 @@ Phase 30 Plan 01 delivers the client-side and server-side building blocks for fe
 - **requireTier() pattern**: Pure utility (no NextResponse coupling) — API routes catch the error and return appropriate HTTP status
 - **NULL tier handling**: Both client and server paths default NULL to 'starter' (legacy org compatibility per Phase 24-05 decision)
 - **No database changes**: All components read existing `organizations.subscription_tier` column
+
+---
+
+## Previous Updates — Sprint 11: Loading States, Error Boundaries & Link Fixes (2026-02-18)
+
+### Overview
+
+Sprint 11 of the gap analysis: adds skeleton loading states to 7 key admin and client portal pages, error boundary components for the client portal and medic dashboard route groups, fixes raw `<a>` tags that should use Next.js `<Link>` for client-side routing, and replaces a hardcoded placeholder phone number with environment variable support.
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/app/admin/bookings/loading.tsx` | Skeleton loading state — stats row + 6-column table |
+| `web/app/admin/medics/loading.tsx` | Skeleton loading state — 5-column table |
+| `web/app/admin/customers/loading.tsx` | Skeleton loading state — 5-column table |
+| `web/app/admin/contracts/loading.tsx` | Skeleton loading state — 6-column table |
+| `web/app/admin/timesheets/loading.tsx` | Skeleton loading state — 5-column table |
+| `web/app/(client)/client/bookings/loading.tsx` | Skeleton loading state — filter tabs + booking cards |
+| `web/app/(client)/client/invoices/loading.tsx` | Skeleton loading state — invoice cards |
+| `web/app/(client)/client/error.tsx` | Error boundary for client portal — retry button + support contact |
+| `web/app/(dashboard)/error.tsx` | Error boundary for medic dashboard — retry + dashboard link |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/app/(dashboard)/contracts/create/page.tsx` | Added `Link` import; changed 2 breadcrumb `<a href>` tags to `<Link href>` for `/dashboard` and `/contracts` routes |
+| `web/components/dashboard/worker-gdpr-form.tsx` | Added `Link` import; changed `<a href="/admin/gdpr">` to `<Link href="/admin/gdpr">` |
+| `web/app/(client)/client/support/page.tsx` | Replaced hardcoded phone `+443301234567` with `process.env.NEXT_PUBLIC_SUPPORT_PHONE` (with fallback); display text uses `NEXT_PUBLIC_SUPPORT_PHONE_DISPLAY` env var |
+
+### Key Details
+
+- **Loading states**: Next.js `loading.tsx` files create automatic Suspense boundaries — the skeleton UI shows instantly while the page component fetches data, eliminating blank screens during load
+- **Skeleton pattern**: Uses the existing `@/components/ui/skeleton` component (animate-pulse shimmer). Admin pages use table-style skeletons; client pages use card-style skeletons matching each page's layout
+- **Error boundaries**: `error.tsx` files catch rendering errors within their route segment and display a fallback UI instead of crashing the whole app. Both include retry buttons and error digest IDs for debugging
+- **`<a>` → `<Link>` fix**: Raw `<a>` tags for internal routes cause full page reloads. Next.js `<Link>` enables client-side navigation (faster, no reload, prefetching). 3 instances fixed across 2 files
+- **Phone env vars**: `NEXT_PUBLIC_SUPPORT_PHONE` (E.164 format for `tel:` href) and `NEXT_PUBLIC_SUPPORT_PHONE_DISPLAY` (formatted for display) — both fall back to placeholder values when not set
+- **Zero TypeScript errors**: Verified with `tsc --noEmit` after all changes
 
 ---
 

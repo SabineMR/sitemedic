@@ -5,7 +5,7 @@
  * Supports offline-first architecture with cached session indicators.
  */
 
-export type UserRole = 'medic' | 'site_manager' | 'admin';
+export type UserRole = 'medic' | 'site_manager' | 'admin' | 'org_admin' | 'platform_admin';
 
 export interface UserProfile {
   id: string;

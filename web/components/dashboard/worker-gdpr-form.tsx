@@ -10,6 +10,7 @@
  */
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { useOrg } from '@/contexts/org-context';
 import { Button } from '@/components/ui/button';
@@ -63,7 +64,7 @@ export function WorkerGdprForm({ workerId, workerName }: WorkerGdprFormProps) {
     return (
       <div className="rounded-lg bg-green-50 border border-green-200 p-4 text-sm text-green-800">
         Request submitted. It will appear in the{' '}
-        <a href="/admin/gdpr" className="underline font-medium">GDPR dashboard</a>{' '}
+        <Link href="/admin/gdpr" className="underline font-medium">GDPR dashboard</Link>{' '}
         for processing within 1 calendar month (UK GDPR requirement).
       </div>
     );
