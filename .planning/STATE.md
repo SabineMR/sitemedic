@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v3.0 White-Label Platform & Subscription Engine — Phase 30 in progress (Subscription Management & Feature Gating)
+**Current focus:** v3.0 White-Label Platform & Subscription Engine — Phase 30 COMPLETE (Subscription Management & Feature Gating)
 
 ## Current Position
 
 Phase: 30 of 31 (Subscription Management & Feature Gating)
-Plan: 4 of 5 in Phase 30
-Status: In progress
-Last activity: 2026-02-18 — Completed 30-04-PLAN.md (Platform Admin Subscriptions / MRR Dashboard)
+Plan: 5 of 5 in Phase 30
+Status: Phase complete
+Last activity: 2026-02-18 — Completed 30-05-PLAN.md (Subscription Suspension Enforcement)
 
-Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [█████████░] v3.0 ~82% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4, Phase 27: 3/3, Phase 28: 3/3, Phase 29: 5/5, Phase 30: 4/5 done)
+Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [█████████░] v3.0 ~85% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4, Phase 27: 3/3, Phase 28: 3/3, Phase 29: 5/5, Phase 30: 5/5 done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 147 (84 v1.0 + 35 v1.1 + 30 v2.0 + 27 v3.0)
+- Total plans completed: 148 (84 v1.0 + 35 v1.1 + 30 v2.0 + 28 v3.0)
 - Average duration: 4.0 min
-- Total execution time: ~9.0 hours
+- Total execution time: ~9.2 hours
 
 **By Phase:**
 
@@ -36,10 +36,10 @@ Progress: [██████████] v1.0 complete | [██████�
 | 27 (v3.0) | 3/3 | ~6 min | ~2 min |
 | 28 (v3.0) | 3/3 | ~8 min | ~2.7 min |
 | 29 (v3.0) | 5/5 | ~25 min | ~5 min |
-| 30 (v3.0) | 4/5 | ~11.5 min | ~2.9 min |
+| 30 (v3.0) | 5/5 | ~22.5 min | ~4.5 min |
 
 **Recent Trend:**
-- Last plan: 30-04 — Platform Admin Subscriptions / MRR Dashboard (~3 min)
+- Last plan: 30-05 — Subscription Suspension Enforcement (~11 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -110,6 +110,9 @@ Progress: [██████████] v1.0 complete | [██████�
 - **30-04:** MRR calculated from hardcoded tier prices (Starter £149, Growth £299, Enterprise £599), not Stripe API — avoids rate limits and latency
 - **30-04:** NULL tier defaults to starter, NULL status defaults to active — matches 24-05 convention
 - **30-04:** Past-due orgs included in MRR (dunning period); cancelled excluded from MRR
+- **30-05:** Suspension check uses `=== 'cancelled'` (not `!== 'active'`) — NULL (legacy) and past_due pass through
+- **30-05:** Single query extension: `.select('onboarding_completed, subscription_status')` — no extra DB call
+- **30-05:** /suspended is NOT in publicRoutes — user must be authenticated to see suspension page
 
 ### Pending Todos
 
@@ -128,5 +131,5 @@ Progress: [██████████] v1.0 complete | [██████�
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 30-04-PLAN.md (Platform Admin Subscriptions / MRR Dashboard)
+Stopped at: Completed 30-05-PLAN.md (Subscription Suspension Enforcement) — Phase 30 COMPLETE
 Resume file: None

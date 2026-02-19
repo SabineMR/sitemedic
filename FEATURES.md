@@ -2,12 +2,36 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Phase 30 — Subscription Management & Feature Gating)
+**Last Updated**: 2026-02-18 (Phase 30-05 — Subscription Suspension Enforcement)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
 
-## Recent Updates — Fix: Mobile App Team Screen Medics Integration (2026-02-18)
+## Recent Updates — Phase 30-05: Subscription Suspension Enforcement (2026-02-18)
+
+### Overview
+
+Phase 30 Plan 05 adds subscription suspension enforcement. When an organisation's subscription is cancelled, the middleware redirects them to a `/suspended` page that clearly communicates the situation, reassures them their data is preserved, and provides a reactivation path via Stripe Customer Portal.
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/lib/supabase/middleware.ts` | **Extended org query** to also SELECT `subscription_status` alongside `onboarding_completed` (single DB query, no extra call). **Added `isSuspendedRoute` detection** to prevent redirect loops. **Suspension redirect**: after onboarding checks, if `subscription_status === 'cancelled'`, redirects to `/suspended`. NULL status (legacy orgs) and `active`/`past_due` pass through normally. |
+| `web/app/suspended/page.tsx` | **New page**. Client component with full-screen dark gradient background and centered white card. Shows `ShieldOff` icon (red), "Subscription Inactive" heading, org name from `useOrg()` context. Green data-preservation callout ("Your data is safe" with details about preserved bookings, medic records, invoices, reports). Purple "Reactivate Subscription" button that POSTs to `/api/billing/portal` and redirects to Stripe Customer Portal. Loading spinner during redirect. Divider with "Contact Support" mailto link (`support@sitemedic.co.uk`) and "Log Out" button. |
+
+### Key Details
+
+- **No database changes**: Uses existing `subscription_status` column from migration 133
+- **Single query**: Middleware extends the existing onboarding query rather than adding a second DB call
+- **Only `cancelled` is blocked**: `NULL` (legacy orgs), `active`, and `past_due` all pass through
+- **No redirect loop**: `/suspended` route detected and excluded from the redirect
+- **Authenticated only**: `/suspended` is NOT in `publicRoutes` — user must be logged in
+- **Reactivation via Stripe**: Uses the existing `/api/billing/portal` endpoint from Phase 30-03
+
+---
+
+## Previous Updates — Fix: Mobile App Team Screen Medics Integration (2026-02-18)
 
 ### Overview
 
@@ -36,7 +60,7 @@ The mobile app's Team screen previously only queried the `profiles` table, which
 
 ---
 
-## Previous Updates — Phase 30-04: Platform Admin Subscriptions / MRR Dashboard (2026-02-18)
+## Previous Updates (2) — Phase 30-04: Platform Admin Subscriptions / MRR Dashboard (2026-02-18)
 
 ### Overview
 
@@ -115,6 +139,60 @@ Phase 30 Plan 01 delivers the client-side and server-side building blocks for fe
 - **requireTier() pattern**: Pure utility (no NextResponse coupling) — API routes catch the error and return appropriate HTTP status
 - **NULL tier handling**: Both client and server paths default NULL to 'starter' (legacy org compatibility per Phase 24-05 decision)
 - **No database changes**: All components read existing `organizations.subscription_tier` column
+
+---
+
+## Previous Updates — Sprint 10: Page Metadata & SEO Titles (2026-02-18)
+
+### Overview
+
+Sprint 10 of the gap analysis: adds proper `<title>` and `<meta description>` tags to all pages that were missing them. The Next.js root layout uses a `template: '%s — CompanyName'` pattern, so page-level exports only need a short title. For `'use client'` pages (which can't export metadata), route-level `layout.tsx` files were created. Legal pages had hardcoded `| SiteMedic` suffixes removed to prevent double branding (e.g., "Terms and Conditions | SiteMedic — SiteMedic").
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/app/(client)/client/bookings/layout.tsx` | Metadata layout — title: "My Bookings" |
+| `web/app/(client)/client/invoices/layout.tsx` | Metadata layout — title: "My Invoices" |
+| `web/app/(client)/client/account/layout.tsx` | Metadata layout — title: "My Account" |
+| `web/app/(client)/client/support/layout.tsx` | Metadata layout — title: "Help & Support" |
+| `web/app/admin/bookings/layout.tsx` | Metadata layout — title: "Manage Bookings" |
+| `web/app/admin/medics/layout.tsx` | Metadata layout — title: "Manage Medics" |
+| `web/app/admin/customers/layout.tsx` | Metadata layout — title: "Customers" |
+| `web/app/admin/revenue/layout.tsx` | Metadata layout — title: "Revenue" |
+| `web/app/admin/settings/layout.tsx` | Metadata layout — title: "Settings" |
+| `web/app/admin/timesheets/layout.tsx` | Metadata layout — title: "Timesheets" |
+| `web/app/admin/contracts/layout.tsx` | Metadata layout — title: "Contracts" |
+| `web/app/admin/schedule-board/layout.tsx` | Metadata layout — title: "Schedule Board" |
+| `web/app/admin/analytics/layout.tsx` | Metadata layout — title: "Analytics" |
+| `web/app/admin/territories/layout.tsx` | Metadata layout — title: "Territories" |
+| `web/app/(booking)/book/confirmation/layout.tsx` | Metadata layout — title: "Booking Confirmation" |
+| `web/app/(booking)/book/payment/layout.tsx` | Metadata layout — title: "Payment" |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/app/(marketing)/page.tsx` | Added `Metadata` import and metadata export with title "Professional Paramedics for Events & Worksites" and description |
+| `web/app/(marketing)/services/page.tsx` | Added metadata export with title "Services" and description |
+| `web/app/(marketing)/about/page.tsx` | Added metadata export with title "About Us" and description |
+| `web/app/(marketing)/contact/page.tsx` | Added metadata export with title "Contact" and description |
+| `web/app/(marketing)/pricing/page.tsx` | Fixed title from `'Pricing - Apex Safety Group'` to `'Pricing'` (avoids double branding with root layout template) |
+| `web/app/terms-and-conditions/page.tsx` | Removed `\| SiteMedic` suffix from title |
+| `web/app/privacy-policy/page.tsx` | Removed `\| SiteMedic` suffix from title |
+| `web/app/refund-policy/page.tsx` | Removed `\| SiteMedic` suffix from title |
+| `web/app/complaints/page.tsx` | Removed `\| SiteMedic` suffix from title |
+| `web/app/accessibility-statement/page.tsx` | Removed `\| SiteMedic` suffix from title |
+| `web/app/acceptable-use/page.tsx` | Removed `\| SiteMedic` suffix from title |
+
+### Key Details
+
+- **Root layout template pattern**: The root layout uses `template: '%s — SiteMedic'`, so every page title automatically gets the brand suffix — pages should NOT include it themselves
+- **Client component metadata pattern**: `'use client'` pages can't export `metadata` (Next.js restriction). Solution: create a minimal `layout.tsx` in the same route folder that exports metadata and passes `children` through
+- **16 new layout files**: Created for client portal (4), admin panel (10), and booking flow (2) routes
+- **6 legal pages fixed**: Removed hardcoded `| SiteMedic` suffix that produced double branding like "Terms and Conditions | SiteMedic — SiteMedic"
+- **5 marketing pages**: Added proper titles and SEO descriptions to homepage, services, about, contact, and fixed pricing
+- **Zero TypeScript errors**: Verified with `tsc --noEmit` after all changes
 
 ---
 
