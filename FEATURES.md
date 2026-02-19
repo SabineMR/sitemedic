@@ -2,8 +2,40 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Sprint 17: Responsive Grid Breakpoints & Dead Code Cleanup)
+**Last Updated**: 2026-02-19 (Phase 31-01: Org Admin Branding Settings Page)
 **Audience**: Web developers, technical reviewers, product team
+
+---
+
+## Recent Updates — Org Admin Branding Settings Page (2026-02-19)
+
+### Overview
+
+Growth-tier org admins can now navigate to `/admin/settings/branding` and configure their portal branding: company name, primary colour, tagline, and logo. Text fields auto-save with a 500ms debounce (no manual save button), while logo upload is an explicit action via Supabase Storage with `upsert: true`. A live preview panel shows a real-time portal header and sidebar mockup as the admin types.
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/app/(dashboard)/admin/settings/branding/page.tsx` | Branding settings page with TierGate wrapping, side-by-side form + preview layout, back link to `/admin/settings`, loading state |
+| `web/app/(dashboard)/admin/settings/branding/components/branding-form.tsx` | Reusable `BrandingForm` component: auto-save (500ms debounce via `useRef<setTimeout>`), logo upload to `org-logos/{org_id}/logo.{ext}`, colour picker with native `<input type="color">` + hex text input, "Reset to SiteMedic Defaults" button, inline save status indicator |
+| `web/app/(dashboard)/admin/settings/branding/components/branding-preview.tsx` | `BrandingPreview` component: live portal header mockup (logo + company name + tagline on primary colour background), sidebar accent bars, browser tab mockup showing `[Company] -- SiteMedic` |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/app/admin/settings/page.tsx` | Branding section simplified: inline form replaced with summary card + "Manage Branding" link to `/admin/settings/branding`. TierGate still wraps the card (Starter sees upgrade prompt). |
+| `web/app/api/admin/branding/route.ts` | PUT handler now accepts `logo_path` in request body for BrandingForm logo upload persistence |
+
+### Key Implementation Details
+
+- **Auto-save**: `useEffect` on `[companyName, primaryColour, tagline]` with `hasInitialized` ref to skip initial render. 500ms debounce via `useRef<ReturnType<typeof setTimeout>>`. Save status: idle -> saving -> saved (fades after 2s)
+- **Logo upload**: Separate from auto-save (explicit button). Validates PNG/JPEG/SVG, max 2MB. Uploads to Supabase Storage with `upsert: true`, then PUTs `logo_path` to API
+- **Colour picker**: Native `<input type="color">` synced with hex text input (font-mono). Hex validated before sending (`/^#[0-9a-fA-F]{6}$/`). Invalid hex sends `null`
+- **Live preview**: `onPreviewChange` callback fires on every state change (no debounce) for instant preview updates
+- **Reusability**: `BrandingForm` accepts `apiEndpoint` prop (default `/api/admin/branding`) for 31-02 platform admin reuse
+- **TierGate**: Growth tier enforced via `<TierGate feature="white_label">`. Starter sees UpgradePrompt
 
 ---
 
@@ -212,6 +244,36 @@ Phase 30 Plan 01 delivers the client-side and server-side building blocks for fe
 - **requireTier() pattern**: Pure utility (no NextResponse coupling) — API routes catch the error and return appropriate HTTP status
 - **NULL tier handling**: Both client and server paths default NULL to 'starter' (legacy org compatibility per Phase 24-05 decision)
 - **No database changes**: All components read existing `organizations.subscription_tier` column
+
+---
+
+## Previous Updates — Sprint 18: API Error Sanitization & Status Code Fixes (2026-02-18)
+
+### Overview
+
+Sprint 18 of the gap analysis: removes internal error details (database messages, Stripe errors, stack traces) from API responses that could leak implementation details to clients, and fixes 3 API routes that incorrectly returned HTTP 401 for all caught errors including server-side failures that should return 500.
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `web/app/api/bookings/[id]/route.ts` | Removed `details` field from 404 and 500 error responses (was leaking Supabase error messages) |
+| `web/app/api/bookings/calculate-cost/route.ts` | Removed `details` field from 500 error response |
+| `web/app/api/bookings/recurring/route.ts` | Removed `details` field from 3 error responses (parent not found, insert failed, catch-all) |
+| `web/app/api/invoices/generate/route.ts` | Removed `details` field from 500 error response |
+| `web/app/api/medics/ir35-assessment/route.ts` | Removed `details` from Stripe and catch-all errors (kept validation `details` for user-facing field errors) |
+| `web/app/api/medics/[id]/compensation/route.ts` | Replaced raw `error.message` with generic "Failed to update compensation" message |
+| `web/app/api/contracts/[id]/capture-milestone/route.ts` | Replaced raw `stripeError.message` in 2 error responses with generic "Payment capture failed" / "Payment failed" |
+| `web/app/api/admin/bookings/[id]/brief/route.ts` | Fixed 2 catch blocks: was returning 401 for all errors, now distinguishes auth errors (401) from server errors (500) |
+| `web/app/api/admin/branding/route.ts` | Fixed 2 catch blocks: was returning 401 for all errors, now returns 500 for non-auth failures |
+| `web/app/api/billing/portal/route.ts` | Fixed catch block: was returning 401 for Stripe errors, now returns 500 for non-auth failures |
+
+### Key Details
+
+- **Error detail sanitization**: Internal error messages from Supabase, Stripe, and JavaScript exceptions can leak table names, column names, API keys, and stack traces. All internal details are now logged server-side via `console.error()` but only generic messages like "Internal server error" are returned to clients.
+- **IR35 validation exception**: The IR35 assessment route's validation `details` field was intentionally kept — it contains user-facing validation error messages (which fields are missing/invalid), not internal error details.
+- **401 vs 500 distinction**: The catch-all pattern `} catch { return 401 }` incorrectly told clients "you're not authorized" when the real problem was a server crash. The fix inspects the error message for auth-related keywords to determine the correct status code.
+- **All error details still logged**: Every sanitized response includes a `console.error()` call with the full error for server-side debugging — only the client-facing response is sanitized.
 
 ---
 
