@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   ShieldAlert,
   BarChart3,
+  MessageSquare,
 } from 'lucide-react';
 
 const navigation = [
@@ -71,6 +72,11 @@ const navigation = [
     name: 'Analytics',
     href: '/analytics/heat-map',
     icon: BarChart3,
+  },
+  {
+    name: 'Messages',
+    href: '/messages',
+    icon: MessageSquare,
   },
 ];
 

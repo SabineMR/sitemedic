@@ -21,10 +21,11 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { LogOut } from 'lucide-react';
+import { LogOut, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { DashboardNav } from '@/components/dashboard/DashboardNav';
+import { fetchTotalUnreadCount } from '@/lib/queries/comms';
 
 export default async function DashboardLayout({
   children,
@@ -43,6 +44,9 @@ export default async function DashboardLayout({
 
   // Get user email for display
   const userEmail = user.email || 'Unknown';
+
+  // Fetch total unread message count for header badge
+  const totalUnread = await fetchTotalUnreadCount(supabase);
 
   // Read org branding from middleware headers (server component — direct access)
   const headersList = await headers();
@@ -116,6 +120,17 @@ export default async function DashboardLayout({
             <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-16 lg:px-6">
               <SidebarTrigger />
               <div className="flex-1" />
+              <Link
+                href="/messages"
+                className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <MessageSquare className="h-5 w-5" />
+                {totalUnread > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-destructive-foreground">
+                    {totalUnread > 99 ? '99+' : totalUnread}
+                  </span>
+                )}
+              </Link>
             </header>
 
             {/* Page content */}
