@@ -358,7 +358,7 @@ Plans:
 | 31. Branding Settings UI | v3.0 | 2/2 | Complete | 2026-02-19 |
 | 32. Foundation Schema & Registration | v4.0 | 4/4 | Complete | 2026-02-19 |
 | 33. Event Posting & Discovery | v4.0 | 3/3 | Complete | 2026-02-19 |
-| 34. Quote Submission & Comparison | v4.0 | 0/3 | In Progress | - |
+| 34. Quote Submission & Comparison | v4.0 | 0/3 | Planned | - |
 | 35. Award Flow & Payment | v4.0 | 0/4 | Not started | - |
 | 36. Ratings, Messaging & Disputes | v4.0 | 0/3 | Not started | - |
 | 37. Company Accounts | v4.0 | 0/3 | Not started | - |
