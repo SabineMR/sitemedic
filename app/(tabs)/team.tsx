@@ -7,7 +7,7 @@
  * The admin's own entry is shown at the top as "You".
  *
  * Role badges: Medic / Site Manager / Admin
- * Medic rows show an availability dot (green/gray) and classification subtitle.
+ * Medic rows show an availability dot (green = available, gray = unavailable).
  */
 
 import React, { useState, useEffect } from 'react';
@@ -29,7 +29,6 @@ interface TeamMember {
   role: 'medic' | 'site_manager' | 'admin' | 'org_admin' | 'platform_admin';
   source: 'profiles' | 'medics';
   available_for_work?: boolean;
-  classification?: string | null;
 }
 
 const ROLE_BADGE: Record<string, { bg: string; text: string; label: string }> = {
@@ -70,7 +69,7 @@ export default function TeamScreen() {
 
         const medicsQuery = supabase
           .from('medics')
-          .select('id, user_id, first_name, last_name, email, available_for_work, classification')
+          .select('id, user_id, first_name, last_name, email, available_for_work')
           .eq('org_id', orgId);
 
         const [profilesResult, medicsResult] = await Promise.all([profilesQuery, medicsQuery]);
@@ -102,7 +101,6 @@ export default function TeamScreen() {
             role: 'medic' as const,
             source: 'medics' as const,
             available_for_work: m.available_for_work ?? false,
-            classification: m.classification ?? null,
           }));
 
         // Combine and sort alphabetically by name
@@ -216,11 +214,6 @@ export default function TeamScreen() {
                           {member.email ? (
                             <Text style={styles.memberEmail}>{member.email}</Text>
                           ) : null}
-                          {member.source === 'medics' && member.classification ? (
-                            <Text style={styles.classificationText}>
-                              {member.classification}
-                            </Text>
-                          ) : null}
                         </View>
                         <View style={[styles.roleBadge, { backgroundColor: badge.bg }]}>
                           <Text style={[styles.roleText, { color: badge.text }]}>
@@ -320,12 +313,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-  },
-  classificationText: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    fontStyle: 'italic',
-    marginTop: 2,
   },
   roleBadge: {
     paddingHorizontal: 10,
