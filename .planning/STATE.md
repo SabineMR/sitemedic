@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 32 of 39 (Foundation Schema & Registration)
-Plan: 2 of 4 in current phase
-Status: In progress (checkpoint pending for 32-02)
-Last activity: 2026-02-19 — Completed 32-02-PLAN.md auto tasks (registration wizard, APIs, client registration)
+Plan: 3 of 4 in current phase
+Status: In progress (checkpoint pending for 32-03)
+Last activity: 2026-02-19 — Completed 32-03-PLAN.md auto tasks (admin verification queue, CQC Edge Function)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [██░░░░░░░░] v4.0 8%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [███░░░░░░░] v4.0 12%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 181 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 2 v4.0)
+- Total plans completed: 182 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 3 v4.0)
 - Average duration: 3.9 min
-- Total execution time: ~11.4 hours
+- Total execution time: ~11.6 hours
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 2/26 | ~11 min | ~5.5 min |
+| v4.0 | 8 | 3/26 | ~22 min | ~7.3 min |
 
 *Updated after each plan completion*
 
@@ -53,6 +53,9 @@ Recent decisions affecting current work:
 - [32-02]: New marketplace users get org auto-created with onboarding_completed=true (skip SiteMedic wizard)
 - [32-02]: Document upload deferred to post-registration (company row must exist for storage RLS)
 - [32-02]: Client registration is single-toggle POST (low friction, billing details at award time)
+- [32-03]: Admin actions use service-role client (platform admin has org_id=NULL, RLS blocks direct writes)
+- [32-03]: CQC Edge Function combines CQC status checks + document expiry monitoring in single function
+- [32-03]: Active bookings flagged for admin review on suspension (NOT auto-cancelled per CONTEXT decision)
 
 ### Pending Todos
 
@@ -79,5 +82,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: 32-02-PLAN.md checkpoint (human verification of registration flow)
+Stopped at: 32-03-PLAN.md checkpoint (human verification of admin queue and actions)
 Resume file: None
