@@ -9,6 +9,9 @@
  * Props:
  *   - orgId: Organization ID (required)
  *   - apiEndpoint: API endpoint for save requests (default: /api/admin/branding)
+ *   - logoUploadEndpoint: Optional server-side logo upload endpoint (POST FormData).
+ *     When set, logo upload goes through this endpoint instead of client-side Supabase Storage.
+ *     Used by platform admin (whose JWT has org_id=NULL, so RLS blocks client-side uploads).
  *   - initialData: Initial form values (company_name, primary_colour_hex, tagline, logo_path)
  *   - onPreviewChange: Callback fired on every state change for live preview updates
  */
@@ -25,6 +28,7 @@ const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/svg+xml'];
 interface BrandingFormProps {
   orgId: string;
   apiEndpoint?: string;
+  logoUploadEndpoint?: string;
   initialData?: {
     company_name: string | null;
     primary_colour_hex: string | null;
@@ -46,6 +50,7 @@ type SaveStatus = 'idle' | 'saving' | 'saved';
 export function BrandingForm({
   orgId,
   apiEndpoint = '/api/admin/branding',
+  logoUploadEndpoint,
   initialData,
   onPreviewChange,
 }: BrandingFormProps) {
@@ -175,48 +180,79 @@ export function BrandingForm({
 
     setUploadingLogo(true);
     try {
-      const supabase = createClient();
-      const ext = logoFile.name.split('.').pop()?.toLowerCase() ?? 'png';
-      const storagePath = `${orgId}/logo.${ext}`;
+      if (logoUploadEndpoint) {
+        // ---------------------------------------------------------------
+        // Server-side upload path (for platform admin)
+        // Platform admin JWT has org_id=NULL so RLS blocks client-side
+        // storage uploads. POST FormData to the server endpoint instead.
+        // ---------------------------------------------------------------
+        const formData = new FormData();
+        formData.append('logo', logoFile);
 
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('org-logos')
-        .upload(storagePath, logoFile, {
-          upsert: true,
-          contentType: logoFile.type,
+        const res = await fetch(logoUploadEndpoint, {
+          method: 'POST',
+          body: formData,
         });
 
-      if (uploadError) {
-        console.error('Logo upload failed:', uploadError);
-        toast.error('Failed to upload logo');
-        setUploadingLogo(false);
-        return;
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: 'Upload failed' }));
+          throw new Error(err.error || 'Upload failed');
+        }
+
+        const data = await res.json();
+
+        // Update state from server response
+        setExistingLogoPath(data.logo_path);
+        setLogoPreviewUrl(data.logo_url);
+        setLogoFile(null);
+        toast.success('Logo uploaded successfully');
+      } else {
+        // ---------------------------------------------------------------
+        // Client-side Supabase Storage upload (for org admin)
+        // ---------------------------------------------------------------
+        const supabase = createClient();
+        const ext = logoFile.name.split('.').pop()?.toLowerCase() ?? 'png';
+        const storagePath = `${orgId}/logo.${ext}`;
+
+        // Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('org-logos')
+          .upload(storagePath, logoFile, {
+            upsert: true,
+            contentType: logoFile.type,
+          });
+
+        if (uploadError) {
+          console.error('Logo upload failed:', uploadError);
+          toast.error('Failed to upload logo');
+          setUploadingLogo(false);
+          return;
+        }
+
+        // Update org_branding.logo_path via API
+        const response = await fetch(apiEndpoint, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            logo_path: storagePath,
+          }),
+        });
+
+        if (!response.ok) {
+          console.error('Failed to update logo_path');
+          toast.error('Failed to save logo path');
+          setUploadingLogo(false);
+          return;
+        }
+
+        // Update state to reflect saved logo
+        setExistingLogoPath(storagePath);
+        setLogoFile(null);
+        toast.success('Logo uploaded successfully');
       }
-
-      // Update org_branding.logo_path via API
-      const response = await fetch(apiEndpoint, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          logo_path: storagePath,
-        }),
-      });
-
-      if (!response.ok) {
-        console.error('Failed to update logo_path');
-        toast.error('Failed to save logo path');
-        setUploadingLogo(false);
-        return;
-      }
-
-      // Update state to reflect saved logo
-      setExistingLogoPath(storagePath);
-      setLogoFile(null);
-      toast.success('Logo uploaded successfully');
     } catch (error) {
       console.error('Logo upload error:', error);
-      toast.error('Failed to upload logo');
+      toast.error(error instanceof Error ? error.message : 'Failed to upload logo');
     } finally {
       setUploadingLogo(false);
     }
