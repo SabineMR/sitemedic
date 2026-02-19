@@ -7,6 +7,7 @@
 - ✅ **v2.0 Multi-Vertical Platform Expansion** — Phases 18–23 (7 phases, 30 plans — shipped 2026-02-18)
 - ✅ **v3.0 White-Label Platform & Subscription Engine** — Phases 24–31 (8 phases, 30 plans — shipped 2026-02-19)
 - **v4.0 MedBid Marketplace** — Phases 32–39 (8 phases, TBD plans — in progress)
+- **v5.0 Internal Comms & Document Management** — Phases 40–47 (8 phases, TBD plans — planned)
 
 ---
 
@@ -52,6 +53,19 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 - [ ] **Phase 37: Company Accounts** - Company registration, roster management, company-level quoting, double-up prevention
 - [ ] **Phase 38: Notifications & Alerts** - Multi-channel notification system (dashboard feed, email, SMS) with medic preferences
 - [ ] **Phase 39: Admin Dashboard** - Platform admin marketplace metrics, event/quote/dispute management, configuration
+
+### v5.0 Internal Comms & Document Management
+
+**Milestone Goal:** Org admins can communicate with their field medics and collect compliance documents inside SiteMedic -- replacing scattered WhatsApp/email with an in-platform system tied to individual medic profiles. Messaging works across iOS app and web dashboard with offline support, real-time delivery, and push notifications. Document management handles upload, categorisation, expiry tracking, and progressive alerts.
+
+- [ ] **Phase 40: Comms & Docs Foundation** - Database schema for conversations, messages, and documents; Supabase Storage buckets; org-scoped RLS policies
+- [ ] **Phase 41: Web Messaging Core** - 1:1 conversations between org admin and medics on the web dashboard with conversation list and message threads
+- [ ] **Phase 42: iOS Messaging & Offline** - WatermelonDB models for messages, offline send queue, cross-platform sync between iOS app and web
+- [ ] **Phase 43: Real-time & Push Notifications** - Supabase Realtime for live message delivery, iOS push notifications with GDPR-safe content
+- [ ] **Phase 44: Broadcast Messaging** - Org admin can send broadcast messages to all medics with per-medic read tracking
+- [ ] **Phase 45: Document Upload & Profile Storage** - Medics upload categorised compliance documents from iOS or web, stored on their profile with versioning
+- [ ] **Phase 46: Expiry Tracking & Alerts** - Status badges, progressive expiry alerts, and bulk expiry dashboard for org admins
+- [ ] **Phase 47: Message Polish** - Delivery/read status indicators, cross-conversation search, and file attachments in messages
 
 ## Phase Details
 
@@ -192,11 +206,136 @@ Plans:
 - [ ] 39-02: Entity management and moderation (events/quotes/awards/disputes admin views, user suspension/ban)
 - [ ] 39-03: Marketplace configuration (commission rate, deposit %, deadline defaults)
 
+### Phase 40: Comms & Docs Foundation
+**Goal**: The database schema, storage buckets, RLS policies, and TypeScript types exist for the entire v5.0 messaging and document management system -- all scoped to org_id so no data leaks between organisations
+**Depends on**: Phase 39 (v4.0 complete)
+**Requirements**: PLAT-03
+**Success Criteria** (what must be TRUE):
+  1. Database tables exist for conversations, messages, message_recipients (for broadcast), documents, and document_versions -- with org_id on every table and appropriate indexes
+  2. RLS policies enforce that users can only access conversations, messages, and documents belonging to their own organisation
+  3. A Supabase Storage bucket exists for compliance documents with RLS policies scoped to org_id, and a separate bucket (or path) for message attachments
+  4. TypeScript types are generated and available for all new tables in the web app and Edge Functions
+**Plans**: 2 plans
+
+Plans:
+- [ ] 40-01: Database schema and RLS (conversations, messages, message_recipients, documents, document_versions tables; org_id RLS policies; indexes; Supabase migration)
+- [ ] 40-02: Storage buckets and TypeScript types (compliance-documents bucket, message-attachments bucket, storage RLS policies, type generation)
+
+### Phase 41: Web Messaging Core
+**Goal**: Org admins and medics can have 1:1 text conversations through the web dashboard -- with a conversation list showing unread counts and a message thread view for sending and reading messages
+**Depends on**: Phase 40
+**Requirements**: MSG-01, MSG-02, MSG-03, MSG-04
+**Success Criteria** (what must be TRUE):
+  1. An org admin can open the messaging section, see a list of medics in their org, and start a new 1:1 conversation with any medic
+  2. A medic can open the messaging section and start a new 1:1 conversation with their org admin
+  3. Both parties can send text messages in a conversation thread and see messages from the other party appear in the thread
+  4. The conversation list shows every conversation with the other party's name, last message preview (truncated), timestamp of last message, and a badge showing unread message count
+**Plans**: 3 plans
+
+Plans:
+- [ ] 41-01: Conversation list page (web route, fetch conversations with last message + unread count, new conversation button, medic/admin participant display)
+- [ ] 41-02: Message thread view (web route, fetch messages for conversation, send message form, scroll-to-bottom, mark-as-read on open)
+- [ ] 41-03: New conversation flow (admin: pick medic from org roster; medic: auto-target org admin; create conversation record, redirect to thread)
+
+### Phase 42: iOS Messaging & Offline
+**Goal**: Messaging works on the iOS app with the same functionality as web, messages sync between platforms, and medics can view cached messages and queue outbound messages when offline
+**Depends on**: Phase 41
+**Requirements**: MSG-07, MSG-08, PLAT-01
+**Success Criteria** (what must be TRUE):
+  1. A medic can open the messaging section in the iOS app and see the same conversation list as on web (synced via Supabase)
+  2. A medic can send and receive messages in the iOS app, and those messages appear on the web dashboard (and vice versa)
+  3. When the device is offline, previously loaded conversations and messages are viewable from WatermelonDB local cache
+  4. When the device is offline, a medic can compose and send a message -- the message is queued locally and automatically delivered when connectivity returns, with no duplicate messages
+**Plans**: 3 plans
+
+Plans:
+- [ ] 42-01: WatermelonDB models and sync (Conversation, Message models; pull sync from Supabase; push sync for new messages; conflict resolution)
+- [ ] 42-02: iOS conversation list and thread UI (React Native screens mirroring web functionality; conversation list with unread counts; message thread with send)
+- [ ] 42-03: Offline queue and delivery (local outbound queue with pending status; automatic retry on connectivity change; deduplication via client-generated UUID; optimistic UI)
+
+### Phase 43: Real-time & Push Notifications
+**Goal**: Messages arrive instantly when the app or web dashboard is open (no manual refresh), and medics receive iOS push notifications for new messages when the app is backgrounded -- with GDPR-safe notification content
+**Depends on**: Phase 42
+**Requirements**: NOTIF-01, NOTIF-02, NOTIF-03
+**Success Criteria** (what must be TRUE):
+  1. When user A sends a message, user B sees it appear in their open conversation thread within 1-2 seconds -- no page refresh or pull-to-refresh needed (Supabase Realtime)
+  2. The conversation list updates in real-time: new messages update the last message preview, timestamp, and unread count without page refresh
+  3. When the iOS app is backgrounded or closed, the medic receives a push notification for new messages -- the notification shows only the sender's name (e.g. "New message from Dr Smith"), never the message content (GDPR compliance)
+  4. A single Supabase Realtime channel per user handles all their conversations (not one channel per conversation) to avoid connection exhaustion
+**Plans**: 3 plans
+
+Plans:
+- [ ] 43-01: Supabase Realtime subscription (single channel per user filtering on org_id + user_id; message insert listener; conversation list live update; thread live update)
+- [ ] 43-02: iOS push notification setup (Expo Notifications configuration; APNs certificate; device token registration; Edge Function to send push via Expo Push API)
+- [ ] 43-03: Push notification Edge Function (trigger on message insert; resolve recipient device tokens; format GDPR-safe payload with sender name only; send via Expo Push API; handle token cleanup for uninstalled apps)
+
+### Phase 44: Broadcast Messaging
+**Goal**: Org admins can send broadcast messages to all medics in their organisation, broadcasts appear in each medic's conversation list as a distinct message type, and the admin can track how many medics have read each broadcast
+**Depends on**: Phase 43 (real-time needed so broadcasts arrive instantly)
+**Requirements**: MSG-05, MSG-06, MSG-10
+**Success Criteria** (what must be TRUE):
+  1. An org admin can compose and send a broadcast message that is delivered to every medic currently in their organisation
+  2. Each medic sees broadcast messages in their conversation list as a distinct "Broadcast" conversation type -- medics cannot reply to broadcasts or see other medics' read status
+  3. The org admin sees a read tracking summary on each broadcast message showing "X of Y medics read" with a drilldown list of who has and has not read it
+  4. Broadcast messages trigger the same real-time delivery and push notifications as 1:1 messages
+**Plans**: 2 plans
+
+Plans:
+- [ ] 44-01: Broadcast send and delivery (admin compose UI; create message + message_recipients rows for each medic; broadcast conversation type; medic conversation list display with "Broadcast" label)
+- [ ] 44-02: Broadcast read tracking (mark-as-read on open per recipient; admin read summary UI with "X of Y read" count; drilldown list of read/unread medics)
+
+### Phase 45: Document Upload & Profile Storage
+**Goal**: Medics can upload categorised compliance documents (PDF, image) with expiry dates from either the iOS app or web dashboard, documents are stored on the medic's profile visible to their org admin, and uploading a new version of a document type archives the previous version
+**Depends on**: Phase 40 (schema and storage buckets)
+**Requirements**: DOC-01, DOC-02, DOC-03, DOC-04, DOC-05, DOC-08, DOC-09, PLAT-02
+**Success Criteria** (what must be TRUE):
+  1. A medic can upload a compliance document (PDF or image) from the web dashboard, selecting a category (Insurance, DBS, Qualification, ID, Other) and entering an expiry date
+  2. A medic can upload a compliance document from the iOS app with the same category selection and expiry date entry
+  3. Uploaded documents appear on the medic's profile page -- the org admin can view all documents for any medic in their org from the medic's profile
+  4. Either the medic or their org admin can download the original uploaded document file
+  5. When a medic uploads a new version of a document in the same category, the previous version is automatically archived (not deleted) and the new version becomes the current active document
+**Plans**: 3 plans
+
+Plans:
+- [ ] 45-01: Web document upload (upload form with category picker, expiry date input, file dropzone; Supabase Storage upload; document record creation; versioning logic that archives previous version)
+- [ ] 45-02: iOS document upload (React Native document picker / camera capture; same category + expiry flow; Supabase Storage upload from iOS; same versioning logic)
+- [ ] 45-03: Document profile views (medic profile documents tab; org admin medic profile view with all documents; download original file; version history display)
+
+### Phase 46: Expiry Tracking & Alerts
+**Goal**: Documents show colour-coded status badges based on expiry proximity, medics and admins receive progressive email alerts as documents approach expiry, and org admins have a bulk view of all documents expiring across their organisation in the next 30 days
+**Depends on**: Phase 45
+**Requirements**: DOC-06, DOC-07, DOC-10
+**Success Criteria** (what must be TRUE):
+  1. Every document displays a status badge: green "Current" (more than 30 days until expiry), amber "Expiring Soon" (30 days or fewer), or red "Expired" (past expiry date)
+  2. Progressive email alerts are sent to both the medic and their org admin at 30, 14, 7, and 1 day(s) before a document expires -- each alert clearly states which document, which medic, and the expiry date
+  3. The org admin can access a bulk expiry dashboard showing all documents expiring in the next 30 days across all medics in their org, sortable by expiry date and filterable by document category
+**Plans**: 2 plans
+
+Plans:
+- [ ] 46-01: Status badges and expiry alerts (computed status badge on document display; pg_cron Edge Function that runs daily checking expiry dates; sends progressive email alerts at 30/14/7/1 day thresholds; tracks which alerts have been sent to avoid duplicates)
+- [ ] 46-02: Bulk expiry dashboard (org admin page listing all documents expiring within 30 days; columns: medic name, document type, expiry date, status badge, days remaining; sort by expiry date; filter by category)
+
+### Phase 47: Message Polish
+**Goal**: Messages show delivery and read status indicators, users can search across all their conversations, and users can attach documents or files to messages -- completing the messaging feature set
+**Depends on**: Phase 44 (broadcast complete), Phase 45 (document storage for attachments)
+**Requirements**: MSG-09, MSG-11, MSG-12
+**Success Criteria** (what must be TRUE):
+  1. Each message in a conversation thread shows a delivery status indicator: single tick for "Sent", double tick for "Delivered", and blue double tick for "Read" -- updating in real-time
+  2. Users can search across all their conversations by keyword, with results showing the matching message, the conversation it belongs to, and the sender -- tapping a result navigates to that message in context
+  3. Users can attach a file (document, image, PDF) to a message -- the attachment is stored in the message-attachments bucket, appears inline in the conversation thread with a download link, and the file is downloadable by the recipient
+
+**Plans**: 3 plans
+
+Plans:
+- [ ] 47-01: Delivery and read status (message status column: sent/delivered/read; update to "delivered" when recipient's client receives via Realtime; update to "read" when thread is opened; real-time status indicator in thread UI)
+- [ ] 47-02: Conversation search (search input on conversation list page; full-text search across messages scoped to user's conversations; result list with message preview, conversation name, sender, timestamp; navigate to message in thread)
+- [ ] 47-03: Message file attachments (attach button in message compose; file picker/dropzone; upload to message-attachments bucket; attachment metadata on message record; inline attachment display in thread with download link)
+
 ---
 
 ## Progress
 
-**Execution Order:** 01 → 01.5 → 02 → 03 → 04 → 04.5 → 04.6 → 05 → 05.5 → 06 → 06.5 → 07 → 07.5 → 08 → 09 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 18.5 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 27 → 28 → 29 → 30 → 31 → 32 → 33 → 34 → 35 → 36 → 37 → 38 → 39
+**Execution Order:** 01 → 01.5 → 02 → 03 → 04 → 04.5 → 04.6 → 05 → 05.5 → 06 → 06.5 → 07 → 07.5 → 08 → 09 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 18.5 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 27 → 28 → 29 → 30 → 31 → 32 → 33 → 34 → 35 → 36 → 37 → 38 → 39 → 40 → 41 → 42 → 43 → 44 → 45 → 46 → 47
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -225,3 +364,11 @@ Plans:
 | 37. Company Accounts | v4.0 | 0/3 | Not started | - |
 | 38. Notifications & Alerts | v4.0 | 0/3 | Not started | - |
 | 39. Admin Dashboard | v4.0 | 0/3 | Not started | - |
+| 40. Comms & Docs Foundation | v5.0 | 0/2 | Not started | - |
+| 41. Web Messaging Core | v5.0 | 0/3 | Not started | - |
+| 42. iOS Messaging & Offline | v5.0 | 0/3 | Not started | - |
+| 43. Real-time & Push Notifications | v5.0 | 0/3 | Not started | - |
+| 44. Broadcast Messaging | v5.0 | 0/2 | Not started | - |
+| 45. Document Upload & Profile Storage | v5.0 | 0/3 | Not started | - |
+| 46. Expiry Tracking & Alerts | v5.0 | 0/2 | Not started | - |
+| 47. Message Polish | v5.0 | 0/3 | Not started | - |

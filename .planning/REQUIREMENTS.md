@@ -74,40 +74,40 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MSG-01 | TBD | Pending |
-| MSG-02 | TBD | Pending |
-| MSG-03 | TBD | Pending |
-| MSG-04 | TBD | Pending |
-| MSG-05 | TBD | Pending |
-| MSG-06 | TBD | Pending |
-| MSG-07 | TBD | Pending |
-| MSG-08 | TBD | Pending |
-| MSG-09 | TBD | Pending |
-| MSG-10 | TBD | Pending |
-| MSG-11 | TBD | Pending |
-| MSG-12 | TBD | Pending |
-| NOTIF-01 | TBD | Pending |
-| NOTIF-02 | TBD | Pending |
-| NOTIF-03 | TBD | Pending |
-| DOC-01 | TBD | Pending |
-| DOC-02 | TBD | Pending |
-| DOC-03 | TBD | Pending |
-| DOC-04 | TBD | Pending |
-| DOC-05 | TBD | Pending |
-| DOC-06 | TBD | Pending |
-| DOC-07 | TBD | Pending |
-| DOC-08 | TBD | Pending |
-| DOC-09 | TBD | Pending |
-| DOC-10 | TBD | Pending |
-| PLAT-01 | TBD | Pending |
-| PLAT-02 | TBD | Pending |
-| PLAT-03 | TBD | Pending |
+| MSG-01 | Phase 41 | Pending |
+| MSG-02 | Phase 41 | Pending |
+| MSG-03 | Phase 41 | Pending |
+| MSG-04 | Phase 41 | Pending |
+| MSG-05 | Phase 44 | Pending |
+| MSG-06 | Phase 44 | Pending |
+| MSG-07 | Phase 42 | Pending |
+| MSG-08 | Phase 42 | Pending |
+| MSG-09 | Phase 47 | Pending |
+| MSG-10 | Phase 44 | Pending |
+| MSG-11 | Phase 47 | Pending |
+| MSG-12 | Phase 47 | Pending |
+| NOTIF-01 | Phase 43 | Pending |
+| NOTIF-02 | Phase 43 | Pending |
+| NOTIF-03 | Phase 43 | Pending |
+| DOC-01 | Phase 45 | Pending |
+| DOC-02 | Phase 45 | Pending |
+| DOC-03 | Phase 45 | Pending |
+| DOC-04 | Phase 45 | Pending |
+| DOC-05 | Phase 45 | Pending |
+| DOC-06 | Phase 46 | Pending |
+| DOC-07 | Phase 46 | Pending |
+| DOC-08 | Phase 45 | Pending |
+| DOC-09 | Phase 45 | Pending |
+| DOC-10 | Phase 46 | Pending |
+| PLAT-01 | Phase 42 | Pending |
+| PLAT-02 | Phase 45 | Pending |
+| PLAT-03 | Phase 40 | Pending |
 
 **Coverage:**
 - v5.0 requirements: 28 total
-- Mapped to phases: 0 (pending roadmap creation)
-- Unmapped: 28
+- Mapped to phases: 28
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-19*
-*Last updated: 2026-02-19 after initial definition*
+*Last updated: 2026-02-19 after roadmap creation -- all 28 requirements mapped to Phases 40-47*

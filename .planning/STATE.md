@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v4.0 MedBid Marketplace — Phase 32 (Foundation Schema & Registration)
+**Current focus:** v4.0 MedBid Marketplace -- Phase 32 (Foundation Schema & Registration)
 
 ## Current Position
 
-Phase: 32 of 39 (Foundation Schema & Registration)
+Phase: 32 of 47 (Foundation Schema & Registration)
 Plan: 3 of 4 in current phase
 Status: In progress (checkpoint pending for 32-03)
-Last activity: 2026-02-19 — Completed 32-03-PLAN.md auto tasks (admin verification queue, CQC Edge Function)
+Last activity: 2026-02-19 -- v5.0 roadmap created (Phases 40-47, 8 phases, 21 plans, 28 requirements mapped)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [███░░░░░░░] v4.0 12%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [███░░░░░░░] v4.0 12% | [░░░░░░░░░░] v5.0 0%
 
 ## Performance Metrics
 
@@ -32,6 +32,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
 | v4.0 | 8 | 3/26 | ~22 min | ~7.3 min |
+| v5.0 | 8 | 0/21 | - | - |
 
 *Updated after each plan completion*
 
@@ -46,16 +47,11 @@ Recent decisions affecting current work:
 - [v4.0]: Two Stripe PaymentIntents for deposit + remainder (not authorize-then-capture, 7-day hold limit)
 - [v4.0]: `bookings.source` column discriminates 'direct' vs 'marketplace' bookings
 - [v4.0]: PostgreSQL EXCLUSION constraints on medic_commitments for race condition prevention
-- [v4.0]: Company accounts deferred to Phase 37 (individual flow must work first)
-- [32-01]: Storage bucket folder convention `{company_id}/{document_type}/{filename}` with company-admin-scoped RLS
-- [32-01]: CQC client uses `cache: 'no-store'` (standard) instead of Next.js-specific `next: { revalidate: 0 }` for TypeScript strict compatibility
-- [32-02]: Marketplace registration routes bypass middleware org_id check so new users can register
-- [32-02]: New marketplace users get org auto-created with onboarding_completed=true (skip SiteMedic wizard)
-- [32-02]: Document upload deferred to post-registration (company row must exist for storage RLS)
-- [32-02]: Client registration is single-toggle POST (low friction, billing details at award time)
-- [32-03]: Admin actions use service-role client (platform admin has org_id=NULL, RLS blocks direct writes)
-- [32-03]: CQC Edge Function combines CQC status checks + document expiry monitoring in single function
-- [32-03]: Active bookings flagged for admin review on suspension (NOT auto-cancelled per CONTEXT decision)
+- [v5.0]: Single Supabase Realtime channel per user (not per conversation) to avoid connection exhaustion
+- [v5.0]: Messages use org_id-scoped RLS (unlike v4.0 marketplace which uses user_id)
+- [v5.0]: Broadcast uses message_recipients join table for per-medic read tracking
+- [v5.0]: WatermelonDB for iOS offline message cache (existing pattern from sync engine)
+- [v5.0]: Push notifications show sender name only, never message content (GDPR)
 
 ### Pending Todos
 
@@ -77,10 +73,10 @@ Recent decisions affecting current work:
 
 ### Planned Milestones
 
-- **v5.0 Internal Comms & Document Management** — planning started 2026-02-19. Org admin ↔ medic messaging, community broadcast, document upload with expiry tracking, both platforms (iOS + web). Requirements and roadmap in progress.
+- **v5.0 Internal Comms & Document Management** -- roadmap created 2026-02-19. 8 phases (40-47), 21 plans, 28 requirements. Org admin ↔ medic messaging with offline support, broadcast messaging, compliance document upload with expiry tracking. Execution after v4.0 completes.
 
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: 32-03-PLAN.md checkpoint (human verification of admin queue and actions)
+Stopped at: v5.0 roadmap creation complete; 32-03-PLAN.md checkpoint still pending (human verification of admin queue and actions)
 Resume file: None
