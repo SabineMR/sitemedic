@@ -7,7 +7,65 @@
 
 ---
 
-## Recent Updates — Phase 30-01: Tier Gating Components & Server Helper (2026-02-18)
+## Recent Updates — Phase 30-04: Platform Admin Subscriptions / MRR Dashboard (2026-02-18)
+
+### Overview
+
+Phase 30 Plan 04 adds a Subscriptions page to the platform admin area. This page provides a Monthly Recurring Revenue (MRR) dashboard that shows all org subscriptions with their tier, status, and MRR contribution. All data is calculated from the local `organizations` table — no Stripe API calls are made.
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/app/platform/subscriptions/page.tsx` | Platform admin MRR dashboard. Fetches all orgs from the `organizations` table, calculates MRR using tier prices (Starter £149/mo, Growth £299/mo, Enterprise £599/mo). NULL tier defaults to `'starter'`, NULL status defaults to `'active'`. Past-due orgs stay in MRR (dunning period), cancelled orgs excluded. Shows 4 summary cards (Total MRR with ARR, Active Orgs, At Risk, Churned), 3 per-tier breakdown cards, searchable org table with tier badge, status badge, per-org MRR, and joined date. Includes skeleton loading state. |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/app/platform/layout.tsx` | Added `CreditCard` import from lucide-react. Added `Subscriptions` nav item between Organizations and Revenue, linking to `/platform/subscriptions`. |
+
+### Key Details
+
+- **MRR calculation rules**: NULL `subscription_tier` defaults to `'starter'`; NULL `subscription_status` defaults to `'active'`; `cancelled` excluded from MRR; `past_due` included in MRR (dunning)
+- **Price constants**: Starter = £149/mo, Growth = £299/mo, Enterprise = £599/mo — hardcoded, not fetched from Stripe
+- **At Risk metric**: Count of orgs with `past_due` status (payment failed, in dunning period)
+- **Churned metric**: Count of orgs with `cancelled` status (no longer contributing MRR)
+- **Search**: Client-side filtering by name, slug, tier, or status
+- **No database changes**: Reads existing `organizations` columns only
+- **No Stripe API calls**: All revenue data calculated locally from tier prices and org count
+
+---
+
+## Previous Updates — Phase 30-03: Stripe Customer Portal Integration (2026-02-18)
+
+### Overview
+
+Phase 30 Plan 03 adds the Stripe Customer Portal integration, allowing org admins to manage their subscription, payment methods, and invoices directly through Stripe's hosted portal. A new API route creates portal sessions, and the admin settings page gets a "Manage Billing" button.
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/app/api/billing/portal/route.ts` | POST endpoint that creates a Stripe Customer Portal session. Authenticates via `requireOrgId()`, looks up `stripe_customer_id` from the `organizations` table, returns a redirect URL to Stripe's hosted billing portal. Returns 400 with a friendly message for legacy orgs without a linked Stripe customer. |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/app/admin/settings/page.tsx` | Replaced "contact support" text in Billing section with a "Manage Billing" button. Added `portalLoading` state and `handleManageBilling()` handler that POSTs to `/api/billing/portal` and redirects to the Stripe portal URL. Button uses purple gradient styling with CreditCard icon and Loader2 spinner during loading. |
+
+### Key Details
+
+- **Portal return URL**: Points back to `/admin/settings` so users land on the settings page after managing billing in Stripe
+- **Legacy org handling**: Orgs without `stripe_customer_id` (set up before Stripe billing) get a descriptive error instead of a broken portal link
+- **Origin detection**: Uses `request.headers.get('origin')` with fallback to `NEXT_PUBLIC_SITE_URL` then `localhost:30500` for correct subdomain support
+- **Button disabled states**: Disabled when portal session is loading or when subscription tier hasn't loaded yet
+- **No database changes**: Reads existing `organizations.stripe_customer_id` column
+
+---
+
+## Previous Updates — Phase 30-01: Tier Gating Components & Server Helper (2026-02-18)
 
 ### Overview
 
