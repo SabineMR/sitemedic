@@ -10,6 +10,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Conversation, MessageWithSender } from '@/types/comms.types';
 
 // =============================================================================
 // TYPES
@@ -220,5 +221,114 @@ export function useConversations(initialData: ConversationListItem[]) {
     queryFn: () => fetchConversationsWithUnread(supabase),
     initialData,
     refetchInterval: 30_000, // 30 seconds
+  });
+}
+
+// =============================================================================
+// MESSAGE QUERY FUNCTIONS (41-02)
+// =============================================================================
+
+/**
+ * Fetch a single conversation by ID.
+ *
+ * @param supabase - Server or client Supabase instance
+ * @param conversationId - The conversation UUID
+ * @returns Conversation or null if not found
+ */
+export async function fetchConversationById(
+  supabase: SupabaseClient,
+  conversationId: string
+): Promise<Conversation | null> {
+  const { data, error } = await supabase
+    .from('conversations')
+    .select('*')
+    .eq('id', conversationId)
+    .single();
+
+  if (error || !data) {
+    if (error) console.error('Error fetching conversation:', error);
+    return null;
+  }
+
+  return data as Conversation;
+}
+
+/**
+ * Fetch all messages for a conversation with sender name resolution.
+ *
+ * Messages are ordered by created_at ASC (oldest first) for display
+ * in a thread. Sender names are resolved by bulk-querying the medics
+ * table — medics get their full name, non-medic senders get "Admin".
+ *
+ * @param supabase - Server or client Supabase instance
+ * @param conversationId - The conversation UUID
+ * @returns Array of MessageWithSender sorted oldest-first (limit 200)
+ */
+export async function fetchMessagesForConversation(
+  supabase: SupabaseClient,
+  conversationId: string
+): Promise<MessageWithSender[]> {
+  // 1. Fetch messages for this conversation
+  const { data: messages, error: msgError } = await supabase
+    .from('messages')
+    .select('*')
+    .eq('conversation_id', conversationId)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: true })
+    .limit(200);
+
+  if (msgError) {
+    console.error('Error fetching messages:', msgError);
+    return [];
+  }
+
+  if (!messages || messages.length === 0) {
+    return [];
+  }
+
+  // 2. Collect unique sender IDs
+  const senderIds = [...new Set(messages.map((m) => m.sender_id))];
+
+  // 3. Bulk-resolve sender names from medics table (medics have user_id FK)
+  const { data: medics } = await supabase
+    .from('medics')
+    .select('user_id, first_name, last_name')
+    .in('user_id', senderIds);
+
+  // Build lookup: userId -> full name
+  const senderNameMap = new Map<string, string>();
+  if (medics) {
+    medics.forEach((m) => {
+      senderNameMap.set(m.user_id, `${m.first_name} ${m.last_name}`);
+    });
+  }
+
+  // 4. Map messages to MessageWithSender
+  return messages.map((msg) => ({
+    ...msg,
+    sender_name: senderNameMap.get(msg.sender_id) || 'Admin',
+    sender_role: senderNameMap.has(msg.sender_id) ? 'medic' : 'admin',
+  })) as MessageWithSender[];
+}
+
+/**
+ * Client-side hook for messages in a conversation with 10-second polling.
+ * Faster polling than conversations (30s) since an active thread is
+ * time-sensitive.
+ *
+ * @param conversationId - The conversation UUID
+ * @param initialData - Server-side fetched messages for SSR hydration
+ */
+export function useMessages(
+  conversationId: string,
+  initialData: MessageWithSender[]
+) {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ['messages', conversationId],
+    queryFn: () => fetchMessagesForConversation(supabase, conversationId),
+    initialData,
+    refetchInterval: 10_000, // 10 seconds — faster for active thread
   });
 }
