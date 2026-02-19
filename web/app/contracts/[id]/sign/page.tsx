@@ -117,7 +117,7 @@ export default async function ContractSigningPage({ params }: PageProps) {
       contract_id: contract.id,
       event_type: 'status_change',
       event_data: {
-        from: previousStatus,
+        from: 'sent',
         to: 'viewed',
         viewed_via: 'signing_page',
       },
