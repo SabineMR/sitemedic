@@ -213,7 +213,7 @@ export default function PlatformLayout({ children }: PlatformLayoutProps) {
 
           {/* User info / logout (bottom of sidebar) */}
           <div className="p-4 border-t border-purple-700/50">
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-purple-700/50 backdrop-blur-sm hover:bg-purple-700/70 transition-all duration-200 cursor-pointer group">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-purple-700/50 backdrop-blur-sm transition-all duration-200 group">
               <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 group-hover:scale-110">
                 <span className="text-white text-sm font-bold">
                   {userName.slice(0, 2).toUpperCase()}

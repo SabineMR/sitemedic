@@ -361,7 +361,7 @@ export function MedicRosterTable() {
             {!medic.available_for_work && medic.unavailable_until && (
               <div className="mt-0.5 text-xs text-gray-500 flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
-                Until {new Date(medic.unavailable_until).toLocaleDateString()}
+                Until {new Date(medic.unavailable_until).toLocaleDateString('en-GB')}
               </div>
             )}
           </div>

@@ -1,5 +1,8 @@
 import Link from 'next/link';
 
+export const dynamic = 'force-static';
+export const revalidate = 86400;
+
 export const metadata = {
   title: 'Privacy Policy',
   description: 'SiteMedic Privacy Policy - How we collect, use, and protect your personal data in compliance with UK GDPR.',

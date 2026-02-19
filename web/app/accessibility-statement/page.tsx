@@ -1,5 +1,8 @@
 import Link from 'next/link';
 
+export const dynamic = 'force-static';
+export const revalidate = 86400;
+
 export const metadata = {
   title: 'Accessibility Statement',
   description: 'SiteMedic\'s commitment to digital accessibility and WCAG 2.1 compliance.',

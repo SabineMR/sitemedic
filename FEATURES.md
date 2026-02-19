@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Gap Analysis Sprint 12 — Security Fix, Type Safety & Not-Found Pages)
+**Last Updated**: 2026-02-18 (Gap Analysis Sprint 14 — Performance: Static Caching & Anchor Scroll Fix)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -149,6 +149,74 @@ Phase 30 Plan 01 delivers the client-side and server-side building blocks for fe
 - **requireTier() pattern**: Pure utility (no NextResponse coupling) — API routes catch the error and return appropriate HTTP status
 - **NULL tier handling**: Both client and server paths default NULL to 'starter' (legacy org compatibility per Phase 24-05 decision)
 - **No database changes**: All components read existing `organizations.subscription_tier` column
+
+---
+
+## Previous Updates — Sprint 14: Performance — Static Caching & Anchor Scroll Fix (2026-02-18)
+
+### Overview
+
+Sprint 14 of the gap analysis: adds Next.js static caching (`force-static` + 24h `revalidate`) to 10 pages that are pure static HTML with no data fetching, fixes the cookie policy's duplicate title suffix, and adds `scroll-margin-top` to services page anchor sections so footer links scroll cleanly past the sticky header.
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/app/(marketing)/about/page.tsx` | Added `export const dynamic = 'force-static'` and `export const revalidate = 86400` |
+| `web/app/(marketing)/services/page.tsx` | Added static caching exports; added `scroll-mt-20` to vertical section divs for smooth anchor scroll |
+| `web/app/(marketing)/contact/page.tsx` | Added static caching exports |
+| `web/app/terms-and-conditions/page.tsx` | Added static caching exports |
+| `web/app/privacy-policy/page.tsx` | Added static caching exports |
+| `web/app/refund-policy/page.tsx` | Added static caching exports |
+| `web/app/complaints/page.tsx` | Added static caching exports |
+| `web/app/accessibility-statement/page.tsx` | Added static caching exports |
+| `web/app/acceptable-use/page.tsx` | Added static caching exports |
+| `web/app/cookie-policy/page.tsx` | Added static caching exports; fixed title from `'Cookie Policy \| SiteMedic'` to `'Cookie Policy'` (was missed in Sprint 10) |
+
+### Key Details
+
+- **`force-static` + `revalidate`**: These Next.js exports tell the framework to pre-render the page at build time and serve from cache. `revalidate = 86400` means the page is re-generated at most once every 24 hours (ISR). Without these, Next.js may re-render on every request.
+- **10 pages now static**: About, Services, Contact + 7 legal pages. Combined with Homepage and Pricing (already static), all 12 public-facing pages are now CDN-cached.
+- **`scroll-mt-20` on service sections**: When navigating to `/services#tv-film` from the footer, the target section now scrolls to 80px below the viewport top, clearing the sticky 64px header. Without this, the section title was hidden behind the header.
+- **Cookie policy title fix**: Was `'Cookie Policy | SiteMedic'` which, combined with the root layout template, produced "Cookie Policy | SiteMedic — SiteMedic". Now just `'Cookie Policy'`.
+- **Zero TypeScript errors**: Verified with `tsc --noEmit` after all changes
+
+---
+
+## Previous Updates — Sprint 13: Accessibility Improvements (2026-02-18)
+
+### Overview
+
+Sprint 13 of the gap analysis: comprehensive accessibility pass across the codebase. Added `aria-label` attributes to 12 search inputs and 2 icon-only buttons, added keyboard support (role, tabIndex, onKeyDown) to the what3words suggestion listbox, and removed misleading `cursor-pointer` from non-interactive elements.
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/app/platform/users/page.tsx` | Added `aria-label="Search users"` to search input |
+| `web/app/platform/subscriptions/page.tsx` | Added `aria-label="Search subscriptions"` to search input |
+| `web/app/platform/organizations/page.tsx` | Added `aria-label="Search organizations"` to search input; removed misleading `cursor-pointer` and `hover:scale` from non-clickable org cards |
+| `web/components/admin/contact-submissions-table.tsx` | Added `aria-label="Search contact submissions"` to search input |
+| `web/components/admin/booking-approval-table.tsx` | Added `aria-label="Search bookings"` to search input |
+| `web/components/admin/client-management-table.tsx` | Added `aria-label="Search clients"` to search input |
+| `web/components/admin/quote-submissions-table.tsx` | Added `aria-label="Search quote submissions"` to search input |
+| `web/components/admin/medic-roster-table.tsx` | Added `aria-label="Search medics"` to search input |
+| `web/app/admin/territories/assignment-panel.tsx` | Added `aria-label="Search medics for territory assignment"` to search input |
+| `web/components/dashboard/workers-table.tsx` | Added `aria-label="Filter by company"` and `aria-label="Filter by role"` to filter inputs |
+| `web/components/dashboard/treatments-table.tsx` | Added `aria-label="Search treatments by worker name"` to search input |
+| `web/components/medic/busy-block-form.tsx` | Added `aria-label="Close busy block form"` to icon-only X button |
+| `web/components/dashboard/date-range-filter.tsx` | Added `aria-label="Clear date filter"` to icon-only X button |
+| `web/components/ui/what3words-input.tsx` | Added `role="listbox"` to `<ul>`, `role="option"` + `aria-selected` + `tabIndex={0}` + `onKeyDown` to suggestion `<li>` items for keyboard navigation |
+| `web/app/platform/layout.tsx` | Removed misleading `cursor-pointer` and `hover:bg` from non-interactive user info section |
+
+### Key Details
+
+- **WCAG 2.1 Level A compliance**: All form inputs now have accessible names (via `aria-label`), all interactive elements are keyboard operable, and icon-only buttons have screen reader labels
+- **12 search inputs fixed**: Screen readers previously announced these as "edit text" with no context — now each has a descriptive label
+- **2 icon-only buttons fixed**: Close/dismiss buttons that only contained `<X />` icons — screen readers announced them as just "button"
+- **what3words listbox pattern**: Suggestion dropdown now uses proper ARIA listbox role with keyboard Enter/Space activation
+- **Misleading cursor-pointer removed**: 2 non-interactive elements had `cursor-pointer` making them appear clickable — removed to prevent user confusion
+- **Zero TypeScript errors**: Verified with `tsc --noEmit` after all changes
 
 ---
 

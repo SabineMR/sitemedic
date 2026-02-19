@@ -1,5 +1,8 @@
 import Link from 'next/link';
 
+export const dynamic = 'force-static';
+export const revalidate = 86400;
+
 export const metadata = {
   title: 'Refund & Returns Policy',
   description: 'SiteMedic refund and returns policy in compliance with UK Consumer Rights Act 2015.',

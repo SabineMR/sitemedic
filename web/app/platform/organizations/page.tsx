@@ -445,7 +445,7 @@ export default function PlatformOrganizationsPage() {
         {filteredOrgs.map((org) => (
           <div
             key={org.id}
-            className="bg-purple-800/30 backdrop-blur-sm border border-purple-700/50 rounded-2xl p-6 hover:bg-purple-800/40 transition-all duration-200 hover:scale-[1.02] cursor-pointer"
+            className="bg-purple-800/30 backdrop-blur-sm border border-purple-700/50 rounded-2xl p-6 hover:bg-purple-800/40 transition-all duration-200"
           >
             {/* Organization Header */}
             <div className="flex items-start justify-between mb-4">

@@ -206,12 +206,16 @@ export function What3WordsInput({
       {/* Suggestions dropdown */}
       {showSuggestions && suggestions.length > 0 && (
         <div className="absolute z-50 mt-1 w-full rounded-md border border-gray-300 bg-white shadow-lg">
-          <ul className="max-h-60 overflow-auto py-1">
+          <ul className="max-h-60 overflow-auto py-1" role="listbox">
             {suggestions.map((suggestion, index) => (
               <li
                 key={index}
+                role="option"
+                aria-selected={false}
+                tabIndex={0}
                 onClick={() => handleSuggestionClick(suggestion)}
-                className="cursor-pointer px-4 py-2 hover:bg-blue-50"
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSuggestionClick(suggestion); } }}
+                className="cursor-pointer px-4 py-2 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
               >
                 <div className="font-mono font-semibold text-blue-600">
                   ///{suggestion.words}

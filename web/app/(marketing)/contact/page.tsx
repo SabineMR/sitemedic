@@ -10,6 +10,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+export const dynamic = 'force-static';
+export const revalidate = 86400;
+
 export const metadata: Metadata = {
   title: 'Contact',
   description: 'Get in touch with Apex Safety Group. Request a quote, discuss your requirements, or book a medic for your event or worksite.',

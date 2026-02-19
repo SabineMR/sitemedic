@@ -1,5 +1,8 @@
 import Link from 'next/link';
 
+export const dynamic = 'force-static';
+export const revalidate = 86400;
+
 export const metadata = {
   title: 'Acceptable Use Policy',
   description: 'Guidelines for acceptable use of SiteMedic services and prohibited activities.',

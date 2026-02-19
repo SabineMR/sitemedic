@@ -209,7 +209,7 @@ export function OutOfTerritoryApproval({ bookingId }: OutOfTerritoryApprovalProp
           </div>
           <div>
             <p className="text-gray-500">Shift Date</p>
-            <p className="font-medium text-gray-900">{new Date(booking.shift_date).toLocaleDateString()}</p>
+            <p className="font-medium text-gray-900">{new Date(booking.shift_date).toLocaleDateString('en-GB')}</p>
           </div>
           <div>
             <p className="text-gray-500">Shift Hours</p>

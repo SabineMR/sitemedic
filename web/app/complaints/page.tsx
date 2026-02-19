@@ -1,5 +1,8 @@
 import Link from 'next/link';
 
+export const dynamic = 'force-static';
+export const revalidate = 86400;
+
 export const metadata = {
   title: 'Complaints Procedure',
   description: 'How to make a complaint and our commitment to resolving issues fairly and quickly.',

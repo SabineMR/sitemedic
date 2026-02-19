@@ -380,7 +380,7 @@ export default function TerritoryDetail({ territory, onClose }: TerritoryDetailP
                   >
                     <div>
                       <div className="text-sm text-white">
-                        {new Date(booking.shift_date).toLocaleDateString()}
+                        {new Date(booking.shift_date).toLocaleDateString('en-GB')}
                       </div>
                       <div className="text-xs text-gray-400">
                         {booking.shift_hours}h shift

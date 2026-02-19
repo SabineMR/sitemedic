@@ -1,7 +1,10 @@
 import Link from 'next/link';
 
+export const dynamic = 'force-static';
+export const revalidate = 86400;
+
 export const metadata = {
-  title: 'Cookie Policy | SiteMedic',
+  title: 'Cookie Policy',
   description: 'Learn about how SiteMedic uses cookies and how you can manage your cookie preferences.',
 };
 

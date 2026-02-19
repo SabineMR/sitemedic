@@ -61,6 +61,7 @@ export function DateRangeFilter({ onDateRangeChange }: DateRangeFilterProps) {
           size="sm"
           onClick={handleClear}
           className="h-8 px-2"
+          aria-label="Clear date filter"
         >
           <X className="h-4 w-4" />
         </Button>

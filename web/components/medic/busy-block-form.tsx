@@ -74,6 +74,7 @@ export function BusyBlockForm({ medicId, onSaved, onCancel }: BusyBlockFormProps
           type="button"
           onClick={onCancel}
           className="text-gray-400 hover:text-white transition-colors"
+          aria-label="Close busy block form"
         >
           <X className="w-5 h-5" />
         </button>

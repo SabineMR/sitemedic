@@ -177,7 +177,7 @@ export default async function MedicOnboardingPage({ params }: { params: Promise<
                 {medic.payslips.map((payslip: any) => (
                   <tr key={payslip.id}>
                     <td className="py-3 text-gray-900">
-                      {new Date(payslip.pay_period_start).toLocaleDateString()} - {new Date(payslip.pay_period_end).toLocaleDateString()}
+                      {new Date(payslip.pay_period_start).toLocaleDateString('en-GB')} - {new Date(payslip.pay_period_end).toLocaleDateString('en-GB')}
                     </td>
                     <td className="py-3 text-gray-900">£{payslip.gross_pay.toFixed(2)}</td>
                     <td className="py-3 text-gray-900">£{(payslip.tax_deducted + payslip.ni_deducted).toFixed(2)}</td>

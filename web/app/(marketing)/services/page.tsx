@@ -10,6 +10,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+export const dynamic = 'force-static';
+export const revalidate = 86400;
+
 export const metadata: Metadata = {
   title: 'Services',
   description: 'Professional paramedic services for construction, film & TV, festivals, motorsport, sporting events, and more. HCPC-registered medics with industry-specific compliance.',
@@ -301,7 +304,7 @@ export default function ServicesPage() {
         {verticals.map((vertical) => {
           const c = colorMap[vertical.color];
           return (
-            <div key={vertical.id} id={vertical.id} className={`border ${c.icon.split(' ')[1]} rounded-2xl overflow-hidden`}>
+            <div key={vertical.id} id={vertical.id} className={`border ${c.icon.split(' ')[1]} rounded-2xl overflow-hidden scroll-mt-20`}>
               {/* Header */}
               <div className={`${c.icon} border-b px-8 py-6`}>
                 <div className="flex items-start gap-4">
