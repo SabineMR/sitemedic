@@ -1,0 +1,113 @@
+# Requirements: SiteMedic v5.0 Internal Comms & Document Management
+
+**Defined:** 2026-02-19
+**Core Value:** Org admins can communicate with their field medics and collect compliance documents inside SiteMedic — replacing scattered WhatsApp/email with an in-platform system tied to individual medic profiles.
+
+## v5.0 Requirements
+
+### Messaging
+
+- [ ] **MSG-01**: Org admin can start a 1:1 conversation with any medic in their org
+- [ ] **MSG-02**: Medic can start a 1:1 conversation with their org admin
+- [ ] **MSG-03**: Both parties can send and receive text messages in a conversation thread
+- [ ] **MSG-04**: Users see a conversation list with last message preview, timestamp, and unread count
+- [ ] **MSG-05**: Org admin can compose and send a broadcast message to all medics in the org
+- [ ] **MSG-06**: Broadcast messages appear in each medic's conversation list (medics cannot reply to each other)
+- [ ] **MSG-07**: Messages sent offline are queued locally and delivered when connectivity returns
+- [ ] **MSG-08**: Previously loaded messages are viewable offline
+- [ ] **MSG-09**: Messages show delivery status: Sent → Delivered → Read
+- [ ] **MSG-10**: Org admin sees broadcast read tracking ("12 of 15 medics read")
+- [ ] **MSG-11**: Users can search across all their conversations
+- [ ] **MSG-12**: Users can attach a document/file to a message
+
+### Notifications
+
+- [ ] **NOTIF-01**: Medic receives iOS push notification when a new message arrives (app backgrounded)
+- [ ] **NOTIF-02**: Push notification shows sender name only — never message content (GDPR)
+- [ ] **NOTIF-03**: Messages arrive in real-time when app/web is open (Supabase Realtime)
+
+### Document Management
+
+- [ ] **DOC-01**: Medic can upload a compliance document (PDF, image) from iOS app or web
+- [ ] **DOC-02**: Documents are categorised by type: Insurance, DBS, Qualification, ID, Other
+- [ ] **DOC-03**: Medic enters an expiry date when uploading a document
+- [ ] **DOC-04**: Uploaded documents are stored on the medic's individual profile
+- [ ] **DOC-05**: Org admin can view all documents for any medic in their org on the medic's profile
+- [ ] **DOC-06**: Documents show status badges: Current (green), Expiring Soon (amber), Expired (red)
+- [ ] **DOC-07**: Progressive expiry alerts sent to medic and admin (30/14/7/1 days before expiry)
+- [ ] **DOC-08**: Medic or admin can download the original document file
+- [ ] **DOC-09**: When medic uploads a new version of a document type, the old version is archived (not deleted)
+- [ ] **DOC-10**: Org admin sees a bulk expiry view — all documents expiring in the next 30 days across all medics
+
+### Cross-Platform
+
+- [ ] **PLAT-01**: Messaging works on both iOS app and web dashboard, synced
+- [ ] **PLAT-02**: Document upload works on both iOS app and web dashboard
+- [ ] **PLAT-03**: All data is scoped to the organization (org_id RLS isolation)
+
+## v5.1 Requirements (Deferred)
+
+### Bookmarks & Preferences
+
+- **BOOK-01**: Medic can bookmark/save messages for quick access
+- **BOOK-02**: Medic can bookmark/save documents for quick access
+- **PREF-01**: Medic can mute non-urgent conversations
+- **PREF-02**: Medic can choose notification channels (push, email, both, none)
+
+### Polish
+
+- **PREV-01**: Document file preview/thumbnail generation (PDF first page, image thumbnail)
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Group chat between medics | Scope creep — this is admin ↔ medic comms, not a team chat platform |
+| Voice/video calling | Phone calls exist; WebRTC adds massive complexity for zero staffing value |
+| Message editing/deletion | Compliance platform — messages are permanent for audit purposes |
+| Auto-disappearing messages | Contradicts UK GDPR retention requirements |
+| Typing indicators | Asynchronous comms, not real-time chat |
+| Message reactions (emoji) | Professional staffing comms, not social media |
+| Custom notification sounds | Emergency alerts have custom sounds; messages use default iOS sound |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| MSG-01 | TBD | Pending |
+| MSG-02 | TBD | Pending |
+| MSG-03 | TBD | Pending |
+| MSG-04 | TBD | Pending |
+| MSG-05 | TBD | Pending |
+| MSG-06 | TBD | Pending |
+| MSG-07 | TBD | Pending |
+| MSG-08 | TBD | Pending |
+| MSG-09 | TBD | Pending |
+| MSG-10 | TBD | Pending |
+| MSG-11 | TBD | Pending |
+| MSG-12 | TBD | Pending |
+| NOTIF-01 | TBD | Pending |
+| NOTIF-02 | TBD | Pending |
+| NOTIF-03 | TBD | Pending |
+| DOC-01 | TBD | Pending |
+| DOC-02 | TBD | Pending |
+| DOC-03 | TBD | Pending |
+| DOC-04 | TBD | Pending |
+| DOC-05 | TBD | Pending |
+| DOC-06 | TBD | Pending |
+| DOC-07 | TBD | Pending |
+| DOC-08 | TBD | Pending |
+| DOC-09 | TBD | Pending |
+| DOC-10 | TBD | Pending |
+| PLAT-01 | TBD | Pending |
+| PLAT-02 | TBD | Pending |
+| PLAT-03 | TBD | Pending |
+
+**Coverage:**
+- v5.0 requirements: 28 total
+- Mapped to phases: 0 (pending roadmap creation)
+- Unmapped: 28
+
+---
+*Requirements defined: 2026-02-19*
+*Last updated: 2026-02-19 after initial definition*
