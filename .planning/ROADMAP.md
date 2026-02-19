@@ -114,12 +114,12 @@ Plans:
   3. Client sees all received quotes in a ranked list sorted by best value (price + rating), with sort and filter options — but no contact details (phone, email, full names hidden until award + deposit)
   4. Client can view full company profile (certifications, star rating, experience, past events, insurance/compliance, written reviews) only after that company has submitted a quote
   5. Minimum rate enforcement: quote form displays guideline rates per qualification level and blocks quotes below the minimum
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 34-01: Quote submission form (pricing breakdown with custom lines, cover letter, staffing plan, draft saving, availability)
-- [ ] 34-02: Quote browsing and comparison (ranked list with best-value sort, filters, anonymised company profiles)
-- [ ] 34-03: Quote management (edit in place, withdraw, quote deadline with soft close + extend)
+- [ ] 34-01-PLAN.md — Database schema, types, validation, API routes, Zustand store, and quote submission form (migration 146: marketplace_quotes table with RLS; quote types + Zod schemas + minimum rates; submit/save-draft/list/detail API routes; Zustand form store; multi-section submission form with pricing breakdown, staffing plan, cover letter, draft auto-save)
+- [ ] 34-02-PLAN.md — Quote browsing and comparison (best-value scoring algorithm, anonymisation utility, ranked quote list with sort/filter, expandable detail rows, company profile page with access control)
+- [ ] 34-03-PLAN.md — Quote management (edit-in-place with revised badge, withdraw with confirmation, company My Quotes dashboard, deadline extension for event poster)
 
 ### Phase 35: Award Flow & Payment
 **Goal**: Clients can award their chosen quote, pay a deposit via Stripe, and the system auto-creates a SiteMedic booking — with the remainder auto-charged after event completion and the medic paid via the existing payout pipeline
@@ -357,8 +357,8 @@ Plans:
 | 30. Subscription Management & Feature Gating | v3.0 | 5/5 | Complete | 2026-02-20 |
 | 31. Branding Settings UI | v3.0 | 2/2 | Complete | 2026-02-19 |
 | 32. Foundation Schema & Registration | v4.0 | 4/4 | Complete | 2026-02-19 |
-| 33. Event Posting & Discovery | v4.0 | 0/3 | Planned | - |
-| 34. Quote Submission & Comparison | v4.0 | 0/3 | Not started | - |
+| 33. Event Posting & Discovery | v4.0 | 3/3 | Complete | 2026-02-19 |
+| 34. Quote Submission & Comparison | v4.0 | 0/3 | In Progress | - |
 | 35. Award Flow & Payment | v4.0 | 0/4 | Not started | - |
 | 36. Ratings, Messaging & Disputes | v4.0 | 0/3 | Not started | - |
 | 37. Company Accounts | v4.0 | 0/3 | Not started | - |
