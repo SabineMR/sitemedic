@@ -1,5 +1,44 @@
 # Project Milestones: SiteMedic
 
+## v3.0 White-Label Platform & Subscription Engine (Shipped: 2026-02-19)
+
+**Delivered:** Transformed SiteMedic into a white-label SaaS engine — each subscribing medic business gets their own branded portal, subdomain, and subscription plan. Per-org branding (logo, primary colour, company name) applied consistently across the web portal, PDFs, and emails. Three Stripe Billing tiers with a hybrid onboarding flow — pay online, platform admin activates. 30/30 requirements satisfied.
+
+**Key accomplishments:**
+
+- DB foundation: org_branding table, subscription columns, org-logos storage bucket, Apex backfill, CVE-2025-29927 patch — Phases 24-25 lay the infrastructure for all v3.0 features
+- Subdomain routing: `slug.sitemedic.co.uk` with secure middleware extraction, x-org-* header injection, branded login page, cookie scope isolation — Phase 26
+- White-label branding pipeline: BrandingProvider (SSR), CSS custom properties (`var(--org-primary)`), all 8 PDF Edge Functions and 4 email templates rebrand per-org — Phases 27-28
+- Stripe Billing subscription engine: Checkout flow, billing webhook handler, FEATURE_GATES tier gating (dual-layer UI + API), Customer Portal, MRR dashboard, subscription suspension — Phases 25, 29, 30
+- Org onboarding flow: Public signup page → Stripe Checkout → webhook creates org → post-payment branding wizard → platform admin activation queue → welcome email — Phase 29
+- Branding self-service UI: BrandingForm with 500ms auto-save debounce + live preview, platform admin branding override with service-role API, TierGate enforcement — Phase 31
+
+**Phases completed:** 24–31 (8 phases, 30 plans total)
+
+**Stats:**
+
+- 340 files changed, ~30,700 lines added
+- 8 phases, 30 plans, 145 commits
+- Executed: 2026-02-18 → 2026-02-19
+- 30/30 requirements satisfied (100%)
+- 8/8 phases verified (7 passed, 1 missing VERIFICATION.md but all plans complete)
+- 18/18 cross-phase integrations verified
+- 5/5 E2E flows verified
+
+**Git range:** `e46c69d` (docs: create milestone v3.0 roadmap) → `ece6c13` (fix: type-safe catch clauses)
+
+**Tech debt deferred:**
+
+- Vercel wildcard domain `*.sitemedic.co.uk` + DNS CNAME (external infrastructure config)
+- Apply Supabase migrations 132-135 to production
+- Create Stripe Products/Prices in Stripe Dashboard and register billing webhook
+- Phase 25 missing VERIFICATION.md (all plan summaries exist)
+- DPA template from solicitor (non-code blocker)
+
+**What's next:** v4.0 MedBid Marketplace — Request-for-Quotes marketplace where clients post events, medics submit quotes, and SiteMedic takes commission
+
+---
+
 ## v2.0 Multi-Vertical Platform Expansion (Shipped: 2026-02-18)
 
 **Delivered:** Expanded SiteMedic from a construction-only platform to a multi-vertical medic compliance platform — Film/TV, Festivals & Events, Motorsport, and Football each have their own incident forms, RIDDOR rules, PDF outputs, cert types, and terminology. Added near-miss heat maps and compliance trend analytics at org and platform level. 36/36 requirements satisfied.

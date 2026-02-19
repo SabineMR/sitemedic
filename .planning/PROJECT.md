@@ -199,6 +199,14 @@ Documentation happens automatically as the medic does their job, not as separate
 | No Film/TV mode in MVP | Validate construction market first; Film/TV is same platform, different labels | ✓ Good (v1.0 - construction-focused) |
 | Territory-based assignment | UK postcode sectors enable geographic optimization and coverage tracking | ✓ Good (v1.0 - 100% auto-assignment) |
 | Stripe Connect for medics | Express accounts handle UK Faster Payments without custom bank integration | ✓ Good (v1.0 - weekly payouts working) |
+| Separate Stripe billing webhook endpoint | `/api/stripe/billing-webhooks` with distinct signing secret from Connect `/api/stripe/webhooks` — prevents event cross-contamination | ✓ Good (v3.0) |
+| Tier from DB, never JWT | Middleware reads `organizations.subscription_tier` on every request — changes take effect immediately after webhook fires | ✓ Good (v3.0) |
+| CSS custom properties for per-org colours | `var(--org-primary)` pattern — Tailwind JIT cannot use runtime-constructed class names | ✓ Good (v3.0) |
+| Cookie domain NOT widened to `.sitemedic.co.uk` | Each subdomain requires its own sign-in — prevents cross-org session leak | ✓ Good (v3.0) |
+| Public bucket for org-logos | Logos in PDFs/emails need stable URLs; signed URLs expire mid-render | ✓ Good (v3.0) |
+| `fetchLogoAsDataUri()` for PDF rendering | @react-pdf/renderer in Deno Edge cannot reliably fetch remote images — data URI approach works reliably | ✓ Good (v3.0) |
+| Service-role client for platform admin ops | Platform admin JWT has org_id=NULL so RLS blocks direct writes; service-role bypasses safely | ✓ Good (v3.0) |
+| Hybrid onboarding (pay online, admin activates) | Balances self-service signup with quality control — Sabine can verify each org before activation | ✓ Good (v3.0) |
 
 ## Current Milestone: v4.0 MedBid Marketplace
 
@@ -236,4 +244,4 @@ Documentation happens automatically as the medic does their job, not as separate
 | Part of SiteMedic brand | Lives at sitemedic.co.uk/marketplace. Leverages existing brand. No separate domain needed. | — Pending |
 
 ---
-*Last updated: 2026-02-19 after v4.0 milestone initialized*
+*Last updated: 2026-02-19 after v3.0 milestone completion*
