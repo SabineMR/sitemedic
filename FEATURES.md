@@ -2,8 +2,51 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-19 (Sprint 22: Multi-Tenant org_id Security Hardening)
+**Last Updated**: 2026-02-19 (v5.0 Internal Comms & Document Management milestone planned)
 **Audience**: Web developers, technical reviewers, product team
+
+---
+
+## Planned — v5.0 Internal Comms & Document Management (2026-02-19)
+
+### Overview
+
+An internal organization communication and document management system for core SiteMedic. Org admins (employers) can message their field medics, send broadcast announcements to all medics, and collect compliance documents (insurance, DBS, qualifications) that are stored on individual medic profiles with expiry tracking. Everything works on both iOS app and web dashboard with full offline support. This replaces scattered WhatsApp/email communication with an in-platform system.
+
+### Key Features (8 phases planned — Phases 40–47)
+
+| Feature | Description | Phase |
+|---------|-------------|-------|
+| **1:1 Messaging** | Two-way conversation threads between org admin and individual medics. Send/receive text messages. | 41 |
+| **Broadcast Messaging** | Org admin sends announcements to all medics. Per-medic read tracking ("12 of 15 read"). | 44 |
+| **Offline Messaging** | Messages cached in WatermelonDB. Outbound queue for offline sends. Auto-delivery on reconnect. | 42 |
+| **Real-time Delivery** | Supabase Realtime — messages appear within 1-2 seconds. Single channel per user (no explosion). | 43 |
+| **Push Notifications** | iOS push via Expo Notifications. GDPR-safe: sender name only, never message content. | 43 |
+| **Document Upload** | Medics upload compliance docs (PDF, image) with category and expiry date. iOS app + web. | 45 |
+| **Profile Document Log** | Documents stored on medic's profile. Admin views all docs. Version history (archive, not delete). | 45 |
+| **Expiry Tracking** | Green/amber/red status badges. Progressive alerts at 30/14/7/1 days. Bulk expiry dashboard. | 46 |
+| **Delivery & Read Status** | Single tick (Sent), double tick (Delivered), blue double tick (Read). Real-time updates. | 47 |
+| **Message Search** | Full-text search across all conversations with navigable results. | 47 |
+| **Message Attachments** | Attach files to messages. Inline display + download link. | 47 |
+
+### Architecture Notes
+
+- **No new packages**: Built entirely with existing Supabase Realtime, WatermelonDB, Storage, Expo Notifications, pg_cron
+- **Org-scoped RLS**: All tables use org_id isolation (unlike marketplace which uses user_id)
+- **Single Realtime channel per user**: Prevents WebSocket channel explosion (critical pitfall avoided)
+- **Offline-first**: WatermelonDB models for conversations + messages with dedup via client-generated UUID
+- **Expiry pattern**: Reuses existing cert expiry pg_cron + Edge Function pattern
+- **New tables**: `conversations`, `conversation_participants`, `messages`, `medic_documents`, `document_expiry_reminders`, `bookmarks`
+- **New storage bucket**: `medic-documents` (private, 10MB, PDF/JPEG/PNG/DOCX)
+
+### Planning Files
+
+| File | Purpose |
+|------|---------|
+| `.planning/PROJECT.md` | Updated with v5.0 milestone context |
+| `.planning/REQUIREMENTS.md` | 28 requirements across 4 categories |
+| `.planning/ROADMAP.md` | 8 phases (40–47), 21 plans |
+| `.planning/research/v5/` | Stack, features, architecture, pitfalls research |
 
 ---
 
@@ -2747,6 +2790,19 @@ These settings control the OpenAI Realtime API's Server Voice Activity Detection
 | **TRANSCRIPTION_CHUNK_INTERVAL_MS** | `5000ms` (5s) | `3000ms` (3s) | First transcript now arrives at ~5s (3s recording + ~2s Whisper API) instead of ~7s. Whisper handles 3-second audio chunks well. |
 
 **Net effect**: iOS transcription feels near-instant (word-by-word with shorter pauses). Android first feedback drops from ~7s to ~5s.
+
+---
+
+## Recent Updates — SOS Button Auth Guard (2026-02-19)
+
+### SOS Button Hidden When Signed Out ✅
+
+The floating SOS button was visible on the login/sign-up screen because it was rendered outside the `AuthProvider` in `app/_layout.tsx`. Medics who aren't signed in shouldn't see the emergency button.
+
+| File | Change |
+|------|--------|
+| `components/ui/SOSButton.tsx` | **Modified** — Added `useAuth()` hook. Returns `null` when `state.isAuthenticated` is `false`, hiding the button on auth screens (login, sign-up). |
+| `app/_layout.tsx` | **Modified** — Moved `<SOSButton />` from outside all providers to inside `<AuthProvider>` (but outside `<OrgProvider>`) so it has access to auth state via `useAuth()`. No visual change when authenticated — context providers don't create native views. |
 
 ---
 
