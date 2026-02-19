@@ -31,7 +31,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 1/26 | ~4 min | ~4 min |
+| v4.0 | 8 | 2/26 | ~11 min | ~5.5 min |
 
 *Updated after each plan completion*
 
@@ -49,6 +49,10 @@ Recent decisions affecting current work:
 - [v4.0]: Company accounts deferred to Phase 37 (individual flow must work first)
 - [32-01]: Storage bucket folder convention `{company_id}/{document_type}/{filename}` with company-admin-scoped RLS
 - [32-01]: CQC client uses `cache: 'no-store'` (standard) instead of Next.js-specific `next: { revalidate: 0 }` for TypeScript strict compatibility
+- [32-02]: Marketplace registration routes bypass middleware org_id check so new users can register
+- [32-02]: New marketplace users get org auto-created with onboarding_completed=true (skip SiteMedic wizard)
+- [32-02]: Document upload deferred to post-registration (company row must exist for storage RLS)
+- [32-02]: Client registration is single-toggle POST (low friction, billing details at award time)
 
 ### Pending Todos
 
@@ -75,5 +79,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: v5.0 milestone planning (questioning complete, moving to research)
+Stopped at: 32-02-PLAN.md checkpoint (human verification of registration flow)
 Resume file: None
