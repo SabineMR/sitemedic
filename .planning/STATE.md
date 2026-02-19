@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v5.0 Internal Comms — Phase 41 (Web Messaging Core)
+**Current focus:** v5.0 Internal Comms — Phase 42 (iOS Messaging & Offline)
 
 ## Current Position
 
-Phase: 41 of 47 (Web Messaging Core)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-02-19 — Completed 41-02-PLAN.md (message thread & send)
+Phase: 42 of 47 (iOS Messaging & Offline)
+Plan: 0 of 3 in current phase
+Status: Ready to plan
+Last activity: 2026-02-19 — Phase 41 complete (3 plans, 4/4 must-haves verified)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████░░░░░░] v4.0 25% | [███░░░░░░░] v5.0 24%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████░░░░░░] v4.0 25% | [███░░░░░░░] v5.0 29%
 
 ## Performance Metrics
 
@@ -56,13 +56,10 @@ Recent decisions affecting current work:
 - [v5.0]: Broadcast uses message_recipients join table for per-medic read tracking
 - [v5.0]: WatermelonDB for iOS offline message cache (existing pattern from sync engine)
 - [v5.0]: Push notifications show sender name only, never message content (GDPR)
-- [32-04]: Company Stripe Express accounts use business_type='company' (distinct from individual medic flow)
-- [32-04]: Stripe onboarding is optional at registration -- can be completed later from company dashboard
-- [40-01]: (SELECT get_user_org_id()) wrapper pattern in RLS for query plan caching -- improvement over bare function call
+- [40-01]: (SELECT get_user_org_id()) wrapper pattern in RLS for query plan caching
 - [40-01]: Denormalized org_id on child tables (messages, message_recipients, document_versions) to avoid JOIN-based RLS
 - [40-01]: Messages soft-delete via deleted_at column, filtered at RLS level for org users (platform admin sees all)
 - [40-02]: Storage RLS uses (storage.foldername(name))[1] = (SELECT get_user_org_id())::text for org-scoped file access
-- [40-02]: Platform admin storage policies use FOR ALL (single policy per bucket instead of per-operation)
 - [40-02]: TypeScript types in separate comms.types.ts -- avoids modifying existing database.types.ts
 - [41-01]: Unread counts computed in JS from 3 parallel Supabase queries (conversations, read statuses, messages) -- avoids N+1
 - [41-01]: 30-second polling for conversations (more frequent than 60s workers due to messaging time sensitivity)
@@ -100,5 +97,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 41-02-PLAN.md (message thread & send)
+Stopped at: Phase 41 complete -- ready to plan Phase 42 (iOS Messaging & Offline)
 Resume file: None

@@ -59,7 +59,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 **Milestone Goal:** Org admins can communicate with their field medics and collect compliance documents inside SiteMedic -- replacing scattered WhatsApp/email with an in-platform system tied to individual medic profiles. Messaging works across iOS app and web dashboard with offline support, real-time delivery, and push notifications. Document management handles upload, categorisation, expiry tracking, and progressive alerts.
 
 - [x] **Phase 40: Comms & Docs Foundation** - Database schema for conversations, messages, and documents; Supabase Storage buckets; org-scoped RLS policies
-- [ ] **Phase 41: Web Messaging Core** - 1:1 conversations between org admin and medics on the web dashboard with conversation list and message threads
+- [x] **Phase 41: Web Messaging Core** - 1:1 conversations between org admin and medics on the web dashboard with conversation list and message threads
 - [ ] **Phase 42: iOS Messaging & Offline** - WatermelonDB models for messages, offline send queue, cross-platform sync between iOS app and web
 - [ ] **Phase 43: Real-time & Push Notifications** - Supabase Realtime for live message delivery, iOS push notifications with GDPR-safe content
 - [ ] **Phase 44: Broadcast Messaging** - Org admin can send broadcast messages to all medics with per-medic read tracking
@@ -233,9 +233,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 41-01-PLAN.md — Conversation list page (query functions, navigation, header unread badge, two-panel layout, conversation rows with unread counts)
-- [ ] 41-02-PLAN.md — Message thread view (dynamic route, message display, send API, mark-as-read, scroll-to-bottom, Enter-to-send input)
-- [ ] 41-03-PLAN.md — New conversation flow (create conversation API with duplicate prevention, admin medic picker dialog, medic "Message Admin" button)
+- [x] 41-01-PLAN.md — Conversation list page (query functions, navigation, header unread badge, two-panel layout, conversation rows with unread counts)
+- [x] 41-02-PLAN.md — Message thread view (dynamic route, message display, send API, mark-as-read, scroll-to-bottom, Enter-to-send input)
+- [x] 41-03-PLAN.md — New conversation flow (create conversation API with duplicate prevention, admin medic picker dialog, medic "Message Admin" button)
 
 ### Phase 42: iOS Messaging & Offline
 **Goal**: Messaging works on the iOS app with the same functionality as web, messages sync between platforms, and medics can view cached messages and queue outbound messages when offline
@@ -365,7 +365,7 @@ Plans:
 | 38. Notifications & Alerts | v4.0 | 0/3 | Not started | - |
 | 39. Admin Dashboard | v4.0 | 0/3 | Not started | - |
 | 40. Comms & Docs Foundation | v5.0 | 2/2 | Complete | 2026-02-19 |
-| 41. Web Messaging Core | v5.0 | 0/3 | Not started | - |
+| 41. Web Messaging Core | v5.0 | 3/3 | Complete | 2026-02-19 |
 | 42. iOS Messaging & Offline | v5.0 | 0/3 | Not started | - |
 | 43. Real-time & Push Notifications | v5.0 | 0/3 | Not started | - |
 | 44. Broadcast Messaging | v5.0 | 0/2 | Not started | - |

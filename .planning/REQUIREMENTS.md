@@ -7,10 +7,10 @@
 
 ### Messaging
 
-- [ ] **MSG-01**: Org admin can start a 1:1 conversation with any medic in their org
-- [ ] **MSG-02**: Medic can start a 1:1 conversation with their org admin
-- [ ] **MSG-03**: Both parties can send and receive text messages in a conversation thread
-- [ ] **MSG-04**: Users see a conversation list with last message preview, timestamp, and unread count
+- [x] **MSG-01**: Org admin can start a 1:1 conversation with any medic in their org
+- [x] **MSG-02**: Medic can start a 1:1 conversation with their org admin
+- [x] **MSG-03**: Both parties can send and receive text messages in a conversation thread
+- [x] **MSG-04**: Users see a conversation list with last message preview, timestamp, and unread count
 - [ ] **MSG-05**: Org admin can compose and send a broadcast message to all medics in the org
 - [ ] **MSG-06**: Broadcast messages appear in each medic's conversation list (medics cannot reply to each other)
 - [ ] **MSG-07**: Messages sent offline are queued locally and delivered when connectivity returns
@@ -74,10 +74,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MSG-01 | Phase 41 | Pending |
-| MSG-02 | Phase 41 | Pending |
-| MSG-03 | Phase 41 | Pending |
-| MSG-04 | Phase 41 | Pending |
+| MSG-01 | Phase 41 | Complete |
+| MSG-02 | Phase 41 | Complete |
+| MSG-03 | Phase 41 | Complete |
+| MSG-04 | Phase 41 | Complete |
 | MSG-05 | Phase 44 | Pending |
 | MSG-06 | Phase 44 | Pending |
 | MSG-07 | Phase 42 | Pending |
