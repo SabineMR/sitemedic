@@ -218,8 +218,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 40-01: Database schema and RLS (conversations, messages, message_recipients, documents, document_versions tables; org_id RLS policies; indexes; Supabase migration)
-- [ ] 40-02: Storage buckets and TypeScript types (compliance-documents bucket, message-attachments bucket, storage RLS policies, type generation)
+- [ ] 40-01-PLAN.md — Database schema and RLS (migration 143: conversations, messages, message_recipients, conversation_read_status, document_categories, documents, document_versions; org_id RLS policies; indexes; triggers; default category seeding)
+- [ ] 40-02-PLAN.md — Storage buckets and TypeScript types (migration 144: medic-documents bucket, message-attachments bucket, storage RLS policies; web/types/comms.types.ts)
 
 ### Phase 41: Web Messaging Core
 **Goal**: Org admins and medics can have 1:1 text conversations through the web dashboard -- with a conversation list showing unread counts and a message thread view for sending and reading messages
