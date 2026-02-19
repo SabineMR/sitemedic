@@ -17,8 +17,8 @@ Foundation work that all subsequent phases depend on. No user-visible output —
 
 ### BRAND — White-Label Branding
 
-- [ ] **BRAND-01**: Org admin can upload their logo, set a primary brand colour (hex), and edit their company name from the org settings page — changes are reflected immediately
-- [ ] **BRAND-02**: Platform admin can upload/override branding for any org from the platform admin panel (white-glove setup for new subscribers)
+- [x] **BRAND-01**: Org admin can upload their logo, set a primary brand colour (hex), and edit their company name from the org settings page — changes are reflected immediately
+- [x] **BRAND-02**: Platform admin can upload/override branding for any org from the platform admin panel (white-glove setup for new subscribers)
 - [ ] **BRAND-03**: Org branding is applied to the web portal — header logo, sidebar accent colour, login page company name and logo, browser tab title
 - [ ] **BRAND-04**: Org logo and company name appear in the header of all generated PDFs (weekly reports, RIDDOR F2508, payslips, invoices) — replaces hardcoded SiteMedic identity
 - [ ] **BRAND-05**: Org logo and primary colour appear in all transactional emails (booking confirmations, shift alerts, invoice notifications) — replaces hardcoded email branding
@@ -113,8 +113,8 @@ Foundation work that all subsequent phases depend on. No user-visible output —
 | SUB-05 | Phase 30 | Complete |
 | SUB-06 | Phase 30 | Complete |
 | SUB-07 | Phase 30 | Complete |
-| BRAND-01 | Phase 31 | Pending |
-| BRAND-02 | Phase 31 | Pending |
+| BRAND-01 | Phase 31 | Complete |
+| BRAND-02 | Phase 31 | Complete |
 
 **Coverage:**
 - v3.0 requirements: 30 total
