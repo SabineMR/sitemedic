@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v3.0 White-Label Platform & Subscription Engine — Phase 29 complete; Phase 30 next (Subscription Management & Feature Gating)
+**Current focus:** v3.0 White-Label Platform & Subscription Engine — Phase 30 in progress (Subscription Management & Feature Gating)
 
 ## Current Position
 
-Phase: 29 of 31 (Org Onboarding Flow)
-Plan: 5 of 5 in Phase 29
-Status: Phase 29 complete — all 5 plans delivered
-Last activity: 2026-02-18 — Completed 29-04-PLAN.md (Platform admin activation queue)
+Phase: 30 of 31 (Subscription Management & Feature Gating)
+Plan: 1 of 5 in Phase 30
+Status: In progress
+Last activity: 2026-02-18 — Completed 30-01-PLAN.md (Tier Gating Components & Server Helper)
 
-Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [████████░░] v3.0 ~74% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4, Phase 27: 3/3, Phase 28: 3/3, Phase 29: 5/5 done)
+Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [████████░░] v3.0 ~77% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4, Phase 27: 3/3, Phase 28: 3/3, Phase 29: 5/5, Phase 30: 1/5 done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 143 (84 v1.0 + 35 v1.1 + 30 v2.0 + 23 v3.0)
+- Total plans completed: 144 (84 v1.0 + 35 v1.1 + 30 v2.0 + 24 v3.0)
 - Average duration: 4.0 min
 - Total execution time: ~9.0 hours
 
@@ -36,10 +36,11 @@ Progress: [██████████] v1.0 complete | [██████�
 | 27 (v3.0) | 3/3 | ~6 min | ~2 min |
 | 28 (v3.0) | 3/3 | ~8 min | ~2.7 min |
 | 29 (v3.0) | 5/5 | ~25 min | ~5 min |
+| 30 (v3.0) | 1/5 | ~2.5 min | ~2.5 min |
 
 **Recent Trend:**
-- Last plan: 29-04 — Platform admin activation queue (~6 min)
-- Trend: Stable
+- Last plan: 30-01 — Tier Gating Components & Server Helper (~2.5 min)
+- Trend: Fast (small utility plan)
 
 *Updated after each plan completion*
 
@@ -101,6 +102,8 @@ Progress: [██████████] v1.0 complete | [██████�
 - **29-04:** Slug format validation: /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/ — 3-30 chars, no leading/trailing hyphens
 - **29-04:** Starter-tier orgs skip slug assignment entirely; Growth/Enterprise require slug before activation
 - **29-04:** Welcome email sent fire-and-forget after activation — activation succeeds regardless of email delivery
+- **30-01:** UpgradePrompt CTA links to `/admin/settings#billing` — settings page billing section is the natural upgrade entry point
+- **30-01:** requireTier() is a pure utility (no NextResponse coupling) — API routes catch errors and return appropriate HTTP status codes
 
 ### Pending Todos
 
@@ -119,5 +122,5 @@ Progress: [██████████] v1.0 complete | [██████�
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 29-04-PLAN.md (Platform admin activation queue) — Phase 29 fully complete
+Stopped at: Completed 30-01-PLAN.md (Tier Gating Components & Server Helper)
 Resume file: None
