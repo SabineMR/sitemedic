@@ -1,9 +1,10 @@
 /**
  * Stripe Connect Edge Function
- * Phase 1.5: Express account creation, onboarding, Payment Intent creation
+ * Phase 1.5 + Phase 32: Express account creation, onboarding, Payment Intent creation
  *
  * Actions:
- * - create_express_account: Create Stripe Express account for medic + onboarding link
+ * - create_express_account: Create Stripe Express account for medic (individual) + onboarding link
+ * - create_company_express_account: Create Stripe Express account for marketplace company (business_type='company') + onboarding link
  * - create_payment_intent: Create Payment Intent for client booking charge
  * - create_customer: Create Stripe Customer for client
  * - check_account_status: Retrieve Express account status
@@ -20,7 +21,7 @@ const SITE_URL = Deno.env.get('SITE_URL') || 'https://sitemedic.com';
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 interface ConnectRequest {
-  action: 'create_express_account' | 'create_payment_intent' | 'create_customer' | 'check_account_status';
+  action: 'create_express_account' | 'create_company_express_account' | 'create_payment_intent' | 'create_customer' | 'check_account_status';
   [key: string]: any;
 }
 
@@ -53,6 +54,9 @@ serve(async (req: Request) => {
     switch (action) {
       case 'create_express_account':
         return await createExpressAccount(requestData);
+
+      case 'create_company_express_account':
+        return await createCompanyExpressAccount(req, requestData);
 
       case 'create_payment_intent':
         return await createPaymentIntent(requestData);
@@ -145,6 +149,126 @@ async function createExpressAccount(data: any): Promise<Response> {
   return new Response(
     JSON.stringify({
       account_id: account.id,
+      onboarding_url: accountLink.url,
+    }),
+    { headers: { 'Content-Type': 'application/json' } }
+  );
+}
+
+/**
+ * Action: create_company_express_account
+ * Phase 32: Create Stripe Express account for marketplace company (business_type='company')
+ * + generate onboarding link for Stripe-hosted identity verification
+ */
+async function createCompanyExpressAccount(req: Request, data: any): Promise<Response> {
+  const { company_id, company_name, company_email, company_reg_number } = data;
+
+  if (!company_id || !company_name || !company_email) {
+    return new Response(
+      JSON.stringify({ error: 'company_id, company_name, company_email required' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Step 1: Authenticate the requesting user via the Authorization header
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return new Response(
+      JSON.stringify({ error: 'Authorization header required' }),
+      { status: 401, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  const userClient = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY')!, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const { data: { user }, error: userError } = await userClient.auth.getUser();
+  if (userError || !user) {
+    return new Response(
+      JSON.stringify({ error: 'Authentication failed' }),
+      { status: 401, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Step 2: Verify the company exists and the requesting user is the admin
+  const { data: company, error: companyError } = await supabase
+    .from('marketplace_companies')
+    .select('id, admin_user_id, stripe_account_id')
+    .eq('id', company_id)
+    .single();
+
+  if (companyError || !company) {
+    return new Response(
+      JSON.stringify({ error: 'Company not found' }),
+      { status: 404, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  if (company.admin_user_id !== user.id) {
+    return new Response(
+      JSON.stringify({ error: 'Only the company admin can initiate Stripe onboarding' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Step 3: If company already has a Stripe account, generate a new Account Link
+  // (for incomplete onboarding retry) instead of creating a new account
+  let accountId = company.stripe_account_id;
+
+  if (!accountId) {
+    console.log(`🏢 Creating Express account for company ${company_id} (${company_name})`);
+
+    // Create Stripe Express account with business_type='company'
+    const account = await stripe.accounts.create({
+      type: 'express',
+      country: 'GB',
+      business_type: 'company',
+      capabilities: {
+        transfers: { requested: true },
+      },
+      company: {
+        name: company_name,
+        registration_number: company_reg_number || undefined,
+      },
+      email: company_email,
+      metadata: {
+        marketplace_company_id: company_id,
+        source: 'marketplace',
+      },
+    });
+
+    accountId = account.id;
+    console.log(`✅ Company Express account created: ${accountId}`);
+
+    // Step 4: Update marketplace_companies with stripe_account_id
+    const { error: updateError } = await supabase
+      .from('marketplace_companies')
+      .update({ stripe_account_id: accountId })
+      .eq('id', company_id);
+
+    if (updateError) {
+      console.error('Error updating marketplace_companies with stripe_account_id:', updateError);
+      throw new Error('Failed to update company record');
+    }
+  } else {
+    console.log(`🔄 Company ${company_id} already has Stripe account ${accountId}, generating new Account Link`);
+  }
+
+  // Step 5: Generate Account Link for onboarding
+  const accountLink = await stripe.accountLinks.create({
+    account: accountId,
+    refresh_url: `${SITE_URL}/marketplace/register/stripe-callback?refresh=true&company_id=${company_id}`,
+    return_url: `${SITE_URL}/marketplace/register/stripe-callback?complete=true&company_id=${company_id}`,
+    type: 'account_onboarding',
+  });
+
+  console.log(`🔗 Company onboarding link created: ${accountLink.url}`);
+
+  // Step 6: Return the onboarding URL
+  return new Response(
+    JSON.stringify({
+      account_id: accountId,
       onboarding_url: accountLink.url,
     }),
     { headers: { 'Content-Type': 'application/json' } }
