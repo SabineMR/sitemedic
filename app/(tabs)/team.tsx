@@ -69,7 +69,7 @@ export default function TeamScreen() {
         // Query profiles (auth-linked users) and medics (roster) in parallel
         let profilesQuery = supabase
           .from('profiles')
-          .select('id, full_name, email, role, is_active')
+          .select('id, full_name, email, role')
           .eq('org_id', orgId)
           .order('full_name', { ascending: true });
         if (userId) {
@@ -93,7 +93,6 @@ export default function TeamScreen() {
           email: p.email,
           role: p.role,
           source: 'profiles' as const,
-          is_active: p.is_active ?? true,
         }));
 
         // Build set of auth user IDs already represented (profiles + current user)
@@ -120,12 +119,31 @@ export default function TeamScreen() {
 
         // Split into team (admins + medics) and site managers
         const team = combined.filter((m) => m.role !== 'site_manager');
-        const managers = combined.filter((m) => m.role === 'site_manager' && m.is_active !== false);
+        let managers = combined.filter((m) => m.role === 'site_manager');
 
         // Fetch company_name + site assignments for site managers
         if (managers.length > 0) {
           const smIds = managers.map((m) => m.authUserId).filter(Boolean) as string[];
           if (smIds.length > 0) {
+            // is_active may not exist yet (migration 139) — gracefully degrade
+            try {
+              const { data: activeData } = await supabase
+                .from('profiles')
+                .select('id, is_active')
+                .in('id', smIds);
+              if (activeData) {
+                const activeMap = new Map(activeData.map((r: any) => [r.id, r.is_active]));
+                for (const mgr of managers) {
+                  if (mgr.authUserId && activeMap.has(mgr.authUserId)) {
+                    mgr.is_active = activeMap.get(mgr.authUserId) ?? true;
+                  }
+                }
+                managers = managers.filter((m) => m.is_active !== false);
+              }
+            } catch {
+              // Column doesn't exist yet — treat all as active
+            }
+
             // company_name may not exist yet (migration 138) — gracefully degrade
             try {
               const { data: companyData } = await supabase
@@ -151,17 +169,39 @@ export default function TeamScreen() {
               .order('shift_date', { ascending: false });
 
             if (assignments && assignments.length > 0) {
-              // Build map: site_manager_id -> most recent site_name
+              // Build maps: most recent site + all unique companies per manager
               const siteMap = new Map<string, string>();
+              const companyMap = new Map<string, Set<string>>();
               for (const row of assignments) {
-                if (row.site_manager_id && row.site_name && !siteMap.has(row.site_manager_id)) {
-                  siteMap.set(row.site_manager_id, row.site_name);
+                if (row.site_manager_id && row.site_name) {
+                  // Most recent site (first match — ordered by shift_date DESC)
+                  if (!siteMap.has(row.site_manager_id)) {
+                    siteMap.set(row.site_manager_id, row.site_name);
+                  }
+                  // Extract company from "Company — Location" format
+                  const dashIdx = row.site_name.indexOf(' \u2014 ');
+                  if (dashIdx > 0) {
+                    const company = row.site_name.substring(0, dashIdx).trim();
+                    if (!companyMap.has(row.site_manager_id)) {
+                      companyMap.set(row.site_manager_id, new Set());
+                    }
+                    companyMap.get(row.site_manager_id)!.add(company);
+                  }
                 }
               }
-              // Attach site_name to managers
+              // Attach site + company to managers
               for (const mgr of managers) {
-                if (mgr.authUserId && siteMap.has(mgr.authUserId)) {
-                  mgr.site_name = siteMap.get(mgr.authUserId)!;
+                if (mgr.authUserId) {
+                  if (siteMap.has(mgr.authUserId)) {
+                    const fullSite = siteMap.get(mgr.authUserId)!;
+                    const dashIdx = fullSite.indexOf(' \u2014 ');
+                    // Show only location part on pin line if parseable
+                    mgr.site_name = dashIdx > 0 ? fullSite.substring(dashIdx + 3).trim() : fullSite;
+                  }
+                  // Booking-derived companies as fallback when profiles.company_name is null
+                  if (!mgr.company_name && companyMap.has(mgr.authUserId)) {
+                    mgr.company_name = [...companyMap.get(mgr.authUserId)!].join(', ');
+                  }
                 }
               }
             }

@@ -10,6 +10,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireOrgId } from '@/lib/organizations/org-resolver';
 import { EXPERIENCE_TIERS, ExperienceLevel } from '@/lib/medics/experience';
 
 const VALID_LEVELS: ExperienceLevel[] = ['junior', 'senior', 'lead'];
@@ -26,6 +27,9 @@ export async function PATCH(
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  // Multi-tenant: Get current user's org_id
+  const orgId = await requireOrgId();
 
   // Parse body
   let body: { experience_level?: string };
@@ -44,10 +48,12 @@ export async function PATCH(
   }
 
   // Update — trigger sets medic_payout_percent + platform_fee_percent automatically
+  // IMPORTANT: Filter by org_id to prevent cross-org access
   const { data, error } = await supabase
     .from('medics')
     .update({ experience_level: level })
     .eq('id', medicId)
+    .eq('org_id', orgId)
     .select('id, experience_level, medic_payout_percent, platform_fee_percent')
     .single();
 

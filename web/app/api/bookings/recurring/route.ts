@@ -6,6 +6,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { addDays, parseISO } from 'date-fns';
+import { requireOrgId } from '@/lib/organizations/org-resolver';
 
 interface RecurringRequest {
   parentBookingId: string;
@@ -15,6 +16,21 @@ interface RecurringRequest {
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient();
+
+    // Verify authentication
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Multi-tenant: Get current user's org_id
+    const orgId = await requireOrgId();
+
     const { parentBookingId, recurrencePattern, weeks }: RecurringRequest = await request.json();
 
     if (!parentBookingId || !recurrencePattern || !weeks) {
@@ -28,13 +44,13 @@ export async function POST(request: Request) {
     const maxWeeks = 52;
     const actualWeeks = Math.min(weeks, maxWeeks);
 
-    const supabase = await createClient();
-
     // Fetch parent booking
+    // IMPORTANT: Filter by org_id to prevent cross-org access
     const { data: parentBooking, error: parentError } = await supabase
       .from('bookings')
       .select('*')
       .eq('id', parentBookingId)
+      .eq('org_id', orgId)
       .single();
 
     if (parentError || !parentBooking) {
@@ -46,10 +62,12 @@ export async function POST(request: Request) {
     }
 
     // Determine child status based on client's payment terms
+    // IMPORTANT: Filter by org_id to prevent cross-org access
     const { data: clientRecord } = await supabase
       .from('clients')
       .select('payment_terms')
       .eq('id', parentBooking.client_id)
+      .eq('org_id', orgId)
       .single();
 
     const clientPaymentTerms = clientRecord?.payment_terms || 'prepay';
@@ -124,10 +142,12 @@ export async function POST(request: Request) {
     // Set recurring_until on the parent booking to the last child's shift date
     if (childBookings.length > 0) {
       const lastChildDate = childBookings[childBookings.length - 1].shift_date;
+      // IMPORTANT: Filter by org_id for safety
       await supabase
         .from('bookings')
         .update({ recurring_until: lastChildDate })
-        .eq('id', parentBookingId);
+        .eq('id', parentBookingId)
+        .eq('org_id', orgId);
     }
 
     return NextResponse.json({

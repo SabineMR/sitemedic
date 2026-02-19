@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireOrgId } from '@/lib/organizations/org-resolver';
 import { canTransition } from '@/lib/contracts/workflow';
 
 // ============================================================================
@@ -38,6 +39,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Multi-tenant: Get current user's org_id
+    const orgId = await requireOrgId();
+
     // Parse request body
     const body: SendContractRequest = await request.json();
     const { contractId, recipientEmail, ccEmail, personalMessage } = body;
@@ -67,6 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch contract with client and booking data
+    // IMPORTANT: Filter by org_id to prevent cross-org access
     const { data: contract, error: contractError } = await supabase
       .from('contracts')
       .select(
@@ -85,6 +90,7 @@ export async function POST(request: NextRequest) {
       `
       )
       .eq('id', contractId)
+      .eq('org_id', orgId)
       .single();
 
     if (contractError || !contract) {
@@ -110,7 +116,8 @@ export async function POST(request: NextRequest) {
       await supabase
         .from('contracts')
         .update({ internal_review_completed_at: now })
-        .eq('id', contractId);
+        .eq('id', contractId)
+        .eq('org_id', orgId);
     }
 
     // Build shareable signing URL
@@ -182,13 +189,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Update contract status to 'sent'
+    // IMPORTANT: Filter by org_id for safety
     const { error: updateError } = await supabase
       .from('contracts')
       .update({
         status: 'sent',
         sent_at: now,
       })
-      .eq('id', contractId);
+      .eq('id', contractId)
+      .eq('org_id', orgId);
 
     if (updateError) {
       console.error('Error updating contract status:', updateError);
@@ -206,6 +215,7 @@ export async function POST(request: NextRequest) {
 
     // Log contract event
     await supabase.from('contract_events').insert({
+      org_id: orgId,
       contract_id: contractId,
       event_type: 'email_sent',
       event_data: {

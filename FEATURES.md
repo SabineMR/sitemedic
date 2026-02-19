@@ -66,8 +66,8 @@ Site managers now have an `is_active` boolean field on their profile. This disti
 
 | File | Changes |
 |------|---------|
-| `app/(tabs)/team.tsx` | **Extended `TeamMember` interface** with `is_active` field. **Updated profiles query** to include `is_active`. **Mapped `is_active`** from profile data onto team members (defaults to `true` if null). **Filtered site managers** to only show active ones: `m.is_active !== false`. Inactive site managers are completely hidden from the mobile Team screen. |
-| `web/app/platform/users/page.tsx` | **Extended `PlatformUser` interface** with `is_active` field. **Updated Supabase query** to fetch `is_active` from profiles join. **Added status badge** in users table — green "Active" dot/pill or gray "Inactive" dot/pill. **Added status filter dropdown** alongside existing role filter (All Status / Active / Inactive). **New table column** "Status" between Role and Organisation. |
+| `app/(tabs)/team.tsx` | **Extended `TeamMember` interface** with `is_active` field. **Separate try/catch query** fetches `is_active` from profiles for site managers only (graceful degradation if migration 139 not yet applied — column missing = treat all as active). **Filtered site managers** to only show active ones: `m.is_active !== false`. Inactive site managers are completely hidden from the mobile Team screen. |
+| `web/app/platform/users/page.tsx` | **Extended `PlatformUser` interface** with `is_active` field. **Separate try/catch query** fetches `is_active` from profiles after main query (graceful degradation if migration 139 not yet applied). **Added status badge** in users table — green "Active" dot/pill or gray "Inactive" dot/pill. **Added status filter dropdown** alongside existing role filter (All Status / Active / Inactive). **New table column** "Status" between Role and Organisation. |
 | `src/types/supabase.ts` | **Added `is_active`** to profiles `Row` (required `boolean`), `Insert` (optional), and `Update` (optional) type definitions. |
 
 ### Key Implementation Details
@@ -76,6 +76,7 @@ Site managers now have an `is_active` boolean field on their profile. This disti
 - **Mobile hides inactive**: The mobile app Team screen filters out site managers where `is_active === false`. Uses `!== false` check so `null`/`undefined` (pre-migration rows) are treated as active.
 - **Web shows all with filter**: The Platform Users page shows all users regardless of status. Admins can filter to see only active or inactive users via a dropdown. Each user row displays a status badge (green dot + "Active" or gray dot + "Inactive").
 - **No cascade effects**: Setting a site manager to inactive does not affect their existing bookings, contracts, or other data. It only controls visibility in the team roster.
+- **Company auto-extraction from bookings**: When `profiles.company_name` is null, the company name is derived from the booking `site_name` field (format: "Company — Location"). All unique companies across ALL bookings for each site manager are collected — handles edge cases where a manager works for multiple companies simultaneously or switches companies over time. Multiple companies shown comma-separated (e.g. "Global Enterprises, Ironclad"). The pin line now shows only the location part (e.g. "Canary Wharf HQ") to avoid repeating the company. If `profiles.company_name` is set, it takes priority over booking-derived values.
 
 ---
 

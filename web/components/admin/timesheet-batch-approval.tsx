@@ -131,7 +131,7 @@ export function TimesheetBatchApproval({ initialData }: TimesheetBatchApprovalPr
   useEffect(() => {
     createClient().auth.getUser().then(({ data }) => {
       if (data.user) setAdminUserId(data.user.id);
-    });
+    }).catch(() => { /* auth lookup failed */ });
   }, []);
 
   const batchApproveMutation = useBatchApproveTimesheets();

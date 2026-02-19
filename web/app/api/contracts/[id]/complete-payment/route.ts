@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireOrgId } from '@/lib/organizations/org-resolver';
 import { stripe } from '@/lib/stripe/server';
 import { getPaymentMilestones, isFullyPaid } from '@/lib/contracts/payment-enforcement';
 import type { Contract } from '@/lib/contracts/types';
@@ -33,7 +34,11 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Multi-tenant: Get current user's org_id
+    const orgId = await requireOrgId();
+
     // Fetch contract with client data
+    // IMPORTANT: Filter by org_id to prevent cross-org access
     const { data: contract, error: contractError } = await supabase
       .from('contracts')
       .select(
@@ -48,6 +53,7 @@ export async function POST(
       `
       )
       .eq('id', contractId)
+      .eq('org_id', orgId)
       .single();
 
     if (contractError || !contract) {
@@ -167,10 +173,12 @@ export async function POST(
       paymentUpdate.stripe_payment_intent_id = stripePaymentIntentId;
     }
 
+    // IMPORTANT: Filter by org_id for safety
     const { error: updateError } = await supabase
       .from('contracts')
       .update(paymentUpdate)
-      .eq('id', contract.id);
+      .eq('id', contract.id)
+      .eq('org_id', orgId);
 
     if (updateError) {
       console.error('Error updating contract:', updateError);
@@ -191,19 +199,22 @@ export async function POST(
           status: 'fulfilled',
           fulfilled_at: now,
         })
-        .eq('id', contract.id);
+        .eq('id', contract.id)
+        .eq('org_id', orgId);
     } else {
       // Update to active if not already
       if (contract.status === 'signed' || contract.status === 'completed') {
         await supabase
           .from('contracts')
           .update({ status: 'active' })
-          .eq('id', contract.id);
+          .eq('id', contract.id)
+          .eq('org_id', orgId);
       }
     }
 
     // Log contract event
     const { error: eventError } = await supabase.from('contract_events').insert({
+      org_id: orgId,
       contract_id: contract.id,
       event_type: 'payment_captured',
       event_data: {

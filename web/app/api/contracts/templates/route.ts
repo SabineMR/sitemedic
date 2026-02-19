@@ -10,20 +10,34 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireOrgId } from '@/lib/organizations/org-resolver';
 import type { ContractTemplate, ContractClause } from '@/lib/contracts/types';
 
 /**
  * GET /api/contracts/templates
- * Fetch all active templates
+ * Fetch all active templates for the current org
  */
 export async function GET() {
   try {
     const supabase = await createClient();
 
+    // Verify authentication
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Multi-tenant: Get current user's org_id
+    const orgId = await requireOrgId();
+
+    // IMPORTANT: Filter by org_id to prevent cross-org access
     const { data, error } = await supabase
       .from('contract_templates')
       .select('*')
       .eq('status', 'active')
+      .eq('org_id', orgId)
       .order('is_default', { ascending: false })
       .order('name', { ascending: true });
 
@@ -57,6 +71,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Multi-tenant: Get current user's org_id
+    const orgId = await requireOrgId();
+
     const body = await request.json();
 
     // Validate required fields
@@ -68,17 +85,20 @@ export async function POST(request: NextRequest) {
     }
 
     // If setting as default, unset other defaults first
+    // IMPORTANT: Filter by org_id to prevent cross-org access
     if (body.is_default) {
       await supabase
         .from('contract_templates')
         .update({ is_default: false })
-        .eq('is_default', true);
+        .eq('is_default', true)
+        .eq('org_id', orgId);
     }
 
     // Create template
     const { data, error } = await supabase
       .from('contract_templates')
       .insert({
+        org_id: orgId,
         name: body.name,
         description: body.description || null,
         clauses: body.clauses || [],
@@ -122,6 +142,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Multi-tenant: Get current user's org_id
+    const orgId = await requireOrgId();
+
     const body = await request.json();
 
     if (!body.id) {
@@ -132,19 +155,23 @@ export async function PUT(request: NextRequest) {
     }
 
     // If setting as default, unset other defaults first
+    // IMPORTANT: Filter by org_id to prevent cross-org access
     if (body.is_default) {
       await supabase
         .from('contract_templates')
         .update({ is_default: false })
         .eq('is_default', true)
+        .eq('org_id', orgId)
         .neq('id', body.id);
     }
 
     // Fetch current template to increment version
+    // IMPORTANT: Filter by org_id to prevent cross-org access
     const { data: current } = await supabase
       .from('contract_templates')
       .select('version')
       .eq('id', body.id)
+      .eq('org_id', orgId)
       .single();
 
     // Update template
@@ -170,10 +197,12 @@ export async function PUT(request: NextRequest) {
       updateData.version = (current?.version || 1) + 1;
     }
 
+    // IMPORTANT: Filter by org_id to prevent cross-org access
     const { data, error } = await supabase
       .from('contract_templates')
       .update(updateData)
       .eq('id', body.id)
+      .eq('org_id', orgId)
       .select()
       .single();
 
@@ -207,6 +236,9 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Multi-tenant: Get current user's org_id
+    const orgId = await requireOrgId();
+
     const body = await request.json();
 
     if (!body.id) {
@@ -217,10 +249,12 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Archive template (soft delete)
+    // IMPORTANT: Filter by org_id to prevent cross-org access
     const { error } = await supabase
       .from('contract_templates')
       .update({ status: 'archived', updated_at: new Date().toISOString() })
-      .eq('id', body.id);
+      .eq('id', body.id)
+      .eq('org_id', orgId);
 
     if (error) {
       throw error;

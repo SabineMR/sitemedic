@@ -44,7 +44,6 @@ export default function PlatformUsersPage() {
           profile:profiles!inner (
             email,
             full_name,
-            is_active,
             last_sign_in_at,
             created_at
           )
@@ -62,11 +61,32 @@ export default function PlatformUsersPage() {
         email: row.profile?.email ?? '',
         full_name: row.profile?.full_name ?? null,
         role: row.role ?? 'unknown',
-        is_active: row.profile?.is_active ?? true,
+        is_active: true,
         org_name: row.org?.name ?? null,
         last_sign_in_at: row.profile?.last_sign_in_at ?? null,
         created_at: row.profile?.created_at ?? '',
       }));
+
+      // is_active may not exist yet (migration 139) — fetch separately and merge
+      try {
+        const userIds = mapped.map((u) => u.id);
+        if (userIds.length > 0) {
+          const { data: activeData } = await supabase
+            .from('profiles')
+            .select('id, is_active')
+            .in('id', userIds);
+          if (activeData) {
+            const activeMap = new Map(activeData.map((r: any) => [r.id, r.is_active]));
+            for (const u of mapped) {
+              if (activeMap.has(u.id)) {
+                u.is_active = activeMap.get(u.id) ?? true;
+              }
+            }
+          }
+        }
+      } catch {
+        // Column doesn't exist yet — all users treated as active
+      }
 
       setUsers(mapped);
       setLoading(false);

@@ -58,6 +58,7 @@ export function What3WordsInput({
             setIsValid(true);
           }
         })
+        .catch(() => { /* w3w lookup failed silently */ })
         .finally(() => setIsLoading(false));
     }
   }, [autoFillFromCoordinates, value, onChange]);
@@ -83,6 +84,7 @@ export function What3WordsInput({
           setSuggestions(results);
           setShowSuggestions(results.length > 0);
         })
+        .catch(() => { /* autosuggest failed silently */ })
         .finally(() => setIsLoading(false));
     }, 300);
 
@@ -103,14 +105,16 @@ export function What3WordsInput({
 
     // If format is valid, fetch coordinates
     if (formatValid) {
-      what3WordsToCoordinates(trimmedValue).then((coords) => {
-        if (coords) {
-          setCoordinates(coords);
-          if (onCoordinatesChange) {
-            onCoordinatesChange(coords.lat, coords.lng);
+      what3WordsToCoordinates(trimmedValue)
+        .then((coords) => {
+          if (coords) {
+            setCoordinates(coords);
+            if (onCoordinatesChange) {
+              onCoordinatesChange(coords.lat, coords.lng);
+            }
           }
-        }
-      });
+        })
+        .catch(() => { /* coordinate lookup failed silently */ });
     }
   }, [value, onCoordinatesChange]);
 
@@ -125,15 +129,17 @@ export function What3WordsInput({
     setShowSuggestions(false);
 
     // Fetch coordinates for the selected suggestion
-    what3WordsToCoordinates(suggestion.words).then((coords) => {
-      if (coords) {
-        setCoordinates(coords);
-        onChange(formattedWords, coords);
-        if (onCoordinatesChange) {
-          onCoordinatesChange(coords.lat, coords.lng);
+    what3WordsToCoordinates(suggestion.words)
+      .then((coords) => {
+        if (coords) {
+          setCoordinates(coords);
+          onChange(formattedWords, coords);
+          if (onCoordinatesChange) {
+            onCoordinatesChange(coords.lat, coords.lng);
+          }
         }
-      }
-    });
+      })
+      .catch(() => { /* coordinate lookup failed silently */ });
   };
 
   const getInputClassName = () => {

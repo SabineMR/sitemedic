@@ -105,7 +105,7 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
           if (result) {
             updateField('what3wordsAddress', `///${result.words}`);
           }
-        });
+        }).catch(() => { /* w3w lookup failed silently */ });
       }
     });
 
