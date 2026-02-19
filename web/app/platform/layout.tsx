@@ -15,6 +15,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import {
   LayoutDashboard,
   Building2,
+  CreditCard,
   TrendingUp,
   BarChart3,
   PieChart,
@@ -106,6 +107,11 @@ export default function PlatformLayout({ children }: PlatformLayoutProps) {
       name: 'Organizations',
       href: '/platform/organizations',
       icon: <Building2 className="w-5 h-5" />,
+    },
+    {
+      name: 'Subscriptions',
+      href: '/platform/subscriptions',
+      icon: <CreditCard className="w-5 h-5" />,
     },
     {
       name: 'Revenue',

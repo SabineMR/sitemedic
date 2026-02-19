@@ -31,6 +31,40 @@ Phase 30 Plan 01 delivers the client-side and server-side building blocks for fe
 
 ---
 
+## Previous Updates — Sprint 9: Final alert() & reload() Cleanup (2026-02-18)
+
+### Overview
+
+Sprint 9 of the gap analysis: eliminates ALL remaining browser `alert()` calls (8 total) and `window.location.reload()` calls (3 total) from the codebase. After this sprint, zero `alert()` and zero `window.location.reload()` remain in any `.ts`/`.tsx` file.
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/components/medics/ir35-section-client.tsx` | Client wrapper for IR35Form in server-rendered onboarding pages. Uses `router.refresh()` instead of `window.location.reload()` for the `onComplete` callback. Accepts `notCompleteMessage` prop for theme-adaptive styling (light vs dark admin panels). |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/components/dashboard/MotorsportIncidentReportCard.tsx` | `alert()` → `toast.error()` for PDF generation failure |
+| `web/components/dashboard/FAIncidentReportCard.tsx` | `alert()` → `toast.error()` for PDF generation failure |
+| `web/components/dashboard/EventIncidentReportCard.tsx` | `alert()` → `toast.error()` for PDF generation failure |
+| `web/app/(dashboard)/riddor/[id]/page.tsx` | `alert()` → `toast.error()` for F2508 PDF generation failure |
+| `web/components/admin/payout-summary.tsx` | `alert()` → `toast.error()` for "No medics selected" validation |
+| `web/components/QuoteBuilder.tsx` | 2x `alert()` → `toast.error()` for address validation and form validation |
+| `web/app/(dashboard)/admin/medics/onboarding/[id]/page.tsx` | Replaced `IR35Form` import with `IR35SectionClient`. Removed 2x `window.location.reload()` (IR35Form callback + "Update IR35 Status" button) |
+| `web/app/admin/medics/[id]/onboarding/page.tsx` | Same — replaced `IR35Form` with `IR35SectionClient`, removed `window.location.reload()` |
+
+### Key Details
+
+- **Zero alert() calls in codebase**: All 20+ `alert()` calls across Sprints 8 and 9 have been replaced with `toast` from sonner
+- **Zero window.location.reload() in codebase**: All 8+ `window.location.reload()` calls have been replaced with either `router.refresh()`, `fetchData()` re-fetches, or the new `IR35SectionClient` wrapper
+- **IR35SectionClient pattern**: Solves the server-component-can't-use-hooks problem by wrapping the IR35Form in a client component that owns the `useRouter` hook. Passes children as server-rendered content for the "completed" state.
+- **Zero TypeScript errors maintained**
+
+---
+
 ## Previous Updates — Sprint 8: UX Polish — Toast Notifications (2026-02-18)
 
 ### Overview

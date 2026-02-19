@@ -157,14 +157,15 @@ export default async function MedicOnboardingPage({ params }: { params: Promise<
             <h2 className="text-white font-semibold text-lg">IR35 Compliance</h2>
             <StatusBadge completed={hasIR35Status} />
           </div>
-          {!hasIR35Status ? (
-            <>
+          <IR35SectionClient
+            medicId={medicId}
+            hasIR35Status={hasIR35Status}
+            notCompleteMessage={
               <p className="text-gray-400 mb-4 text-sm">
                 Medic must complete IR35 assessment before receiving payouts.
               </p>
-              <IR35Form medicId={medicId} onComplete={() => window.location.reload()} />
-            </>
-          ) : (
+            }
+          >
             <div className="grid grid-cols-2 gap-4 text-sm">
               <InfoRow label="Employment Status" value={medic.employment_status?.replace('_', ' ')} capitalize />
               {medic.employment_status === 'self_employed' && (
@@ -190,7 +191,7 @@ export default async function MedicOnboardingPage({ params }: { params: Promise<
                 <InfoRow label="Umbrella Company" value={medic.umbrella_company_name} />
               )}
             </div>
-          )}
+          </IR35SectionClient>
         </div>
 
         {/* Payout Setup */}
