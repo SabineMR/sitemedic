@@ -7,6 +7,49 @@
 
 ---
 
+## Planned — v4.0 MedBid Marketplace (2026-02-19)
+
+### Overview
+
+A Request-for-Quotes (RFQ) marketplace being added to SiteMedic where UK clients post events needing medical cover, verified medics (individuals and companies) submit detailed quotes, and clients award jobs with SiteMedic taking commission from the medic's side. Awarded quotes auto-create bookings that flow into the existing dashboard, timesheets, and payout systems.
+
+### Key Features (8 phases planned — Phases 32–39)
+
+| Feature | Description | Phase |
+|---------|-------------|-------|
+| **Event Posting** | Clients post events with type, dates, location, staffing needs, budget range. Quote deadline enforced. | 33 |
+| **Quote Submission** | Medics submit quotes with total price, itemised breakdown, cover letter/pitch, staffing plan, availability. | 34 |
+| **Profile Gating** | Medic profiles (certs, rating, experience) visible only after they quote. Contact details hidden until award + deposit. | 34 |
+| **Award & Deposit** | Client awards quote, deposit charged (default 25%), booking auto-created in SiteMedic with `source='marketplace'`. | 35 |
+| **Remainder Payment** | Auto-charged after event via saved payment method. Retry logic + notifications on failure. | 35 |
+| **Commission** | SiteMedic takes % from medic side (existing platform_fee/medic_payout pattern). Client pays quoted price. | 35 |
+| **Open Registration** | Individual medics + medic companies. Verification gates quoting (admin approves uploaded certs). | 32 |
+| **Company Accounts** | Companies manage medic rosters. Company quotes lock out individual quotes from same medic (double-up prevention). | 37 |
+| **Bidirectional Ratings** | Client rates medic + medic rates client (1–5 stars + review). 14-day window. Admin moderation. | 36 |
+| **Platform Messaging** | On-platform messaging between clients and medics. Contact details gated behind payment. | 36 |
+| **Dispute Resolution** | Either party raises disputes. Remainder held until admin resolves. Tiered cancellation policy. | 36 |
+| **Notifications** | Dashboard feed + email + SMS (urgent/high-value). Medic configures preferences. | 38 |
+| **Admin Dashboard** | Marketplace metrics, entity management, commission/deposit config, user moderation. | 39 |
+
+### Architecture Notes
+
+- **Cross-org RLS**: Marketplace tables use `user_id`-based RLS (not `org_id`) since marketplace is platform-scoped
+- **Booking bridge**: Awarded quotes auto-create bookings via Edge Function, linking to existing timesheets → payouts pipeline
+- **Payment model**: Two Stripe PaymentIntents (deposit at award + remainder after event), not authorize-then-capture
+- **New tables**: `marketplace_events`, `marketplace_quotes`, `marketplace_awards`, `marketplace_ratings`, `marketplace_messages`, `medic_companies`
+- **Credits/points system**: Deferred to v4.1 — free to quote at launch to build marketplace liquidity
+
+### Planning Files
+
+| File | Purpose |
+|------|---------|
+| `.planning/PROJECT.md` | Updated with v4.0 milestone context |
+| `.planning/REQUIREMENTS-v4.md` | 60 requirements across 10 categories |
+| `.planning/ROADMAP.md` | 8 phases (32–39), 26 plans |
+| `.planning/research/v4/` | Stack, features, architecture, pitfalls research |
+
+---
+
 ## Recent Updates — Site Manager Active/Inactive Status (2026-02-19)
 
 ### Overview
