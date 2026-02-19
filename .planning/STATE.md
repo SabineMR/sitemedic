@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v5.0 Internal Comms — Phase 41 (Web Messaging Core)
+**Current focus:** v4.0 MedBid Marketplace — Phase 34 (Quote Submission & Comparison)
 
 ## Current Position
 
-Phase: 41 of 47 (Web Messaging Core)
-Plan: 3 of 3 in current phase
-Status: In progress (41-02 running in parallel)
-Last activity: 2026-02-19 — Completed 41-03-PLAN.md (new conversation flow)
+Phase: 34 of 47 (Quote Submission & Comparison)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-19 — Completed 34-01-PLAN.md (quote submission foundation)
 
 Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████░░░░░░] v4.0 25% | [███░░░░░░░] v5.0 19%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 190 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 7 v4.0 + 4 v5.0)
+- Total plans completed: 191 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 8 v4.0 + 4 v5.0)
 - Average duration: 3.9 min
-- Total execution time: ~12.3 hours
+- Total execution time: ~12.5 hours
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 7/26 | ~44 min | ~6.3 min |
+| v4.0 | 8 | 8/26 | ~86 min | ~6.4 min |
 | v5.0 | 8 | 4/21 | ~12 min | ~3 min |
 
 *Updated after each plan completion*
@@ -43,6 +43,10 @@ Progress: [██████████] v1.0 | [█████████�
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- [34-01]: Minimum rate enforcement is HARD block (rejected at both form and API level) per CONTEXT
+- [34-01]: Draft auto-save uses 2-second debounce on form state change (not per-keystroke)
+- [34-01]: Staffing plan discriminated union: named_medics OR headcount_and_quals (not both)
+- [34-01]: Quote status lifecycle: draft → submitted → revised | withdrawn (tracks submission time)
 - [v4.0]: Marketplace tables use user_id-based RLS (NOT org_id) -- cross-org by design
 - [v4.0]: Two Stripe PaymentIntents for deposit + remainder (not authorize-then-capture, 7-day hold limit)
 - [v4.0]: `bookings.source` column discriminates 'direct' vs 'marketplace' bookings
@@ -72,13 +76,13 @@ Recent decisions affecting current work:
 - Configure external services for production deployment (Stripe, Google Maps, Resend, webhooks, pg_cron, Vault) -- carried from v1.1
 - Obtain DPA template + solicitor review before first org onboarding (non-code blocker for v3.0 launch)
 - **Configure Vercel wildcard `*.sitemedic.co.uk` and DNS CNAME** -- checkpoint from 26-01; 72h propagation
-- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142, 143, 144) to production** -- verified correct, ready to apply
+- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142, 143, 144, 146) to production** -- migrations 132-144 verified, 146 new for marketplace quotes
 - **Add `NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.co.uk` to Vercel env vars** -- needed for production subdomain routing
 - **Create Stripe Products/Prices and register billing webhook** -- checkpoint from 25-01
 - **CQC legal opinion required** -- must determine if marketplace model requires CQC registration before launch
 - **FCA/PSD2 commercial agent exemption** -- confirm Stripe Connect satisfies requirements before processing marketplace payments
 - **GDPR Legitimate Interest Assessment** -- required for marketplace data processing before launch
-- **Decide marketplace commission rate and deposit percentage** -- business decisions needed before Phase 35
+- **Decide marketplace commission rate and deposit percentage** -- business decisions needed before Phase 35 (Award Flow)
 
 ### Blockers/Concerns
 
@@ -92,5 +96,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 41-03-PLAN.md (new conversation flow)
+Stopped at: Completed 34-01-PLAN.md (quote submission foundation)
 Resume file: None
