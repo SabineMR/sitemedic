@@ -27,6 +27,7 @@ export interface Database {
           phone: string | null;
           push_token: string | null;
           push_token_updated_at: string | null;
+          is_active: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -39,6 +40,7 @@ export interface Database {
           phone?: string | null;
           push_token?: string | null;
           push_token_updated_at?: string | null;
+          is_active?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -51,6 +53,7 @@ export interface Database {
           phone?: string | null;
           push_token?: string | null;
           push_token_updated_at?: string | null;
+          is_active?: boolean;
           created_at?: string;
           updated_at?: string;
         };

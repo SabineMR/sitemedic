@@ -34,6 +34,7 @@ interface TeamMember {
   role: 'medic' | 'site_manager' | 'admin' | 'org_admin' | 'platform_admin';
   source: 'profiles' | 'medics';
   available_for_work?: boolean;
+  is_active?: boolean;
   company_name?: string | null;
   site_name?: string | null;
 }
@@ -68,7 +69,7 @@ export default function TeamScreen() {
         // Query profiles (auth-linked users) and medics (roster) in parallel
         let profilesQuery = supabase
           .from('profiles')
-          .select('id, full_name, email, role')
+          .select('id, full_name, email, role, is_active')
           .eq('org_id', orgId)
           .order('full_name', { ascending: true });
         if (userId) {
@@ -92,6 +93,7 @@ export default function TeamScreen() {
           email: p.email,
           role: p.role,
           source: 'profiles' as const,
+          is_active: p.is_active ?? true,
         }));
 
         // Build set of auth user IDs already represented (profiles + current user)
@@ -118,7 +120,7 @@ export default function TeamScreen() {
 
         // Split into team (admins + medics) and site managers
         const team = combined.filter((m) => m.role !== 'site_manager');
-        const managers = combined.filter((m) => m.role === 'site_manager');
+        const managers = combined.filter((m) => m.role === 'site_manager' && m.is_active !== false);
 
         // Fetch company_name + site assignments for site managers
         if (managers.length > 0) {

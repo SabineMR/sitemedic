@@ -17,6 +17,7 @@ interface PlatformUser {
   email: string;
   full_name: string | null;
   role: string;
+  is_active: boolean;
   org_name: string | null;
   last_sign_in_at: string | null;
   created_at: string;
@@ -27,6 +28,7 @@ export default function PlatformUsersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
     async function fetchUsers() {
@@ -42,6 +44,7 @@ export default function PlatformUsersPage() {
           profile:profiles!inner (
             email,
             full_name,
+            is_active,
             last_sign_in_at,
             created_at
           )
@@ -59,6 +62,7 @@ export default function PlatformUsersPage() {
         email: row.profile?.email ?? '',
         full_name: row.profile?.full_name ?? null,
         role: row.role ?? 'unknown',
+        is_active: row.profile?.is_active ?? true,
         org_name: row.org?.name ?? null,
         last_sign_in_at: row.profile?.last_sign_in_at ?? null,
         created_at: row.profile?.created_at ?? '',
@@ -78,7 +82,11 @@ export default function PlatformUsersPage() {
       (u.full_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
       (u.org_name ?? '').toLowerCase().includes(search.toLowerCase());
     const matchesRole = roleFilter === 'all' || u.role === roleFilter;
-    return matchesSearch && matchesRole;
+    const matchesStatus =
+      statusFilter === 'all' ||
+      (statusFilter === 'active' && u.is_active) ||
+      (statusFilter === 'inactive' && !u.is_active);
+    return matchesSearch && matchesRole && matchesStatus;
   });
 
   const roleColors: Record<string, string> = {
@@ -126,6 +134,15 @@ export default function PlatformUsersPage() {
           <option value="site_manager">Site Manager</option>
           <option value="medic">Medic</option>
         </select>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-4 py-2 bg-purple-800/40 border border-purple-700/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+        >
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
       </div>
 
       {/* Table */}
@@ -146,6 +163,7 @@ export default function PlatformUsersPage() {
               <tr className="border-b border-purple-700/50">
                 <th className="text-left px-6 py-4 text-purple-300 text-sm font-medium">User</th>
                 <th className="text-left px-6 py-4 text-purple-300 text-sm font-medium">Role</th>
+                <th className="text-left px-6 py-4 text-purple-300 text-sm font-medium">Status</th>
                 <th className="text-left px-6 py-4 text-purple-300 text-sm font-medium">
                   <div className="flex items-center gap-1">
                     <Building2 className="w-4 h-4" />
@@ -186,6 +204,22 @@ export default function PlatformUsersPage() {
                     >
                       {user.role === 'platform_admin' && <Shield className="w-3 h-3" />}
                       {user.role.replace(/_/g, ' ')}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                        user.is_active
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          user.is_active ? 'bg-emerald-500' : 'bg-gray-400'
+                        }`}
+                      />
+                      {user.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
