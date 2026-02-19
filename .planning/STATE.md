@@ -68,8 +68,12 @@ Recent decisions affecting current work:
 - CQC registration question is a non-code blocker -- requires legal counsel, cannot be resolved with technical work
 - FCA/PSD2 exemption needs formal confirmation before marketplace payments go live
 
+### Planned Milestones
+
+- **v5.0 Internal Comms & Document Management** — planning started 2026-02-19. Org admin ↔ medic messaging, community broadcast, document upload with expiry tracking, both platforms (iOS + web). Requirements and roadmap in progress.
+
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 32-01-PLAN.md (marketplace foundation schema + types + CQC client)
+Stopped at: v5.0 milestone planning (questioning complete, moving to research)
 Resume file: None

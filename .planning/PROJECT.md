@@ -116,6 +116,23 @@ Documentation happens automatically as the medic does their job, not as separate
 - [ ] Early access — premium credits buy early access to new event listings before general release
 - [ ] Tiered medic priority — SiteMedic roster medics get priority access before open marketplace
 
+### Planned (v5.0 — Internal Comms & Document Management)
+
+**Messaging:**
+- [ ] 1:1 messaging — org admin and medics have two-way conversation threads inside SiteMedic
+- [ ] Community broadcast — org admin sends announcements to all medics at once
+- [ ] Message notifications — medics receive push/email notifications for new messages
+
+**Document Management:**
+- [ ] Document upload — medics upload compliance documents (insurance, DBS, certs) via iOS app or web
+- [ ] Profile document log — uploaded documents saved to medic's individual profile, admin can see what's on file
+- [ ] Expiry tracking — documents have expiry dates, system alerts admin and medic before they lapse
+- [ ] Save for later — medics can bookmark/save documents or messages for quick reference
+
+**Cross-platform:**
+- [ ] iOS app support — messaging and document upload available in the mobile app
+- [ ] Web dashboard support — messaging and document management synced on web portal
+
 ### Out of Scope
 
 - **Document library** — Not MVP-critical, add when clients request it
@@ -243,5 +260,25 @@ Documentation happens automatically as the medic does their job, not as separate
 | Free to quote at launch, credits in v2 | New marketplace needs frictionless adoption. Credits/points added once volume justifies it. | — Pending |
 | Part of SiteMedic brand | Lives at sitemedic.co.uk/marketplace. Leverages existing brand. No separate domain needed. | — Pending |
 
+## Planned Milestone: v5.0 Internal Comms & Document Management
+
+**Goal:** Give org admins a built-in way to communicate with their field medics and collect compliance documents — replacing scattered WhatsApp/email with an in-platform messaging system and document storage tied to individual medic profiles.
+
+**Target features:**
+- Two-way 1:1 messaging between org admin and medics
+- Community broadcast — org admin sends announcements to all medics
+- Medics upload compliance documents (insurance, DBS, qualifications) via iOS app or web
+- Documents stored on medic profiles with expiry date tracking and alerts
+- Save/bookmark messages and documents for quick reference
+- Synced across iOS app and web dashboard
+
+**Build priority:**
+1. Database schema for messages and documents
+2. Messaging UI (web + iOS) with conversation threads
+3. Document upload and profile storage
+4. Expiry tracking and notifications
+5. Broadcast messaging
+6. Save/bookmark functionality
+
 ---
-*Last updated: 2026-02-19 after v3.0 milestone completion*
+*Last updated: 2026-02-19 after v5.0 milestone planning started*
