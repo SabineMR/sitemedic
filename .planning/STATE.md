@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 32 of 47 (Foundation Schema & Registration)
-Plan: 3 of 4 in current phase
-Status: In progress (checkpoint pending for 32-03)
-Last activity: 2026-02-19 -- v5.0 roadmap created (Phases 40-47, 8 phases, 21 plans, 28 requirements mapped)
+Plan: 4 of 4 in current phase (checkpoint pending)
+Status: In progress (checkpoint pending for 32-04)
+Last activity: 2026-02-19 -- Completed 32-04-PLAN.md auto tasks (Stripe Connect company onboarding)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [███░░░░░░░] v4.0 12% | [░░░░░░░░░░] v5.0 0%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [███░░░░░░░] v4.0 15% | [░░░░░░░░░░] v5.0 0%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 182 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 3 v4.0)
+- Total plans completed: 183 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 4 v4.0)
 - Average duration: 3.9 min
-- Total execution time: ~11.6 hours
+- Total execution time: ~11.8 hours
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 3/26 | ~22 min | ~7.3 min |
+| v4.0 | 8 | 4/26 | ~32 min | ~8 min |
 | v5.0 | 8 | 0/21 | - | - |
 
 *Updated after each plan completion*
@@ -52,6 +52,8 @@ Recent decisions affecting current work:
 - [v5.0]: Broadcast uses message_recipients join table for per-medic read tracking
 - [v5.0]: WatermelonDB for iOS offline message cache (existing pattern from sync engine)
 - [v5.0]: Push notifications show sender name only, never message content (GDPR)
+- [32-04]: Company Stripe Express accounts use business_type='company' (distinct from individual medic flow)
+- [32-04]: Stripe onboarding is optional at registration -- can be completed later from company dashboard
 
 ### Pending Todos
 
@@ -78,5 +80,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: v5.0 roadmap creation complete; 32-03-PLAN.md checkpoint still pending (human verification of admin queue and actions)
+Stopped at: 32-04-PLAN.md checkpoint (human verification of Stripe Connect onboarding flow)
 Resume file: None
