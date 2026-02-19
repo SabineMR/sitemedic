@@ -208,7 +208,10 @@ export async function updateSession(request: NextRequest) {
     const isSetupRoute = request.nextUrl.pathname.startsWith('/setup/') ||
                          request.nextUrl.pathname.startsWith('/onboarding');
 
-    if (!orgId && !isSetupRoute) {
+    // Platform admins have no org_id by design — they manage all orgs
+    const isPlatformAdmin = user.app_metadata?.role === 'platform_admin';
+
+    if (!orgId && !isSetupRoute && !isPlatformAdmin) {
       console.warn(
         `User ${user.id} authenticated but has no org_id - redirecting to org setup`
       );

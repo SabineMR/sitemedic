@@ -8,7 +8,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Users, Search, Shield, Building2, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -32,64 +31,20 @@ export default function PlatformUsersPage() {
 
   useEffect(() => {
     async function fetchUsers() {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from('org_memberships')
-        .select(`
-          user_id,
-          role,
-          org:organizations!inner (
-            name
-          ),
-          profile:profiles!inner (
-            email,
-            full_name,
-            last_sign_in_at,
-            created_at
-          )
-        `)
-        .order('created_at', { referencedTable: 'profiles', ascending: false });
-
-      if (error) {
-        console.error('Error fetching users:', error);
-        setLoading(false);
-        return;
-      }
-
-      const mapped: PlatformUser[] = (data || []).map((row: any) => ({
-        id: row.user_id,
-        email: row.profile?.email ?? '',
-        full_name: row.profile?.full_name ?? null,
-        role: row.role ?? 'unknown',
-        is_active: true,
-        org_name: row.org?.name ?? null,
-        last_sign_in_at: row.profile?.last_sign_in_at ?? null,
-        created_at: row.profile?.created_at ?? '',
-      }));
-
-      // is_active may not exist yet (migration 139) — fetch separately and merge
       try {
-        const userIds = mapped.map((u) => u.id);
-        if (userIds.length > 0) {
-          const { data: activeData } = await supabase
-            .from('profiles')
-            .select('id, is_active')
-            .in('id', userIds);
-          if (activeData) {
-            const activeMap = new Map(activeData.map((r: any) => [r.id, r.is_active]));
-            for (const u of mapped) {
-              if (activeMap.has(u.id)) {
-                u.is_active = activeMap.get(u.id) ?? true;
-              }
-            }
-          }
+        const res = await fetch('/api/platform/users');
+        if (!res.ok) {
+          console.error('Error fetching users:', res.status);
+          setLoading(false);
+          return;
         }
-      } catch {
-        // Column doesn't exist yet — all users treated as active
+        const { users: data } = await res.json();
+        setUsers(data || []);
+      } catch (e) {
+        console.error('Error fetching users:', e);
+      } finally {
+        setLoading(false);
       }
-
-      setUsers(mapped);
-      setLoading(false);
     }
 
     fetchUsers();

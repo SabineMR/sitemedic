@@ -33,6 +33,7 @@ import {
   Bluetooth,
   Inbox,
   FileSignature,
+  LogOut,
 } from 'lucide-react';
 import { QueryProvider } from '@/components/providers/query-provider';
 import { useBranding } from '@/contexts/branding-context';
@@ -312,8 +313,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
         {/* User info / logout (bottom of sidebar) */}
         <div className="p-4 border-t border-gray-700/50">
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-700/50 backdrop-blur-sm hover:bg-gray-700/70 transition-all duration-200 cursor-pointer group">
-            <div className="w-8 h-8 bg-[color:var(--org-primary)] rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 group-hover:scale-110">
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-700/50 backdrop-blur-sm">
+            <div className="w-8 h-8 bg-[color:var(--org-primary)] rounded-full flex items-center justify-center shadow-lg">
               <span className="text-white text-sm font-bold">
                 {userName.slice(0, 2).toUpperCase()}
               </span>
@@ -323,6 +324,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <p className="text-gray-400 text-xs truncate">{userEmail}</p>
             </div>
           </div>
+          <form action="/api/auth/signout" method="POST" className="mt-2">
+            <button
+              type="submit"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-gray-300 hover:text-white hover:bg-gray-700/50 transition-all duration-200 text-sm font-medium"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          </form>
         </div>
       </aside>
 
