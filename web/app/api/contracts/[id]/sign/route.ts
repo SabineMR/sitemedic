@@ -38,7 +38,7 @@ export async function POST(
           version
         ),
         client:clients!contracts_client_id_fkey (
-          email
+          contact_email
         )
       `
       )
@@ -85,8 +85,8 @@ export async function POST(
         client_signed_name: signedName,
         signed_at: now,
         signed_by_email: Array.isArray(contract.client)
-          ? contract.client[0]?.email
-          : contract.client?.email,
+          ? contract.client[0]?.contact_email
+          : contract.client?.contact_email,
         signed_by_ip: ipAddress,
       })
       .eq('id', currentVersion?.id);

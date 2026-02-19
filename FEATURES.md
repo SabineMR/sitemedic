@@ -2,12 +2,40 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Sprint 6 — Column Name Fixes, Client Support Page)
+**Last Updated**: 2026-02-18 (Sprint 7 — Contract Signing Fix & TypeScript Cleanup)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
 
-## Recent Updates — Sprint 6: Column Name Fixes & Client Support Page (2026-02-18)
+## Recent Updates — Sprint 7: Contract Signing Fix & TypeScript Cleanup (2026-02-18)
+
+### Overview
+
+Sprint 7 of the gap analysis: fixes the contract signing page and API (missed in Sprint 5's contracts fix), resolves all TypeScript compilation errors to achieve a zero-error build.
+
+### Critical Bug Fixes
+
+| File | Bug | Fix |
+|------|-----|-----|
+| `web/app/contracts/[id]/sign/page.tsx` | Supabase select query used 7 non-existent columns: `service_type`, `scheduled_date`, `total_price`, `address_line1`, `address_line2`, `city`, `postcode`, `name`, `email`, `phone`. **This broke the public contract signing page — clients clicking a signing link saw empty/missing data.** | Updated to real columns: `event_vertical`, `shift_date`, `total`/`subtotal`/`vat`, `site_name`, `site_address`, `site_postcode`, `company_name`, `contact_email`, `contact_phone` |
+| `web/app/api/contracts/[id]/sign/route.ts` | Selected `email` from clients table (non-existent) and used `contract.client?.email` for the audit trail `signed_by_email` field | Changed to `contact_email` in both the select query and the usage |
+
+### TypeScript Error Fixes
+
+| File | Error | Fix |
+|------|-------|-----|
+| `web/lib/queries/client/bookings.ts` (lines 100, 176) | TS2352: `medics` typed as single object but Supabase FK join returns array — caused unsafe type assertion errors | Changed `medics` type from `{ ... } \| null` to `{ ... }[] \| null` to match actual Supabase return shape |
+| `web/lib/territory/__tests__/auto-assignment-success-rate.test.ts` (line 125) | TS2322: Missing `region` in territory assignment fixtures. Also had extra `recent_metrics` and `org_id` properties not on `MedicWithMetrics` type | Added `region: 'Test Region'`, removed non-existent properties, used `Partial<MedicWithMetrics>[]` for flexible test fixtures |
+
+### Key Details
+
+- **Zero TypeScript errors**: The codebase now compiles with `tsc --noEmit` producing zero errors (previously had 3 errors across 2 files)
+- **Contract signing now works end-to-end**: The public signing page (`/contracts/[token]/sign`) correctly loads booking and client data from the database. Previously, all booking/client fields would be null due to querying non-existent columns.
+- **Audit trail integrity**: Contract signatures now correctly record `signed_by_email` from the client's `contact_email` column instead of storing null.
+
+---
+
+## Previous Updates — Sprint 6: Column Name Fixes & Client Support Page (2026-02-18)
 
 ### Overview
 

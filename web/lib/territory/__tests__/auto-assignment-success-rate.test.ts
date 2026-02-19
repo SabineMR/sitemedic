@@ -82,7 +82,7 @@ function generateSimulatedBookings(): BookingRequirements[] {
  * Generate 30 simulated medics with realistic profiles
  */
 function generateSimulatedMedics(): MedicWithMetrics[] {
-  const medics: MedicWithMetrics[] = [];
+  const medics: Partial<MedicWithMetrics>[] = [];
 
   for (let i = 0; i < 30; i++) {
     const medicId = `medic-${i + 1}`;
@@ -96,6 +96,7 @@ function generateSimulatedMedics(): MedicWithMetrics[] {
         territory_id: `territory-${randomPostcodeIndex}`,
         postcode_sector: TEST_POSTCODES[randomPostcodeIndex],
         role: 'primary' as const,
+        region: 'Test Region',
       });
     }
 
@@ -123,20 +124,12 @@ function generateSimulatedMedics(): MedicWithMetrics[] {
       has_trauma_cert,
       riddor_compliance_rate: 90 + Math.floor(Math.random() * 11), // 90-100%
       territory_assignments,
-      recent_metrics: {
-        total_bookings: Math.floor(utilization_pct / 10),
-        confirmed_bookings: Math.floor(utilization_pct / 12),
-        rejected_bookings: 0,
-        rejection_rate: 0,
-        avg_shift_hours: 8,
-      },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      org_id: 'test-org',
     });
   }
 
-  return medics;
+  return medics as MedicWithMetrics[];
 }
 
 // =============================================================================

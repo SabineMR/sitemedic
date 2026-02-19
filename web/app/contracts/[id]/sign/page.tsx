@@ -29,19 +29,20 @@ export default async function ContractSigningPage({ params }: PageProps) {
       *,
       booking:bookings!contracts_booking_id_fkey (
         id,
-        service_type,
-        scheduled_date,
-        total_price,
-        address_line1,
-        address_line2,
-        city,
-        postcode
+        site_name,
+        event_vertical,
+        shift_date,
+        total,
+        subtotal,
+        vat,
+        site_address,
+        site_postcode
       ),
       client:clients!contracts_client_id_fkey (
         id,
-        name,
-        email,
-        phone,
+        company_name,
+        contact_email,
+        contact_phone,
         payment_terms
       ),
       template:contract_templates!contracts_template_id_fkey (

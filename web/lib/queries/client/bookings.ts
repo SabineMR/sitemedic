@@ -33,7 +33,7 @@ export interface ClientBooking {
     first_name: string;
     last_name: string;
     star_rating: number;
-  } | null;
+  }[] | null;
 }
 
 /**

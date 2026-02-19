@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { TravelCalculation } from '@/lib/bookings/out-of-territory';
 import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
 
 interface OutOfTerritoryApprovalProps {
   bookingId: string;
@@ -89,7 +90,7 @@ export function OutOfTerritoryApproval({ bookingId }: OutOfTerritoryApprovalProp
 
     // Block if cost >75% (hard limit)
     if (calculation.cost_percentage > ADMIN_OVERRIDE_LIMIT) {
-      alert(`Cannot approve: Cost (${calculation.cost_percentage.toFixed(1)}%) exceeds admin override limit (${ADMIN_OVERRIDE_LIMIT}%). Escalation required.`);
+      toast.error(`Cannot approve: Cost (${calculation.cost_percentage.toFixed(1)}%) exceeds admin override limit (${ADMIN_OVERRIDE_LIMIT}%). Escalation required.`);
       return;
     }
 
@@ -118,8 +119,8 @@ export function OutOfTerritoryApproval({ bookingId }: OutOfTerritoryApprovalProp
 
       if (updateError) throw updateError;
 
-      alert('Booking approved successfully!');
-      window.location.reload();
+      toast.success('Booking approved successfully!');
+      await fetchBookingData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to approve booking');
     } finally {
@@ -130,7 +131,7 @@ export function OutOfTerritoryApproval({ bookingId }: OutOfTerritoryApprovalProp
 
   const handleDeny = async () => {
     if (!booking || !denialReason.trim()) {
-      alert('Please provide a reason for denial');
+      toast.error('Please provide a reason for denial');
       return;
     }
 
@@ -155,8 +156,8 @@ export function OutOfTerritoryApproval({ bookingId }: OutOfTerritoryApprovalProp
 
       if (updateError) throw updateError;
 
-      alert('Booking denied successfully');
-      window.location.reload();
+      toast.success('Booking denied successfully');
+      await fetchBookingData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to deny booking');
     } finally {

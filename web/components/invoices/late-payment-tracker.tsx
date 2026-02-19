@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { calculateLateFee } from '@/lib/invoices/late-fees';
+import { toast } from 'sonner';
 
 interface OverdueInvoice {
   id: string;
@@ -105,10 +106,10 @@ export function LatePaymentTracker() {
         throw new Error(errorData.error || 'Failed to send reminder');
       }
 
-      alert('Reminder sent successfully!');
+      toast.success('Reminder sent successfully!');
       await fetchOverdueInvoices();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to send reminder');
+      toast.error(err instanceof Error ? err.message : 'Failed to send reminder');
     } finally {
       setSendingReminder(null);
     }
@@ -123,10 +124,10 @@ export function LatePaymentTracker() {
 
       if (error) throw error;
 
-      alert('Invoice marked as paid!');
+      toast.success('Invoice marked as paid!');
       await fetchOverdueInvoices();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to mark as paid');
+      toast.error(err instanceof Error ? err.message : 'Failed to mark as paid');
     }
   };
 
