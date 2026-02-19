@@ -244,11 +244,11 @@ Plans:
 3. A Starter-tier org admin visiting the branding settings page sees an upgrade prompt ("Upgrade to Growth to access white-label branding") — the page does not expose the upload form or colour picker to Starter-tier orgs
 4. A platform admin can navigate to any org in the platform admin panel and override that org's branding — upload a logo and set a colour on behalf of the org without being an org admin themselves
 
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 31-01: Org admin branding settings — create `web/app/(dashboard)/admin/settings/branding/page.tsx`; logo upload (direct to `org-logos/{org_id}/logo.{ext}` via Supabase Storage client); primary colour picker (hex input + visual swatch); company name and tagline text fields; live preview panel; `<TierGate tier="growth">` wrapping the entire form
-- [ ] 31-02: Platform admin branding override — add branding override section to `web/app/platform/organizations/[id]/page.tsx`; reuse branding form components from 31-01; service-role Supabase writes (platform admin uses service role, bypasses org-scoped RLS)
+- [ ] 31-01-PLAN.md — Org admin branding settings page: BrandingForm component (auto-save 500ms debounce, logo upload, colour picker with reset), BrandingPreview live panel, TierGate wrapping; update settings page to link to dedicated branding page
+- [ ] 31-02-PLAN.md — Platform admin branding override: service-role API route (GET/PUT/POST) for any org's branding; expandable branding section per org card on platform organizations page with logo upload via server-side POST
 
 ---
 
@@ -276,4 +276,4 @@ Note: Phases 27 and 28 can be parallelised once Phase 26 is deployed. Phase 30 a
 | 28. Branding — PDFs & Emails | v3.0 | 3/3 | Complete | 2026-02-18 |
 | 29. Org Onboarding Flow | v3.0 | 5/5 | Complete | 2026-02-18 |
 | 30. Subscription Management & Feature Gating | v3.0 | 5/5 | Complete | 2026-02-20 |
-| 31. Branding Settings UI | v3.0 | 0/2 | Not started | - |
+| 31. Branding Settings UI | v3.0 | 0/2 | Planned | - |
