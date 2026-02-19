@@ -126,13 +126,72 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated during roadmap creation) | | |
+| EVNT-01 | Phase 33 | Pending |
+| EVNT-02 | Phase 33 | Pending |
+| EVNT-03 | Phase 33 | Pending |
+| EVNT-04 | Phase 33 | Pending |
+| EVNT-05 | Phase 33 | Pending |
+| EVNT-06 | Phase 33 | Pending |
+| EVNT-07 | Phase 33 | Pending |
+| EVNT-08 | Phase 33 | Pending |
+| QUOT-01 | Phase 34 | Pending |
+| QUOT-02 | Phase 34 | Pending |
+| QUOT-03 | Phase 34 | Pending |
+| QUOT-04 | Phase 34 | Pending |
+| QUOT-05 | Phase 34 | Pending |
+| QUOT-06 | Phase 34 | Pending |
+| QUOT-07 | Phase 34 | Pending |
+| QUOT-08 | Phase 34 | Pending |
+| AWRD-01 | Phase 35 | Pending |
+| AWRD-02 | Phase 35 | Pending |
+| AWRD-03 | Phase 35 | Pending |
+| AWRD-04 | Phase 35 | Pending |
+| AWRD-05 | Phase 35 | Pending |
+| AWRD-06 | Phase 35 | Pending |
+| AWRD-07 | Phase 35 | Pending |
+| AWRD-08 | Phase 35 | Pending |
+| AWRD-09 | Phase 35 | Pending |
+| REG-01 | Phase 32 | Pending |
+| REG-02 | Phase 32 | Pending |
+| REG-03 | Phase 32 | Pending |
+| REG-04 | Phase 32 | Pending |
+| REG-05 | Phase 32 | Pending |
+| REG-06 | Phase 32 | Pending |
+| REG-07 | Phase 32 | Pending |
+| REG-08 | Phase 32 | Pending |
+| COMP-01 | Phase 37 | Pending |
+| COMP-02 | Phase 37 | Pending |
+| COMP-03 | Phase 37 | Pending |
+| COMP-04 | Phase 37 | Pending |
+| COMP-05 | Phase 37 | Pending |
+| RATE-01 | Phase 36 | Pending |
+| RATE-02 | Phase 36 | Pending |
+| RATE-03 | Phase 36 | Pending |
+| RATE-04 | Phase 36 | Pending |
+| RATE-05 | Phase 36 | Pending |
+| MSG-01 | Phase 36 | Pending |
+| MSG-02 | Phase 36 | Pending |
+| MSG-03 | Phase 36 | Pending |
+| MSG-04 | Phase 36 | Pending |
+| DISP-01 | Phase 36 | Pending |
+| DISP-02 | Phase 36 | Pending |
+| DISP-03 | Phase 36 | Pending |
+| DISP-04 | Phase 36 | Pending |
+| NOTIF-01 | Phase 38 | Pending |
+| NOTIF-02 | Phase 38 | Pending |
+| NOTIF-03 | Phase 38 | Pending |
+| NOTIF-04 | Phase 38 | Pending |
+| NOTIF-05 | Phase 38 | Pending |
+| ADMIN-01 | Phase 39 | Pending |
+| ADMIN-02 | Phase 39 | Pending |
+| ADMIN-03 | Phase 39 | Pending |
+| ADMIN-04 | Phase 39 | Pending |
 
 **Coverage:**
-- v4.0 requirements: 54 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 54
+- v4.0 requirements: 60 total
+- Mapped to phases: 60/60
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-19*
-*Last updated: 2026-02-19 after initial definition*
+*Last updated: 2026-02-19 after roadmap creation — all 60 requirements mapped to Phases 32-39*
