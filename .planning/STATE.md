@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-02-18)
 ## Current Position
 
 Phase: 30 of 31 (Subscription Management & Feature Gating)
-Plan: 3 of 5 in Phase 30
+Plan: 4 of 5 in Phase 30
 Status: In progress
-Last activity: 2026-02-18 — Completed 30-03-PLAN.md (Stripe Customer Portal Integration)
+Last activity: 2026-02-18 — Completed 30-04-PLAN.md (Platform Admin Subscriptions / MRR Dashboard)
 
-Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [█████████░] v3.0 ~80% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4, Phase 27: 3/3, Phase 28: 3/3, Phase 29: 5/5, Phase 30: 3/5 done)
+Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [█████████░] v3.0 ~82% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4, Phase 27: 3/3, Phase 28: 3/3, Phase 29: 5/5, Phase 30: 4/5 done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 146 (84 v1.0 + 35 v1.1 + 30 v2.0 + 26 v3.0)
+- Total plans completed: 147 (84 v1.0 + 35 v1.1 + 30 v2.0 + 27 v3.0)
 - Average duration: 4.0 min
 - Total execution time: ~9.0 hours
 
@@ -36,10 +36,10 @@ Progress: [██████████] v1.0 complete | [██████�
 | 27 (v3.0) | 3/3 | ~6 min | ~2 min |
 | 28 (v3.0) | 3/3 | ~8 min | ~2.7 min |
 | 29 (v3.0) | 5/5 | ~25 min | ~5 min |
-| 30 (v3.0) | 3/5 | ~8.5 min | ~2.8 min |
+| 30 (v3.0) | 4/5 | ~11.5 min | ~2.9 min |
 
 **Recent Trend:**
-- Last plan: 30-03 — Stripe Customer Portal Integration (~3 min)
+- Last plan: 30-04 — Platform Admin Subscriptions / MRR Dashboard (~3 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -107,6 +107,9 @@ Progress: [██████████] v1.0 complete | [██████�
 - **30-03:** Portal return_url points to /admin/settings — user lands back where they started after Stripe portal
 - **30-03:** Legacy orgs without stripe_customer_id get 400 with descriptive error instead of broken portal session
 - **30-03:** Origin detection chain: request headers > NEXT_PUBLIC_SITE_URL > localhost:30500 for white-label subdomain support
+- **30-04:** MRR calculated from hardcoded tier prices (Starter £149, Growth £299, Enterprise £599), not Stripe API — avoids rate limits and latency
+- **30-04:** NULL tier defaults to starter, NULL status defaults to active — matches 24-05 convention
+- **30-04:** Past-due orgs included in MRR (dunning period); cancelled excluded from MRR
 
 ### Pending Todos
 
@@ -125,5 +128,5 @@ Progress: [██████████] v1.0 complete | [██████�
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 30-03-PLAN.md (Stripe Customer Portal Integration)
+Stopped at: Completed 30-04-PLAN.md (Platform Admin Subscriptions / MRR Dashboard)
 Resume file: None
