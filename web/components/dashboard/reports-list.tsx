@@ -22,6 +22,7 @@ import {
   CheckCircle2,
   Loader2
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { formatDistanceToNow, format, parseISO } from 'date-fns';
 
 interface ReportsListProps {
@@ -57,7 +58,7 @@ export function ReportsList({ initialData }: ReportsListProps) {
       }, 2000);
     } catch (error) {
       console.error('Failed to generate report:', error);
-      alert('Failed to generate report. Please try again.');
+      toast.error('Failed to generate report. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -73,7 +74,7 @@ export function ReportsList({ initialData }: ReportsListProps) {
       window.open(url, '_blank');
     } catch (error) {
       console.error('Failed to download report:', error);
-      alert('Failed to download report. Please try again.');
+      toast.error('Failed to download report. Please try again.');
     }
   };
 

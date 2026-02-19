@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
-import { IR35Form } from '@/components/medics/ir35-form';
 import { StripeOnboardingStatus } from '@/components/medics/stripe-onboarding-status';
+import { IR35SectionClient } from '@/components/medics/ir35-section-client';
 import { notFound } from 'next/navigation';
 
 export default async function MedicOnboardingPage({ params }: { params: Promise<{ id: string }> }) {
@@ -105,14 +105,7 @@ export default async function MedicOnboardingPage({ params }: { params: Promise<
       {/* IR35 Compliance */}
       <div className="bg-white border rounded-lg shadow-sm p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">IR35 Compliance</h2>
-        {!hasIR35Status ? (
-          <>
-            <p className="text-gray-600 mb-4 text-sm">
-              Medic must complete IR35 assessment before receiving payouts.
-            </p>
-            <IR35Form medicId={medicId} onComplete={() => window.location.reload()} />
-          </>
-        ) : (
+        <IR35SectionClient medicId={medicId} hasIR35Status={hasIR35Status}>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
@@ -155,16 +148,8 @@ export default async function MedicOnboardingPage({ params }: { params: Promise<
                 </div>
               )}
             </div>
-            <div className="pt-3 border-t">
-              <button
-                onClick={() => window.location.reload()}
-                className="text-sm text-blue-600 hover:underline"
-              >
-                Update IR35 Status
-              </button>
-            </div>
           </div>
-        )}
+        </IR35SectionClient>
       </div>
 
       {/* Payout Setup */}

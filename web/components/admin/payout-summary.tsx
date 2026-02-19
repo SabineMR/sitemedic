@@ -12,6 +12,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
 interface TimesheetDetail {
   id: string;
@@ -83,7 +84,7 @@ export default function PayoutSummary() {
 
   async function handleProcessPayouts(dryRun: boolean = false) {
     if (selectedMedics.size === 0) {
-      alert('No medics selected');
+      toast.error('No medics selected');
       return;
     }
 

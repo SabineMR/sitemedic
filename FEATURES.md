@@ -2,12 +2,60 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Sprint 7 — Contract Signing Fix & TypeScript Cleanup)
+**Last Updated**: 2026-02-18 (Phase 30 — Subscription Management & Feature Gating)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
 
-## Recent Updates — Sprint 7: Contract Signing Fix & TypeScript Cleanup (2026-02-18)
+## Recent Updates — Phase 30-01: Tier Gating Components & Server Helper (2026-02-18)
+
+### Overview
+
+Phase 30 Plan 01 delivers the client-side and server-side building blocks for feature gating across the platform. These components consume the feature-gates module (Phase 25) to conditionally render UI or block API access based on an org's subscription tier.
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/components/billing/upgrade-prompt.tsx` | Client component — gradient card prompting users to upgrade when they access a feature above their tier. Includes `FEATURE_DISPLAY_NAMES` (human-readable names for all 12 features) and `FEATURE_REQUIRED_TIER` (maps Growth+ and Enterprise features to their required tier). Links to `/admin/settings#billing`. |
+| `web/components/billing/tier-gate.tsx` | Client component — wraps children in a tier check. If `hasFeature(tier, feature)` passes, renders children; otherwise renders `<UpgradePrompt>`. Accepts optional `upgradeMessage` for contextual copy. |
+| `web/lib/billing/require-tier.ts` | Server-side async helper for API route gating. Resolves org from session via `requireOrgId()`, queries `organizations.subscription_tier`, gates via `hasFeature()`. Throws `'TIER_INSUFFICIENT'` error (catch in route handler, return 403). Returns the tier on success. |
+
+### Key Details
+
+- **UpgradePrompt styling**: `bg-gradient-to-br from-blue-900/30 to-purple-900/30`, `border-blue-700/50`, `rounded-2xl` — matches dark theme
+- **TierGate pattern**: Drop-in wrapper for any page section that should be tier-locked — pass `feature` and `tier` props
+- **requireTier() pattern**: Pure utility (no NextResponse coupling) — API routes catch the error and return appropriate HTTP status
+- **NULL tier handling**: Both client and server paths default NULL to 'starter' (legacy org compatibility per Phase 24-05 decision)
+- **No database changes**: All components read existing `organizations.subscription_tier` column
+
+---
+
+## Previous Updates — Sprint 8: UX Polish — Toast Notifications (2026-02-18)
+
+### Overview
+
+Sprint 8 of the gap analysis: replaces all browser `alert()` calls and `window.location.reload()` patterns in admin-facing components with proper `toast` notifications from sonner and React-native data refresh patterns. This is a UX polish sprint — no new features, just making existing features feel professional and modern.
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/components/admin/out-of-territory-approval.tsx` | Replaced 3 `alert()` with `toast.success()`/`toast.error()`. Replaced 2 `window.location.reload()` with `await fetchBookingData()` to re-fetch data without full page reload. |
+| `web/components/invoices/late-payment-tracker.tsx` | Replaced 4 `alert()` with `toast.success()`/`toast.error()`. Component already re-fetches data after actions (no reload needed). |
+| `web/components/contracts/template-manager.tsx` | Replaced 3 `alert()` with `toast.success()`/`toast.error()`. Replaced 3 `window.location.reload()` with `router.refresh()` (Next.js server component revalidation). Added `useRouter` import. |
+| `web/components/dashboard/reports-list.tsx` | Replaced 2 `alert()` with `toast.error()`. |
+
+### Key Details
+
+- **12 alert() calls eliminated** across 4 components — all replaced with non-blocking toast notifications that match the app's design system (sonner)
+- **5 window.location.reload() calls eliminated** — replaced with either `router.refresh()` (for server-rendered pages like contracts) or `await fetchBookingData()` (for client components that manage their own data)
+- **No visual regressions**: Toast notifications use the same patterns already established in the client account page and other components
+- **Zero TypeScript errors maintained**: All changes compile cleanly
+
+---
+
+## Previous Updates — Sprint 7: Contract Signing Fix & TypeScript Cleanup (2026-02-18)
 
 ### Overview
 

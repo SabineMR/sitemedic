@@ -9,6 +9,7 @@
  */
 
 import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +28,7 @@ export function MotorsportIncidentReportCard({ treatmentId }: MotorsportIncident
       }
     },
     onError: () => {
-      alert('Failed to generate Motorsport Incident Report. Please try again.');
+      toast.error('Failed to generate Motorsport Incident Report. Please try again.');
     },
   });
 

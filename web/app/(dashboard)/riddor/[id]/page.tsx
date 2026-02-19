@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Camera, Clock, Download, FileText } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function RIDDORDetailPage() {
   const params = useParams();
@@ -134,7 +135,7 @@ export default function RIDDORDetailPage() {
     },
     onError: () => {
       setGeneratingPDF(false);
-      alert('Failed to generate F2508 PDF. Please try again.');
+      toast.error('Failed to generate F2508 PDF. Please try again.');
     },
   });
 

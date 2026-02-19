@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
+import { toast } from 'sonner';
 import { What3WordsInput } from '@/components/ui/what3words-input';
 import { coordinatesToWhat3Words } from '@/lib/utils/what3words';
 
@@ -78,7 +79,7 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
       // Filter out Scotland and Northern Ireland
       const excludedAreas = ['Scotland', 'Northern Ireland'];
       if (adminArea && excludedAreas.includes(adminArea.long_name)) {
-        alert('Please select an address in England or Wales only.');
+        toast.error('Please select an address in England or Wales only.');
         updateField('siteAddress', '');
         updateField('coordinates', '');
         setAddressAutoFilled(false);
@@ -226,7 +227,7 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
 
   const nextStep = () => {
     if (step === 1 && !canProceedToStep2()) {
-      alert('Please fill in all required fields before continuing');
+      toast.error('Please fill in all required fields before continuing');
       return;
     }
     setStep(step + 1);

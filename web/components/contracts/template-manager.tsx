@@ -84,11 +84,12 @@ export function TemplateManager({ templates }: TemplateManagerProps) {
         throw new Error('Failed to save template');
       }
 
-      // Refresh page to show updated data
-      window.location.reload();
+      toast.success(creating ? 'Template created!' : 'Template saved!');
+      handleCancel();
+      router.refresh();
     } catch (error) {
       console.error('Error saving template:', error);
-      alert('Failed to save template. Please try again.');
+      toast.error('Failed to save template. Please try again.');
     }
   };
 
@@ -109,10 +110,11 @@ export function TemplateManager({ templates }: TemplateManagerProps) {
         throw new Error('Failed to archive template');
       }
 
-      window.location.reload();
+      toast.success('Template archived');
+      router.refresh();
     } catch (error) {
       console.error('Error archiving template:', error);
-      alert('Failed to archive template. Please try again.');
+      toast.error('Failed to archive template. Please try again.');
     }
   };
 
@@ -129,10 +131,11 @@ export function TemplateManager({ templates }: TemplateManagerProps) {
         throw new Error('Failed to set default template');
       }
 
-      window.location.reload();
+      toast.success('Default template updated');
+      router.refresh();
     } catch (error) {
       console.error('Error setting default:', error);
-      alert('Failed to set default template. Please try again.');
+      toast.error('Failed to set default template. Please try again.');
     }
   };
 
