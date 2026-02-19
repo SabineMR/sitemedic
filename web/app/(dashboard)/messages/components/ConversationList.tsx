@@ -20,14 +20,18 @@ import { Search } from 'lucide-react';
 
 interface ConversationListProps {
   initialConversations: ConversationListItem[];
+  selectedId?: string;
 }
 
 export function ConversationList({
   initialConversations,
+  selectedId: externalSelectedId,
 }: ConversationListProps) {
   const { data: conversations } = useConversations(initialConversations);
   const [search, setSearch] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    externalSelectedId ?? null
+  );
 
   // Filter conversations by participant name (local filter)
   const filtered =
