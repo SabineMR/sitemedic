@@ -622,6 +622,7 @@ export function BookingApprovalTable({ initialData }: BookingApprovalTableProps)
           {/* Search */}
           <Input
             placeholder="Search by site, postcode, client, or medic..."
+            aria-label="Search bookings"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="bg-gray-900/50 border-gray-700/50 text-white placeholder-gray-500"

@@ -216,6 +216,7 @@ export function ClientManagementTable() {
           <Input
             type="text"
             placeholder="Search by company, contact, email, or postcode..."
+            aria-label="Search clients"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="bg-gray-900/50 border-gray-700/50 text-white"

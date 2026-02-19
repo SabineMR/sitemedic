@@ -10,6 +10,21 @@ import { jsonToCSV } from 'react-papaparse';
 import { format } from 'date-fns';
 import { TreatmentWithWorker, Worker } from '@/types/database.types';
 import { TimesheetWithDetails } from '@/lib/queries/admin/timesheets';
+import type { BookingWithRelations } from '@/lib/queries/admin/bookings';
+
+/** Extended Worker type for CSV export — includes optional certification_status from joined queries */
+type WorkerForExport = Worker & { certification_status?: string | null };
+
+/** Minimal booking shape for invoice CSV export (from partial Supabase select) */
+interface InvoiceExportRow {
+  shift_date?: string | null;
+  site_postcode?: string | null;
+  total?: number | null;
+  platform_fee?: number | null;
+  medic_payout?: number | null;
+  status?: string | null;
+  clients?: { company_name: string }[] | { company_name: string } | null;
+}
 
 /**
  * Export treatments to CSV file
@@ -61,7 +76,7 @@ export function exportTreatmentsCSV(treatments: TreatmentWithWorker[]) {
  *
  * Certification Status: Uses worker.certification_status if provided, otherwise blank
  */
-export function exportWorkersCSV(workers: Worker[]) {
+export function exportWorkersCSV(workers: WorkerForExport[]) {
   // Map workers to flat CSV rows
   const csvData = workers.map((w) => ({
     'Last Name': w.last_name || '',
@@ -76,7 +91,7 @@ export function exportWorkersCSV(workers: Worker[]) {
     'Consent Date': w.consent_date
       ? format(new Date(w.consent_date), 'dd/MM/yyyy')
       : '',
-    'Certification Status': (w as any).certification_status ?? '',
+    'Certification Status': w.certification_status ?? '',
     'Added Date': w.created_at
       ? format(new Date(w.created_at), 'dd/MM/yyyy HH:mm')
       : '',
@@ -146,7 +161,7 @@ export function exportTimesheetsCSV(timesheets: TimesheetWithDetails[]) {
  *
  * Date format: UK format (dd/MM/yyyy)
  */
-export function exportBookingsCSV(bookings: any[]) {
+export function exportBookingsCSV(bookings: BookingWithRelations[]) {
   // Map bookings to flat CSV rows
   const csvData = bookings.map((b) => ({
     'Date': b.shift_date ? format(new Date(b.shift_date), 'dd/MM/yyyy') : '',
@@ -186,17 +201,21 @@ export function exportBookingsCSV(bookings: any[]) {
  *
  * Date format: UK format (dd/MM/yyyy)
  */
-export function exportInvoicesCSV(bookings: any[]) {
+export function exportInvoicesCSV(bookings: InvoiceExportRow[]) {
   // Map completed bookings to flat CSV rows
-  const csvData = bookings.map((b) => ({
-    'Date': b.shift_date ? format(new Date(b.shift_date), 'dd/MM/yyyy') : '',
-    'Client': b.clients?.company_name || '',
-    'Site Postcode': b.site_postcode || '',
-    'Total': b.total != null ? `£${Number(b.total).toFixed(2)}` : '',
-    'Platform Fee': b.platform_fee != null ? `£${Number(b.platform_fee).toFixed(2)}` : '',
-    'Medic Payout': b.medic_payout != null ? `£${Number(b.medic_payout).toFixed(2)}` : '',
-    'Status': b.status || '',
-  }));
+  const csvData = bookings.map((b) => {
+    // Handle both single object and array FK join shapes from Supabase
+    const client = Array.isArray(b.clients) ? b.clients[0] : b.clients;
+    return {
+      'Date': b.shift_date ? format(new Date(b.shift_date), 'dd/MM/yyyy') : '',
+      'Client': client?.company_name || '',
+      'Site Postcode': b.site_postcode || '',
+      'Total': b.total != null ? `£${Number(b.total).toFixed(2)}` : '',
+      'Platform Fee': b.platform_fee != null ? `£${Number(b.platform_fee).toFixed(2)}` : '',
+      'Medic Payout': b.medic_payout != null ? `£${Number(b.medic_payout).toFixed(2)}` : '',
+      'Status': b.status || '',
+    };
+  });
 
   // Generate CSV with react-papaparse
   const csv = jsonToCSV(csvData);

@@ -64,6 +64,7 @@ export function WorkersTable({ initialData }: WorkersTableProps) {
             <label className="text-sm font-medium">Company</label>
             <Input
               placeholder="Search company..."
+              aria-label="Filter by company"
               value={companyFilter}
               onChange={(e) => setCompanyFilter(e.target.value)}
               className="w-[200px]"
@@ -74,6 +75,7 @@ export function WorkersTable({ initialData }: WorkersTableProps) {
             <label className="text-sm font-medium">Role</label>
             <Input
               placeholder="Search role..."
+              aria-label="Filter by role"
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
               className="w-[200px]"

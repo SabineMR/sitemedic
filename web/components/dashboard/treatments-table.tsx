@@ -127,6 +127,7 @@ export function TreatmentsTable({ initialData }: TreatmentsTableProps) {
 
           <Input
             placeholder="Search worker name..."
+            aria-label="Search treatments by worker name"
             value={workerSearch}
             onChange={(e) => setWorkerSearch(e.target.value)}
             className="w-[200px]"

@@ -109,6 +109,7 @@ export default function PlatformUsersPage() {
           <input
             type="text"
             placeholder="Search by name, email or org..."
+            aria-label="Search users"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2 bg-purple-800/40 border border-purple-700/50 rounded-xl text-white placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"

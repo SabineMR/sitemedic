@@ -83,6 +83,7 @@ export function ContactSubmissionsTable() {
             <Input
               type="text"
               placeholder="Search by name, email, or company..."
+              aria-label="Search contact submissions"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 bg-gray-900/50 border-gray-700/50 text-white"

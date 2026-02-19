@@ -432,6 +432,7 @@ export default function PlatformOrganizationsPage() {
           <input
             type="text"
             placeholder="Search organizations..."
+            aria-label="Search organizations"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-12 pr-4 py-3 bg-purple-800/30 border border-purple-700/50 rounded-xl text-white placeholder-purple-400 focus:outline-none focus:border-purple-500 transition-all"

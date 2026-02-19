@@ -297,6 +297,7 @@ export default function AssignmentPanel() {
             <Input
               type="text"
               placeholder="Search medics..."
+              aria-label="Search medics for territory assignment"
               value={medicSearch}
               onChange={e => setMedicSearch(e.target.value)}
               className="mb-3 bg-gray-800/50 border-gray-700/50 text-white"

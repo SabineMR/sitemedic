@@ -32,44 +32,56 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { requireOrgId } from '@/lib/organizations/org-resolver';
 import { routeDailyMileage } from '@/lib/payouts/mileage-router';
 
 export async function POST(req: NextRequest) {
-  let body: { medicId?: string; date?: string };
   try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
+    // Authenticate: require logged-in user with org membership
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    // Multi-tenant: ensure caller belongs to an org
+    await requireOrgId();
 
-  const { medicId, date } = body;
+    let body: { medicId?: string; date?: string };
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
 
-  if (!medicId || !date) {
-    return NextResponse.json(
-      { error: 'Missing required fields: medicId, date (YYYY-MM-DD)' },
-      { status: 400 }
-    );
-  }
+    const { medicId, date } = body;
 
-  // Basic date format validation
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    return NextResponse.json(
-      { error: 'date must be in YYYY-MM-DD format' },
-      { status: 400 }
-    );
-  }
+    if (!medicId || !date) {
+      return NextResponse.json(
+        { error: 'Missing required fields: medicId, date (YYYY-MM-DD)' },
+        { status: 400 }
+      );
+    }
 
-  try {
+    // Basic date format validation
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return NextResponse.json(
+        { error: 'date must be in YYYY-MM-DD format' },
+        { status: 400 }
+      );
+    }
+
     const result = await routeDailyMileage(medicId, date);
 
     // Return 207 Multi-Status if there were partial errors (some timesheets updated, some not)
     const status = result.errors.length > 0 ? 207 : 200;
 
     return NextResponse.json(result, { status });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Internal server error';
     console.error('[POST /api/payouts/mileage]', err);
     return NextResponse.json(
-      { error: err.message ?? 'Internal server error' },
+      { error: message },
       { status: 500 }
     );
   }

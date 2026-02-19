@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Gap Analysis Sprint 11 — Loading States, Error Boundaries & Link Fixes)
+**Last Updated**: 2026-02-18 (Gap Analysis Sprint 12 — Security Fix, Type Safety & Not-Found Pages)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -149,6 +149,36 @@ Phase 30 Plan 01 delivers the client-side and server-side building blocks for fe
 - **requireTier() pattern**: Pure utility (no NextResponse coupling) — API routes catch the error and return appropriate HTTP status
 - **NULL tier handling**: Both client and server paths default NULL to 'starter' (legacy org compatibility per Phase 24-05 decision)
 - **No database changes**: All components read existing `organizations.subscription_tier` column
+
+---
+
+## Previous Updates — Sprint 12: Security Fix, Type Safety & Not-Found Pages (2026-02-18)
+
+### Overview
+
+Sprint 12 of the gap analysis: fixes a **critical security vulnerability** in the mileage payout API (unauthenticated endpoint), replaces `any` types in the CSV export utility with proper interfaces, and adds branded 404 pages for admin and client portal areas.
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/app/admin/not-found.tsx` | Admin 404 page — dark theme, links to Bookings and Settings |
+| `web/app/(client)/client/not-found.tsx` | Client portal 404 page — links to My Bookings and Support |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/app/api/payouts/mileage/route.ts` | **SECURITY FIX**: Added `createClient()` + `supabase.auth.getUser()` + `requireOrgId()` authentication. Previously had ZERO auth — anyone could POST to trigger mileage calculations for any medic. Also changed `err: any` to `err: unknown` with proper `instanceof Error` check. |
+| `web/lib/utils/export-csv.ts` | **Type safety**: Added `BookingWithRelations` import for `exportBookingsCSV()`. Created `InvoiceExportRow` interface for `exportInvoicesCSV()` (handles partial Supabase select). Created `WorkerForExport` type extending `Worker` with optional `certification_status`. Removed all `as any` casts and `any[]` parameter types. Fixed `clients` FK join handling (array vs object). |
+
+### Key Details
+
+- **Mileage API was unauthenticated**: The `/api/payouts/mileage` endpoint's JSDoc said "Access: org_admin only" but had no actual auth check. Any unauthenticated HTTP client could trigger mileage calculations for any medic ID. Now requires valid session + org membership.
+- **CSV export type safety**: The `exportBookingsCSV` and `exportInvoicesCSV` functions previously accepted `any[]`, hiding type mismatches. The revenue page passes partial booking data (6 fields), so a dedicated `InvoiceExportRow` interface was created instead of reusing the full `BookingWithRelations` type.
+- **`WorkerForExport` type**: The `Worker` interface doesn't have `certification_status` (it comes from a joined query), so `(w as any).certification_status` was replaced with a proper intersection type `Worker & { certification_status?: string | null }`.
+- **Not-found pages**: Admin uses dark theme matching the admin panel; client portal uses light theme and directs to bookings/support.
+- **Zero TypeScript errors**: Verified with `tsc --noEmit` after all changes
 
 ---
 
