@@ -46,7 +46,7 @@ See: `.planning/milestones/v2.0-ROADMAP.md`
 - [x] **Phase 27: Branding — Web Portal** — BrandingProvider, SSR header injection, CSS custom properties, portal rebrand ✓ 2026-02-18
 - [x] **Phase 28: Branding — PDFs & Emails** — Org logo in all 8 PDF Edge Functions + all 4 email templates ✓ 2026-02-18
 - [x] **Phase 29: Org Onboarding Flow** — Signup page, Stripe Checkout, activation queue, welcome email ✓ 2026-02-18
-- [ ] **Phase 30: Subscription Management & Feature Gating** — Tier gates in UI and API, Stripe Customer Portal, MRR dashboard, suspension flow
+- [x] **Phase 30: Subscription Management & Feature Gating** — Tier gates in UI and API, Stripe Customer Portal, MRR dashboard, suspension flow ✓ 2026-02-20
 - [ ] **Phase 31: Branding Settings UI** — Org admin logo upload + colour picker, platform admin branding override
 
 ---
@@ -222,11 +222,11 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 30-01-PLAN.md — TierGate component + requireTier() API helper: shared UI and server-side gating primitives
-- [ ] 30-02-PLAN.md — Feature gate wiring: wrap branding section with TierGate, add requireTier() to branding API routes
-- [ ] 30-03-PLAN.md — Stripe Customer Portal: POST /api/billing/portal + Manage Billing button on settings page
-- [ ] 30-04-PLAN.md — Platform admin MRR dashboard: /platform/subscriptions page with per-tier breakdown and org table
-- [ ] 30-05-PLAN.md — Suspension flow: middleware subscription check + /suspended page with reactivation path
+- [x] 30-01-PLAN.md — TierGate component + requireTier() API helper: shared UI and server-side gating primitives
+- [x] 30-02-PLAN.md — Feature gate wiring: wrap branding section with TierGate, add requireTier() to branding API routes
+- [x] 30-03-PLAN.md — Stripe Customer Portal: POST /api/billing/portal + Manage Billing button on settings page
+- [x] 30-04-PLAN.md — Platform admin MRR dashboard: /platform/subscriptions page with per-tier breakdown and org table
+- [x] 30-05-PLAN.md — Suspension flow: middleware subscription check + /suspended page with reactivation path
 
 ---
 
@@ -275,5 +275,5 @@ Note: Phases 27 and 28 can be parallelised once Phase 26 is deployed. Phase 30 a
 | 27. Branding — Web Portal | v3.0 | 3/3 | Complete | 2026-02-18 |
 | 28. Branding — PDFs & Emails | v3.0 | 3/3 | Complete | 2026-02-18 |
 | 29. Org Onboarding Flow | v3.0 | 5/5 | Complete | 2026-02-18 |
-| 30. Subscription Management & Feature Gating | v3.0 | 0/5 | Not started | - |
+| 30. Subscription Management & Feature Gating | v3.0 | 5/5 | Complete | 2026-02-20 |
 | 31. Branding Settings UI | v3.0 | 0/2 | Not started | - |

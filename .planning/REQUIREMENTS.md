@@ -37,16 +37,16 @@ Foundation work that all subsequent phases depend on. No user-visible output —
 - [x] **SUB-02**: A new medic business can sign up at `sitemedic.co.uk/signup`, select a plan, and complete payment via Stripe Checkout — flow works end-to-end in test mode
 - [x] **SUB-03**: A dedicated `/api/stripe/billing-webhooks` endpoint (separate signing secret from Connect webhooks) handles subscription lifecycle events: `checkout.session.completed` creates the org record; `customer.subscription.updated` updates tier; `customer.subscription.deleted` suspends org access
 - [x] **SUB-04**: Platform admin receives a notification and sees a pending activation queue when a new org signs up — can activate the org, assign slug, and trigger branding setup
-- [ ] **SUB-05**: Org admin can access the Stripe Customer Portal from their settings page to manage billing (upgrade plan, update payment method, view invoices, cancel)
-- [ ] **SUB-06**: Platform admin dashboard shows all org subscriptions with plan, status, MRR summary, and churn indicators
-- [ ] **SUB-07**: When a subscription is cancelled or payment lapses, the org's access is gracefully suspended — admins see a "subscription inactive" screen, data is preserved, reactivation restores full access
+- [x] **SUB-05**: Org admin can access the Stripe Customer Portal from their settings page to manage billing (upgrade plan, update payment method, view invoices, cancel)
+- [x] **SUB-06**: Platform admin dashboard shows all org subscriptions with plan, status, MRR summary, and churn indicators
+- [x] **SUB-07**: When a subscription is cancelled or payment lapses, the org's access is gracefully suspended — admins see a "subscription inactive" screen, data is preserved, reactivation restores full access
 
 ### GATE — Feature Gating
 
 - [x] **GATE-01**: A single server-side `FEATURE_GATES` map defines which features are available per tier — tier is read from `organizations.subscription_tier` on each middleware request (never from JWT)
-- [ ] **GATE-02**: White-label branding (BRAND-01 through BRAND-05) and subdomain access (ROUTE-01) are gated to Growth and Enterprise tiers — Starter orgs use SiteMedic default branding
-- [ ] **GATE-03**: Feature gates are enforced at both the API route layer and the UI layer simultaneously — UI gates alone are not sufficient (prevents bypass-by-URL)
-- [ ] **GATE-04**: Starter tier org admins see contextual upgrade prompts when they encounter Growth-gated features (e.g. "Upgrade to Growth to white-label your portal")
+- [x] **GATE-02**: White-label branding (BRAND-01 through BRAND-05) and subdomain access (ROUTE-01) are gated to Growth and Enterprise tiers — Starter orgs use SiteMedic default branding
+- [x] **GATE-03**: Feature gates are enforced at both the API route layer and the UI layer simultaneously — UI gates alone are not sufficient (prevents bypass-by-URL)
+- [x] **GATE-04**: Starter tier org admins see contextual upgrade prompts when they encounter Growth-gated features (e.g. "Upgrade to Growth to white-label your portal")
 
 ### ONBOARD — Org Onboarding Flow
 
@@ -107,12 +107,12 @@ Foundation work that all subsequent phases depend on. No user-visible output —
 | ONBOARD-02 | Phase 29 | Complete |
 | ONBOARD-03 | Phase 29 | Complete |
 | ONBOARD-04 | Phase 29 | Complete |
-| GATE-02 | Phase 30 | Pending |
-| GATE-03 | Phase 30 | Pending |
-| GATE-04 | Phase 30 | Pending |
-| SUB-05 | Phase 30 | Pending |
-| SUB-06 | Phase 30 | Pending |
-| SUB-07 | Phase 30 | Pending |
+| GATE-02 | Phase 30 | Complete |
+| GATE-03 | Phase 30 | Complete |
+| GATE-04 | Phase 30 | Complete |
+| SUB-05 | Phase 30 | Complete |
+| SUB-06 | Phase 30 | Complete |
+| SUB-07 | Phase 30 | Complete |
 | BRAND-01 | Phase 31 | Pending |
 | BRAND-02 | Phase 31 | Pending |
 
