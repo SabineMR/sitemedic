@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Sprint 16: Fetch Safety, JSON.parse Guards & OG Metadata)
+**Last Updated**: 2026-02-18 (Sprint 17: Responsive Grid Breakpoints & Dead Code Cleanup)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -212,6 +212,40 @@ Phase 30 Plan 01 delivers the client-side and server-side building blocks for fe
 - **requireTier() pattern**: Pure utility (no NextResponse coupling) — API routes catch the error and return appropriate HTTP status
 - **NULL tier handling**: Both client and server paths default NULL to 'starter' (legacy org compatibility per Phase 24-05 decision)
 - **No database changes**: All components read existing `organizations.subscription_tier` column
+
+---
+
+## Previous Updates — Sprint 17: Responsive Grid Breakpoints & Dead Code Cleanup (2026-02-18)
+
+### Overview
+
+Sprint 17 of the gap analysis: adds responsive grid breakpoints to 12 components that used fixed `grid-cols-2/3/4` without mobile fallbacks (layouts would overflow or become unusable on small screens), and removes an unused variable from the contract signing page.
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `web/components/admin/booking-approval-table.tsx` | Stats row: `grid-cols-4` → `grid-cols-2 md:grid-cols-4` |
+| `web/components/admin/assignment-analytics-charts.tsx` | Summary cards: `grid-cols-3` → `grid-cols-1 sm:grid-cols-3` |
+| `web/components/admin/medic-utilisation-charts.tsx` | OOT summary cards (2 instances): `grid-cols-3` → `grid-cols-1 sm:grid-cols-3` |
+| `web/components/admin/timesheet-batch-approval.tsx` | Payout summary: `grid-cols-3` → `grid-cols-1 sm:grid-cols-3` |
+| `web/components/admin/out-of-territory-approval.tsx` | Booking details + travel details (2 instances): `grid-cols-2` → `grid-cols-1 sm:grid-cols-2` |
+| `web/components/invoices/late-payment-tracker.tsx` | Invoice detail grid: `grid-cols-3` → `grid-cols-1 sm:grid-cols-3` |
+| `web/components/contracts/contract-preview.tsx` | Parties + signatures (2 instances): `grid-cols-2` → `grid-cols-1 sm:grid-cols-2` |
+| `web/components/contracts/contract-detail.tsx` | Client info + booking details (2 instances): `grid-cols-2` → `grid-cols-1 sm:grid-cols-2` |
+| `web/components/contracts/send-contract-dialog.tsx` | Contract summary grid: `grid-cols-2` → `grid-cols-1 sm:grid-cols-2` |
+| `web/components/contracts/create-contract-form.tsx` | Booking info + price breakdown: `grid-cols-2` → `grid-cols-1 sm:grid-cols-2`, `grid-cols-3` → `grid-cols-1 sm:grid-cols-3` |
+| `web/components/booking/shift-config.tsx` | Shift time inputs: `grid-cols-2` → `grid-cols-1 sm:grid-cols-2` |
+| `web/components/bookings/out-of-territory-calculator.tsx` | Travel details grid: `grid-cols-2` → `grid-cols-1 sm:grid-cols-2` |
+| `web/app/contracts/[id]/sign/page.tsx` | Removed unused `previousStatus` variable (declared but never referenced) |
+
+### Key Details
+
+- **Mobile-first grid pattern**: All grids now start at `grid-cols-1` (single column on mobile) and scale up at `sm:` (640px) or `md:` (768px) breakpoints using Tailwind's responsive prefix system
+- **Admin stat cards**: `grid-cols-4` stat rows now show 2 columns on small screens, preventing horizontal overflow
+- **Contract preview**: Provider/Client and signature blocks now stack vertically on mobile instead of side-by-side
+- **No visual change on desktop**: All `sm:`/`md:` breakpoints only activate below their threshold — desktop users see the same layout as before
+- **Dead code removal**: The `previousStatus` variable in the contract signing page was assigned but never used — safe to remove
 
 ---
 

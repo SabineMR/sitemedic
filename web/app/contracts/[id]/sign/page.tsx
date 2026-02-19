@@ -103,8 +103,6 @@ export default async function ContractSigningPage({ params }: PageProps) {
 
   // Update status to 'viewed' if currently 'sent'
   if (contract.status === 'sent') {
-    const previousStatus = contract.status;
-
     // Update contract status
     await supabase
       .from('contracts')

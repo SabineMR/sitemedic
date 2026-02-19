@@ -231,7 +231,7 @@ export function SendContractDialog({
           <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
             <h3 className="font-semibold text-sm">Contract Summary</h3>
 
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
               <div>
                 <span className="text-muted-foreground">Contract Number:</span>
                 <p className="font-mono font-medium">{contractNumber}</p>

@@ -211,7 +211,7 @@ export function CreateContractForm({
 
         {selectedBooking && (
           <div className="p-4 border rounded-lg bg-accent/10 space-y-2 text-sm">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <p className="font-medium">Client</p>
                 <p className="text-muted-foreground">
@@ -258,7 +258,7 @@ export function CreateContractForm({
                 {selectedBooking.shift_hours}hrs)
               </p>
             </div>
-            <div className="pt-2 border-t grid grid-cols-3 gap-2">
+            <div className="pt-2 border-t grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
                 <p className="text-xs text-muted-foreground">Subtotal</p>
                 <p className="font-medium">£{selectedBooking.subtotal.toFixed(2)}</p>

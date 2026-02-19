@@ -59,7 +59,7 @@ export function ContractPreview({
         </div>
 
         {/* Parties */}
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <h2 className="text-lg font-semibold mb-2">Provider</h2>
             <div className="text-sm space-y-1">

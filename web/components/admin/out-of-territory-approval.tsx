@@ -202,7 +202,7 @@ export function OutOfTerritoryApproval({ bookingId }: OutOfTerritoryApprovalProp
       {/* Booking Details */}
       <div className="bg-white border rounded-lg shadow-sm p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Booking Details</h3>
-        <div className="grid grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-gray-500">Site Name</p>
             <p className="font-medium text-gray-900">{booking.site_name}</p>
@@ -228,7 +228,7 @@ export function OutOfTerritoryApproval({ bookingId }: OutOfTerritoryApprovalProp
 
         <div className="space-y-4">
           {/* Travel Details */}
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-gray-500">Distance</p>
               <p className="font-medium text-gray-900">{calculation.distance_miles} miles</p>

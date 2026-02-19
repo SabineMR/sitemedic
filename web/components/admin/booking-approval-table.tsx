@@ -582,7 +582,7 @@ export function BookingApprovalTable({ initialData }: BookingApprovalTableProps)
   return (
     <div className="space-y-6">
       {/* Stats Row */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Total" value={stats.total} color="blue" />
         <StatCard
           label="Pending"

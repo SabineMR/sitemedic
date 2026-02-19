@@ -246,7 +246,7 @@ export function ContractDetail({ contract }: ContractDetailProps) {
             <CardTitle>Client Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <div className="text-sm font-medium text-muted-foreground">
                   Company
@@ -285,7 +285,7 @@ export function ContractDetail({ contract }: ContractDetailProps) {
             <CardTitle>Booking Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <div className="text-sm font-medium text-muted-foreground">
                   Site Address

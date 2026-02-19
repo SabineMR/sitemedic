@@ -203,7 +203,7 @@ export function LatePaymentTracker() {
                   {invoice.days_overdue} days overdue
                 </span>
               </div>
-              <div className="grid grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                 <div>
                   <p className="text-gray-600">Client</p>
                   <p className="font-medium text-gray-900">{invoice.client_name}</p>

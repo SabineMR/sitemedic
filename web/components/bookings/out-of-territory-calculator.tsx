@@ -121,7 +121,7 @@ export function OutOfTerritoryCalculator({
         {/* Travel Details */}
         <div>
           <h4 className="font-medium text-gray-900 mb-3">Travel Details</h4>
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-gray-500">Distance</p>
               <p className="font-medium text-gray-900">{calculation.distance_miles} miles</p>

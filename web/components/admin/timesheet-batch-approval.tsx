@@ -379,7 +379,7 @@ export function TimesheetBatchApproval({ initialData }: TimesheetBatchApprovalPr
             Payout Summary
           </h3>
 
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div>
               <div className="text-sm text-gray-400">Total Payout</div>
               <div className="text-2xl font-bold text-green-400">

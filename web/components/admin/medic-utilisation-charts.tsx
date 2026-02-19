@@ -229,7 +229,7 @@ export function OOTBookingsChart({ data }: OOTBookingsChartProps) {
     return (
       <div className="space-y-4">
         {/* Summary cards */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
             <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">OOT Bookings</p>
             <p className="text-2xl font-bold text-white">0</p>
@@ -258,7 +258,7 @@ export function OOTBookingsChart({ data }: OOTBookingsChartProps) {
   return (
     <div className="space-y-4">
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
           <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">OOT Bookings</p>
           <p className="text-2xl font-bold text-white">{total_oot_bookings}</p>
