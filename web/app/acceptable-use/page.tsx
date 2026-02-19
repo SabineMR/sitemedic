@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Acceptable Use Policy | SiteMedic',
+  title: 'Acceptable Use Policy',
   description: 'Guidelines for acceptable use of SiteMedic services and prohibited activities.',
 };
 

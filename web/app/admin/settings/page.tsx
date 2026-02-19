@@ -11,6 +11,8 @@ import React, { useState, useEffect } from 'react';
 import { Settings, Building2, Bell, CreditCard, Shield, Mail, Phone, Loader2, Sliders, Layers, Clapperboard, Gauge, HardHat, Music2, Trophy, FerrisWheel, Briefcase, Star, GraduationCap, Tent, ShieldCheck, Palette, Upload, Banknote, Car, Percent, Calendar, CheckCircle2, XCircle } from 'lucide-react';
 import { useOrg } from '@/contexts/org-context';
 import { toast } from 'sonner';
+import { TierGate } from '@/components/billing/tier-gate';
+import { type SubscriptionTier } from '@/lib/billing/feature-gates';
 
 type VerticalId =
   | 'construction' | 'tv_film' | 'motorsport' | 'festivals'

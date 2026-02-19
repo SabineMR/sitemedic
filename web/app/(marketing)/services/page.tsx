@@ -7,13 +7,12 @@
  * Route: /services
  */
 
-import Link from 'next/link';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Services — Apex Safety Group',
-  description:
-    'HCPC-registered paramedic services for TV & film, motorsport, music festivals, sporting events, construction sites, corporate events and more across England & Wales.',
+  title: 'Services',
+  description: 'Professional paramedic services for construction, film & TV, festivals, motorsport, sporting events, and more. HCPC-registered medics with industry-specific compliance.',
 };
 
 const verticals = [

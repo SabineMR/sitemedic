@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Refund & Returns Policy | SiteMedic',
+  title: 'Refund & Returns Policy',
   description: 'SiteMedic refund and returns policy in compliance with UK Consumer Rights Act 2015.',
 };
 

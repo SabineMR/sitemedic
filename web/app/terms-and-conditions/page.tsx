@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Terms and Conditions | SiteMedic',
+  title: 'Terms and Conditions',
   description: 'Terms and Conditions for using SiteMedic services and software.',
 };
 

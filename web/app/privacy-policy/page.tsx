@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Privacy Policy | SiteMedic',
+  title: 'Privacy Policy',
   description: 'SiteMedic Privacy Policy - How we collect, use, and protect your personal data in compliance with UK GDPR.',
 };
 

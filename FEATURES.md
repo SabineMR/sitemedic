@@ -7,7 +7,36 @@
 
 ---
 
-## Recent Updates — Phase 30-04: Platform Admin Subscriptions / MRR Dashboard (2026-02-18)
+## Recent Updates — Fix: Mobile App Team Screen Medics Integration (2026-02-18)
+
+### Overview
+
+The mobile app's Team screen previously only queried the `profiles` table, which stores auth-linked user accounts (admins, site managers). Medics exist in a separate `medics` table and were invisible on the Team screen — it showed "No other team members yet" even when medics existed. This fix queries both tables in parallel, deduplicates by auth user ID, and merges results so all team members appear.
+
+### Problem
+
+- Web app Medics page correctly queried the `medics` table and showed 2 medics (Kai Aufmkolk, Alex Turner)
+- Mobile app Team screen only queried `profiles` — a completely different table — and found no medics
+- The 2 medics had rows in `medics` but no corresponding rows in `profiles`
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `app/(tabs)/team.tsx` | **Expanded `TeamMember` interface** with `authUserId`, `source` ('profiles' \| 'medics'), `available_for_work`, `classification` fields. **Added parallel `medics` table query** via `Promise.all` alongside existing `profiles` query. **Deduplication logic**: builds a Set of auth user IDs from profiles + current user, filters out medics whose `user_id` already appears in profiles. **Merged results** sorted alphabetically. **Availability dot**: green (#10B981) for available medics, gray (#9CA3AF) for unavailable — only shown for medics-sourced rows. **Classification subtitle**: shows medic classification (e.g. "Senior") in italic gray text below email when non-null. |
+
+### Key Details
+
+- **No database changes**: RLS policies already allow authenticated users to read `medics` rows for their org
+- **Deduplication**: If a medic also has a `profiles` row (linked via `user_id`), the profiles entry takes precedence — no duplicates
+- **Medic display**: `full_name` constructed from `first_name + " " + last_name`, role forced to `'medic'`
+- **Availability indicator**: Small colored dot before name — green = `available_for_work: true`, gray = false/null
+- **Classification**: Italic gray text below email (e.g. "Junior", "Senior") — only shown when `classification` is non-null
+- **Parallel queries**: Both `profiles` and `medics` fetched via `Promise.all` for fast load times
+
+---
+
+## Previous Updates — Phase 30-04: Platform Admin Subscriptions / MRR Dashboard (2026-02-18)
 
 ### Overview
 
@@ -1203,8 +1232,10 @@ The mobile app tab bar and Settings screen are now fully role-aware. Admin users
 
 **New Screen: Team (`app/(tabs)/team.tsx`):**
 - Admin-only screen showing the roster of team members in the admin's organisation
-- Supabase query: `profiles` table, filtered by `org_id`, excluding self (`neq('id', userId)`), ordered alphabetically by `full_name`
+- Supabase queries: `profiles` table (auth-linked users) AND `medics` table (medic roster) fetched in parallel via `Promise.all`, filtered by `org_id`
+- Deduplication: medics whose `user_id` already appears in `profiles` are excluded to prevent duplicate rows
 - Each member card shows: `full_name` (bold), `email` (muted), role badge
+- Medic-specific enhancements: availability dot (green=available, gray=unavailable) before name, classification subtitle (italic gray) below email
 - Role badge colour coding: Medic=blue, Site Manager=purple, Admin=amber
 - Empty state: "No team members yet."
 - Error state with warning icon

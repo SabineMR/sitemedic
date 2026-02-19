@@ -7,13 +7,12 @@
  * Route: /about
  */
 
-import Link from 'next/link';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'About Us — Apex Safety Group',
-  description:
-    'Apex Safety Group provides HCPC-registered paramedics for events, film productions, motorsport, construction sites and more across England & Wales — powered by SiteMedic.',
+  title: 'About Us',
+  description: 'Learn about Apex Safety Group and the SiteMedic platform. HCPC-registered paramedics, automated compliance, and a better way to staff medical cover.',
 };
 
 export default function AboutPage() {

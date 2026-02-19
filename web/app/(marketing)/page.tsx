@@ -1,4 +1,10 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'Professional Paramedics for Events & Worksites',
+  description: 'Book HCPC-registered paramedics for film sets, music festivals, motorsport events, construction sites, and more. Compliance records generated automatically.',
+};
 import QuoteButton from '@/components/marketing/quote-button';
 import {
   Shield,

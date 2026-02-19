@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Accessibility Statement | SiteMedic',
+  title: 'Accessibility Statement',
   description: 'SiteMedic\'s commitment to digital accessibility and WCAG 2.1 compliance.',
 };
 

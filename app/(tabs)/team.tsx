@@ -2,10 +2,12 @@
  * Team Screen (Admin only)
  *
  * Shows the roster of team members in the admin's organisation.
- * Fetched from the `profiles` table filtered by org_id via Supabase RLS.
+ * Queries both `profiles` (auth-linked users) and `medics` (medic roster)
+ * tables in parallel, deduplicates by auth user ID, and merges results.
  * The admin's own entry is shown at the top as "You".
  *
  * Role badges: Medic / Site Manager / Admin
+ * Medic rows show an availability dot (green/gray) and classification subtitle.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -21,9 +23,13 @@ import { useRole } from '../../hooks/useRole';
 
 interface TeamMember {
   id: string;
+  authUserId: string | null;
   full_name: string | null;
   email: string | null;
   role: 'medic' | 'site_manager' | 'admin';
+  source: 'profiles' | 'medics';
+  available_for_work?: boolean;
+  classification?: string | null;
 }
 
 const ROLE_BADGE: Record<string, { bg: string; text: string; label: string }> = {
@@ -49,17 +55,60 @@ export default function TeamScreen() {
       }
       try {
         const { supabase } = await import('../../src/lib/supabase');
-        let query = supabase
+
+        // Query profiles (auth-linked users) and medics (roster) in parallel
+        let profilesQuery = supabase
           .from('profiles')
           .select('id, full_name, email, role')
           .eq('org_id', orgId)
           .order('full_name', { ascending: true });
         if (userId) {
-          query = query.neq('id', userId);
+          profilesQuery = profilesQuery.neq('id', userId);
         }
-        const { data, error: err } = await query;
-        if (err) throw err;
-        setMembers((data as TeamMember[]) ?? []);
+
+        const medicsQuery = supabase
+          .from('medics')
+          .select('id, user_id, first_name, last_name, email, available_for_work, classification')
+          .eq('org_id', orgId);
+
+        const [profilesResult, medicsResult] = await Promise.all([profilesQuery, medicsQuery]);
+        if (profilesResult.error) throw profilesResult.error;
+        if (medicsResult.error) throw medicsResult.error;
+
+        // Map profiles to TeamMember format
+        const profileMembers: TeamMember[] = (profilesResult.data ?? []).map((p: any) => ({
+          id: p.id,
+          authUserId: p.id,
+          full_name: p.full_name,
+          email: p.email,
+          role: p.role,
+          source: 'profiles' as const,
+        }));
+
+        // Build set of auth user IDs already represented (profiles + current user)
+        const knownAuthIds = new Set<string>(profileMembers.map((m) => m.authUserId!));
+        if (userId) knownAuthIds.add(userId);
+
+        // Map medics to TeamMember format, excluding those already in profiles
+        const medicMembers: TeamMember[] = (medicsResult.data ?? [])
+          .filter((m: any) => !m.user_id || !knownAuthIds.has(m.user_id))
+          .map((m: any) => ({
+            id: `medic-${m.id}`,
+            authUserId: m.user_id ?? null,
+            full_name: [m.first_name, m.last_name].filter(Boolean).join(' ') || null,
+            email: m.email,
+            role: 'medic' as const,
+            source: 'medics' as const,
+            available_for_work: m.available_for_work ?? false,
+            classification: m.classification ?? null,
+          }));
+
+        // Combine and sort alphabetically by name
+        const combined = [...profileMembers, ...medicMembers].sort((a, b) =>
+          (a.full_name ?? '').localeCompare(b.full_name ?? '')
+        );
+
+        setMembers(combined);
       } catch (e: any) {
         setError(e?.message ?? 'Failed to load team.');
       } finally {
@@ -145,11 +194,30 @@ export default function TeamScreen() {
                       <View style={styles.divider} />
                       <View style={styles.memberRow}>
                         <View style={styles.memberInfo}>
-                          <Text style={styles.memberName}>
-                            {member.full_name || 'Unnamed'}
-                          </Text>
+                          <View style={styles.nameRow}>
+                            {member.source === 'medics' && (
+                              <View
+                                style={[
+                                  styles.availabilityDot,
+                                  {
+                                    backgroundColor: member.available_for_work
+                                      ? '#10B981'
+                                      : '#9CA3AF',
+                                  },
+                                ]}
+                              />
+                            )}
+                            <Text style={styles.memberName}>
+                              {member.full_name || 'Unnamed'}
+                            </Text>
+                          </View>
                           {member.email ? (
                             <Text style={styles.memberEmail}>{member.email}</Text>
+                          ) : null}
+                          {member.source === 'medics' && member.classification ? (
+                            <Text style={styles.classificationText}>
+                              {member.classification}
+                            </Text>
                           ) : null}
                         </View>
                         <View style={[styles.roleBadge, { backgroundColor: badge.bg }]}>
@@ -245,6 +313,17 @@ const styles = StyleSheet.create({
   memberEmail: {
     fontSize: 13,
     color: '#64748b',
+  },
+  availabilityDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  classificationText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    fontStyle: 'italic',
+    marginTop: 2,
   },
   roleBadge: {
     paddingHorizontal: 10,

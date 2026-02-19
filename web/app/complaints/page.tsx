@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Complaints Procedure | SiteMedic',
+  title: 'Complaints Procedure',
   description: 'How to make a complaint and our commitment to resolving issues fairly and quickly.',
 };
 
