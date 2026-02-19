@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-19 (Phase 33 Event Posting & Discovery complete)
+**Last Updated**: 2026-02-19 (Phase 41 Web Messaging Core complete)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -55,6 +55,27 @@ An internal organization communication and document management system for core S
 | File | Content |
 |------|---------|
 | `web/types/comms.types.ts` | 7 table interfaces (Conversation, Message, MessageRecipient, ConversationReadStatus, DocumentCategory, Document, DocumentVersion), 4 union types (ConversationType, MessageType, MessageStatus, DocumentStatus), 4 convenience types (ConversationWithUnread, MessageWithSender, DocumentWithVersion, BroadcastReadSummary) |
+
+### Phase 41: Web Messaging Core (COMPLETE)
+
+Org admins and medics can have 1:1 text conversations through the web dashboard with conversation list, message threads, and new conversation creation.
+
+| Feature | Implementation | Files |
+|---------|---------------|-------|
+| **Conversation List** | Two-panel layout with scrollable sidebar (~320px). Conversations sorted by most recent message. Search filter on participant name. 30-second polling via useQuery. | `web/app/(dashboard)/messages/page.tsx`, `web/app/(dashboard)/messages/components/ConversationList.tsx` |
+| **Conversation Row** | Avatar initial, participant name (bold when unread), truncated last message preview, relative timestamp (Today=time, Yesterday, day name, date), unread count badge (caps at 99+), role indicator (Medic/Admin). | `web/app/(dashboard)/messages/components/ConversationRow.tsx` |
+| **Unread Count Computation** | 3 parallel bulk Supabase queries (conversations, read statuses, messages) computed in JavaScript. Avoids N+1. Counts messages created after user's `last_read_at` where `sender_id != current user`. | `web/lib/queries/comms.ts` — `fetchConversationsWithUnread()` |
+| **Header Unread Badge** | MessageSquare icon in dashboard header with total unread count badge. Server-side fetched (no client component needed). Navigates to /messages. | `web/app/(dashboard)/layout.tsx` |
+| **Sidebar Navigation** | "Messages" item with MessageSquare icon added after Analytics. | `web/components/dashboard/DashboardNav.tsx` |
+| **Message Thread** | Flat Slack-style message display (not chat bubbles). Sender avatar/initials, name, content, relative timestamp. Own messages labeled "(you)". Scroll-to-bottom on load. 10-second polling. | `web/app/(dashboard)/messages/[conversationId]/page.tsx`, `web/app/(dashboard)/messages/components/MessageThread.tsx`, `MessageItem.tsx` |
+| **Send Message** | Textarea with Enter-to-send, Shift+Enter for newline. Auto-grows up to ~5 lines. Send button. POST `/api/messages/send` validates (max 5000 chars), inserts message, updates conversation metadata, upserts sender read status. | `web/app/(dashboard)/messages/components/MessageInput.tsx`, `web/app/api/messages/send/route.ts` |
+| **Mark as Read** | PATCH `/api/messages/conversations/{id}/read` fires on thread open. Upserts `conversation_read_status` with current timestamp. Invalidates conversations query to update unread badges. | `web/app/api/messages/conversations/[id]/read/route.ts` |
+| **New Conversation (Admin)** | "+" button opens MedicPicker dialog. Shows all org medics with search filter. Existing conversations marked with "Existing" indicator. Creates new or navigates to existing. | `web/app/(dashboard)/messages/components/MedicPicker.tsx` |
+| **New Conversation (Medic)** | "Message Admin" button. Auto-resolves medic's own record from auth. Creates/finds conversation and redirects. | `web/app/(dashboard)/messages/components/MedicPicker.tsx` |
+| **Duplicate Prevention** | POST `/api/messages/conversations` uses SELECT-then-INSERT with 23505 unique constraint catch. Enforced by partial unique index `idx_conversations_org_medic_direct`. | `web/app/api/messages/conversations/route.ts` |
+| **Empty State** | MessageSquare icon, "No conversations yet" text, working "Start a conversation" CTA (opens MedicPicker for admin, triggers Message Admin for medic). | `web/app/(dashboard)/messages/components/EmptyState.tsx` |
+
+**Requirements completed:** MSG-01, MSG-02, MSG-03, MSG-04
 
 ### Planning Files
 
