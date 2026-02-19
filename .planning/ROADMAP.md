@@ -97,12 +97,12 @@ Plans:
   3. Events have a quote deadline after which no new quotes can be submitted
   4. Events are visible only to verified medics whose qualifications match the staffing requirements
   5. Medics can search and filter events by type, date, location radius, and qualification level
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 33-01: Event posting form (multi-step with Zod validation, all event fields)
-- [ ] 33-02: Event management (edit restrictions, close/cancel, quote deadline enforcement)
-- [ ] 33-03: Event discovery (browse, search, filter by location/qualifications, medic dashboard feed)
+- [ ] 33-01-PLAN.md — Event database schema, TypeScript types, Zod schemas, and CRUD API routes (migration 145: marketplace_events, event_days, event_staffing_requirements; PostGIS for radius queries; RLS; event types + schemas + API routes)
+- [ ] 33-02-PLAN.md — Event posting wizard and client management (Zustand store, 4-step wizard with Google Places + what3words + per-day staffing + equipment checklist, My Events dashboard, edit page with pre/post-quote restrictions)
+- [ ] 33-03-PLAN.md — Event discovery for medics (browse page with list/map toggle, dual search modes for company owners vs individual medics, filters by type/date/location/qualification, event detail page with approximate location)
 
 ### Phase 34: Quote Submission & Comparison
 **Goal**: Verified medics can submit detailed quotes on open events, and clients can compare quotes with anonymised medic profiles — no contact details visible until award and deposit
@@ -357,7 +357,7 @@ Plans:
 | 30. Subscription Management & Feature Gating | v3.0 | 5/5 | Complete | 2026-02-20 |
 | 31. Branding Settings UI | v3.0 | 2/2 | Complete | 2026-02-19 |
 | 32. Foundation Schema & Registration | v4.0 | 4/4 | Complete | 2026-02-19 |
-| 33. Event Posting & Discovery | v4.0 | 0/3 | Not started | - |
+| 33. Event Posting & Discovery | v4.0 | 0/3 | Planned | - |
 | 34. Quote Submission & Comparison | v4.0 | 0/3 | Not started | - |
 | 35. Award Flow & Payment | v4.0 | 0/4 | Not started | - |
 | 36. Ratings, Messaging & Disputes | v4.0 | 0/3 | Not started | - |
