@@ -41,14 +41,14 @@
 
 ### REG — Registration & Verification
 
-- [ ] **REG-01**: Individual medics can register on the marketplace with: name, qualifications, certifications, insurance details, location/coverage area, and experience summary
-- [ ] **REG-02**: Medic companies can register with: company name, insurance, admin user — and then add individual medics to their roster
-- [ ] **REG-03**: New medics can register and browse events immediately, but cannot submit quotes until their qualifications are verified
-- [ ] **REG-04**: Medics upload qualification certificates, insurance documents, and optionally DBS check status during registration
-- [ ] **REG-05**: Platform admin sees a verification queue of pending medic registrations with uploaded documents — can approve, reject, or request additional information
-- [ ] **REG-06**: Approved medics receive a "verified" badge on their profile and can begin submitting quotes
-- [ ] **REG-07**: Verification expires when certificates expire — medic is notified and quoting is suspended until updated documents are reviewed
-- [ ] **REG-08**: New marketplace registrants get Stripe Connect onboarding (Express account) so they can receive payouts
+- [x] **REG-01**: Individual medics can register on the marketplace with: name, qualifications, certifications, insurance details, location/coverage area, and experience summary
+- [x] **REG-02**: Medic companies can register with: company name, insurance, admin user — and then add individual medics to their roster
+- [x] **REG-03**: New medics can register and browse events immediately, but cannot submit quotes until their qualifications are verified
+- [x] **REG-04**: Medics upload qualification certificates, insurance documents, and optionally DBS check status during registration
+- [x] **REG-05**: Platform admin sees a verification queue of pending medic registrations with uploaded documents — can approve, reject, or request additional information
+- [x] **REG-06**: Approved medics receive a "verified" badge on their profile and can begin submitting quotes
+- [x] **REG-07**: Verification expires when certificates expire — medic is notified and quoting is suspended until updated documents are reviewed
+- [x] **REG-08**: New marketplace registrants get Stripe Connect onboarding (Express account) so they can receive payouts
 
 ### COMP — Company Accounts
 
@@ -151,14 +151,14 @@
 | AWRD-07 | Phase 35 | Pending |
 | AWRD-08 | Phase 35 | Pending |
 | AWRD-09 | Phase 35 | Pending |
-| REG-01 | Phase 32 | Pending |
-| REG-02 | Phase 32 | Pending |
-| REG-03 | Phase 32 | Pending |
-| REG-04 | Phase 32 | Pending |
-| REG-05 | Phase 32 | Pending |
-| REG-06 | Phase 32 | Pending |
-| REG-07 | Phase 32 | Pending |
-| REG-08 | Phase 32 | Pending |
+| REG-01 | Phase 32 | Complete |
+| REG-02 | Phase 32 | Complete |
+| REG-03 | Phase 32 | Complete |
+| REG-04 | Phase 32 | Complete |
+| REG-05 | Phase 32 | Complete |
+| REG-06 | Phase 32 | Complete |
+| REG-07 | Phase 32 | Complete |
+| REG-08 | Phase 32 | Complete |
 | COMP-01 | Phase 37 | Pending |
 | COMP-02 | Phase 37 | Pending |
 | COMP-03 | Phase 37 | Pending |

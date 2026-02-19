@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v4.0 MedBid Marketplace -- Phase 32 (Foundation Schema & Registration)
+**Current focus:** v4.0 MedBid Marketplace — Phase 33 (Event Posting & Discovery)
 
 ## Current Position
 
-Phase: 32 of 47 (Foundation Schema & Registration)
-Plan: 4 of 4 in current phase (checkpoint pending)
-Status: In progress (checkpoint pending for 32-04)
-Last activity: 2026-02-19 -- Completed 32-04-PLAN.md auto tasks (Stripe Connect company onboarding)
+Phase: 33 of 47 (Event Posting & Discovery)
+Plan: 0 of 3 in current phase
+Status: Ready to plan
+Last activity: 2026-02-19 — Phase 32 complete (4 plans, 5/5 must-haves verified)
 
 Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [███░░░░░░░] v4.0 15% | [░░░░░░░░░░] v5.0 0%
 
@@ -60,7 +60,7 @@ Recent decisions affecting current work:
 - Configure external services for production deployment (Stripe, Google Maps, Resend, webhooks, pg_cron, Vault) -- carried from v1.1
 - Obtain DPA template + solicitor review before first org onboarding (non-code blocker for v3.0 launch)
 - **Configure Vercel wildcard `*.sitemedic.co.uk` and DNS CNAME** -- checkpoint from 26-01; 72h propagation
-- **Apply Supabase migrations (132, 133, 134, 135) to production** -- verified correct, ready to apply
+- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142) to production** -- verified correct, ready to apply
 - **Add `NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.co.uk` to Vercel env vars** -- needed for production subdomain routing
 - **Create Stripe Products/Prices and register billing webhook** -- checkpoint from 25-01
 - **CQC legal opinion required** -- must determine if marketplace model requires CQC registration before launch
@@ -80,5 +80,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: 32-04-PLAN.md checkpoint (human verification of Stripe Connect onboarding flow)
+Stopped at: Phase 32 complete -- ready to plan Phase 33
 Resume file: None

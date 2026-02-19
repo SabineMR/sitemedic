@@ -45,7 +45,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 
 **Milestone Goal:** Add an RFQ marketplace to SiteMedic where UK clients post events needing medical cover, verified medics submit detailed quotes, clients award the job with a deposit payment, and SiteMedic takes commission from the medic's side. Awarded quotes auto-create bookings that flow into existing timesheets, payouts, and compliance reporting. Free to sign up, free to quote at launch.
 
-- [ ] **Phase 32: Foundation Schema & Registration** - Database tables, RLS policies, race-condition prevention, and CQC-registered company/client registration with verification
+- [x] **Phase 32: Foundation Schema & Registration** - Database tables, RLS policies, race-condition prevention, and CQC-registered company/client registration with verification
 - [ ] **Phase 33: Event Posting & Discovery** - Clients create event listings, medics browse and filter by location/qualifications
 - [ ] **Phase 34: Quote Submission & Comparison** - Medics submit priced quotes with breakdowns, clients compare anonymised profiles
 - [ ] **Phase 35: Award Flow & Payment** - Client awards quote, deposit collected, booking auto-created, remainder charged after event, commission split, payouts
@@ -82,10 +82,10 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 **Plans**: 4 plans
 
 Plans:
-- [ ] 32-01-PLAN.md — Marketplace database schema (marketplace_companies, compliance_documents, medic_commitments tables, RLS policies, EXCLUSION constraints, storage bucket, TypeScript types, CQC client)
-- [ ] 32-02-PLAN.md — Company registration wizard and client signup (4-step wizard, Zustand store, CQC verification API, document upload, registration API, lightweight client marketplace registration)
-- [ ] 32-03-PLAN.md — Admin verification queue and compliance monitoring (admin queue UI, approve/reject/request-info, CQC daily check Edge Function, document expiry auto-suspension)
-- [ ] 32-04-PLAN.md — Stripe Connect onboarding for marketplace companies (company Express account, onboarding link, callback page)
+- [x] 32-01-PLAN.md — Marketplace database schema (marketplace_companies, compliance_documents, medic_commitments tables, RLS policies, EXCLUSION constraints, storage bucket, TypeScript types, CQC client)
+- [x] 32-02-PLAN.md — Company registration wizard and client signup (4-step wizard, Zustand store, CQC verification API, document upload, registration API, lightweight client marketplace registration)
+- [x] 32-03-PLAN.md — Admin verification queue and compliance monitoring (admin queue UI, approve/reject/request-info, CQC daily check Edge Function, document expiry auto-suspension)
+- [x] 32-04-PLAN.md — Stripe Connect onboarding for marketplace companies (company Express account, onboarding link, callback page)
 
 ### Phase 33: Event Posting & Discovery
 **Goal**: Clients can post events needing medical cover with full details, and verified medics can browse, search, and filter events that match their qualifications and location
@@ -356,7 +356,7 @@ Plans:
 | 29. Org Onboarding Flow | v3.0 | 5/5 | Complete | 2026-02-18 |
 | 30. Subscription Management & Feature Gating | v3.0 | 5/5 | Complete | 2026-02-20 |
 | 31. Branding Settings UI | v3.0 | 2/2 | Complete | 2026-02-19 |
-| 32. Foundation Schema & Registration | v4.0 | 0/4 | Planned | - |
+| 32. Foundation Schema & Registration | v4.0 | 4/4 | Complete | 2026-02-19 |
 | 33. Event Posting & Discovery | v4.0 | 0/3 | Not started | - |
 | 34. Quote Submission & Comparison | v4.0 | 0/3 | Not started | - |
 | 35. Award Flow & Payment | v4.0 | 0/4 | Not started | - |
