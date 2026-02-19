@@ -44,7 +44,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 
 **Milestone Goal:** Add an RFQ marketplace to SiteMedic where UK clients post events needing medical cover, verified medics submit detailed quotes, clients award the job with a deposit payment, and SiteMedic takes commission from the medic's side. Awarded quotes auto-create bookings that flow into existing timesheets, payouts, and compliance reporting. Free to sign up, free to quote at launch.
 
-- [ ] **Phase 32: Foundation Schema & Registration** - Database tables, RLS policies, race-condition prevention, and medic/client registration with verification
+- [ ] **Phase 32: Foundation Schema & Registration** - Database tables, RLS policies, race-condition prevention, and CQC-registered company/client registration with verification
 - [ ] **Phase 33: Event Posting & Discovery** - Clients create event listings, medics browse and filter by location/qualifications
 - [ ] **Phase 34: Quote Submission & Comparison** - Medics submit priced quotes with breakdowns, clients compare anonymised profiles
 - [ ] **Phase 35: Award Flow & Payment** - Client awards quote, deposit collected, booking auto-created, remainder charged after event, commission split, payouts
@@ -56,20 +56,20 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 ## Phase Details
 
 ### Phase 32: Foundation Schema & Registration
-**Goal**: Medics and clients can register on the marketplace, medics can upload qualifications for verification, and platform admin can approve/reject registrations — all on a database foundation with cross-org RLS and race-condition prevention
+**Goal**: CQC-registered medical companies and clients can register on the marketplace, companies can upload compliance documents for verification, and platform admin can approve/reject registrations — all on a database foundation with marketplace-scoped RLS and race-condition prevention
 **Depends on**: Phase 31 (v3.0 complete)
 **Requirements**: REG-01, REG-02, REG-03, REG-04, REG-05, REG-06, REG-07, REG-08
 **Success Criteria** (what must be TRUE):
-  1. An individual medic can register with name, qualifications, insurance, location, and experience — and browse events immediately (but cannot quote until verified)
-  2. A medic company can register with company name, insurance, and admin user — and add individual medics to their roster later
-  3. Platform admin sees a verification queue with uploaded documents and can approve, reject, or request more information — approved medics get a "verified" badge
-  4. When a medic's certificate expires, their quoting ability is suspended and they receive notification to upload updated documents
-  5. Approved medics are guided through Stripe Connect Express onboarding so they can receive payouts
+  1. A CQC-registered company can register via a multi-step wizard (company details, CQC verification, document upload, Stripe Connect) — and browse events immediately but cannot quote until admin-verified
+  2. An existing SiteMedic org can register on the marketplace and link to their existing account (shared login, company info carries over) — bidirectional crossover via org_id
+  3. Platform admin sees a verification queue with uploaded compliance documents and can approve, reject, or request more information — approved companies display a "verified" badge on their marketplace profile
+  4. When a company's required compliance documents (insurance, DBS) expire or their CQC registration status changes, the company is automatically suspended from quoting and receives an email notification
+  5. Approved companies are guided through Stripe Connect Express onboarding (business_type='company') so they can receive payouts
 **Plans**: 4 plans
 
 Plans:
 - [ ] 32-01-PLAN.md — Marketplace database schema (marketplace_companies, compliance_documents, medic_commitments tables, RLS policies, EXCLUSION constraints, storage bucket, TypeScript types, CQC client)
-- [ ] 32-02-PLAN.md — Company registration wizard and client signup (4-step wizard, Zustand store, CQC verification API, document upload, registration API)
+- [ ] 32-02-PLAN.md — Company registration wizard and client signup (4-step wizard, Zustand store, CQC verification API, document upload, registration API, lightweight client marketplace registration)
 - [ ] 32-03-PLAN.md — Admin verification queue and compliance monitoring (admin queue UI, approve/reject/request-info, CQC daily check Edge Function, document expiry auto-suspension)
 - [ ] 32-04-PLAN.md — Stripe Connect onboarding for marketplace companies (company Express account, onboarding link, callback page)
 
