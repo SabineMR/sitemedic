@@ -42,8 +42,14 @@ export async function GET(_request: NextRequest) {
       });
     }
     return NextResponse.json(data);
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  } catch (err) {
+    console.error('GET /api/admin/branding error:', err);
+    const message = err instanceof Error ? err.message : '';
+    const isAuthError = message.includes('org') || message.includes('auth') || message.includes('Unauthorized');
+    return NextResponse.json(
+      { error: isAuthError ? 'Unauthorized' : 'Internal server error' },
+      { status: isAuthError ? 401 : 500 }
+    );
   }
 }
 
@@ -107,7 +113,13 @@ export async function PUT(request: NextRequest) {
     }
 
     return NextResponse.json(data);
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  } catch (err) {
+    console.error('PUT /api/admin/branding error:', err);
+    const message = err instanceof Error ? err.message : '';
+    const isAuthError = message.includes('org') || message.includes('auth') || message.includes('Unauthorized');
+    return NextResponse.json(
+      { error: isAuthError ? 'Unauthorized' : 'Internal server error' },
+      { status: isAuthError ? 401 : 500 }
+    );
   }
 }

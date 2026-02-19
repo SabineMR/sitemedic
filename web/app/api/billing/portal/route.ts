@@ -52,7 +52,13 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ url: session.url });
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  } catch (err) {
+    console.error('POST /api/billing/portal error:', err);
+    const message = err instanceof Error ? err.message : '';
+    const isAuthError = message.includes('org') || message.includes('auth') || message.includes('Unauthorized');
+    return NextResponse.json(
+      { error: isAuthError ? 'Unauthorized' : 'Internal server error' },
+      { status: isAuthError ? 401 : 500 }
+    );
   }
 }
