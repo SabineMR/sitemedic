@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
       if (stripeError) {
         console.error('Error creating Stripe Express account:', stripeError);
         return NextResponse.json(
-          { error: 'Failed to create Stripe account', details: stripeError.message },
+          { error: 'Failed to create Stripe account' },
           { status: 500 }
         );
       }
@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Error in IR35 assessment API:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

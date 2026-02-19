@@ -236,7 +236,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Error in invoice generation:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

@@ -53,7 +53,7 @@ export async function GET(
     if (error || !booking) {
       console.error('❌ Failed to fetch booking:', error);
       return NextResponse.json(
-        { error: 'Booking not found', details: error?.message },
+        { error: 'Booking not found' },
         { status: 404 }
       );
     }
@@ -104,7 +104,7 @@ export async function GET(
   } catch (error) {
     console.error('❌ Booking detail error:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

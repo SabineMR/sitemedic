@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     if (parentError || !parentBooking) {
       console.error('❌ Failed to fetch parent booking:', parentError);
       return NextResponse.json(
-        { error: 'Parent booking not found', details: parentError?.message },
+        { error: 'Parent booking not found' },
         { status: 404 }
       );
     }
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
     if (insertError) {
       console.error('❌ Failed to create recurring bookings:', insertError);
       return NextResponse.json(
-        { error: 'Failed to create recurring bookings', details: insertError.message },
+        { error: 'Failed to create recurring bookings' },
         { status: 500 }
       );
     }
@@ -138,7 +138,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('❌ Recurring bookings error:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
