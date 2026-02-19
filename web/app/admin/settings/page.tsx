@@ -507,100 +507,102 @@ export default function SettingsPage() {
             <Palette className="w-5 h-5 text-pink-400" />
             Branding
           </h2>
-          <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 shadow-2xl p-6 space-y-5">
-            {brandingLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
-                <span className="ml-3 text-gray-400 text-sm">Loading branding...</span>
-              </div>
-            ) : (
-              <>
-                <p className="text-sm text-gray-400">
-                  Customise your organisation&apos;s branding for white-label portals, PDFs, and emails.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Company Display Name
-                    </label>
-                    <input
-                      type="text"
-                      value={brandCompanyName}
-                      onChange={(e) => setBrandCompanyName(e.target.value)}
-                      placeholder="Your Company Name"
-                      className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Shown on branded documents and client-facing pages.</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Primary Brand Colour
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        value={brandColor}
-                        onChange={(e) => setBrandColor(e.target.value)}
-                        className="w-10 h-10 rounded-lg border border-gray-700 bg-transparent cursor-pointer"
-                      />
+          <TierGate feature="white_label" tier={subscriptionTier as SubscriptionTier | null} upgradeMessage="Upgrade to the Growth plan to customise your portal branding, logo, and colours.">
+            <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 shadow-2xl p-6 space-y-5">
+              {brandingLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+                  <span className="ml-3 text-gray-400 text-sm">Loading branding...</span>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-400">
+                    Customise your organisation&apos;s branding for white-label portals, PDFs, and emails.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Company Display Name
+                      </label>
                       <input
                         type="text"
-                        value={brandColor}
-                        onChange={(e) => setBrandColor(e.target.value)}
-                        placeholder="#2563EB"
-                        pattern="^#[0-9A-Fa-f]{6}$"
-                        className="w-32 bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm font-mono placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={brandCompanyName}
+                        onChange={(e) => setBrandCompanyName(e.target.value)}
+                        placeholder="Your Company Name"
+                        className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
-                      <div
-                        className="w-10 h-10 rounded-lg border border-gray-700"
-                        style={{ backgroundColor: brandColor }}
+                      <p className="text-xs text-gray-500 mt-1">Shown on branded documents and client-facing pages.</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Primary Brand Colour
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={brandColor}
+                          onChange={(e) => setBrandColor(e.target.value)}
+                          className="w-10 h-10 rounded-lg border border-gray-700 bg-transparent cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={brandColor}
+                          onChange={(e) => setBrandColor(e.target.value)}
+                          placeholder="#2563EB"
+                          pattern="^#[0-9A-Fa-f]{6}$"
+                          className="w-32 bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm font-mono placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                        <div
+                          className="w-10 h-10 rounded-lg border border-gray-700"
+                          style={{ backgroundColor: brandColor }}
+                        />
+                      </div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Tagline
+                      </label>
+                      <input
+                        type="text"
+                        value={brandTagline}
+                        onChange={(e) => setBrandTagline(e.target.value)}
+                        placeholder="e.g. Professional Medical Staffing Solutions"
+                        className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
+                      <p className="text-xs text-gray-500 mt-1">Displayed below your logo on the white-label portal.</p>
                     </div>
                   </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Tagline
-                    </label>
-                    <input
-                      type="text"
-                      value={brandTagline}
-                      onChange={(e) => setBrandTagline(e.target.value)}
-                      placeholder="e.g. Professional Medical Staffing Solutions"
-                      className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Displayed below your logo on the white-label portal.</p>
-                  </div>
-                </div>
 
-                {/* Logo info */}
-                <div className="flex items-start gap-3 px-4 py-3 bg-gray-700/20 border border-gray-700/40 rounded-xl">
-                  <Upload className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div className="text-xs text-gray-400">
-                    <span className="text-gray-200 font-medium">Logo upload</span>
-                    {' '}— {brandLogoPath ? `Current: ${brandLogoPath}` : 'No logo uploaded yet.'}
-                    {' '}Logo upload via file picker coming soon.
+                  {/* Logo info */}
+                  <div className="flex items-start gap-3 px-4 py-3 bg-gray-700/20 border border-gray-700/40 rounded-xl">
+                    <Upload className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div className="text-xs text-gray-400">
+                      <span className="text-gray-200 font-medium">Logo upload</span>
+                      {' '}— {brandLogoPath ? `Current: ${brandLogoPath}` : 'No logo uploaded yet.'}
+                      {' '}Logo upload via file picker coming soon.
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex justify-end pt-2">
-                  <button
-                    onClick={handleSaveBranding}
-                    disabled={savingBranding}
-                    className="px-5 py-2.5 bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-500 hover:to-pink-600 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-2"
-                  >
-                    {savingBranding ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      'Save Branding'
-                    )}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+                  <div className="flex justify-end pt-2">
+                    <button
+                      onClick={handleSaveBranding}
+                      disabled={savingBranding}
+                      className="px-5 py-2.5 bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-500 hover:to-pink-600 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-2"
+                    >
+                      {savingBranding ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Branding'
+                      )}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </TierGate>
         </section>
 
         {/* Industry & Verticals */}
