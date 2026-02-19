@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-19 (v5.0 Internal Comms & Document Management milestone planned)
+**Last Updated**: 2026-02-19 (Phase 33 Event Posting & Discovery complete)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -140,6 +140,47 @@ A Request-for-Quotes (RFQ) marketplace being added to SiteMedic where UK clients
   - Post-registration: prominent "Start Stripe Onboarding" button with redirect to Stripe hosted flow
   - "Skip for now" option (onboarding can be completed later from company dashboard)
 - Existing individual medic Stripe Connect flow (`create_express_account`) remains unchanged
+
+### Implementation Progress (Phase 33 -- Event Posting & Discovery) ✅ VERIFIED
+
+**Plan 01 -- Database Schema, Types, Schemas, API Routes (Complete):**
+- `marketplace_events` table with PostGIS GEOGRAPHY column for radius-based spatial queries, status workflow (draft → open → closed/cancelled/awarded), quote tracking (`has_quotes`, `quote_count`), equipment JSONB, and budget range
+- `event_days` table for multi-day event support with date, start/end times, and sort_order
+- `event_staffing_requirements` table with role enum, quantity, optional per-day assignment, and notes
+- 9 RLS policies: poster manage own, verified companies browse open, platform admin full access (3 per table)
+- 10 indexes including GIST spatial index on `location_coordinates` for PostGIS `ST_DWithin` queries
+- TypeScript types (`MarketplaceEvent`, `EventDay`, `EventStaffingRequirement`, `MarketplaceEventWithDetails`)
+- Label maps for event types, staffing roles, equipment types, status, indoor/outdoor
+- Zod schemas: `basicInfoSchema`, `schedulingSchema` (UK postcode regex), `staffingSchema`, `eventFormSchema`, `eventUpdatePreQuotesSchema`, `eventUpdatePostQuotesSchema`
+- POST `/api/marketplace/events` — create event with days, staffing, equipment, draft support, PostGIS coordinate setting
+- GET `/api/marketplace/events` — list with filters (status, type, role, lat/lng/radius, pagination), PostGIS spatial fallback
+- GET `/api/marketplace/events/[id]` — single event with nested relations
+- PUT `/api/marketplace/events/[id]` — EVNT-05 edit restrictions: full update pre-quotes, description-only post-quotes
+- POST `/api/marketplace/events/[id]/close` — close or cancel with ownership verification and status validation
+
+**Plan 02 -- Event Posting Wizard & Client Management (Complete):**
+- Zustand store (`useEventPostingStore`) managing 4-step wizard state with `loadDraft` for resuming drafts
+- Step 1 (Basic Info): event name, type dropdown, description, special requirements, indoor/outdoor, attendance
+- Step 2 (Schedule & Location): dynamic event days (add/remove), postcode, Google Places address, what3words, display location, quote deadline
+- Step 3 (Staffing & Equipment): dynamic staffing requirements with role/qty/day-assignment, equipment checklist with notes, budget range with info nudge
+- Step 4 (Review): full summary with per-section Edit links back to relevant step
+- Create Event Page: wizard container with step indicator, Zod validation on step transition, Save as Draft / Publish buttons, draft loading from URL params
+- My Events Dashboard: event list with status badges (draft/open/closed/cancelled/awarded), filters by status and search, per-status action menus (edit/publish/delete for drafts, edit/close/cancel for open, view for archived)
+- Edit Event Page: dual mode — full wizard for pre-quote events, restricted description+special requirements form for post-quote events (EVNT-05 enforced)
+- Confirmation dialogs for destructive actions (close/cancel)
+
+**Plan 03 -- Event Discovery for Medics (Complete):**
+- React Query hooks: `useMarketplaceEvents` (full filter params), `useMarketplaceEvent` (single event)
+- Browse Events page with list/map toggle, auto-detection of company owner vs individual medic
+- EventListRow: dense 12-column grid showing event name + type badge, date range with multi-day count, staffing summary (truncated with +N more), budget range, approximate location with haversine distance, deadline countdown with urgency highlighting, quote count
+- EventFilters with dual search modes:
+  - Company owners: Google Places city autocomplete + UK region dropdown (12 regions with preset coordinates)
+  - Individual medics: "Near me" radius search (10/25/50/75/100/150 miles) from profile location
+  - Common: event type, role needed, date range, clear filters
+- EventMap: Google Maps with event markers, InfoWindow popups (name, type, dates, "View Details" link), search radius circle overlay, auto-fit bounds
+- Event Detail Page: full event info with approximate location ONLY (`location_display`), "Exact address provided after you submit a quote" note, schedule table, staffing requirements table, equipment list, budget display
+- Quote button disabled with Phase 34 placeholder text
+- Breadcrumb navigation (Browse Events > Event Name)
 
 ### Planning Files
 

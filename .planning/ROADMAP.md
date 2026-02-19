@@ -46,7 +46,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 **Milestone Goal:** Add an RFQ marketplace to SiteMedic where UK clients post events needing medical cover, verified medics submit detailed quotes, clients award the job with a deposit payment, and SiteMedic takes commission from the medic's side. Awarded quotes auto-create bookings that flow into existing timesheets, payouts, and compliance reporting. Free to sign up, free to quote at launch.
 
 - [x] **Phase 32: Foundation Schema & Registration** - Database tables, RLS policies, race-condition prevention, and CQC-registered company/client registration with verification
-- [ ] **Phase 33: Event Posting & Discovery** - Clients create event listings, medics browse and filter by location/qualifications
+- [x] **Phase 33: Event Posting & Discovery** - Clients create event listings, medics browse and filter by location/qualifications
 - [ ] **Phase 34: Quote Submission & Comparison** - Medics submit priced quotes with breakdowns, clients compare anonymised profiles
 - [ ] **Phase 35: Award Flow & Payment** - Client awards quote, deposit collected, booking auto-created, remainder charged after event, commission split, payouts
 - [ ] **Phase 36: Ratings, Messaging & Disputes** - Bidirectional ratings, per-quote messaging, cancellation policy, dispute resolution
@@ -100,9 +100,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 33-01-PLAN.md — Event database schema, TypeScript types, Zod schemas, and CRUD API routes (migration 145: marketplace_events, event_days, event_staffing_requirements; PostGIS for radius queries; RLS; event types + schemas + API routes)
-- [ ] 33-02-PLAN.md — Event posting wizard and client management (Zustand store, 4-step wizard with Google Places + what3words + per-day staffing + equipment checklist, My Events dashboard, edit page with pre/post-quote restrictions)
-- [ ] 33-03-PLAN.md — Event discovery for medics (browse page with list/map toggle, dual search modes for company owners vs individual medics, filters by type/date/location/qualification, event detail page with approximate location)
+- [x] 33-01-PLAN.md — Event database schema, TypeScript types, Zod schemas, and CRUD API routes (migration 145: marketplace_events, event_days, event_staffing_requirements; PostGIS for radius queries; RLS; event types + schemas + API routes)
+- [x] 33-02-PLAN.md — Event posting wizard and client management (Zustand store, 4-step wizard with Google Places + what3words + per-day staffing + equipment checklist, My Events dashboard, edit page with pre/post-quote restrictions)
+- [x] 33-03-PLAN.md — Event discovery for medics (browse page with list/map toggle, dual search modes for company owners vs individual medics, filters by type/date/location/qualification, event detail page with approximate location)
 
 ### Phase 34: Quote Submission & Comparison
 **Goal**: Verified medics can submit detailed quotes on open events, and clients can compare quotes with anonymised medic profiles — no contact details visible until award and deposit
