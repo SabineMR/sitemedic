@@ -36,8 +36,16 @@ An internal organization communication and document management system for core S
 - **Single Realtime channel per user**: Prevents WebSocket channel explosion (critical pitfall avoided)
 - **Offline-first**: WatermelonDB models for conversations + messages with dedup via client-generated UUID
 - **Expiry pattern**: Reuses existing cert expiry pg_cron + Edge Function pattern
-- **New tables**: `conversations`, `conversation_participants`, `messages`, `medic_documents`, `document_expiry_reminders`, `bookmarks`
+- **New tables (Phase 40 - foundation created)**: `conversations`, `messages`, `message_recipients`, `conversation_read_status`, `document_categories`, `documents`, `document_versions`
+- **Denormalized org_id**: Child tables (messages, message_recipients, document_versions) have denormalized org_id to avoid JOIN-based RLS performance issues
+- **Default document categories**: Insurance, DBS, Qualification, ID, Other -- auto-seeded per org with trigger for new orgs
 - **New storage bucket**: `medic-documents` (private, 10MB, PDF/JPEG/PNG/DOCX)
+
+### Database Migration Status
+
+| Migration | Content | Status |
+|-----------|---------|--------|
+| `143_comms_docs_schema.sql` | 7 tables, 35 RLS policies, 18 indexes, 5 triggers, category seeding | Created (not yet applied to production) |
 
 ### Planning Files
 
