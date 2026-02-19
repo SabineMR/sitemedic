@@ -6,15 +6,20 @@
  *
  * Phase 29-04: Added pending activation queue at the top.
  * Shows orgs that have paid but not yet been activated by platform admin.
+ *
+ * Phase 31-02: Added expandable branding override section per org card.
+ * Platform admin can configure branding on behalf of any org.
  */
 
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Building2, Users, Calendar, TrendingUp, Plus, Search, AlertTriangle, ExternalLink, Loader2, CheckCircle } from 'lucide-react';
+import { Building2, Users, Calendar, TrendingUp, Plus, Search, AlertTriangle, ExternalLink, Loader2, CheckCircle, Palette } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { BrandingForm } from '@/app/(dashboard)/admin/settings/branding/components/branding-form';
+import { BrandingPreview } from '@/app/(dashboard)/admin/settings/branding/components/branding-preview';
 
 interface Organization {
   id: string;
@@ -96,6 +101,22 @@ export default function PlatformOrganizationsPage() {
   // Per-org activation state
   const [slugInputs, setSlugInputs] = useState<Record<string, string>>({});
   const [activatingIds, setActivatingIds] = useState<Set<string>>(new Set());
+
+  // Branding override state (31-02)
+  const [expandedBrandingId, setExpandedBrandingId] = useState<string | null>(null);
+  const [brandingData, setBrandingData] = useState<Record<string, any>>({});
+  const [brandingLoading, setBrandingLoading] = useState<string | null>(null);
+  const [previewBranding, setPreviewBranding] = useState<{
+    companyName: string;
+    primaryColour: string;
+    tagline: string;
+    logoUrl: string;
+  }>({
+    companyName: '',
+    primaryColour: '#2563eb',
+    tagline: '',
+    logoUrl: '',
+  });
 
   // -------------------------------------------------------------------
   // Data fetching
@@ -226,6 +247,58 @@ export default function PlatformOrganizationsPage() {
         next.delete(orgId);
         return next;
       });
+    }
+  }
+
+  // -------------------------------------------------------------------
+  // Branding toggle handler (31-02)
+  // -------------------------------------------------------------------
+
+  async function handleToggleBranding(orgId: string) {
+    // Collapse if already expanded
+    if (expandedBrandingId === orgId) {
+      setExpandedBrandingId(null);
+      return;
+    }
+
+    setExpandedBrandingId(orgId);
+
+    // Use cached data if available
+    if (brandingData[orgId]) {
+      const cached = brandingData[orgId];
+      setPreviewBranding({
+        companyName: cached.company_name || 'Your Company',
+        primaryColour: cached.primary_colour_hex || '#2563eb',
+        tagline: cached.tagline || '',
+        logoUrl: cached.logo_path
+          ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/org-logos/${cached.logo_path}`
+          : '',
+      });
+      return;
+    }
+
+    // Fetch branding data
+    setBrandingLoading(orgId);
+    try {
+      const res = await fetch(`/api/platform/organizations/${orgId}/branding`);
+      if (!res.ok) throw new Error('Failed to fetch branding');
+      const data = await res.json();
+
+      setBrandingData((prev) => ({ ...prev, [orgId]: data }));
+      setPreviewBranding({
+        companyName: data.company_name || 'Your Company',
+        primaryColour: data.primary_colour_hex || '#2563eb',
+        tagline: data.tagline || '',
+        logoUrl: data.logo_path
+          ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/org-logos/${data.logo_path}`
+          : '',
+      });
+    } catch (err) {
+      console.error('Failed to fetch branding:', err);
+      toast.error('Failed to load branding data');
+      setExpandedBrandingId(null);
+    } finally {
+      setBrandingLoading(null);
     }
   }
 
@@ -445,7 +518,11 @@ export default function PlatformOrganizationsPage() {
         {filteredOrgs.map((org) => (
           <div
             key={org.id}
-            className="bg-purple-800/30 backdrop-blur-sm border border-purple-700/50 rounded-2xl p-6 hover:bg-purple-800/40 transition-all duration-200"
+            className={`bg-purple-800/30 backdrop-blur-sm border border-purple-700/50 rounded-2xl p-6 transition-all duration-200 ${
+              expandedBrandingId === org.id
+                ? 'lg:col-span-2 bg-purple-800/40'
+                : 'hover:bg-purple-800/40'
+            }`}
           >
             {/* Organization Header */}
             <div className="flex items-start justify-between mb-4">
@@ -458,9 +535,22 @@ export default function PlatformOrganizationsPage() {
                   <p className="text-sm text-purple-300">@{org.slug}</p>
                 </div>
               </div>
-              <span className="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-medium rounded-full">
-                Active
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleToggleBranding(org.id)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
+                    expandedBrandingId === org.id
+                      ? 'bg-purple-500/30 text-purple-200 border-purple-500/50'
+                      : 'text-purple-300 hover:bg-purple-500/20 border-purple-500/30'
+                  }`}
+                >
+                  <Palette className="w-3.5 h-3.5" />
+                  Branding
+                </button>
+                <span className="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-medium rounded-full">
+                  Active
+                </span>
+              </div>
             </div>
 
             {/* Metrics */}
@@ -484,7 +574,7 @@ export default function PlatformOrganizationsPage() {
                   <TrendingUp className="w-4 h-4 text-purple-400" />
                   <p className="text-xs text-purple-300">Revenue</p>
                 </div>
-                <p className="text-xl font-bold text-white">£{org.revenue?.toLocaleString()}</p>
+                <p className="text-xl font-bold text-white">{org.revenue?.toLocaleString()}</p>
               </div>
             </div>
 
@@ -498,6 +588,35 @@ export default function PlatformOrganizationsPage() {
                 })}
               </p>
             </div>
+
+            {/* Expandable Branding Section (31-02) */}
+            {expandedBrandingId === org.id && (
+              <div className="border-t border-gray-700/50 pt-4 mt-4">
+                {brandingLoading === org.id ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-purple-400" />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="text-sm font-semibold text-purple-300 mb-4">
+                        Branding Override
+                      </h4>
+                      <BrandingForm
+                        orgId={org.id}
+                        apiEndpoint={`/api/platform/organizations/${org.id}/branding`}
+                        logoUploadEndpoint={`/api/platform/organizations/${org.id}/branding`}
+                        initialData={brandingData[org.id] || undefined}
+                        onPreviewChange={setPreviewBranding}
+                      />
+                    </div>
+                    <div className="xl:sticky xl:top-8 self-start">
+                      <BrandingPreview branding={previewBranding} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>
