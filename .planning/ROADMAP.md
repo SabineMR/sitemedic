@@ -233,9 +233,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 41-01: Conversation list page (web route, fetch conversations with last message + unread count, new conversation button, medic/admin participant display)
-- [ ] 41-02: Message thread view (web route, fetch messages for conversation, send message form, scroll-to-bottom, mark-as-read on open)
-- [ ] 41-03: New conversation flow (admin: pick medic from org roster; medic: auto-target org admin; create conversation record, redirect to thread)
+- [ ] 41-01-PLAN.md — Conversation list page (query functions, navigation, header unread badge, two-panel layout, conversation rows with unread counts)
+- [ ] 41-02-PLAN.md — Message thread view (dynamic route, message display, send API, mark-as-read, scroll-to-bottom, Enter-to-send input)
+- [ ] 41-03-PLAN.md — New conversation flow (create conversation API with duplicate prevention, admin medic picker dialog, medic "Message Admin" button)
 
 ### Phase 42: iOS Messaging & Offline
 **Goal**: Messaging works on the iOS app with the same functionality as web, messages sync between platforms, and medics can view cached messages and queue outbound messages when offline
