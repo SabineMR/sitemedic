@@ -48,6 +48,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 - [x] **Phase 32: Foundation Schema & Registration** - Database tables, RLS policies, race-condition prevention, and CQC-registered company/client registration with verification
 - [x] **Phase 33: Event Posting & Discovery** - Clients create event listings, medics browse and filter by location/qualifications
 - [ ] **Phase 34: Quote Submission & Comparison** - Companies submit priced quotes with breakdowns, clients compare anonymised company profiles (companies only)
+- [ ] **Phase 34.1: Self-Procured Jobs** (INSERTED) - Companies with SiteMedic subscriptions create and manage jobs they sourced themselves, with zero commission, full wizard entry, Stripe payment flow, and complete feature parity with marketplace jobs
 - [ ] **Phase 35: Award Flow & Payment** - Client awards quote, deposit collected, booking auto-created, remainder charged after event, commission split, payouts
 - [ ] **Phase 36: Ratings, Messaging & Disputes** - Bidirectional ratings, per-quote messaging, cancellation policy, dispute resolution
 - [ ] **Phase 37: Company Accounts** - Company roster management, medic assignment to events, company profile display
@@ -120,6 +121,23 @@ Plans:
 - [ ] 34-01-PLAN.md — Database schema, types, validation, API routes, Zustand store, and quote submission form (migration 146: marketplace_quotes table with RLS; quote types + Zod schemas + minimum rates; submit/save-draft/list/detail API routes; Zustand form store; multi-section submission form with pricing breakdown, staffing plan, cover letter, draft auto-save)
 - [ ] 34-02-PLAN.md — Quote browsing and comparison (best-value scoring algorithm, anonymisation utility, ranked quote list with sort/filter, expandable detail rows, company profile page with access control)
 - [ ] 34-03-PLAN.md — Quote management (edit-in-place with revised badge, withdraw with confirmation, company My Quotes dashboard, deadline extension for event poster)
+
+### Phase 34.1: Self-Procured Jobs (INSERTED)
+**Goal**: Companies with a SiteMedic subscription can create and manage jobs they sourced themselves (outside the marketplace) alongside marketplace-awarded jobs — with full wizard entry, zero platform commission (subscription covers it), Stripe payment flow (deposit + remainder), and complete feature parity with marketplace jobs (timesheets, compliance reporting, payouts, ratings)
+**Depends on**: Phase 34 (quote/booking patterns established), Phase 37 (company roster for medic assignment)
+**Success Criteria** (what must be TRUE):
+  1. A company with an active SiteMedic subscription can create a self-procured job via a full wizard in the main SiteMedic dashboard (not the marketplace section) — with client details, event type, multi-day dates/times, location, staffing requirements, and agreed price
+  2. Self-procured jobs create bookings with `source='direct'` that flow into the same timesheet, payout, and compliance reporting pipeline as marketplace bookings — with 0% platform commission (100% to company)
+  3. The client pays through SiteMedic's Stripe checkout (deposit + remainder) and the company receives payouts via the existing Friday Stripe Connect pipeline
+  4. The SiteMedic platform dashboard shows both marketplace and self-procured jobs in a filterable view with source badges ("Marketplace" / "Direct"), while the marketplace dashboard shows only marketplace-sourced jobs
+  5. The client gets portal access to view job status, compliance reports, and payments — at admin level only (no access to individual medic details)
+  6. Full client records are created and stored (name, contact, address) as formal records in the system
+  7. Company can assign medics from their roster to self-procured jobs with the same availability checking as marketplace
+  8. Bidirectional ratings supported for self-procured jobs — client and company can rate each other
+**Plans**: TBD
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 34.1 to break down)
 
 ### Phase 35: Award Flow & Payment
 **Goal**: Clients can award their chosen quote, pay a deposit via Stripe, and the system auto-creates a SiteMedic booking — with the remainder auto-charged after event completion and the medic paid via the existing payout pipeline
@@ -335,7 +353,7 @@ Plans:
 
 ## Progress
 
-**Execution Order:** 01 → 01.5 → 02 → 03 → 04 → 04.5 → 04.6 → 05 → 05.5 → 06 → 06.5 → 07 → 07.5 → 08 → 09 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 18.5 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 27 → 28 → 29 → 30 → 31 → 32 → 33 → 34 → 35 → 36 → 37 → 38 → 39 → 40 → 41 → 42 → 43 → 44 → 45 → 46 → 47
+**Execution Order:** 01 → 01.5 → 02 → 03 → 04 → 04.5 → 04.6 → 05 → 05.5 → 06 → 06.5 → 07 → 07.5 → 08 → 09 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 18.5 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 27 → 28 → 29 → 30 → 31 → 32 → 33 → 34 → 34.1 → 35 → 36 → 37 → 38 → 39 → 40 → 41 → 42 → 43 → 44 → 45 → 46 → 47
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -359,6 +377,7 @@ Plans:
 | 32. Foundation Schema & Registration | v4.0 | 4/4 | Complete | 2026-02-19 |
 | 33. Event Posting & Discovery | v4.0 | 3/3 | Complete | 2026-02-19 |
 | 34. Quote Submission & Comparison | v4.0 | 0/3 | Planned | - |
+| 34.1. Self-Procured Jobs (INSERTED) | v4.0 | 0/TBD | Not started | - |
 | 35. Award Flow & Payment | v4.0 | 0/4 | Not started | - |
 | 36. Ratings, Messaging & Disputes | v4.0 | 0/3 | Not started | - |
 | 37. Company Accounts | v4.0 | 0/3 | Not started | - |

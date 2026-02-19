@@ -90,6 +90,10 @@ Recent decisions affecting current work:
 - CQC registration question is a non-code blocker -- requires legal counsel, cannot be resolved with technical work
 - FCA/PSD2 exemption needs formal confirmation before marketplace payments go live
 
+### Roadmap Evolution
+
+- Phase 34.1 inserted after Phase 34: Self-Procured Jobs (INSERTED) — Companies with SiteMedic subscriptions can create/manage jobs sourced outside the marketplace, with zero commission, full wizard, Stripe payment, and complete feature parity. Depends on Phase 34 + Phase 37 (roster).
+
 ### Planned Milestones
 
 - **v5.0 Internal Comms & Document Management** -- roadmap created 2026-02-19. 8 phases (40-47), 21 plans, 28 requirements. Org admin ↔ medic messaging with offline support, broadcast messaging, compliance document upload with expiry tracking. Execution after v4.0 completes.
