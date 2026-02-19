@@ -229,15 +229,16 @@ export async function updateSession(request: NextRequest) {
 
     if (orgId) {
       const isOnboardingRoute = request.nextUrl.pathname.startsWith('/onboarding');
+      const isSuspendedRoute = request.nextUrl.pathname.startsWith('/suspended');
       const isDashboardRoute = request.nextUrl.pathname.startsWith('/admin') ||
                                request.nextUrl.pathname.startsWith('/dashboard') ||
                                request.nextUrl.pathname.startsWith('/medic');
 
-      // Only query DB for dashboard or onboarding routes to avoid unnecessary calls
-      if (isDashboardRoute || isOnboardingRoute) {
+      // Only query DB for dashboard, onboarding, or suspended routes to avoid unnecessary calls
+      if (isDashboardRoute || isOnboardingRoute || isSuspendedRoute) {
         const { data: orgStatus } = await supabase
           .from('organizations')
-          .select('onboarding_completed')
+          .select('onboarding_completed, subscription_status')
           .eq('id', orgId)
           .single();
 
@@ -255,6 +256,16 @@ export async function updateSession(request: NextRequest) {
           const url = request.nextUrl.clone();
           url.pathname = '/admin';
           return NextResponse.redirect(url);
+        }
+
+        // Suspension check: redirect cancelled orgs to /suspended
+        // Only checks for 'cancelled' — NULL (legacy orgs) and 'active'/'past_due' pass through
+        if (orgStatus?.subscription_status === 'cancelled') {
+          if (!isSuspendedRoute) {
+            const url = request.nextUrl.clone();
+            url.pathname = '/suspended';
+            return NextResponse.redirect(url);
+          }
         }
       }
     }
