@@ -244,10 +244,11 @@ export default function QuoteBuilder({ onClose }: QuoteBuilderProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-      const data = await response.json();
-      if (!response.ok || !data.success) {
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
         setSubmitError(data.error || 'Something went wrong. Please try again.');
       } else {
+        const data = await response.json();
         setQuoteRef(data.quoteRef);
         setStep(4);
       }

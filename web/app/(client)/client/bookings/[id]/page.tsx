@@ -76,13 +76,14 @@ export default function ClientBookingDetailPage() {
         body: JSON.stringify({ reason: cancelReason || undefined }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
         toast.error(data.error || 'Failed to cancel booking');
         setCancelling(false);
         return;
       }
+
+      const data = await response.json();
 
       toast.success(
         data.refundAmount > 0

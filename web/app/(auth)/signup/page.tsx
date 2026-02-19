@@ -184,13 +184,14 @@ export default function SignupPage() {
         }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
         setError(data.error || 'Failed to create checkout session. Please try again.');
         setLoading(false);
         return;
       }
+
+      const data = await response.json();
 
       // Redirect to Stripe Checkout
       if (data.url) {
