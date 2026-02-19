@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireOrgId } from '@/lib/organizations/org-resolver';
+import { requireTier } from '@/lib/billing/require-tier';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,18 @@ export async function GET(_request: NextRequest) {
   try {
     const supabase = await createClient();
     const orgId = await requireOrgId();
+
+    try {
+      await requireTier('white_label');
+    } catch (err) {
+      if (err instanceof Error && err.message === 'TIER_INSUFFICIENT') {
+        return NextResponse.json(
+          { error: 'This feature requires the Growth plan or higher' },
+          { status: 403 }
+        );
+      }
+      throw err;
+    }
 
     const { data, error } = await supabase
       .from('org_branding')
@@ -38,6 +51,18 @@ export async function PUT(request: NextRequest) {
   try {
     const supabase = await createClient();
     const orgId = await requireOrgId();
+
+    try {
+      await requireTier('white_label');
+    } catch (err) {
+      if (err instanceof Error && err.message === 'TIER_INSUFFICIENT') {
+        return NextResponse.json(
+          { error: 'This feature requires the Growth plan or higher' },
+          { status: 403 }
+        );
+      }
+      throw err;
+    }
 
     let body: {
       company_name?: unknown;
