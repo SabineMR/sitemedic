@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 32 of 39 (Foundation Schema & Registration)
-Plan: 0 of 4 in current phase
-Status: Ready to plan
-Last activity: 2026-02-19 — v4.0 roadmap created (8 phases, 26 plans, 60 requirements mapped)
+Plan: 1 of 4 in current phase
+Status: In progress
+Last activity: 2026-02-19 — Completed 32-01-PLAN.md (marketplace foundation schema, types, CQC client)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [░░░░░░░░░░] v4.0 0%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [█░░░░░░░░░] v4.0 4%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 179 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0)
+- Total plans completed: 180 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 1 v4.0)
 - Average duration: 3.9 min
-- Total execution time: ~11.2 hours
+- Total execution time: ~11.3 hours
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 0/26 | - | - |
+| v4.0 | 8 | 1/26 | ~4 min | ~4 min |
 
 *Updated after each plan completion*
 
@@ -47,6 +47,8 @@ Recent decisions affecting current work:
 - [v4.0]: `bookings.source` column discriminates 'direct' vs 'marketplace' bookings
 - [v4.0]: PostgreSQL EXCLUSION constraints on medic_commitments for race condition prevention
 - [v4.0]: Company accounts deferred to Phase 37 (individual flow must work first)
+- [32-01]: Storage bucket folder convention `{company_id}/{document_type}/{filename}` with company-admin-scoped RLS
+- [32-01]: CQC client uses `cache: 'no-store'` (standard) instead of Next.js-specific `next: { revalidate: 0 }` for TypeScript strict compatibility
 
 ### Pending Todos
 
@@ -69,5 +71,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: v4.0 roadmap created -- ready to plan Phase 32
+Stopped at: Completed 32-01-PLAN.md (marketplace foundation schema + types + CQC client)
 Resume file: None
