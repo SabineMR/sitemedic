@@ -68,7 +68,7 @@ export default function TeamScreen() {
         // Query profiles (auth-linked users) and medics (roster) in parallel
         let profilesQuery = supabase
           .from('profiles')
-          .select('id, full_name, email, role, company_name')
+          .select('id, full_name, email, role')
           .eq('org_id', orgId)
           .order('full_name', { ascending: true });
         if (userId) {
@@ -92,7 +92,6 @@ export default function TeamScreen() {
           email: p.email,
           role: p.role,
           source: 'profiles' as const,
-          company_name: p.company_name ?? null,
         }));
 
         // Build set of auth user IDs already represented (profiles + current user)
@@ -121,10 +120,28 @@ export default function TeamScreen() {
         const team = combined.filter((m) => m.role !== 'site_manager');
         const managers = combined.filter((m) => m.role === 'site_manager');
 
-        // Fetch site assignments from bookings for site managers
+        // Fetch company_name + site assignments for site managers
         if (managers.length > 0) {
           const smIds = managers.map((m) => m.authUserId).filter(Boolean) as string[];
           if (smIds.length > 0) {
+            // company_name may not exist yet (migration 138) — gracefully degrade
+            try {
+              const { data: companyData } = await supabase
+                .from('profiles')
+                .select('id, company_name')
+                .in('id', smIds);
+              if (companyData) {
+                const companyMap = new Map(companyData.map((r: any) => [r.id, r.company_name]));
+                for (const mgr of managers) {
+                  if (mgr.authUserId && companyMap.has(mgr.authUserId)) {
+                    mgr.company_name = companyMap.get(mgr.authUserId) ?? null;
+                  }
+                }
+              }
+            } catch {
+              // Column doesn't exist yet — leave company_name as null
+            }
+
             const { data: assignments } = await supabase
               .from('bookings')
               .select('site_manager_id, site_name')

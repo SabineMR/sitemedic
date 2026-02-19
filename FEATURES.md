@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Team Screen: Separate Site Managers with Company & Site Info)
+**Last Updated**: 2026-02-18 (Sprint 15: Date Locale & Confirm Dialog Fixes)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -212,6 +212,32 @@ Phase 30 Plan 01 delivers the client-side and server-side building blocks for fe
 - **requireTier() pattern**: Pure utility (no NextResponse coupling) — API routes catch the error and return appropriate HTTP status
 - **NULL tier handling**: Both client and server paths default NULL to 'starter' (legacy org compatibility per Phase 24-05 decision)
 - **No database changes**: All components read existing `organizations.subscription_tier` column
+
+---
+
+## Previous Updates — Sprint 15: Date Locale Consistency & Confirm Dialog Replacement (2026-02-18)
+
+### Overview
+
+Sprint 15 of the gap analysis: fixes 5 components that called `toLocaleDateString()` without a locale (defaulting to the browser's locale rather than UK format), and replaces 2 uses of `window.confirm()` with inline two-step confirmation buttons that are more accessible and consistent with the app's design system.
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `web/components/admin/out-of-territory-approval.tsx` | Added `'en-GB'` locale to `toLocaleDateString()` call for booking dates |
+| `web/components/admin/medic-roster-table.tsx` | Added `'en-GB'` locale to `toLocaleDateString()` for unavailable-until dates |
+| `web/app/(dashboard)/admin/medics/onboarding/[id]/page.tsx` | Added `'en-GB'` locale to 2 `toLocaleDateString()` calls for payslip pay-period dates |
+| `web/app/admin/territories/territory-detail.tsx` | Added `'en-GB'` locale to `toLocaleDateString()` for booking shift dates |
+| `web/app/admin/territories/assignment-panel.tsx` | Added `'en-GB'` locale to `toLocaleDateString()` for unavailable-until dates |
+| `web/components/admin/payout-summary.tsx` | Replaced `window.confirm()` with two-step inline confirmation — first click sets `confirmingPayout` state turning button red with "Confirm — Process X Payouts?" text, second click executes. `onBlur` resets state. |
+| `web/components/contracts/template-manager.tsx` | Replaced `window.confirm()` with two-step inline confirmation — first click sets `confirmArchiveId` state turning Archive button to `variant="destructive"` with "Confirm Archive?" text, second click executes. `onBlur` resets state. |
+
+### Key Details
+
+- **UK locale requirement**: All dates in the app must use `toLocaleDateString('en-GB')` to ensure DD/MM/YYYY format — a US-locale browser would otherwise display MM/DD/YYYY which is dangerous for medical shift scheduling
+- **Two-step confirmation pattern**: Replaces browser-native `window.confirm()` which is unstyled, blocks the UI thread, and provides poor UX. The new pattern uses React state: first click enters "confirming" mode (button turns red/destructive), second click executes the action. Clicking away (`onBlur`) resets the state.
+- **No new dependencies**: All changes use existing React state and UI component variants (`variant="destructive"` on Button)
 
 ---
 

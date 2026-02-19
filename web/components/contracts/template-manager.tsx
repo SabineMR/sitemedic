@@ -378,12 +378,13 @@ export function TemplateManager({ templates }: TemplateManagerProps) {
                     </Button>
                   )}
                   <Button
-                    variant="outline"
+                    variant={confirmArchiveId === template.id ? 'destructive' : 'outline'}
                     size="sm"
                     onClick={() => handleArchive(template.id)}
+                    onBlur={() => setConfirmArchiveId(null)}
                   >
                     <Archive className="mr-2 h-4 w-4" />
-                    Archive
+                    {confirmArchiveId === template.id ? 'Confirm Archive?' : 'Archive'}
                   </Button>
                 </div>
               )}
