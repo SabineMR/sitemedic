@@ -20,7 +20,7 @@ export default async function CreateContractPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/auth/login');
+    redirect('/login');
   }
 
   // Fetch bookings that don't have existing contracts

@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
           });
 
           upfrontCaptured = true;
-        } catch (paymentError: any) {
+        } catch (paymentError: unknown) {
           console.error('Error capturing upfront payment:', paymentError);
           // Don't fail booking confirmation if payment capture fails
           // Admin can manually capture payment later

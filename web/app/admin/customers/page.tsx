@@ -7,7 +7,6 @@
 
 'use client';
 
-import Link from 'next/link';
 import { Building2, UserPlus } from 'lucide-react';
 import { ClientManagementTable } from '@/components/admin/client-management-table';
 
@@ -25,13 +24,14 @@ export default function CustomersPage() {
             </h1>
             <p className="text-gray-400 text-sm">Manage client accounts and payment terms</p>
           </div>
-          <Link
-            href="/admin/customers/new"
-            className="group px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl font-medium transition-all duration-200 shadow-lg shadow-blue-500/20 hover:scale-105 active:scale-95 flex items-center gap-2"
+          <button
+            disabled
+            title="Customers are created automatically through the booking flow"
+            className="group px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-gray-300 rounded-xl font-medium cursor-not-allowed opacity-60 flex items-center gap-2"
           >
-            <UserPlus className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
+            <UserPlus className="w-5 h-5" />
             Add Customer
-          </Link>
+          </button>
         </div>
       </header>
 

@@ -69,10 +69,14 @@ export function ContractsTable({ contracts, stats }: ContractsTableProps) {
       .update({ status: 'terminated', terminated_at: new Date().toISOString() })
       .eq('id', contractId);
 
-    if (!error) {
+    if (error) {
+      console.error('Error terminating contract:', error);
+      toast.error('Failed to terminate contract. Please try again.');
+    } else {
       setContractList((prev) =>
         prev.map((c) => (c.id === contractId ? { ...c, status: 'terminated' as ContractStatus } : c))
       );
+      toast.success('Contract terminated');
     }
     setTerminatingId(null);
   }

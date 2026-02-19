@@ -112,10 +112,10 @@ export async function POST(
         );
 
         stripePaymentIntentId = paymentIntent.id;
-      } catch (stripeError: any) {
+      } catch (stripeError: unknown) {
         console.error('Stripe capture error:', stripeError);
         return NextResponse.json(
-          { error: `Payment capture failed: ${stripeError.message}` },
+          { error: 'Payment capture failed' },
           { status: 500 }
         );
       }
@@ -147,10 +147,10 @@ export async function POST(
         });
 
         stripePaymentIntentId = paymentIntent.id;
-      } catch (stripeError: any) {
+      } catch (stripeError: unknown) {
         console.error('Stripe payment intent creation error:', stripeError);
         return NextResponse.json(
-          { error: `Payment failed: ${stripeError.message}` },
+          { error: 'Payment failed' },
           { status: 500 }
         );
       }

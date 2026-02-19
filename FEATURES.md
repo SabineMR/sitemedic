@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-19 (Phase 31-02: Platform Admin Branding Override)
+**Last Updated**: 2026-02-19 (Sprint 20: Catch Type Safety & Error Detail Sanitization)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -273,6 +273,54 @@ Phase 30 Plan 01 delivers the client-side and server-side building blocks for fe
 - **requireTier() pattern**: Pure utility (no NextResponse coupling) — API routes catch the error and return appropriate HTTP status
 - **NULL tier handling**: Both client and server paths default NULL to 'starter' (legacy org compatibility per Phase 24-05 decision)
 - **No database changes**: All components read existing `organizations.subscription_tier` column
+
+---
+
+## Previous Updates — Sprint 20: Catch Type Safety & Error Detail Sanitization (2026-02-19)
+
+### Overview
+
+Sprint 20 of the gap analysis: converts 10 `catch (error: any)` blocks across 6 files to `catch (error: unknown)` with proper `instanceof Error` narrowing, improving TypeScript type safety and preventing accidental property access on non-Error objects. Also sanitizes 2 additional error responses in the complete-payment route that were still leaking Stripe error messages.
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `web/components/medics/compensation-settings.tsx` | `catch (err: any)` → `catch (err: unknown)` with `instanceof Error` check for `err.message` |
+| `web/components/admin/payout-summary.tsx` | `catch (error: any)` → `catch (error: unknown)` with `instanceof Error` check |
+| `web/lib/payouts/mileage-router.ts` | `catch (err: any)` → `catch (err: unknown)` with `instanceof Error` check for leg error messages |
+| `web/app/api/payouts/process-batch/route.ts` | 2 catch blocks: inner per-timesheet error + outer catch-all. Both converted to `: unknown` with proper narrowing. Also removed leaked `details` field from outer catch. |
+| `web/app/api/bookings/confirm/route.ts` | `catch (paymentError: any)` → `catch (paymentError: unknown)` (no message access needed — error is only logged) |
+| `web/app/api/contracts/[id]/capture-milestone/route.ts` | 2 `catch (stripeError: any)` → `catch (stripeError: unknown)` |
+| `web/app/api/contracts/[id]/complete-payment/route.ts` | 2 `catch (stripeError: any)` → `catch (stripeError: unknown)`. Also sanitized error responses: removed raw `stripeError.message` from client-facing JSON, replaced with generic "Payment capture failed" / "Payment failed". |
+
+### Key Details
+
+- **TypeScript `unknown` vs `any`**: `any` bypasses type checking entirely — accessing `.message` on a non-Error object (e.g., a string throw or undefined) causes a runtime crash. `unknown` forces explicit type narrowing via `instanceof Error` before accessing properties.
+- **Pattern used**: `error instanceof Error ? error.message : 'An unexpected error occurred'` — safely extracts message from Error objects, provides fallback for non-Error throws.
+- **Additional error sanitization**: The `complete-payment` route was still exposing raw Stripe error messages to clients (missed in Sprint 18). Now returns generic messages like Sprint 18 fixes.
+
+---
+
+## Previous Updates — Sprint 19: Dead Link Fixes & Contract Terminate Feedback (2026-02-19)
+
+### Overview
+
+Sprint 19 of the gap analysis: fixes 2 dead links that would cause 404 errors for users, and adds success/error toast feedback to the contract termination action which previously gave no visual confirmation.
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `web/app/(dashboard)/contracts/create/page.tsx` | Fixed redirect from `/auth/login` to `/login` — login page lives at `/(auth)/login` which maps to URL `/login`, not `/auth/login` |
+| `web/app/admin/customers/page.tsx` | "Add Customer" button was a `<Link>` to `/admin/customers/new` which has no page. Changed to a disabled `<button>` with tooltip "Customers are created automatically through the booking flow". Removed unused `Link` import. |
+| `web/components/contracts/contracts-table.tsx` | Added `toast` import from sonner. `confirmTerminate()` now shows `toast.success('Contract terminated')` on success and `toast.error('Failed to terminate contract')` on failure (previously silently failed with no user feedback). |
+
+### Key Details
+
+- **Route group URL mapping**: Next.js route groups like `(auth)` are stripped from URLs — `/(auth)/login/page.tsx` responds to `/login`, not `/auth/login`. The old redirect would have landed on a 404 page.
+- **Dead "Add Customer" button**: The button linked to a page that was never built. Rather than creating a new page (out of scope for gap fixes), the button is now disabled with an explanatory tooltip. Customers are created when they book through the booking flow.
+- **Contract terminate feedback**: The AlertDialog confirmation was already in place, but after the API call completed (success or failure), the user received no visual confirmation. Now uses the app's standard `sonner` toast pattern.
 
 ---
 

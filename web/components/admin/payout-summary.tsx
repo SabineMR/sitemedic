@@ -120,9 +120,9 @@ export default function PayoutSummary() {
         // Refresh data after successful processing
         setTimeout(fetchWeeklySummary, 1000);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error processing payouts:', error);
-      setResult({ error: error.message });
+      setResult({ error: error instanceof Error ? error.message : 'An unexpected error occurred' });
     } finally {
       setProcessing(false);
     }

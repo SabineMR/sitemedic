@@ -243,8 +243,8 @@ export async function routeDailyMileage(
     try {
       const { miles, cached } = await getDistanceMiles(supabase, from, to);
       routeLegs.push({ from, to, miles, cached });
-    } catch (err: any) {
-      errors.push(`Leg ${from} → ${to}: ${err.message}`);
+    } catch (err: unknown) {
+      errors.push(`Leg ${from} → ${to}: ${err instanceof Error ? err.message : 'Unknown error'}`);
       routeLegs.push({ from, to, miles: 0, cached: false });
     }
   }

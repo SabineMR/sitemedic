@@ -124,7 +124,7 @@ export async function POST(
 
         // Update paid_at timestamp
         paymentUpdate[`${milestoneId}_paid_at`] = now;
-      } catch (stripeError: any) {
+      } catch (stripeError: unknown) {
         console.error('Stripe capture error:', stripeError);
         return NextResponse.json(
           { error: 'Payment capture failed' },
@@ -167,7 +167,7 @@ export async function POST(
         if (!contract.stripe_payment_intent_id) {
           paymentUpdate.stripe_payment_intent_id = paymentIntent.id;
         }
-      } catch (stripeError: any) {
+      } catch (stripeError: unknown) {
         console.error('Stripe payment intent creation error:', stripeError);
         return NextResponse.json(
           { error: 'Payment failed' },
