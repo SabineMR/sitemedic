@@ -736,6 +736,10 @@ function StepReviewSubmit({ onBack }: { onBack: () => void }) {
   const store = useMarketplaceRegistrationStore();
   const router = useRouter();
 
+  // Track whether registration has been submitted and the returned companyId
+  const [registeredCompanyId, setRegisteredCompanyId] = useState<string | null>(null);
+  const [startingStripe, setStartingStripe] = useState(false);
+
   const handleSubmit = async () => {
     store.setSubmitting(true);
     store.setError(null);
@@ -763,10 +767,9 @@ function StepReviewSubmit({ onBack }: { onBack: () => void }) {
 
       const data = await response.json();
 
-      if (data.success) {
+      if (data.success && data.companyId) {
         toast.success('Registration submitted successfully!');
-        store.reset();
-        router.push('/marketplace/register/success');
+        setRegisteredCompanyId(data.companyId);
       } else {
         store.setError(data.error || 'Registration failed');
         toast.error(data.error || 'Registration failed');
@@ -779,6 +782,115 @@ function StepReviewSubmit({ onBack }: { onBack: () => void }) {
     }
   };
 
+  const handleStartStripeOnboarding = async () => {
+    if (!registeredCompanyId) return;
+    setStartingStripe(true);
+    store.setError(null);
+
+    try {
+      const response = await fetch('/api/marketplace/stripe-connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId: registeredCompanyId }),
+      });
+
+      const data = await response.json();
+
+      if (data.onboarding_url) {
+        // Redirect to Stripe's hosted onboarding
+        window.location.href = data.onboarding_url;
+      } else {
+        store.setError(data.error || 'Failed to start Stripe onboarding');
+        toast.error(data.error || 'Failed to start Stripe onboarding');
+        setStartingStripe(false);
+      }
+    } catch {
+      store.setError('Failed to start Stripe onboarding');
+      toast.error('Failed to start Stripe onboarding');
+      setStartingStripe(false);
+    }
+  };
+
+  const handleSkipStripe = () => {
+    store.reset();
+    router.push('/marketplace/register/success');
+  };
+
+  // ---- Post-registration: Stripe onboarding step ----
+  if (registeredCompanyId) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6 space-y-6">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="w-6 h-6 text-green-400 shrink-0" />
+            <h2 className="text-white font-semibold text-lg">Registration Complete</h2>
+          </div>
+
+          <p className="text-gray-300 text-sm">
+            Your company has been registered successfully. Now set up Stripe Connect
+            to receive payouts for marketplace bookings.
+          </p>
+
+          {/* Stripe Connect CTA */}
+          <div className="bg-gray-900/50 rounded-xl p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <CreditCard className="w-6 h-6 text-green-400" />
+              <div>
+                <h3 className="text-white font-medium">Set Up Payouts</h3>
+                <p className="text-gray-400 text-sm">
+                  Connect your company to Stripe to receive payments for marketplace bookings.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleStartStripeOnboarding}
+              disabled={startingStripe}
+              className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-500 hover:to-green-600 h-12 text-base"
+            >
+              {startingStripe ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  Starting Stripe Onboarding...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="w-5 h-5 mr-2" />
+                  Start Stripe Onboarding
+                </>
+              )}
+            </Button>
+
+            <div className="flex items-start gap-3 bg-blue-900/30 border border-blue-700/50 rounded-xl p-3">
+              <Info className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
+              <p className="text-xs text-blue-200">
+                You&apos;ll be redirected to Stripe&apos;s secure onboarding page to verify your
+                company identity and set up your bank account. You can complete this later
+                from your company dashboard if you prefer.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {store.error && (
+          <div className="text-sm text-red-300 bg-red-900/30 border border-red-700/50 p-3 rounded-xl">
+            {store.error}
+          </div>
+        )}
+
+        <div className="flex justify-center">
+          <button
+            onClick={handleSkipStripe}
+            className="text-gray-500 hover:text-gray-300 text-sm underline underline-offset-4"
+          >
+            Skip for now — I&apos;ll set up payouts later
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Pre-registration: Review summary + submit ----
   return (
     <div className="space-y-6">
       <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6 space-y-6">
@@ -874,15 +986,15 @@ function StepReviewSubmit({ onBack }: { onBack: () => void }) {
           </div>
         </div>
 
-        {/* Stripe Connect Placeholder */}
+        {/* Payment Setup info */}
         <div className="space-y-2">
           <h3 className="text-gray-300 font-medium text-sm uppercase tracking-wider">
             Payment Setup
           </h3>
           <div className="bg-gray-900/50 rounded-xl p-4 text-sm">
             <p className="text-gray-400">
-              Stripe Connect onboarding will be available once your company is
-              verified. This allows you to receive payments for marketplace bookings.
+              After submitting your registration, you&apos;ll be able to set up
+              Stripe Connect to receive payments for marketplace bookings.
             </p>
           </div>
         </div>
