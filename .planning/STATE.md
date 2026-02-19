@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 41 of 47 (Web Messaging Core)
-Plan: 1 of 3 in current phase
-Status: In progress
-Last activity: 2026-02-19 — Completed 41-01-PLAN.md (conversation list & navigation)
+Plan: 3 of 3 in current phase
+Status: In progress (41-02 running in parallel)
+Last activity: 2026-02-19 — Completed 41-03-PLAN.md (new conversation flow)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████░░░░░░] v4.0 25% | [██░░░░░░░░] v5.0 14%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████░░░░░░] v4.0 25% | [███░░░░░░░] v5.0 19%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 189 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 7 v4.0 + 3 v5.0)
+- Total plans completed: 190 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 7 v4.0 + 4 v5.0)
 - Average duration: 3.9 min
-- Total execution time: ~12.2 hours
+- Total execution time: ~12.3 hours
 
 **By Milestone:**
 
@@ -32,7 +32,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
 | v4.0 | 8 | 7/26 | ~44 min | ~6.3 min |
-| v5.0 | 8 | 3/21 | ~9 min | ~3 min |
+| v5.0 | 8 | 4/21 | ~12 min | ~3 min |
 
 *Updated after each plan completion*
 
@@ -63,6 +63,9 @@ Recent decisions affecting current work:
 - [41-01]: Unread counts computed in JS from 3 parallel Supabase queries (conversations, read statuses, messages) -- avoids N+1
 - [41-01]: 30-second polling for conversations (more frequent than 60s workers due to messaging time sensitivity)
 - [41-01]: Header unread badge fetched server-side in layout -- no client component needed until Phase 43 real-time
+- [41-03]: SELECT-then-INSERT with 23505 catch for conversation creation duplicate prevention (partial unique index)
+- [41-03]: MedicPicker fetches medics client-side on dialog open (not server-side) for fresh data on long-lived pages
+- [41-03]: EmptyState converted to client component to support MedicPicker rendering
 
 ### Pending Todos
 
@@ -89,5 +92,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 41-01-PLAN.md (conversation list & navigation)
+Stopped at: Completed 41-03-PLAN.md (new conversation flow)
 Resume file: None
