@@ -74,21 +74,47 @@ Documentation happens automatically as the medic does their job, not as separate
 - ✓ Football / Sports vertical — Player + Spectator dual-form, FA Match Day Injury Form + SGSA Medical Incident Report PDFs, HIA concussion assessment, ATMMiF/ITMMiF cert types, RIDDOR disabled for on-pitch players — v2.0
 - ✓ Analytics — near-miss heat maps (org + platform admin, Leaflet CircleMarker severity-coded), compliance score trend charts (12-month weekly, Recharts), incident frequency charts, admin aggregate compliance trend with org ranking table — v2.0
 
-### Active (v3.0 — White-Label Platform & Subscription Engine)
+**White-Label Platform & Subscription Engine (Added during v3.0):**
+- ✓ Per-org branding storage — logo (Supabase Storage), primary colour (hex), company name, tagline — v3.0
+- ✓ Branding applied to web portal — header, login page, sidebar all reflect org brand — v3.0
+- ✓ Branded PDFs — org logo injected into weekly reports, RIDDOR PDFs, payslips — v3.0
+- ✓ Branded emails — org logo + primary colour in all Resend transactional emails — v3.0
+- ✓ Subdomain routing — `slug.sitemedic.co.uk` resolves to correct org in Next.js middleware — v3.0
+- ✓ Stripe Billing integration — subscription plans (Starter/Growth/Enterprise) per org — v3.0
+- ✓ Tiered feature gating — certain features locked to Growth/Enterprise tier — v3.0
+- ✓ Hybrid onboarding flow — signup page → Stripe Checkout → webhook creates org → platform admin activates — v3.0
+- ✓ Subscription management — upgrade/downgrade, Stripe billing portal, cancellation flow — v3.0
+- ✓ Platform admin subscription dashboard — view all org subscriptions, MRR, churn — v3.0
+- ✓ Branding settings UI — org admin logo upload + colour picker, platform admin branding override — v3.0
 
-**White-Label Branding:**
-- [ ] Per-org branding storage — logo (Supabase Storage), primary colour (hex), company name, tagline
-- [ ] Branding applied to web portal — header, login page, sidebar all reflect org brand
-- [ ] Branded PDFs — org logo injected into weekly reports, RIDDOR PDFs, payslips
-- [ ] Branded emails — org logo + primary colour in all Resend transactional emails
-- [ ] Subdomain routing — `slug.sitemedic.co.uk` resolves to correct org in Next.js middleware
+### Active (v4.0 — MedBid Marketplace)
 
-**Subscription Engine:**
-- [ ] Stripe Billing integration — subscription plans (Starter/Growth/Enterprise) per org
-- [ ] Tiered feature gating — certain features locked to Growth/Enterprise tier
-- [ ] Hybrid onboarding flow — signup page → Stripe Checkout → webhook creates org → platform admin activates
-- [ ] Subscription management — upgrade/downgrade, Stripe billing portal, cancellation flow
-- [ ] Platform admin subscription dashboard — view all org subscriptions, MRR, churn
+**Core Marketplace:**
+- [ ] Event posting — clients post events needing medical cover (name, type, description, dates/times, location/postcode, staffing needs, budget range)
+- [ ] Quote submission — medics submit quotes with total price, itemised breakdown, cover letter/pitch, and availability confirmation
+- [ ] Quote browsing — clients see medic profile (certs, rating, experience) only after a quote is submitted; contact details hidden until award + deposit
+- [ ] Award flow — client selects preferred quote; triggers deposit payment and auto-creates a booking in SiteMedic dashboard
+- [ ] Deposit + remainder payment — deposit charged on award, remainder charged after event completion
+- [ ] Commission model — SiteMedic takes commission from medic's quote (uses existing platform_fee_percent/medic_payout_percent pattern)
+- [ ] Booking integration — awarded quotes auto-create booking records that flow into timesheets, payouts, and reporting
+
+**Medic & Company Registration:**
+- [ ] Open registration — individual medics and medic companies can sign up to the marketplace
+- [ ] Company accounts — companies manage a roster of medics with individual profiles
+- [ ] Double-up prevention — when a company quotes with a specific medic, that medic cannot independently quote on the same event
+- [ ] Medic verification — new medics submit qualifications for approval before they can quote
+
+**Ratings & Discovery:**
+- [ ] Bidirectional ratings — clients rate medics and medics rate clients after event completion (star rating + written review)
+- [ ] Dashboard feed — medics see open events filtered by location and qualifications
+- [ ] Email alerts — medics notified when new events match their profile
+- [ ] SMS alerts — urgent or high-value events trigger SMS to qualified nearby medics
+
+**Credits & Monetisation (v4.0 later phases):**
+- [ ] Credits/points system — medics purchase credits to submit quotes (like Upwork Connects)
+- [ ] Credit refunds — credits returned when medic wins a job or client doesn't award
+- [ ] Early access — premium credits buy early access to new event listings before general release
+- [ ] Tiered medic priority — SiteMedic roster medics get priority access before open marketplace
 
 ### Out of Scope
 
@@ -102,19 +128,17 @@ Documentation happens automatically as the medic does their job, not as separate
 
 ## Current State
 
-**v2.0 Shipped:** 2026-02-18
+**v3.0 Shipped:** 2026-02-19
 
-- **Codebase:** ~171,000 lines (TypeScript, TSX, SQL) — 29,300 lines added in v2.0
-- **Tech Stack:** Expo (iOS), Next.js 15 (web), Supabase (backend), WatermelonDB v4 (offline storage), Stripe (payments), Recharts (analytics), react-leaflet (maps)
-- **Phases:** 30 phases complete (149 plans executed — 84 in v1.0, 35 in v1.1, 30 in v2.0)
-- **Status:** 100% production-ready — 36/36 v2.0 requirements satisfied, all E2E flows verified
-- **Integration:** All cross-phase connections verified, 5/5 E2E flows complete
-- **Known Issues:** Minor tech debt deferred: `getLocationLabel`/`getEventLabel` orphaned exports; `incident-report-dispatcher.ts` dead code; Motorsport PDF has DRAFT watermark pending Motorsport UK Incident Pack V8.0 field validation
+- **Codebase:** ~171,000+ lines (TypeScript, TSX, SQL)
+- **Tech Stack:** Expo (iOS), Next.js 15 (web), Supabase (backend), WatermelonDB v4 (offline storage), Stripe (payments + Billing + Connect), Recharts (analytics), react-leaflet (maps)
+- **Phases:** 31 phases complete (180 plans executed — 84 in v1.0, 35 in v1.1, 30 in v2.0, 31 in v3.0)
+- **Status:** v3.0 complete — white-label branding, subdomain routing, Stripe Billing subscription engine, feature gating, org onboarding, and branding settings UI all shipped
+- **Known Issues:** Minor tech debt deferred: `getLocationLabel`/`getEventLabel` orphaned exports; `incident-report-dispatcher.ts` dead code; Motorsport PDF has DRAFT watermark
 
 **Next Steps:**
-- Deploy to production (configure external services per DEPLOYMENT.md)
-- Begin v3.0 milestone: White-Label Platform & Subscription Engine (Apex Safety Solutions is first live deployment target)
-- Run `/gsd:new-milestone` to define v3.0 requirements and roadmap
+- Begin v4.0 milestone: MedBid Marketplace
+- Deploy v3.0 to production (configure external services per DEPLOYMENT.md)
 
 ## Context
 
@@ -176,22 +200,40 @@ Documentation happens automatically as the medic does their job, not as separate
 | Territory-based assignment | UK postcode sectors enable geographic optimization and coverage tracking | ✓ Good (v1.0 - 100% auto-assignment) |
 | Stripe Connect for medics | Express accounts handle UK Faster Payments without custom bank integration | ✓ Good (v1.0 - weekly payouts working) |
 
-## Current Milestone: v3.0 White-Label Platform & Subscription Engine
+## Current Milestone: v4.0 MedBid Marketplace
 
-**Goal:** Transform SiteMedic into a white-label SaaS engine — each subscribing medic business gets their own branded portal, subdomain, and subscription plan. Apex Safety Solutions (Sabine's own business) is the first live deployment and the v3.0 launch target.
+**Goal:** Add a Request-for-Quotes marketplace to SiteMedic where UK clients post events needing medical cover, medics (individuals and companies) submit detailed quotes, clients award the job, and SiteMedic takes a commission from the medic's side. Awarded quotes auto-create bookings that flow into the existing dashboard, timesheets, and payout systems. Free to sign up for both sides. Credits/points monetisation system added in later phases.
 
 **Target features:**
-- Per-org branding: logo, primary colour, company name — applied across portal, PDFs, and emails
-- Subdomain routing: `apex.sitemedic.co.uk` per org (Pro), full custom domain (Enterprise)
-- Tiered subscription plans: Starter / Growth / Enterprise via Stripe Billing
-- Hybrid onboarding: online signup + Stripe Checkout → platform admin activates + configures branding
-- Subscription management: upgrade/downgrade, billing portal, cancellation
-- Feature gating: certain features unlocked per tier
+- Event posting with full details (type, dates, location, staffing needs, budget range)
+- Quote submission with itemised breakdown, cover letter, availability confirmation
+- Medic profiles visible only after quoting (certs, rating, experience) — contact details hidden until award + deposit
+- Deposit + remainder payment model — deposit on award, remainder after event
+- Commission from medic's quote (existing platform_fee/medic_payout pattern)
+- Open registration for individual medics AND medic companies
+- Company roster management with double-up prevention (company quotes lock out individual quotes from same medic)
+- Bidirectional ratings (client rates medic, medic rates client)
+- Multi-channel notifications: dashboard feed, email alerts, SMS for urgent/high-value
+- Credits/points system (later phases) — medics purchase credits to quote, early access, tiered priority
 
 **Build priority:**
-1. Apex Safety Solutions white-label (Sabine's real business — goes live first)
-2. Subscription + self-serve onboarding (opens platform to paying customers)
-3. Feature gating by tier
+1. Database schema + core marketplace (event posting, quoting, awarding)
+2. Payment integration (deposit + remainder, commission split)
+3. Booking integration (award → auto-create booking in SiteMedic)
+4. Registration + verification (individual medics + companies)
+5. Ratings + notifications
+6. Credits/points monetisation system
+
+| Decision | Rationale | Outcome |
+|----------|-----------|---------|
+| Same repo as SiteMedic | Shared auth, database, Stripe, medic roster — separate repo would duplicate infrastructure | — Pending |
+| Request for Quotes model (not auction) | Medics submit detailed quotes with breakdown + pitch. More professional than price-only bidding. Clients choose on quality + price. | — Pending |
+| Commission from medic side | Client pays exactly what medic quoted. SiteMedic takes % from medic (like Upwork). Clean, transparent. | — Pending |
+| Deposit + remainder payment | Deposit on award secures medic's time. Remainder after event. Balances risk for both sides. | — Pending |
+| Profiles visible after quote only | Prevents disintermediation (clients contacting medics directly). Contact details hidden until award + deposit. | — Pending |
+| Open registration (individuals + companies) | Bigger medic pool = more competition = better for clients. Companies manage rosters with double-up prevention. | — Pending |
+| Free to quote at launch, credits in v2 | New marketplace needs frictionless adoption. Credits/points added once volume justifies it. | — Pending |
+| Part of SiteMedic brand | Lives at sitemedic.co.uk/marketplace. Leverages existing brand. No separate domain needed. | — Pending |
 
 ---
-*Last updated: 2026-02-18 after v3.0 milestone initialized*
+*Last updated: 2026-02-19 after v4.0 milestone initialized*
