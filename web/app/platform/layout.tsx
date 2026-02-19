@@ -22,6 +22,7 @@ import {
   Settings,
   Users,
   Shield,
+  ShieldCheck,
 } from 'lucide-react';
 import { QueryProvider } from '@/components/providers/query-provider';
 import { useIsPlatformAdmin, useOrg } from '@/contexts/org-context';
@@ -107,6 +108,11 @@ export default function PlatformLayout({ children }: PlatformLayoutProps) {
       name: 'Organizations',
       href: '/platform/organizations',
       icon: <Building2 className="w-5 h-5" />,
+    },
+    {
+      name: 'Verification',
+      href: '/platform/verification',
+      icon: <ShieldCheck className="w-5 h-5" />,
     },
     {
       name: 'Subscriptions',
