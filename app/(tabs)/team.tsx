@@ -162,45 +162,42 @@ export default function TeamScreen() {
               // Column doesn't exist yet — leave company_name as null
             }
 
+            const today = new Date().toISOString().split('T')[0];
             const { data: assignments } = await supabase
               .from('bookings')
-              .select('site_manager_id, site_name')
+              .select('site_manager_id, site_name, status')
               .in('site_manager_id', smIds)
-              .order('shift_date', { ascending: false });
+              .in('status', ['pending', 'confirmed', 'in_progress'])
+              .gte('shift_date', today);
 
             if (assignments && assignments.length > 0) {
-              // Build maps: most recent site + all unique companies per manager
-              const siteMap = new Map<string, string>();
+              // Collect all current companies + sites per manager
               const companyMap = new Map<string, Set<string>>();
+              const siteMap = new Map<string, Set<string>>();
               for (const row of assignments) {
                 if (row.site_manager_id && row.site_name) {
-                  // Most recent site (first match — ordered by shift_date DESC)
-                  if (!siteMap.has(row.site_manager_id)) {
-                    siteMap.set(row.site_manager_id, row.site_name);
-                  }
-                  // Extract company from "Company — Location" format
                   const dashIdx = row.site_name.indexOf(' \u2014 ');
                   if (dashIdx > 0) {
                     const company = row.site_name.substring(0, dashIdx).trim();
-                    if (!companyMap.has(row.site_manager_id)) {
-                      companyMap.set(row.site_manager_id, new Set());
-                    }
+                    const location = row.site_name.substring(dashIdx + 3).trim();
+                    if (!companyMap.has(row.site_manager_id)) companyMap.set(row.site_manager_id, new Set());
+                    if (!siteMap.has(row.site_manager_id)) siteMap.set(row.site_manager_id, new Set());
                     companyMap.get(row.site_manager_id)!.add(company);
+                    siteMap.get(row.site_manager_id)!.add(location);
+                  } else {
+                    if (!siteMap.has(row.site_manager_id)) siteMap.set(row.site_manager_id, new Set());
+                    siteMap.get(row.site_manager_id)!.add(row.site_name);
                   }
                 }
               }
-              // Attach site + company to managers
+              // Attach current companies + sites to managers
               for (const mgr of managers) {
                 if (mgr.authUserId) {
-                  if (siteMap.has(mgr.authUserId)) {
-                    const fullSite = siteMap.get(mgr.authUserId)!;
-                    const dashIdx = fullSite.indexOf(' \u2014 ');
-                    // Show only location part on pin line if parseable
-                    mgr.site_name = dashIdx > 0 ? fullSite.substring(dashIdx + 3).trim() : fullSite;
-                  }
-                  // Booking-derived companies as fallback when profiles.company_name is null
                   if (!mgr.company_name && companyMap.has(mgr.authUserId)) {
                     mgr.company_name = [...companyMap.get(mgr.authUserId)!].join(', ');
+                  }
+                  if (siteMap.has(mgr.authUserId)) {
+                    mgr.site_name = [...siteMap.get(mgr.authUserId)!].join(', ');
                   }
                 }
               }
