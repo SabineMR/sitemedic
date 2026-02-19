@@ -2,12 +2,75 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Gap Analysis Sprint 14 — Performance: Static Caching & Anchor Scroll Fix)
+**Last Updated**: 2026-02-18 (Team Screen: Separate Site Managers with Company & Site Info)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
 
-## Recent Updates — Phase 30-05: Subscription Suspension Enforcement (2026-02-18)
+## Recent Updates — Team Screen: Separate Site Managers with Company & Site Info (2026-02-18)
+
+### Overview
+
+The mobile Team screen now separates **site managers** into their own dedicated section, distinct from the org's internal team (admins + medics). Site managers are external users from client companies — they now display their **company name** (from `profiles.company_name`) and their **assigned site/project name** (from the most recent booking in `bookings`).
+
+### New Migration
+
+| File | Purpose |
+|------|---------|
+| `supabase/migrations/138_site_manager_company.sql` | Adds `company_name TEXT` column to `profiles` table. Nullable — only relevant for `site_manager` role. No NOT NULL constraint for backward compatibility. |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `app/(tabs)/team.tsx` | **Two-section layout**: members are now split into "Your Team (N)" (admins + medics) and "Site Managers (N)" sections. **Extended `TeamMember` interface** with `company_name` and `site_name` fields. **Expanded profiles query** to include `company_name`. **Added bookings query** for site manager site assignments — fetches most recent `site_name` per `site_manager_id` from `bookings` table, ordered by `shift_date DESC`. **Site Manager cards** show name (bold), company name (muted gray), and site name with pin icon (lighter gray). Fallback text: "Company not set" / "No site assigned". **Role badge** changed from "Site Manager" to "Site Mgr" for compact display. **Empty state** for site managers section: "No site managers yet." |
+
+### Data Flow
+
+1. **Profiles query** fetches `id, full_name, email, role, company_name` from `profiles` (filtered by `org_id`)
+2. **Medics query** fetches from `medics` table (unchanged)
+3. Combined results split: `role !== 'site_manager'` → "Your Team", `role === 'site_manager'` → "Site Managers"
+4. **Bookings query** (only if site managers exist): fetches `site_manager_id, site_name` from `bookings` ordered by `shift_date DESC`, builds a map of most recent site per manager
+5. Site name attached to each site manager before rendering
+
+### UI Layout
+
+```
+YOUR TEAM (3)
+┌─────────────────────────────────────────┐
+│ Admin Name                    You  Admin│
+│ admin@example.com                       │
+│─────────────────────────────────────────│
+│ ● Medic One                       Medic│
+│ medic1@example.com                      │
+│─────────────────────────────────────────│
+│ ● Medic Two                       Medic│
+│ medic2@example.com                      │
+└─────────────────────────────────────────┘
+
+SITE MANAGERS (2)
+┌─────────────────────────────────────────┐
+│ Jordan Blake                   Site Mgr │
+│ Apex Client Ltd                         │
+│ 📍 Wembley Stadium Build               │
+│─────────────────────────────────────────│
+│ Marcus Holt                    Site Mgr │
+│ Company not set                         │
+│ 📍 No site assigned                    │
+└─────────────────────────────────────────┘
+```
+
+### Key Details
+
+- **No breaking changes**: The `company_name` column is nullable — existing profiles unaffected
+- **Migration must be applied manually**: `supabase migration up` or via Supabase dashboard
+- **Bookings query is conditional**: Only runs when site managers are present, avoiding unnecessary DB calls
+- **Most recent site wins**: If a site manager has multiple bookings, the one with the latest `shift_date` determines the displayed site name
+- **Empty states**: Both sections have their own empty state messages
+
+---
+
+## Previous Updates — Phase 30-05: Subscription Suspension Enforcement (2026-02-18)
 
 ### Overview
 

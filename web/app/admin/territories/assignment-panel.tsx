@@ -105,7 +105,7 @@ function MedicCard({ medic, isDragging = false }: MedicCardProps) {
           {/* Unavailable status */}
           {!medic.available_for_work && (
             <div className="mt-2 text-sm text-red-400">
-              Unavailable{medic.unavailable_until ? ` until ${new Date(medic.unavailable_until).toLocaleDateString()}` : ''}
+              Unavailable{medic.unavailable_until ? ` until ${new Date(medic.unavailable_until).toLocaleDateString('en-GB')}` : ''}
             </div>
           )}
         </div>

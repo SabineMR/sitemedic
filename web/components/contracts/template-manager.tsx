@@ -36,6 +36,7 @@ export function TemplateManager({ templates }: TemplateManagerProps) {
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [creating, setCreating] = React.useState(false);
   const [formData, setFormData] = React.useState<Partial<ContractTemplate>>({});
+  const [confirmArchiveId, setConfirmArchiveId] = React.useState<string | null>(null);
 
   // Start editing a template
   const handleEdit = (template: ContractTemplate) => {
@@ -95,9 +96,11 @@ export function TemplateManager({ templates }: TemplateManagerProps) {
 
   // Archive template
   const handleArchive = async (templateId: string) => {
-    if (!confirm('Are you sure you want to archive this template?')) {
+    if (confirmArchiveId !== templateId) {
+      setConfirmArchiveId(templateId);
       return;
     }
+    setConfirmArchiveId(null);
 
     try {
       const response = await fetch('/api/contracts/templates', {

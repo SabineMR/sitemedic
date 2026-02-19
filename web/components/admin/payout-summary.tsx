@@ -51,6 +51,7 @@ export default function PayoutSummary() {
   const [showPreview, setShowPreview] = useState(false);
   const [selectedMedics, setSelectedMedics] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<any>(null);
+  const [confirmingPayout, setConfirmingPayout] = useState(false);
 
   useEffect(() => {
     fetchWeeklySummary();
@@ -88,9 +89,11 @@ export default function PayoutSummary() {
       return;
     }
 
-    if (!dryRun && !confirm(`Process payouts for ${selectedMedics.size} medics?`)) {
+    if (!dryRun && !confirmingPayout) {
+      setConfirmingPayout(true);
       return;
     }
+    setConfirmingPayout(false);
 
     try {
       setProcessing(true);
@@ -222,10 +225,11 @@ export default function PayoutSummary() {
         </button>
         <button
           onClick={() => handleProcessPayouts(false)}
+          onBlur={() => setConfirmingPayout(false)}
           disabled={processing || selectedMedics.size === 0}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded disabled:opacity-50"
+          className={`px-4 py-2 text-white rounded disabled:opacity-50 ${confirmingPayout ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}
         >
-          {processing ? 'Processing...' : `Process ${selectedMedics.size} Payouts`}
+          {processing ? 'Processing...' : confirmingPayout ? `Confirm — Process ${selectedMedics.size} Payouts?` : `Process ${selectedMedics.size} Payouts`}
         </button>
         <div className="flex-1 text-right self-center">
           <span className="text-sm text-gray-600">
