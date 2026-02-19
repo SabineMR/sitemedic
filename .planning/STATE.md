@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v3.0 White-Label Platform & Subscription Engine — Phase 30 COMPLETE (Subscription Management & Feature Gating)
+**Current focus:** v3.0 White-Label Platform & Subscription Engine — Phase 31 IN PROGRESS (Branding Settings UI)
 
 ## Current Position
 
-Phase: 30 of 31 (Subscription Management & Feature Gating)
-Plan: 5 of 5 in Phase 30
-Status: Phase complete
-Last activity: 2026-02-20 — Phase 30 verified complete
+Phase: 31 of 31 (Branding Settings UI)
+Plan: 1 of 2 in Phase 31
+Status: In progress
+Last activity: 2026-02-19 — Completed 31-01-PLAN.md
 
-Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [█████████░] v3.0 ~85% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4, Phase 27: 3/3, Phase 28: 3/3, Phase 29: 5/5, Phase 30: 5/5 done)
+Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [█████████░] v3.0 ~93% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4, Phase 27: 3/3, Phase 28: 3/3, Phase 29: 5/5, Phase 30: 5/5, Phase 31: 1/2 done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 148 (84 v1.0 + 35 v1.1 + 30 v2.0 + 28 v3.0)
+- Total plans completed: 149 (84 v1.0 + 35 v1.1 + 30 v2.0 + 29 v3.0)
 - Average duration: 4.0 min
-- Total execution time: ~9.2 hours
+- Total execution time: ~9.4 hours
 
 **By Phase:**
 
@@ -37,9 +37,10 @@ Progress: [██████████] v1.0 complete | [██████�
 | 28 (v3.0) | 3/3 | ~8 min | ~2.7 min |
 | 29 (v3.0) | 5/5 | ~25 min | ~5 min |
 | 30 (v3.0) | 5/5 | ~22.5 min | ~4.5 min |
+| 31 (v3.0) | 1/2 | ~10 min | ~10 min |
 
 **Recent Trend:**
-- Last plan: 30-05 — Subscription Suspension Enforcement (~11 min)
+- Last plan: 31-01 — Org Admin Branding Settings Page (~10 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -115,6 +116,9 @@ Progress: [██████████] v1.0 complete | [██████�
 - **30-05:** Suspension check uses `=== 'cancelled'` (not `!== 'active'`) — NULL (legacy) and past_due pass through
 - **30-05:** Single query extension: `.select('onboarding_completed, subscription_status')` — no extra DB call
 - **30-05:** /suspended is NOT in publicRoutes — user must be authenticated to see suspension page
+- **31-01:** Auto-save (500ms debounce) for text fields, explicit upload for logo — different UX patterns for different interaction types
+- **31-01:** BrandingForm accepts apiEndpoint prop for 31-02 platform admin reuse
+- **31-01:** Preview updates instantly (no debounce) while save is debounced — snappy UX
 
 ### Pending Todos
 
@@ -132,6 +136,6 @@ Progress: [██████████] v1.0 complete | [██████�
 
 ## Session Continuity
 
-Last session: 2026-02-20
-Stopped at: Phase 30 verified and complete — all 5 plans delivered, VERIFICATION.md passed
+Last session: 2026-02-19
+Stopped at: Completed 31-01-PLAN.md (org admin branding settings page)
 Resume file: None
