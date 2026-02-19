@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-19 (Sprint 20: Catch Type Safety & Error Detail Sanitization)
+**Last Updated**: 2026-02-19 (Sprint 22: Multi-Tenant org_id Security Hardening)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -273,6 +273,56 @@ Phase 30 Plan 01 delivers the client-side and server-side building blocks for fe
 - **requireTier() pattern**: Pure utility (no NextResponse coupling) — API routes catch the error and return appropriate HTTP status
 - **NULL tier handling**: Both client and server paths default NULL to 'starter' (legacy org compatibility per Phase 24-05 decision)
 - **No database changes**: All components read existing `organizations.subscription_tier` column
+
+---
+
+## Previous Updates — Sprint 22: Multi-Tenant org_id Security Hardening (2026-02-19)
+
+### Overview
+
+Sprint 22 of the gap analysis: **critical multi-tenant security hardening** across 6 API routes. All routes had authentication (`getUser()`) but were missing `requireOrgId()` and `.eq('org_id', orgId)` on their Supabase queries, meaning an authenticated user from Org A could read/modify data belonging to Org B by guessing UUIDs. The contract templates GET endpoint additionally had **no authentication at all**.
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `web/app/api/contracts/templates/route.ts` | **CRITICAL**: Added auth check to GET (was unauthenticated). Added `requireOrgId()` + `.eq('org_id', orgId)` to all 4 handlers (GET/POST/PUT/DELETE). POST now includes `org_id` in insert payload. Default-unset queries now scoped to org. |
+| `web/app/api/contracts/send/route.ts` | Added `requireOrgId()` + `.eq('org_id', orgId)` to contract fetch, internal review update, status update, and `org_id` to contract_events insert |
+| `web/app/api/contracts/[id]/capture-milestone/route.ts` | Added `requireOrgId()` + `.eq('org_id', orgId)` to contract fetch, payment update, fulfilled status update, and `org_id` to contract_events insert |
+| `web/app/api/contracts/[id]/complete-payment/route.ts` | Added `requireOrgId()` + `.eq('org_id', orgId)` to contract fetch, payment update, fulfilled/active status updates, and `org_id` to contract_events insert |
+| `web/app/api/medics/[id]/compensation/route.ts` | Added `requireOrgId()` + `.eq('org_id', orgId)` to medic update query — prevents cross-org experience tier changes |
+
+### Key Details
+
+- **6 routes hardened**: templates (4 handlers), send, capture-milestone, complete-payment, compensation
+- **Pattern applied**: `requireOrgId()` from `@/lib/organizations/org-resolver` + `.eq('org_id', orgId)` on every Supabase query (reads, updates, inserts)
+- **RLS is a safety net, not the primary defense**: Even though RLS policies exist, application-level org_id filtering provides defense-in-depth and prevents leaks if RLS is misconfigured
+- **No database changes**: All fixes are application-level query scoping
+- **Zero TypeScript errors**: All changes pass `tsc --noEmit`
+
+---
+
+## Previous Updates — Sprint 21: Auth Security & Unhandled Promise Safety (2026-02-19)
+
+### Overview
+
+Sprint 21 of the gap analysis addresses a **critical security gap** and improves promise chain safety. The recurring bookings API route (`/api/bookings/recurring`) had **no authentication or org_id filtering**, allowing any unauthenticated request to create bookings and read parent booking data across tenants. Additionally, 6 unhandled `.then()` promise chains across 3 components are now guarded with `.catch()` to prevent unhandled rejection crashes.
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `web/app/api/bookings/recurring/route.ts` | **CRITICAL**: Added `supabase.auth.getUser()` authentication check + `requireOrgId()` multi-tenant gate + `.eq('org_id', orgId)` filter on parent booking query, client query, and parent update query. Route was previously completely unauthenticated. |
+| `web/components/ui/what3words-input.tsx` | Added `.catch()` to 4 unhandled promise chains: `coordinatesToWhat3Words` (auto-fill), `autosuggestWhat3Words` (autocomplete), `what3WordsToCoordinates` (validation), and `what3WordsToCoordinates` (suggestion click) |
+| `web/components/admin/timesheet-batch-approval.tsx` | Added `.catch()` to `createClient().auth.getUser()` promise chain in useEffect |
+| `web/components/QuoteBuilder.tsx` | Added `.catch()` to `coordinatesToWhat3Words` promise chain in Google Places autocomplete handler |
+
+### Key Details
+
+- **Security fix**: The recurring bookings route now follows the standard auth pattern: `createClient()` → `getUser()` → `requireOrgId()` → org-scoped queries, matching all other booking API routes
+- **Promise safety**: All 6 `.then()` chains now have `.catch()` handlers to prevent `UnhandledPromiseRejection` crashes when network requests (what3words API, Supabase auth) fail
+- **No database changes**: All fixes are code-level auth/safety improvements
+- **Zero TypeScript errors**: All changes pass `tsc --noEmit`
 
 ---
 
@@ -2599,6 +2649,31 @@ Hardened `getUserProfile()` in `src/lib/auth-manager.ts` to use a three-stage fa
 | File | Change |
 |------|--------|
 | `src/lib/auth-manager.ts` | `getUserProfile()` rewritten with 3-stage fallback; new `getProfileFromCacheOrJwt()` private helper |
+
+---
+
+## Recent Updates — Live Transcription Speed Improvements (2026-02-19)
+
+### Faster Live Transcription on iOS & Android ✅
+
+Tuned the live transcription pipeline to reduce perceived latency on both platforms. The medic now sees transcript text appear noticeably faster after speaking.
+
+#### `supabase/functions/realtime-transcribe/index.ts` (iOS Streaming)
+
+| Change | Before | After | Why |
+|--------|--------|-------|-----|
+| **VAD threshold** | `0.5` | `0.3` | Lower threshold = more sensitive to speech. Picks up quieter speech sooner and starts transcribing earlier. |
+| **VAD silence_duration_ms** | `400ms` | `250ms` | Shorter required silence before a speech segment is considered "done". Transcript delta events fire ~150ms faster after each phrase/pause. |
+
+These settings control the OpenAI Realtime API's Server Voice Activity Detection. The `prefix_padding_ms` (200ms) is unchanged — it captures audio just before detected speech starts so words aren't clipped.
+
+#### `services/EmergencyAlertService.ts` (Android HTTP Chunked)
+
+| Change | Before | After | Why |
+|--------|--------|-------|-----|
+| **TRANSCRIPTION_CHUNK_INTERVAL_MS** | `5000ms` (5s) | `3000ms` (3s) | First transcript now arrives at ~5s (3s recording + ~2s Whisper API) instead of ~7s. Whisper handles 3-second audio chunks well. |
+
+**Net effect**: iOS transcription feels near-instant (word-by-word with shorter pauses). Android first feedback drops from ~7s to ~5s.
 
 ---
 

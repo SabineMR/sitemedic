@@ -66,9 +66,9 @@ const PCM_RECORDING_OPTIONS = {
 // Notification channel for emergency alerts (Android)
 const EMERGENCY_CHANNEL_ID = 'emergency';
 const MAX_RECORDING_DURATION_MS = 90_000; // 90 seconds
-// 5s gives first feedback at ~7s (5s record + ~2s Whisper API).
-// Going below 4s risks chunks being too short for meaningful transcription.
-const TRANSCRIPTION_CHUNK_INTERVAL_MS = 5_000;
+// 3s gives first feedback at ~5s (3s record + ~2s Whisper API).
+// Whisper handles 3-second chunks well; going below 2s risks too-short audio.
+const TRANSCRIPTION_CHUNK_INTERVAL_MS = 3_000;
 const AUDIO_BUCKET = 'emergency-recordings';
 
 export interface EmergencyContact {
