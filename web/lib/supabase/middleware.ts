@@ -204,9 +204,11 @@ export async function updateSession(request: NextRequest) {
   if (user && !isPublicRoute) {
     const orgId = user.app_metadata?.org_id;
 
-    // Allow access to setup and onboarding pages even without org_id
+    // Allow access to setup, onboarding, and marketplace registration without org_id
     const isSetupRoute = request.nextUrl.pathname.startsWith('/setup/') ||
-                         request.nextUrl.pathname.startsWith('/onboarding');
+                         request.nextUrl.pathname.startsWith('/onboarding') ||
+                         request.nextUrl.pathname.startsWith('/marketplace/register') ||
+                         request.nextUrl.pathname.startsWith('/marketplace/client-register');
 
     // Platform admins have no org_id by design — they manage all orgs
     const isPlatformAdmin = user.app_metadata?.role === 'platform_admin';
