@@ -8,6 +8,16 @@ export const revalidate = 86400; // Revalidate daily (24 hours)
 export const metadata: Metadata = {
   title: 'Pricing',
   description: 'Transparent pricing for professional paramedics with built-in compliance. One daily rate, everything included.',
+  openGraph: {
+    title: 'Pricing',
+    description: 'Transparent pricing for professional paramedics with built-in compliance. One daily rate, everything included.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Pricing',
+    description: 'Transparent pricing for professional paramedics with built-in compliance. One daily rate, everything included.',
+  },
 };
 
 export default function Pricing() {

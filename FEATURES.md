@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-18 (Sprint 15: Date Locale & Confirm Dialog Fixes)
+**Last Updated**: 2026-02-18 (Sprint 16: Fetch Safety, JSON.parse Guards & OG Metadata)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -212,6 +212,37 @@ Phase 30 Plan 01 delivers the client-side and server-side building blocks for fe
 - **requireTier() pattern**: Pure utility (no NextResponse coupling) — API routes catch the error and return appropriate HTTP status
 - **NULL tier handling**: Both client and server paths default NULL to 'starter' (legacy org compatibility per Phase 24-05 decision)
 - **No database changes**: All components read existing `organizations.subscription_tier` column
+
+---
+
+## Previous Updates — Sprint 16: Fetch Safety, JSON.parse Guards & OG Metadata (2026-02-18)
+
+### Overview
+
+Sprint 16 of the gap analysis: fixes a critical pattern where `response.json()` was called before checking `response.ok` (4 files — crashes when server returns HTML error pages), wraps 2 unprotected `JSON.parse` calls in try/catch (sessionStorage corruption would crash booking flow), and adds Open Graph + Twitter Card metadata to all 5 marketing pages for rich social media sharing previews.
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `web/app/(client)/client/bookings/[id]/page.tsx` | Fixed `response.json()` ordering — now checks `response.ok` first, then parses JSON. Error path uses `.catch(() => ({}))` to handle non-JSON error responses safely. |
+| `web/app/(auth)/signup/page.tsx` | Fixed `response.json()` ordering — same pattern: check `response.ok` first, parse error JSON with `.catch()` fallback. |
+| `web/components/QuoteBuilder.tsx` | Fixed `response.json()` ordering — split into error path (with `.catch()`) and success path with properly scoped `data` variables. |
+| `web/app/contracts/[id]/sign/signature-section.tsx` | Added `.catch(() => ({}))` to error-path `response.json()` call — was already checking `response.ok` first but the JSON parse could still crash on HTML error responses. |
+| `web/components/booking/net30-confirmation.tsx` | Wrapped `JSON.parse(sessionStorage)` calls in try/catch — corrupted sessionStorage values would crash the Net-30 confirmation page. Shows user-friendly error message on parse failure. |
+| `web/components/booking/payment-form.tsx` | Wrapped `JSON.parse(sessionStorage)` calls in try/catch — corrupted sessionStorage values would crash the payment form. Returns early with error message on parse failure. |
+| `web/app/(marketing)/page.tsx` | Added `openGraph` and `twitter` card metadata for rich social sharing previews. |
+| `web/app/(marketing)/about/page.tsx` | Added `openGraph` and `twitter` card metadata. |
+| `web/app/(marketing)/services/page.tsx` | Added `openGraph` and `twitter` card metadata. |
+| `web/app/(marketing)/pricing/page.tsx` | Added `openGraph` and `twitter` card metadata. |
+| `web/app/(marketing)/contact/page.tsx` | Added `openGraph` and `twitter` card metadata. |
+
+### Key Details
+
+- **response.json() before response.ok**: If a server returns a 500 HTML error page, calling `.json()` throws `SyntaxError: Unexpected token '<'` — crashing the entire error handling. The fix checks `response.ok` first and uses `.catch(() => ({}))` as a safety net.
+- **JSON.parse safety**: sessionStorage values can become corrupted (browser extensions, storage limits, manual tampering). Without try/catch, `JSON.parse` throws a `SyntaxError` that crashes the React component.
+- **Open Graph metadata**: Enables rich link previews on Facebook, LinkedIn, Slack, etc. Each marketing page now includes `og:title`, `og:description`, `og:type` and `twitter:card`, `twitter:title`, `twitter:description`.
+- **No new dependencies**: All changes use existing Next.js metadata API and standard JavaScript error handling.
 
 ---
 

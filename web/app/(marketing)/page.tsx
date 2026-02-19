@@ -4,6 +4,16 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Professional Paramedics for Events & Worksites',
   description: 'Book HCPC-registered paramedics for film sets, music festivals, motorsport events, construction sites, and more. Compliance records generated automatically.',
+  openGraph: {
+    title: 'Professional Paramedics for Events & Worksites',
+    description: 'Book HCPC-registered paramedics for film sets, music festivals, motorsport events, construction sites, and more.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Professional Paramedics for Events & Worksites',
+    description: 'Book HCPC-registered paramedics for film sets, music festivals, motorsport events, construction sites, and more.',
+  },
 };
 import QuoteButton from '@/components/marketing/quote-button';
 import {

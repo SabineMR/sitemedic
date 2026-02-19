@@ -50,7 +50,7 @@ export function BrandingForm({
   onPreviewChange,
 }: BrandingFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasInitializedRef = useRef(false);
 
   // Form state

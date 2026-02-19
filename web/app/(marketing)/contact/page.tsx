@@ -16,6 +16,16 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: 'Contact',
   description: 'Get in touch with Apex Safety Group. Request a quote, discuss your requirements, or book a medic for your event or worksite.',
+  openGraph: {
+    title: 'Contact',
+    description: 'Get in touch with Apex Safety Group. Request a quote, discuss your requirements, or book a medic for your event or worksite.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Contact',
+    description: 'Get in touch with Apex Safety Group. Request a quote, discuss your requirements, or book a medic for your event or worksite.',
+  },
 };
 
 import { ContactForm } from './contact-form';

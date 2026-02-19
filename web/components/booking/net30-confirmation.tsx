@@ -37,8 +37,12 @@ export function Net30Confirmation({
       return;
     }
 
-    setBookingData(JSON.parse(bookingDataStr));
-    setPricing(JSON.parse(pricingDataStr));
+    try {
+      setBookingData(JSON.parse(bookingDataStr));
+      setPricing(JSON.parse(pricingDataStr));
+    } catch {
+      setError('Booking data is corrupted. Please return to the booking form.');
+    }
   }, []);
 
   const handleConfirm = async () => {

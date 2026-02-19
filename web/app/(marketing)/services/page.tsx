@@ -16,6 +16,16 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: 'Services',
   description: 'Professional paramedic services for construction, film & TV, festivals, motorsport, sporting events, and more. HCPC-registered medics with industry-specific compliance.',
+  openGraph: {
+    title: 'Services',
+    description: 'Professional paramedic services for construction, film & TV, festivals, motorsport, sporting events, and more.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Services',
+    description: 'Professional paramedic services for construction, film & TV, festivals, motorsport, sporting events, and more.',
+  },
 };
 
 const verticals = [

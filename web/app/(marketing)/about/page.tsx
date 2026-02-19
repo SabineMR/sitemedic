@@ -16,6 +16,16 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: 'About Us',
   description: 'Learn about Apex Safety Group and the SiteMedic platform. HCPC-registered paramedics, automated compliance, and a better way to staff medical cover.',
+  openGraph: {
+    title: 'About Us',
+    description: 'Learn about Apex Safety Group and the SiteMedic platform. HCPC-registered paramedics, automated compliance, and a better way to staff medical cover.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'About Us',
+    description: 'Learn about Apex Safety Group and the SiteMedic platform. HCPC-registered paramedics and automated compliance.',
+  },
 };
 
 export default function AboutPage() {

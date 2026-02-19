@@ -136,8 +136,16 @@ export function PaymentForm({ clientId }: PaymentFormProps) {
       return;
     }
 
-    const bookingData: BookingFormData = JSON.parse(bookingDataStr);
-    const pricing: PricingBreakdown = JSON.parse(pricingDataStr);
+    let bookingData: BookingFormData;
+    let pricing: PricingBreakdown;
+    try {
+      bookingData = JSON.parse(bookingDataStr);
+      pricing = JSON.parse(pricingDataStr);
+    } catch {
+      setError('Booking data is corrupted. Please return to the booking form.');
+      setLoading(false);
+      return;
+    }
 
     // Call API to create booking + Payment Intent
     fetch('/api/bookings/create-payment-intent', {
