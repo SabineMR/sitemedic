@@ -82,18 +82,60 @@ A Request-for-Quotes (RFQ) marketplace being added to SiteMedic where UK clients
 - **New tables**: `marketplace_companies`, `compliance_documents`, `medic_commitments` (Phase 32), `marketplace_events`, `marketplace_quotes`, `marketplace_awards`, `marketplace_ratings`, `marketplace_messages` (later phases)
 - **Credits/points system**: Deferred to v4.1 — free to quote at launch to build marketplace liquidity
 
+### Implementation Progress (Phase 32 -- Foundation Schema & Registration)
+
+**Plan 01 -- Database Schema (Complete):**
+- `marketplace_companies` table with CQC fields, Stripe Connect columns, verification workflow, user_id-based RLS
+- `medic_commitments` table with PostgreSQL EXCLUSION constraint (btree_gist) preventing double-booking
+- `compliance_documents` table with document_type discriminator, expiry tracking, admin review workflow
+- Private `compliance-documents` storage bucket with company-folder-scoped RLS
+- TypeScript types (`MarketplaceCompany`, `ComplianceDocument`, `MedicCommitment`, `CQCProvider`)
+- CQC API client (`verifyCQCProvider()`) and compliance utilities (`isDocumentExpired()`, `getExpiringDocuments()`)
+
+**Plan 02 -- Registration Wizard & APIs (Complete):**
+- Zustand store managing 4-step wizard state with org pre-fill from existing SiteMedic account
+- CQC verify API route proxying to public CQC API
+- Registration API creating `marketplace_companies` with dual-path org crossover (existing org linking or new org creation)
+- Multipart document upload API with 10MB limit, MIME validation, storage bucket upload
+- 4-step wizard UI: company details, CQC verification, document upload, review & submit
+- Lightweight client marketplace registration page (single-click toggle)
+- Middleware updated to allow marketplace routes without org_id
+
+**Plan 03 -- Admin Verification & CQC Monitoring (Complete):**
+- Admin verification queue with status filters, search, and action buttons (approve/reject/request info/suspend)
+- CQC daily check Edge Function combining CQC status verification + document expiry monitoring
+- Service-role admin actions (platform admin has org_id=NULL, RLS blocks direct writes)
+- Active bookings flagged for admin review on company suspension
+
+**Plan 04 -- Stripe Connect Onboarding (Complete):**
+- New `create_company_express_account` action in existing `stripe-connect` Edge Function
+  - Creates Stripe Express accounts with `business_type='company'` (distinct from individual medic flow)
+  - Authenticates user and verifies company admin ownership before account creation
+  - If company already has a Stripe account (incomplete onboarding), generates new Account Link instead of duplicate
+  - Updates `marketplace_companies.stripe_account_id` after creation
+- `POST /api/marketplace/stripe-connect` API route proxying to Edge Function with company details lookup
+- Stripe callback page (`/marketplace/register/stripe-callback`) handling:
+  - `?complete=true`: Verifies account status (charges_enabled, payouts_enabled), updates `stripe_onboarding_complete`
+  - `?refresh=true`: Generates fresh Account Link for expired onboarding sessions
+  - Error states with appropriate recovery options
+- Registration wizard Step 4 updated from placeholder to two-phase flow:
+  - Pre-registration: review summary + submit button
+  - Post-registration: prominent "Start Stripe Onboarding" button with redirect to Stripe hosted flow
+  - "Skip for now" option (onboarding can be completed later from company dashboard)
+- Existing individual medic Stripe Connect flow (`create_express_account`) remains unchanged
+
 ### Planning Files
 
 | File | Purpose |
 |------|---------|
 | `.planning/PROJECT.md` | Updated with v4.0 milestone context |
 | `.planning/REQUIREMENTS-v4.md` | 60 requirements across 10 categories |
-| `.planning/ROADMAP.md` | 8 phases (32–39), 26 plans |
+| `.planning/ROADMAP.md` | 8 phases (32--39), 26 plans |
 | `.planning/research/v4/` | Stack, features, architecture, pitfalls research |
 
 ---
 
-## Recent Updates — Site Manager Active/Inactive Status (2026-02-19)
+## Recent Updates -- Site Manager Active/Inactive Status (2026-02-19)
 
 ### Overview
 
