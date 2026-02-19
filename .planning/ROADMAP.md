@@ -65,13 +65,13 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
   3. Platform admin sees a verification queue with uploaded documents and can approve, reject, or request more information — approved medics get a "verified" badge
   4. When a medic's certificate expires, their quoting ability is suspended and they receive notification to upload updated documents
   5. Approved medics are guided through Stripe Connect Express onboarding so they can receive payouts
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 32-01: Marketplace database schema (tables, RLS policies, EXCLUSION constraints, source column on bookings, Zod schemas)
-- [ ] 32-02: Medic and client registration flows (signup forms, profile creation, document upload)
-- [ ] 32-03: Verification workflow (admin queue, approve/reject/request-info, verified badge, certificate expiry monitoring)
-- [ ] 32-04: Stripe Connect onboarding for marketplace medics
+- [ ] 32-01-PLAN.md — Marketplace database schema (marketplace_companies, compliance_documents, medic_commitments tables, RLS policies, EXCLUSION constraints, storage bucket, TypeScript types, CQC client)
+- [ ] 32-02-PLAN.md — Company registration wizard and client signup (4-step wizard, Zustand store, CQC verification API, document upload, registration API)
+- [ ] 32-03-PLAN.md — Admin verification queue and compliance monitoring (admin queue UI, approve/reject/request-info, CQC daily check Edge Function, document expiry auto-suspension)
+- [ ] 32-04-PLAN.md — Stripe Connect onboarding for marketplace companies (company Express account, onboarding link, callback page)
 
 ### Phase 33: Event Posting & Discovery
 **Goal**: Clients can post events needing medical cover with full details, and verified medics can browse, search, and filter events that match their qualifications and location
@@ -217,7 +217,7 @@ Plans:
 | 29. Org Onboarding Flow | v3.0 | 5/5 | Complete | 2026-02-18 |
 | 30. Subscription Management & Feature Gating | v3.0 | 5/5 | Complete | 2026-02-20 |
 | 31. Branding Settings UI | v3.0 | 2/2 | Complete | 2026-02-19 |
-| 32. Foundation Schema & Registration | v4.0 | 0/4 | Not started | - |
+| 32. Foundation Schema & Registration | v4.0 | 0/4 | Planned | - |
 | 33. Event Posting & Discovery | v4.0 | 0/3 | Not started | - |
 | 34. Quote Submission & Comparison | v4.0 | 0/3 | Not started | - |
 | 35. Award Flow & Payment | v4.0 | 0/4 | Not started | - |
