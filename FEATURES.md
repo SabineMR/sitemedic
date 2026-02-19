@@ -11,7 +11,7 @@
 
 ### Overview
 
-A Request-for-Quotes (RFQ) marketplace being added to SiteMedic where UK clients post events needing medical cover, verified medics (individuals and companies) submit detailed quotes, and clients award jobs with SiteMedic taking commission from the medic's side. Awarded quotes auto-create bookings that flow into the existing dashboard, timesheets, and payout systems.
+A Request-for-Quotes (RFQ) marketplace being added to SiteMedic where UK clients post events needing medical cover, verified CQC-registered medical companies submit detailed quotes, and clients award jobs with SiteMedic taking commission from the company's side. Awarded quotes auto-create bookings that flow into the existing dashboard, timesheets, and payout systems. **Note:** Marketplace is companies-only (no individual freelance medics). Individual medic roster management is handled in Phase 37.
 
 ### Key Features (8 phases planned — Phases 32–39)
 
@@ -23,7 +23,7 @@ A Request-for-Quotes (RFQ) marketplace being added to SiteMedic where UK clients
 | **Award & Deposit** | Client awards quote, deposit charged (default 25%), booking auto-created in SiteMedic with `source='marketplace'`. | 35 |
 | **Remainder Payment** | Auto-charged after event via saved payment method. Retry logic + notifications on failure. | 35 |
 | **Commission** | SiteMedic takes % from medic side (existing platform_fee/medic_payout pattern). Client pays quoted price. | 35 |
-| **Open Registration** | Individual medics + medic companies. Verification gates quoting (admin approves uploaded certs). | 32 |
+| **Company Registration** | CQC-registered medical companies register via 4-step wizard (company details, CQC verification, document upload, Stripe Connect). Admin verification queue gates quoting. Lightweight client registration for event posting. | 32 |
 | **Company Accounts** | Companies manage medic rosters. Company quotes lock out individual quotes from same medic (double-up prevention). | 37 |
 | **Bidirectional Ratings** | Client rates medic + medic rates client (1–5 stars + review). 14-day window. Admin moderation. | 36 |
 | **Platform Messaging** | On-platform messaging between clients and medics. Contact details gated behind payment. | 36 |
@@ -36,7 +36,7 @@ A Request-for-Quotes (RFQ) marketplace being added to SiteMedic where UK clients
 - **Cross-org RLS**: Marketplace tables use `user_id`-based RLS (not `org_id`) since marketplace is platform-scoped
 - **Booking bridge**: Awarded quotes auto-create bookings via Edge Function, linking to existing timesheets → payouts pipeline
 - **Payment model**: Two Stripe PaymentIntents (deposit at award + remainder after event), not authorize-then-capture
-- **New tables**: `marketplace_events`, `marketplace_quotes`, `marketplace_awards`, `marketplace_ratings`, `marketplace_messages`, `medic_companies`
+- **New tables**: `marketplace_companies`, `compliance_documents`, `medic_commitments` (Phase 32), `marketplace_events`, `marketplace_quotes`, `marketplace_awards`, `marketplace_ratings`, `marketplace_messages` (later phases)
 - **Credits/points system**: Deferred to v4.1 — free to quote at launch to build marketplace liquidity
 
 ### Planning Files
