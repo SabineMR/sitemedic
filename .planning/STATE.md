@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v4.0 MedBid Marketplace — Phase 33 (Event Posting & Discovery)
+**Current focus:** v5.0 Internal Comms & Document Management — Phase 40 (Comms & Docs Foundation)
 
 ## Current Position
 
-Phase: 33 of 47 (Event Posting & Discovery)
-Plan: 0 of 3 in current phase
-Status: Ready to plan
-Last activity: 2026-02-19 — Phase 32 complete (4 plans, 5/5 must-haves verified)
+Phase: 40 of 47 (Comms & Docs Foundation)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-19 — Completed 40-01-PLAN.md
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [███░░░░░░░] v4.0 15% | [░░░░░░░░░░] v5.0 0%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [███░░░░░░░] v4.0 15% | [█░░░░░░░░░] v5.0 5%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 183 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 4 v4.0)
+- Total plans completed: 184 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 4 v4.0 + 1 v5.0)
 - Average duration: 3.9 min
-- Total execution time: ~11.8 hours
+- Total execution time: ~11.9 hours
 
 **By Milestone:**
 
@@ -32,7 +32,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
 | v4.0 | 8 | 4/26 | ~32 min | ~8 min |
-| v5.0 | 8 | 0/21 | - | - |
+| v5.0 | 8 | 1/21 | ~3 min | ~3 min |
 
 *Updated after each plan completion*
 
@@ -54,13 +54,16 @@ Recent decisions affecting current work:
 - [v5.0]: Push notifications show sender name only, never message content (GDPR)
 - [32-04]: Company Stripe Express accounts use business_type='company' (distinct from individual medic flow)
 - [32-04]: Stripe onboarding is optional at registration -- can be completed later from company dashboard
+- [40-01]: (SELECT get_user_org_id()) wrapper pattern in RLS for query plan caching -- improvement over bare function call
+- [40-01]: Denormalized org_id on child tables (messages, message_recipients, document_versions) to avoid JOIN-based RLS
+- [40-01]: Messages soft-delete via deleted_at column, filtered at RLS level for org users (platform admin sees all)
 
 ### Pending Todos
 
 - Configure external services for production deployment (Stripe, Google Maps, Resend, webhooks, pg_cron, Vault) -- carried from v1.1
 - Obtain DPA template + solicitor review before first org onboarding (non-code blocker for v3.0 launch)
 - **Configure Vercel wildcard `*.sitemedic.co.uk` and DNS CNAME** -- checkpoint from 26-01; 72h propagation
-- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142) to production** -- verified correct, ready to apply
+- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142, 143) to production** -- verified correct, ready to apply
 - **Add `NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.co.uk` to Vercel env vars** -- needed for production subdomain routing
 - **Create Stripe Products/Prices and register billing webhook** -- checkpoint from 25-01
 - **CQC legal opinion required** -- must determine if marketplace model requires CQC registration before launch
@@ -80,5 +83,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Phase 32 complete -- ready to plan Phase 33
+Stopped at: Completed 40-01-PLAN.md -- ready for 40-02-PLAN.md
 Resume file: None
