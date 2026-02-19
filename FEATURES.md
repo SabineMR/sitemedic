@@ -39,13 +39,22 @@ An internal organization communication and document management system for core S
 - **New tables (Phase 40 - foundation created)**: `conversations`, `messages`, `message_recipients`, `conversation_read_status`, `document_categories`, `documents`, `document_versions`
 - **Denormalized org_id**: Child tables (messages, message_recipients, document_versions) have denormalized org_id to avoid JOIN-based RLS performance issues
 - **Default document categories**: Insurance, DBS, Qualification, ID, Other -- auto-seeded per org with trigger for new orgs
-- **New storage bucket**: `medic-documents` (private, 10MB, PDF/JPEG/PNG/DOCX)
+- **Storage buckets (Phase 40-02)**: `medic-documents` and `message-attachments` (both private, 10MB, PDF/JPEG/PNG/DOC/DOCX)
+- **Storage RLS**: Org-scoped via `(storage.foldername(name))[1] = (SELECT get_user_org_id())::text` with platform admin bypass
+- **TypeScript types**: `web/types/comms.types.ts` with interfaces for all 7 tables, 4 enum union types, 4 convenience types
 
 ### Database Migration Status
 
 | Migration | Content | Status |
 |-----------|---------|--------|
 | `143_comms_docs_schema.sql` | 7 tables, 35 RLS policies, 18 indexes, 5 triggers, category seeding | Created (not yet applied to production) |
+| `144_comms_docs_storage.sql` | 2 storage buckets, 10 storage RLS policies (org-scoped + platform admin) | Created (not yet applied to production) |
+
+### TypeScript Types
+
+| File | Content |
+|------|---------|
+| `web/types/comms.types.ts` | 7 table interfaces (Conversation, Message, MessageRecipient, ConversationReadStatus, DocumentCategory, Document, DocumentVersion), 4 union types (ConversationType, MessageType, MessageStatus, DocumentStatus), 4 convenience types (ConversationWithUnread, MessageWithSender, DocumentWithVersion, BroadcastReadSummary) |
 
 ### Planning Files
 

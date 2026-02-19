@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 40 of 47 (Comms & Docs Foundation)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-19 — Completed 40-01-PLAN.md
+Plan: 2 of 2 in current phase (Phase 40 complete)
+Status: Phase complete
+Last activity: 2026-02-19 — Completed 40-02-PLAN.md
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [███░░░░░░░] v4.0 15% | [█░░░░░░░░░] v5.0 5%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [███░░░░░░░] v4.0 15% | [█░░░░░░░░░] v5.0 10%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 184 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 4 v4.0 + 1 v5.0)
+- Total plans completed: 185 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 4 v4.0 + 2 v5.0)
 - Average duration: 3.9 min
 - Total execution time: ~11.9 hours
 
@@ -32,7 +32,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
 | v4.0 | 8 | 4/26 | ~32 min | ~8 min |
-| v5.0 | 8 | 1/21 | ~3 min | ~3 min |
+| v5.0 | 8 | 2/21 | ~5 min | ~2.5 min |
 
 *Updated after each plan completion*
 
@@ -57,13 +57,16 @@ Recent decisions affecting current work:
 - [40-01]: (SELECT get_user_org_id()) wrapper pattern in RLS for query plan caching -- improvement over bare function call
 - [40-01]: Denormalized org_id on child tables (messages, message_recipients, document_versions) to avoid JOIN-based RLS
 - [40-01]: Messages soft-delete via deleted_at column, filtered at RLS level for org users (platform admin sees all)
+- [40-02]: Storage RLS uses (storage.foldername(name))[1] = (SELECT get_user_org_id())::text for org-scoped file access
+- [40-02]: Platform admin storage policies use FOR ALL (single policy per bucket instead of per-operation)
+- [40-02]: TypeScript types in separate comms.types.ts -- avoids modifying existing database.types.ts
 
 ### Pending Todos
 
 - Configure external services for production deployment (Stripe, Google Maps, Resend, webhooks, pg_cron, Vault) -- carried from v1.1
 - Obtain DPA template + solicitor review before first org onboarding (non-code blocker for v3.0 launch)
 - **Configure Vercel wildcard `*.sitemedic.co.uk` and DNS CNAME** -- checkpoint from 26-01; 72h propagation
-- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142, 143) to production** -- verified correct, ready to apply
+- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142, 143, 144) to production** -- verified correct, ready to apply
 - **Add `NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.co.uk` to Vercel env vars** -- needed for production subdomain routing
 - **Create Stripe Products/Prices and register billing webhook** -- checkpoint from 25-01
 - **CQC legal opinion required** -- must determine if marketplace model requires CQC registration before launch
@@ -83,5 +86,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 40-01-PLAN.md -- ready for 40-02-PLAN.md
+Stopped at: Completed 40-02-PLAN.md -- Phase 40 complete, ready for Phase 41 (Messaging UI)
 Resume file: None
