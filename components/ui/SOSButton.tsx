@@ -19,10 +19,17 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import SOSModal from './SOSModal';
+import { useAuth } from '../../src/contexts/AuthContext';
 
 export default function SOSButton() {
+  const { state } = useAuth();
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [sosModalVisible, setSosModalVisible] = useState(false);
+
+  // Hide SOS button when user is not authenticated (e.g. on login screen)
+  if (!state.isAuthenticated) {
+    return null;
+  }
 
   const handleConfirm = () => {
     setConfirmVisible(false);

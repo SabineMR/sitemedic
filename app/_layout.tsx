@@ -161,10 +161,10 @@ export default function RootLayout() {
               </BottomSheetModalProvider>
             </SyncProvider>
           </OrgProvider>
+          {/* SOSButton inside AuthProvider so it can check auth state and hide when signed out */}
+          <SOSButton />
         </AuthProvider>
       </DatabaseProvider>
-      {/* SOSButton outside all providers — no stacking context interference */}
-      <SOSButton />
     </GestureHandlerRootView>
   );
 }
