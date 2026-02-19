@@ -47,7 +47,7 @@ See: `.planning/milestones/v2.0-ROADMAP.md`
 - [x] **Phase 28: Branding — PDFs & Emails** — Org logo in all 8 PDF Edge Functions + all 4 email templates ✓ 2026-02-18
 - [x] **Phase 29: Org Onboarding Flow** — Signup page, Stripe Checkout, activation queue, welcome email ✓ 2026-02-18
 - [x] **Phase 30: Subscription Management & Feature Gating** — Tier gates in UI and API, Stripe Customer Portal, MRR dashboard, suspension flow ✓ 2026-02-20
-- [ ] **Phase 31: Branding Settings UI** — Org admin logo upload + colour picker, platform admin branding override
+- [x] **Phase 31: Branding Settings UI** — Org admin logo upload + colour picker, platform admin branding override ✓ 2026-02-19
 
 ---
 
@@ -248,7 +248,7 @@ Plans:
 
 Plans:
 - [x] 31-01-PLAN.md — Org admin branding settings page: BrandingForm component (auto-save 500ms debounce, logo upload, colour picker with reset), BrandingPreview live panel, TierGate wrapping; update settings page to link to dedicated branding page
-- [ ] 31-02-PLAN.md — Platform admin branding override: service-role API route (GET/PUT/POST) for any org's branding; expandable branding section per org card on platform organizations page with logo upload via server-side POST
+- [x] 31-02-PLAN.md — Platform admin branding override: service-role API route (GET/PUT/POST) for any org's branding; expandable branding section per org card on platform organizations page with logo upload via server-side POST
 
 ---
 
@@ -276,4 +276,4 @@ Note: Phases 27 and 28 can be parallelised once Phase 26 is deployed. Phase 30 a
 | 28. Branding — PDFs & Emails | v3.0 | 3/3 | Complete | 2026-02-18 |
 | 29. Org Onboarding Flow | v3.0 | 5/5 | Complete | 2026-02-18 |
 | 30. Subscription Management & Feature Gating | v3.0 | 5/5 | Complete | 2026-02-20 |
-| 31. Branding Settings UI | v3.0 | 1/2 | In progress | - |
+| 31. Branding Settings UI | v3.0 | 2/2 | Complete | 2026-02-19 |

@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v3.0 White-Label Platform & Subscription Engine — Phase 31 IN PROGRESS (Branding Settings UI)
+**Current focus:** v3.0 White-Label Platform & Subscription Engine — COMPLETE
 
 ## Current Position
 
 Phase: 31 of 31 (Branding Settings UI)
-Plan: 1 of 2 in Phase 31
-Status: In progress
-Last activity: 2026-02-19 — Completed 31-01-PLAN.md
+Plan: 2 of 2 in Phase 31
+Status: Phase complete — v3.0 milestone complete
+Last activity: 2026-02-19 — Completed 31-02-PLAN.md
 
-Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [█████████░] v3.0 ~93% (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4, Phase 27: 3/3, Phase 28: 3/3, Phase 29: 5/5, Phase 30: 5/5, Phase 31: 1/2 done)
+Progress: [██████████] v1.0 complete | [██████████] v1.1 complete | [██████████] v2.0 complete | [██████████] v3.0 complete (Phase 24: 5/5, Phase 25: 3/3, Phase 26: 4/4, Phase 27: 3/3, Phase 28: 3/3, Phase 29: 5/5, Phase 30: 5/5, Phase 31: 2/2)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 149 (84 v1.0 + 35 v1.1 + 30 v2.0 + 29 v3.0)
-- Average duration: 4.0 min
-- Total execution time: ~9.4 hours
+- Total plans completed: 150 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0)
+- Average duration: 3.9 min
+- Total execution time: ~9.5 hours
 
 **By Phase:**
 
@@ -37,10 +37,10 @@ Progress: [██████████] v1.0 complete | [██████�
 | 28 (v3.0) | 3/3 | ~8 min | ~2.7 min |
 | 29 (v3.0) | 5/5 | ~25 min | ~5 min |
 | 30 (v3.0) | 5/5 | ~22.5 min | ~4.5 min |
-| 31 (v3.0) | 1/2 | ~10 min | ~10 min |
+| 31 (v3.0) | 2/2 | ~16 min | ~8 min |
 
 **Recent Trend:**
-- Last plan: 31-01 — Org Admin Branding Settings Page (~10 min)
+- Last plan: 31-02 — Platform Admin Branding Override (~6 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -119,6 +119,9 @@ Progress: [██████████] v1.0 complete | [██████�
 - **31-01:** Auto-save (500ms debounce) for text fields, explicit upload for logo — different UX patterns for different interaction types
 - **31-01:** BrandingForm accepts apiEndpoint prop for 31-02 platform admin reuse
 - **31-01:** Preview updates instantly (no debounce) while save is debounced — snappy UX
+- **31-02:** Service-role client for all platform admin branding ops — platform admin JWT has org_id=NULL so RLS blocks direct writes
+- **31-02:** logoUploadEndpoint prop is optional — org admin flow (31-01) is completely unchanged, zero regression
+- **31-02:** apiEndpoint and logoUploadEndpoint both point to same route — distinguished by HTTP method (PUT for text, POST for FormData logo)
 
 ### Pending Todos
 
@@ -137,5 +140,5 @@ Progress: [██████████] v1.0 complete | [██████�
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 31-01-PLAN.md (org admin branding settings page)
+Stopped at: Completed 31-02-PLAN.md (platform admin branding override) — v3.0 milestone complete
 Resume file: None

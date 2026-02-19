@@ -2,8 +2,37 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-19 (Phase 31-01: Org Admin Branding Settings Page)
+**Last Updated**: 2026-02-19 (Phase 31-02: Platform Admin Branding Override)
 **Audience**: Web developers, technical reviewers, product team
+
+---
+
+## Recent Updates — Platform Admin Branding Override (2026-02-19)
+
+### Overview
+
+Platform admin (Sabine) can now configure branding on behalf of any organisation directly from the `/platform/organizations` page. Each active org card has a "Branding" button that expands an inline section with the same `BrandingForm` + `BrandingPreview` components used by org admins. This is the white-glove onboarding service: new subscribers who haven't configured their branding can have it done for them.
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `web/app/api/platform/organizations/[id]/branding/route.ts` | Platform admin branding API: GET (read branding), PUT (auto-save text fields), POST (logo upload via FormData). Uses service-role Supabase client to bypass RLS (platform admin JWT has `org_id=NULL`). All handlers verify `app_metadata.role === 'platform_admin'`. POST validates file type (PNG/JPEG/SVG) and size (max 2MB) before uploading to `org-logos` bucket. |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `web/app/(dashboard)/admin/settings/branding/components/branding-form.tsx` | Added optional `logoUploadEndpoint` prop. When set, logo upload POSTs FormData to that server endpoint instead of client-side Supabase Storage. Needed for platform admin whose JWT lacks org_id (RLS blocks client-side uploads). Org admin flow unchanged (prop is optional). |
+| `web/app/platform/organizations/page.tsx` | Added expandable branding section per active org card. Clicking "Branding" (Palette icon) fetches branding via GET, shows `BrandingForm` + `BrandingPreview` inline. Only one org expanded at a time (card spans full width when expanded). Branding data cached to avoid re-fetching on collapse/expand. |
+
+### Key Implementation Details
+
+- **Service-role client**: Same `getServiceClient()` pattern as `activate/route.ts` -- uses `SUPABASE_SERVICE_ROLE_KEY` to bypass RLS for all org_branding reads/writes
+- **Server-side logo upload**: POST handler parses `FormData`, validates file, converts to Buffer, uploads via `supabase.storage.from('org-logos').upload()` with `upsert: true`, then updates `org_branding.logo_path`
+- **logoUploadEndpoint prop**: When `BrandingForm` receives this prop, it sends a `POST FormData` request instead of client-side Supabase Storage upload. Response includes `logo_path` and `logo_url` for state updates
+- **Expandable UX**: `expandedBrandingId` state tracks which org is expanded. Card gets `lg:col-span-2` when expanded for full-width branding form. Collapse/expand is instant (cached data reused)
+- **No tier check**: Platform admin can edit branding for any org regardless of subscription tier -- this is the white-glove override capability
 
 ---
 
