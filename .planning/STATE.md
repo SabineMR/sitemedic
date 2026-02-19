@@ -110,6 +110,8 @@ Progress: [██████████] v1.0 complete | [██████�
 - **30-04:** MRR calculated from hardcoded tier prices (Starter £149, Growth £299, Enterprise £599), not Stripe API — avoids rate limits and latency
 - **30-04:** NULL tier defaults to starter, NULL status defaults to active — matches 24-05 convention
 - **30-04:** Past-due orgs included in MRR (dunning period); cancelled excluded from MRR
+- **30-02:** Branding section header stays outside TierGate so all tiers see the feature exists — upgrade prompt appears inside
+- **30-02:** requireTier placed after requireOrgId in branding API — auth check first (401), then tier check (403)
 - **30-05:** Suspension check uses `=== 'cancelled'` (not `!== 'active'`) — NULL (legacy) and past_due pass through
 - **30-05:** Single query extension: `.select('onboarding_completed, subscription_status')` — no extra DB call
 - **30-05:** /suspended is NOT in publicRoutes — user must be authenticated to see suspension page
