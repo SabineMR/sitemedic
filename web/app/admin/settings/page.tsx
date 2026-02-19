@@ -113,6 +113,9 @@ export default function SettingsPage() {
   const [gcalRedirectUri, setGcalRedirectUri] = useState('');
   const [gcalMedics, setGcalMedics] = useState<Array<{ id: string; first_name: string; last_name: string; connected: boolean }>>([]);
 
+  // Billing portal state
+  const [portalLoading, setPortalLoading] = useState(false);
+
   // Branding state
   const [brandingLoading, setBrandingLoading] = useState(true);
   const [savingBranding, setSavingBranding] = useState(false);
@@ -427,6 +430,23 @@ export default function SettingsPage() {
       toast.error('Failed to save notification preference');
     } finally {
       setSavingNotifs(false);
+    }
+  }
+
+  async function handleManageBilling() {
+    setPortalLoading(true);
+    try {
+      const res = await fetch('/api/billing/portal', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error ?? 'Failed to open billing portal');
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      toast.error('Failed to open billing portal');
+    } finally {
+      setPortalLoading(false);
     }
   }
 
@@ -1285,12 +1305,28 @@ export default function SettingsPage() {
                   ))}
                 </div>
 
-                <p className="text-xs text-gray-500">
-                  To upgrade or manage billing, contact support at{' '}
-                  <a href="mailto:support@sitemedic.co.uk" className="text-blue-400 hover:text-blue-300">
-                    support@sitemedic.co.uk
-                  </a>
-                </p>
+                <div className="flex items-center justify-between pt-2 border-t border-gray-700/50">
+                  <p className="text-xs text-gray-500">
+                    Manage your payment methods, invoices, and subscription via Stripe.
+                  </p>
+                  <button
+                    onClick={handleManageBilling}
+                    disabled={portalLoading || !subscriptionTier}
+                    className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-2"
+                  >
+                    {portalLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Opening...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="w-4 h-4" />
+                        Manage Billing
+                      </>
+                    )}
+                  </button>
+                </div>
               </>
             )}
           </div>
