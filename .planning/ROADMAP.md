@@ -65,7 +65,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 - [x] **Phase 43: Real-time & Push Notifications** - Supabase Realtime for live message delivery, iOS push notifications with GDPR-safe content
 - [x] **Phase 44: Broadcast Messaging** - Org admin can send broadcast messages to all medics with per-medic read tracking
 - [x] **Phase 45: Document Upload & Profile Storage** - Medics upload categorised compliance documents from iOS or web, stored on their profile with versioning
-- [ ] **Phase 46: Expiry Tracking & Alerts** - Status badges, progressive expiry alerts, and bulk expiry dashboard for org admins
+- [x] **Phase 46: Expiry Tracking & Alerts** - Status badges, progressive expiry alerts, and bulk expiry dashboard for org admins
 - [ ] **Phase 47: Message Polish** - Delivery/read status indicators, cross-conversation search, and file attachments in messages
 
 ## Phase Details
@@ -335,8 +335,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 46-01-PLAN.md — Migration 155 + Edge Function for progressive expiry alerts (document_expiry_reminders audit table, get_documents_expiring_in_days RPC, mark_expired_documents function, pg_cron daily job at 8:00 UTC, document-expiry-checker Edge Function with medic digest emails at 30/14/7/1 days and admin digest at 14/7/1 days, Resend with dev mode fallback)
-- [ ] 46-02-PLAN.md — Bulk expiry dashboard (TanStack Query hooks for expiring documents, /admin/document-expiry page with summary cards + tabbed data table + category filter, DashboardNav item with FileWarning icon)
+- [x] 46-01-PLAN.md — Migration 155 + Edge Function for progressive expiry alerts (document_expiry_reminders audit table, get_documents_expiring_in_days RPC, mark_expired_documents function, pg_cron daily job at 8:00 UTC, document-expiry-checker Edge Function with medic digest emails at 30/14/7/1 days and admin digest at 14/7/1 days, Resend with dev mode fallback)
+- [x] 46-02-PLAN.md — Bulk expiry dashboard (TanStack Query hooks for expiring documents, /admin/document-expiry page with summary cards + tabbed data table + category filter, DashboardNav item with FileWarning icon)
 
 ### Phase 47: Message Polish
 **Goal**: Messages show delivery and read status indicators, users can search across all their conversations, and users can attach documents or files to messages -- completing the messaging feature set
@@ -394,5 +394,5 @@ Plans:
 | 43. Real-time & Push Notifications | v5.0 | 3/3 | Complete | 2026-02-20 |
 | 44. Broadcast Messaging | v5.0 | 2/2 | Complete | 2026-02-20 |
 | 45. Document Upload & Profile Storage | v5.0 | 3/3 | Complete | 2026-02-20 |
-| 46. Expiry Tracking & Alerts | v5.0 | 0/2 | Not started | - |
+| 46. Expiry Tracking & Alerts | v5.0 | 2/2 | Complete | 2026-02-20 |
 | 47. Message Polish | v5.0 | 0/3 | Not started | - |

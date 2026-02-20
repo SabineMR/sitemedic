@@ -33,11 +33,11 @@
 - [x] **DOC-03**: Medic enters an expiry date when uploading a document
 - [x] **DOC-04**: Uploaded documents are stored on the medic's individual profile
 - [x] **DOC-05**: Org admin can view all documents for any medic in their org on the medic's profile
-- [ ] **DOC-06**: Documents show status badges: Current (green), Expiring Soon (amber), Expired (red)
-- [ ] **DOC-07**: Progressive expiry alerts sent to medic and admin (30/14/7/1 days before expiry)
+- [x] **DOC-06**: Documents show status badges: Current (green), Expiring Soon (amber), Expired (red)
+- [x] **DOC-07**: Progressive expiry alerts sent to medic and admin (30/14/7/1 days before expiry)
 - [x] **DOC-08**: Medic or admin can download the original document file
 - [x] **DOC-09**: When medic uploads a new version of a document type, the old version is archived (not deleted)
-- [ ] **DOC-10**: Org admin sees a bulk expiry view — all documents expiring in the next 30 days across all medics
+- [x] **DOC-10**: Org admin sees a bulk expiry view — all documents expiring in the next 30 days across all medics
 
 ### Cross-Platform
 
@@ -94,11 +94,11 @@
 | DOC-03 | Phase 45 | Complete |
 | DOC-04 | Phase 45 | Complete |
 | DOC-05 | Phase 45 | Complete |
-| DOC-06 | Phase 46 | Pending |
-| DOC-07 | Phase 46 | Pending |
+| DOC-06 | Phase 46 | Complete |
+| DOC-07 | Phase 46 | Complete |
 | DOC-08 | Phase 45 | Complete |
 | DOC-09 | Phase 45 | Complete |
-| DOC-10 | Phase 46 | Pending |
+| DOC-10 | Phase 46 | Complete |
 | PLAT-01 | Phase 42 | Complete |
 | PLAT-02 | Phase 45 | Complete |
 | PLAT-03 | Phase 40 | Complete |
