@@ -335,8 +335,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 46-01: Status badges and expiry alerts (computed status badge on document display; pg_cron Edge Function that runs daily checking expiry dates; sends progressive email alerts at 30/14/7/1 day thresholds; tracks which alerts have been sent to avoid duplicates)
-- [ ] 46-02: Bulk expiry dashboard (org admin page listing all documents expiring within 30 days; columns: medic name, document type, expiry date, status badge, days remaining; sort by expiry date; filter by category)
+- [ ] 46-01-PLAN.md — Migration 155 + Edge Function for progressive expiry alerts (document_expiry_reminders audit table, get_documents_expiring_in_days RPC, mark_expired_documents function, pg_cron daily job at 8:00 UTC, document-expiry-checker Edge Function with medic digest emails at 30/14/7/1 days and admin digest at 14/7/1 days, Resend with dev mode fallback)
+- [ ] 46-02-PLAN.md — Bulk expiry dashboard (TanStack Query hooks for expiring documents, /admin/document-expiry page with summary cards + tabbed data table + category filter, DashboardNav item with FileWarning icon)
 
 ### Phase 47: Message Polish
 **Goal**: Messages show delivery and read status indicators, users can search across all their conversations, and users can attach documents or files to messages -- completing the messaging feature set
