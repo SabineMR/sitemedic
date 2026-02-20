@@ -12,13 +12,21 @@
 
 import type { MessageWithSender } from '@/types/comms.types';
 import { cn } from '@/lib/utils';
+import { BroadcastReadSummary } from './BroadcastReadSummary';
 
 interface MessageItemProps {
   message: MessageWithSender;
   isOwnMessage: boolean;
+  readSummary?: { totalRecipients: number; readCount: number } | null;
+  onReadDrilldown?: () => void;
 }
 
-export function MessageItem({ message, isOwnMessage }: MessageItemProps) {
+export function MessageItem({
+  message,
+  isOwnMessage,
+  readSummary,
+  onReadDrilldown,
+}: MessageItemProps) {
   const initial = (message.sender_name || '?').charAt(0).toUpperCase();
   const timeDisplay = formatMessageTime(message.created_at);
 
@@ -52,6 +60,14 @@ export function MessageItem({ message, isOwnMessage }: MessageItemProps) {
         <span className="text-[11px] text-muted-foreground mt-1 inline-block">
           {timeDisplay}
         </span>
+        {readSummary && onReadDrilldown && (
+          <BroadcastReadSummary
+            messageId={message.id}
+            totalRecipients={readSummary.totalRecipients}
+            readCount={readSummary.readCount}
+            onDrilldown={onReadDrilldown}
+          />
+        )}
       </div>
     </div>
   );

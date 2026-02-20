@@ -11,11 +11,12 @@
 
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
-import { useMessages } from '@/lib/queries/comms.hooks';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useMessages, useBroadcastReadSummaries } from '@/lib/queries/comms.hooks';
 import type { MessageWithSender } from '@/types/comms.types';
 import { MessageItem } from './MessageItem';
 import { MessageInput } from './MessageInput';
+import { BroadcastReadDrilldown } from './BroadcastReadDrilldown';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -43,6 +44,16 @@ export function MessageThread({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const prevMessageCount = useRef(initialMessages.length);
   const queryClient = useQueryClient();
+  const [drilldownMessageId, setDrilldownMessageId] = useState<string | null>(null);
+
+  // Read summaries for admin viewing broadcast
+  const showReadSummaries =
+    conversationType === 'broadcast' && userRole === 'org_admin';
+  const messageIds = messages?.map((m) => m.id) ?? [];
+  const { data: readSummaryMap } = useBroadcastReadSummaries(
+    messageIds,
+    showReadSummaries
+  );
 
   /**
    * Check if the user is scrolled near the bottom of the message list.
@@ -129,9 +140,27 @@ export function MessageThread({
             key={message.id}
             message={message}
             isOwnMessage={message.sender_id === currentUserId}
+            readSummary={
+              showReadSummaries
+                ? readSummaryMap?.get(message.id) ?? null
+                : undefined
+            }
+            onReadDrilldown={
+              showReadSummaries
+                ? () => setDrilldownMessageId(message.id)
+                : undefined
+            }
           />
         ))}
         <div ref={messagesEndRef} />
+
+        {drilldownMessageId && (
+          <BroadcastReadDrilldown
+            messageId={drilldownMessageId}
+            open={!!drilldownMessageId}
+            onClose={() => setDrilldownMessageId(null)}
+          />
+        )}
       </div>
 
       {/* Message input or broadcast read-only notice */}

@@ -68,6 +68,50 @@ export function useMessages(
 }
 
 // =============================================================================
+// BROADCAST READ SUMMARIES HOOK (Phase 44)
+// =============================================================================
+
+/**
+ * Fetch broadcast read summaries for multiple message IDs in a single batch.
+ * Used by admin to see "X of Y read" on each broadcast message.
+ * Returns a Map of messageId -> { totalRecipients, readCount }.
+ */
+export function useBroadcastReadSummaries(
+  messageIds: string[],
+  enabled: boolean
+) {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ['broadcast-read-summaries', ...messageIds],
+    queryFn: async () => {
+      if (messageIds.length === 0) return new Map<string, { totalRecipients: number; readCount: number }>();
+
+      const { data } = await supabase
+        .from('message_recipients')
+        .select('message_id, read_at')
+        .in('message_id', messageIds);
+
+      const summaryMap = new Map<string, { totalRecipients: number; readCount: number }>();
+      if (data) {
+        data.forEach((r: { message_id: string; read_at: string | null }) => {
+          const existing = summaryMap.get(r.message_id) || {
+            totalRecipients: 0,
+            readCount: 0,
+          };
+          existing.totalRecipients++;
+          if (r.read_at) existing.readCount++;
+          summaryMap.set(r.message_id, existing);
+        });
+      }
+      return summaryMap;
+    },
+    enabled,
+    staleTime: 30_000,
+  });
+}
+
+// =============================================================================
 // REALTIME SUBSCRIPTION HOOK (Phase 43)
 // =============================================================================
 
