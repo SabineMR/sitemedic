@@ -154,13 +154,13 @@ Plans:
   3. Winning medic receives email + dashboard notification with event details and client contact info; non-selected medics receive "not selected" notification
   4. After event completion, the remainder is auto-charged to the client's saved payment method — with retry logic and email + SMS notification if the charge fails
   5. SiteMedic commission is deducted from the medic's side using the existing platform_fee_percent/medic_payout_percent pattern, and the medic payout follows the existing friday-payout pipeline via Stripe Connect
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 35-01: Award flow and deposit payment (select quote, Stripe PaymentIntent with SetupIntent, EXCLUSION constraint enforcement)
-- [ ] 35-02: Booking bridge (marketplace-booking-creator Edge Function, source='marketplace' guards on existing triggers)
-- [ ] 35-03: Remainder payment and commission (auto-charge after event, retry logic, marketplace payout calculation)
-- [ ] 35-04: Award notifications (winner with contact reveal, rejection notifications, failed payment alerts)
+- [ ] 35-01-PLAN.md — Award foundation: migration 149 (bookings payment columns, marketplace_award_history, client_payment_methods, quote status expansion), TypeScript types, Zod schemas, award calculations, Zustand store, POST /api/marketplace/quotes/[id]/award API with EXCLUSION constraint check and Stripe PaymentIntent creation
+- [ ] 35-02-PLAN.md — Award UI and deposit flow: AwardConfirmationModal (confirm + payment steps), PaymentBreakdownSection, DepositPaymentForm with embedded Stripe Payment Element, deposit webhook handler creating marketplace booking, quote/event status updates
+- [ ] 35-03-PLAN.md — Remainder payment automation: charge-remainder-payment Edge Function with off-session charging, pg_cron daily schedule, 3-retry logic over 7 days, remainder webhook handlers, payment method manager UI and API
+- [ ] 35-04-PLAN.md — Award notifications and contact reveal: email functions (award winner, rejection, deposit confirmation, remainder failure), webhook email triggers, awarded event details API with contact gating, AwardedEventDetails dashboard component
 
 ### Phase 36: Ratings, Messaging & Disputes
 **Goal**: Both parties can rate each other after events, communicate through platform messaging before and after award, and raise disputes with defined cancellation policies — building trust and safety into the marketplace
