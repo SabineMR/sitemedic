@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v5.0 shipped — ready for next milestone (v4.0 MedBid Marketplace remaining: Phases 38-39)
+**Current focus:** v5.0 shipped — ready for next milestone (v4.0 MedBid Marketplace remaining: Phase 39)
 
 ## Current Position
 
-Phase: 38-notifications-alerts (Phase 1 of 2 remaining in v4.0) — COMPLETE
-Plan: 04 of 04 complete
-Status: Phase complete — All 4 Plans shipped (DB foundation, feed UI, trigger wiring, preferences UI)
-Last activity: 2026-02-20 — Completed 38-04-PLAN.md (notification preferences API + channel x category matrix UI)
+Phase: 39-admin-dashboard (Phase 1 of 1 remaining in v4.0) — pending planning
+Plan: 0 of ? pending
+Status: Ready for planning
+Last activity: 2026-02-20 — Phase 38 (Notifications & Alerts) verified and complete
 
-Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [##########] v4.0 88% | [##########] v5.0 100%
+Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [##########] v4.0 89% | [##########] v5.0 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 238 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 33 v4.0 + 21 v5.0 + 5 gap closures)
+- Total plans completed: 242 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 37 v4.0 + 21 v5.0 + 5 gap closures)
 - Average duration: 3.9 min
 - Total execution time: ~14.5 hours
 
@@ -31,7 +31,7 @@ Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [#########
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 33 | ~369 min | ~5.6 min |
+| v4.0 | 9 | 37 | ~389 min | ~5.3 min |
 | v5.0 | 8 | 21 | ~116 min | ~5.0 min |
 
 *Updated after each plan completion*
@@ -141,7 +141,7 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 - Configure external services for production deployment (Stripe, Google Maps, Resend, webhooks, pg_cron, Vault) -- carried from v1.1
 - Obtain DPA template + solicitor review before first org onboarding (non-code blocker for v3.0 launch)
 - **Configure Vercel wildcard `*.sitemedic.co.uk` and DNS CNAME** -- checkpoint from 26-01; 72h propagation
-- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142, 143, 144, 146, 147, 148, 149, 149b, 150, 151, 155, 156, 157) to production** -- migrations 132-144 verified, 146 for marketplace quotes, 147 for direct jobs, 148 for job ratings, 149/149b for marketplace award/payment, 150 for message notification trigger, 151 for broadcast indexes, 155 for document expiry reminders, 156 for company roster medics, 157 for message polish (FTS + delivery status)
+- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142, 143, 144, 146, 147, 148, 149, 149b, 150, 151, 155, 156, 157, 158, 159, 160) to production** -- migrations 132-144 verified, 146 for marketplace quotes, 147 for direct jobs, 148 for job ratings, 149/149b for marketplace award/payment, 150 for message notification trigger, 151 for broadcast indexes, 155 for document expiry reminders, 156 for company roster medics, 157 for message polish (FTS + delivery status), 158 for enhanced ratings, 159 for user notifications, 160 for notification preferences
 - **Add `NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.co.uk` to Vercel env vars** -- needed for production subdomain routing
 - **Create Stripe Products/Prices and register billing webhook** -- checkpoint from 25-01
 - **CQC legal opinion required** -- must determine if marketplace model requires CQC registration before launch
@@ -160,6 +160,6 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 
 ## Session Continuity
 
-Last session: 2026-02-20T23:24:25Z
-Stopped at: Completed 38-04-PLAN.md (notification preferences API + channel x category matrix UI) — Phase 38 COMPLETE
+Last session: 2026-02-21T00:00:00Z
+Stopped at: Phase 38 verified and complete — ready for Phase 39 (Admin Dashboard)
 Resume file: None

@@ -52,7 +52,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 - [x] **Phase 35: Award Flow & Payment** - Client awards quote, deposit collected, booking auto-created, remainder charged after event, commission split, payouts
 - [x] **Phase 36: Ratings, Messaging & Disputes** - Bidirectional ratings, per-quote messaging, cancellation policy, dispute resolution
 - [x] **Phase 37: Company Accounts** - Company roster management, medic assignment to events, company profile display
-- [ ] **Phase 38: Notifications & Alerts** - Multi-channel notification system (dashboard feed, email, SMS) with medic preferences
+- [x] **Phase 38: Notifications & Alerts** - Multi-channel notification system (dashboard feed, email, SMS) with medic preferences
 - [ ] **Phase 39: Admin Dashboard** - Platform admin marketplace metrics, event/quote/dispute management, configuration
 
 <details>
@@ -203,10 +203,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 38-01-PLAN.md — Database foundation and notification service (user_notifications + preferences migrations, Twilio SMS module, notification types, create-notification utility)
-- [ ] 38-02-PLAN.md — Dashboard notification bell and feed UI (NotificationBell dropdown, /dashboard/notifications page, Realtime hooks, mark-as-read API)
-- [ ] 38-03-PLAN.md — Event fan-out and marketplace action triggers (new event fan-out to companies, notification triggers in 10+ existing API routes)
-- [ ] 38-04-PLAN.md — Notification preferences UI and API (channel x category matrix settings page, GET/PUT preferences API, SMS opt-in with PECR compliance)
+- [x] 38-01-PLAN.md — Database foundation and notification service (user_notifications + preferences migrations, Twilio SMS module, notification types, create-notification utility)
+- [x] 38-02-PLAN.md — Dashboard notification bell and feed UI (NotificationBell dropdown, /dashboard/notifications page, Realtime hooks, mark-as-read API)
+- [x] 38-03-PLAN.md — Event fan-out and marketplace action triggers (new event fan-out to companies, notification triggers in 10+ existing API routes)
+- [x] 38-04-PLAN.md — Notification preferences UI and API (channel x category matrix settings page, GET/PUT preferences API, SMS opt-in with PECR compliance)
 
 ### Phase 39: Admin Dashboard
 **Goal**: Platform admin can monitor marketplace health, manage all marketplace entities, configure settings, and moderate users — completing the operational toolkit
@@ -256,5 +256,5 @@ Plans:
 | 35. Award Flow & Payment | v4.0 | 0/4 | Not started | - |
 | 36. Ratings, Messaging & Disputes | v4.0 | 3/3 | Complete | 2026-02-20 |
 | 37. Company Accounts | v4.0 | 3/3 | Complete | 2026-02-20 |
-| 38. Notifications & Alerts | v4.0 | 0/4 | Not started | - |
+| 38. Notifications & Alerts | v4.0 | 4/4 | Complete | 2026-02-20 |
 | 39. Admin Dashboard | v4.0 | 0/3 | Not started | - |
