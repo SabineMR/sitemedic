@@ -131,6 +131,14 @@ export function useBroadcastReadSummaries(
 export function useRealtimeMessages(orgId: string | null) {
   const [isConnected, setIsConnected] = useState(false);
   const queryClient = useQueryClient();
+  const currentUserIdRef = useRef<string | null>(null);
+
+  // Resolve current user ID once on mount
+  useEffect(() => {
+    realtimeSupabase.auth.getUser().then(({ data }) => {
+      currentUserIdRef.current = data.user?.id ?? null;
+    });
+  }, []);
 
   useEffect(() => {
     if (!orgId) {
@@ -160,6 +168,39 @@ export function useRealtimeMessages(orgId: string | null) {
           }
           // Also refresh the conversation list (preview, timestamp, unread count)
           queryClient.invalidateQueries({ queryKey: ['conversations'] });
+
+          // Auto-mark as "delivered" when we receive another user's message
+          const newMsg = payload.new;
+          if (
+            newMsg?.sender_id &&
+            currentUserIdRef.current &&
+            newMsg.sender_id !== currentUserIdRef.current &&
+            newMsg.status === 'sent'
+          ) {
+            fetch(`/api/messages/${newMsg.id}/status`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: 'delivered' }),
+            }).catch(console.error); // Fire-and-forget
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `org_id=eq.${orgId}`,
+        },
+        (payload) => {
+          // Refresh messages when status changes (tick updates)
+          const conversationId = payload.new?.conversation_id;
+          if (conversationId) {
+            queryClient.invalidateQueries({
+              queryKey: ['messages', conversationId],
+            });
+          }
         }
       )
       .on(

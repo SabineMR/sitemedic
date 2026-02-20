@@ -4,7 +4,7 @@
  * Phase 37: Company Accounts — Plan 01
  *
  * GET: Returns roster medics with joined medic name/email.
- *   Query params: companyId (required), status (default: 'active')
+ *   Query params: companyId (required), status (optional, 'all' returns all statuses, default: all)
  *   Auth: company admin or platform admin
  *
  * POST: Directly adds a medic to the company roster.
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const companyId = searchParams.get('companyId');
-    const statusFilter = searchParams.get('status') || 'active';
+    const statusFilter = searchParams.get('status') || 'all';
 
     if (!companyId) {
       return NextResponse.json({ error: 'companyId is required' }, { status: 400 });
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch roster medics with joined medic details
-    const { data: rosterMedics, error: rosterError } = await supabase
+    let query = supabase
       .from('company_roster_medics')
       .select(`
         *,
@@ -78,8 +78,14 @@ export async function GET(request: NextRequest) {
           email
         )
       `)
-      .eq('company_id', companyId)
-      .eq('status', statusFilter)
+      .eq('company_id', companyId);
+
+    // Apply status filter (skip for 'all' to return every status)
+    if (statusFilter !== 'all') {
+      query = query.eq('status', statusFilter);
+    }
+
+    const { data: rosterMedics, error: rosterError } = await query
       .order('joined_at', { ascending: false });
 
     if (rosterError) {

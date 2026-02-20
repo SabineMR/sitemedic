@@ -69,6 +69,20 @@ export async function PATCH(
       );
     }
 
+    // 5. Advance message status to 'read' for all other-sender messages
+    const { error: statusError } = await supabase
+      .from('messages')
+      .update({ status: 'read' })
+      .eq('conversation_id', conversationId)
+      .eq('org_id', orgId)
+      .neq('sender_id', user.id)
+      .in('status', ['sent', 'delivered']);
+
+    if (statusError) {
+      console.error('Error advancing message status to read:', statusError);
+      // Non-fatal: conversation read status was already updated
+    }
+
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('Mark-as-read error:', err);
