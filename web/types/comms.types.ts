@@ -139,3 +139,15 @@ export interface BroadcastRecipientDetail {
   read_at: string | null;
   status: 'read' | 'unread';
 }
+
+/** Search result for cross-conversation message search (Phase 47) */
+export interface MessageSearchResult {
+  id: string;
+  conversation_id: string;
+  content: string;
+  sender_id: string;
+  sender_name: string;
+  created_at: string;
+  conversation_name: string;
+  conversation_type: ConversationType;
+}

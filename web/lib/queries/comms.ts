@@ -9,7 +9,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Conversation, MessageWithSender } from '@/types/comms.types';
+import type { Conversation, MessageWithSender, MessageSearchResult } from '@/types/comms.types';
 
 // =============================================================================
 // TYPES
@@ -296,5 +296,30 @@ export async function fetchMessagesForConversation(
     sender_name: senderNameMap.get(msg.sender_id) || 'Admin',
     sender_role: senderNameMap.has(msg.sender_id) ? 'medic' : 'admin',
   })) as MessageWithSender[];
+}
+
+// =============================================================================
+// MESSAGE SEARCH (Phase 47-02)
+// =============================================================================
+
+/**
+ * Search messages across all conversations via the search API.
+ * Client-side function that calls the server search endpoint.
+ *
+ * @param query - Search term (min 2 chars)
+ * @returns Array of search results
+ */
+export async function searchMessages(
+  query: string
+): Promise<MessageSearchResult[]> {
+  if (!query || query.trim().length < 2) return [];
+
+  const res = await fetch(
+    `/api/messages/search?q=${encodeURIComponent(query.trim())}&limit=50`
+  );
+  if (!res.ok) return [];
+
+  const data = await res.json();
+  return data.results ?? [];
 }
 

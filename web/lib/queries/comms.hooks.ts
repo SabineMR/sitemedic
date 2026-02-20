@@ -19,6 +19,7 @@ import type { MessageWithSender } from '@/types/comms.types';
 import {
   fetchConversationsWithUnread,
   fetchMessagesForConversation,
+  searchMessages,
   type ConversationListItem,
 } from './comms';
 
@@ -108,6 +109,25 @@ export function useBroadcastReadSummaries(
     },
     enabled,
     staleTime: 30_000,
+  });
+}
+
+// =============================================================================
+// MESSAGE SEARCH HOOK (Phase 47)
+// =============================================================================
+
+/**
+ * Client-side hook for cross-conversation message search.
+ * Debounce-friendly: only fires when query >= 2 chars.
+ * Uses placeholderData to keep previous results visible while loading.
+ */
+export function useMessageSearch(query: string) {
+  return useQuery({
+    queryKey: ['message-search', query],
+    queryFn: () => searchMessages(query),
+    enabled: query.trim().length >= 2,
+    staleTime: 60_000,
+    placeholderData: (prev: unknown) => prev as Awaited<ReturnType<typeof searchMessages>> | undefined,
   });
 }
 
