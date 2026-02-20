@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v5.0 Internal Comms — Phase 43 (Real-Time Push Notifications) executing
+**Current focus:** v4.0 MedBid Marketplace — Phase 35 (Award Flow & Payment) COMPLETE; v5.0 Phase 43 also complete
 
 ## Current Position
 
-Phase: 43 of 47 (Real-Time Push Notifications — COMPLETE)
-Plan: 3 of 3 in current phase (43-01 + 43-02 + 43-03 complete)
-Status: Phase 43 complete
-Last activity: 2026-02-20 — Completed 43-03-PLAN.md (Server-side push notification pipeline)
+Phase: 35 of 47 (Award Flow & Payment — COMPLETE)
+Plan: 4 of 4 in current phase (35-01 + 35-02 + 35-03 + 35-04 complete)
+Status: Phase 35 complete, Phase 43 also complete
+Last activity: 2026-02-20 — Completed Phase 35 (Award Flow & Payment)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [██████░░░░] v4.0 50% | [███████░░░] v5.0 67%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [██████░░░░] v4.0 63% | [███████░░░] v5.0 67%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 216 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 23 v4.0 + 14 v5.0)
+- Total plans completed: 220 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 27 v4.0 + 14 v5.0)
 - Average duration: 3.9 min
 - Total execution time: ~14.0 hours
 
@@ -31,7 +31,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 23/32 | ~293 min | ~6.0 min |
+| v4.0 | 8 | 27/32 | ~317 min | ~5.6 min |
 | v5.0 | 8 | 14/21 | ~71 min | ~5.1 min |
 
 *Updated after each plan completion*
@@ -137,6 +137,14 @@ Recent decisions affecting current work:
 - [43-01]: Web Realtime uses @/lib/supabase singleton (not SSR client) for persistent WebSocket channel
 - [43-01]: UnreadBadge client component replaces server-rendered badge for live updates
 - [43-01]: All polling removed from web messaging (30s conversations, 10s messages) -- Realtime only
+- [35-03]: Remainder Edge Function retry: 3 attempts at 1d, 3d, 7d intervals with idempotency keys per attempt
+- [35-03]: pg_cron uses Vault secrets pattern (matching migration 022) -- vault.decrypted_secrets for URL and service_role_key
+- [35-03]: Remainder webhook success updates remainder_paid_at (does NOT cancel booking on failure -- unlike direct bookings)
+- [35-03]: Payment method PUT updates all unpaid marketplace bookings for the customer to use new card
+- [35-04]: Email notifications use shared Resend client with dev mode fallback (no RESEND_API_KEY = console log only)
+- [35-04]: Each email send wrapped in individual try/catch in webhook (email failure NEVER blocks webhook response)
+- [35-04]: Contact gating server-side: awarded event API returns client=null when deposit not yet paid
+- [35-04]: Award button in QuoteRankRow only visible for submitted/revised quotes when event is open/closed
 - [43-03]: Migration numbered 150 (not 149) because 149_marketplace_award_payment.sql already existed
 - [43-03]: Vault secrets pattern for Edge Function URL/key (matching migration 033 RIDDOR trigger)
 - [43-03]: Sender name resolution: medics.first_name+last_name > profiles.full_name > "Someone" fallback
@@ -171,5 +179,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 43-03-PLAN.md (Server-side push notification pipeline — Phase 43 complete)
+Stopped at: Completed Phase 35 (Award Flow & Payment) — all 4 plans executed and verified
 Resume file: None

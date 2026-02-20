@@ -49,7 +49,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 - [x] **Phase 33: Event Posting & Discovery** - Clients create event listings, medics browse and filter by location/qualifications
 - [x] **Phase 34: Quote Submission & Comparison** - Companies submit priced quotes with breakdowns, clients compare anonymised company profiles (companies only)
 - [x] **Phase 34.1: Self-Procured Jobs** (INSERTED) - Companies with SiteMedic subscriptions create and manage jobs they sourced themselves, with zero commission, full wizard entry, Stripe payment flow, and complete feature parity with marketplace jobs
-- [ ] **Phase 35: Award Flow & Payment** - Client awards quote, deposit collected, booking auto-created, remainder charged after event, commission split, payouts
+- [x] **Phase 35: Award Flow & Payment** - Client awards quote, deposit collected, booking auto-created, remainder charged after event, commission split, payouts
 - [ ] **Phase 36: Ratings, Messaging & Disputes** - Bidirectional ratings, per-quote messaging, cancellation policy, dispute resolution
 - [ ] **Phase 37: Company Accounts** - Company roster management, medic assignment to events, company profile display
 - [ ] **Phase 38: Notifications & Alerts** - Multi-channel notification system (dashboard feed, email, SMS) with medic preferences
@@ -157,10 +157,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 35-01-PLAN.md — Award foundation: migration 149 (bookings payment columns, marketplace_award_history, client_payment_methods, quote status expansion), TypeScript types, Zod schemas, award calculations, Zustand store, POST /api/marketplace/quotes/[id]/award API with EXCLUSION constraint check and Stripe PaymentIntent creation
-- [ ] 35-02-PLAN.md — Award UI and deposit flow: AwardConfirmationModal (confirm + payment steps), PaymentBreakdownSection, DepositPaymentForm with embedded Stripe Payment Element, deposit webhook handler creating marketplace booking, quote/event status updates
-- [ ] 35-03-PLAN.md — Remainder payment automation: charge-remainder-payment Edge Function with off-session charging, pg_cron daily schedule, 3-retry logic over 7 days, remainder webhook handlers, payment method manager UI and API
-- [ ] 35-04-PLAN.md — Award notifications and contact reveal: email functions (award winner, rejection, deposit confirmation, remainder failure), webhook email triggers, awarded event details API with contact gating, AwardedEventDetails dashboard component
+- [x] 35-01-PLAN.md — Award foundation: migration 149 (bookings payment columns, marketplace_award_history, client_payment_methods, quote status expansion), TypeScript types, Zod schemas, award calculations, Zustand store, POST /api/marketplace/quotes/[id]/award API with EXCLUSION constraint check and Stripe PaymentIntent creation
+- [x] 35-02-PLAN.md — Award UI and deposit flow: AwardConfirmationModal (confirm + payment steps), PaymentBreakdownSection, DepositPaymentForm with embedded Stripe Payment Element, deposit webhook handler creating marketplace booking, quote/event status updates
+- [x] 35-03-PLAN.md — Remainder payment automation: charge-remainder-payment Edge Function with off-session charging, pg_cron daily schedule, 3-retry logic over 7 days, remainder webhook handlers, payment method manager UI and API
+- [x] 35-04-PLAN.md — Award notifications and contact reveal: email functions (award winner, rejection, deposit confirmation, remainder failure), webhook email triggers, awarded event details API with contact gating, AwardedEventDetails dashboard component
 
 ### Phase 36: Ratings, Messaging & Disputes
 **Goal**: Both parties can rate each other after events, communicate through platform messaging before and after award, and raise disputes with defined cancellation policies — building trust and safety into the marketplace
