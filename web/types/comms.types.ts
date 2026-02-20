@@ -131,3 +131,11 @@ export interface BroadcastReadSummary {
   read_count: number;
   delivered_count: number;
 }
+
+/** Individual recipient detail for broadcast drilldown (admin view) */
+export interface BroadcastRecipientDetail {
+  recipient_id: string;
+  name: string;
+  read_at: string | null;
+  status: 'read' | 'unread';
+}

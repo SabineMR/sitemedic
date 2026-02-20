@@ -8,11 +8,7 @@
  * Phase 43: Polling replaced with Supabase Realtime subscriptions
  */
 
-import { useEffect, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase/client';
-import { supabase as realtimeSupabase } from '@/lib/supabase';
-import type { SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Conversation, MessageWithSender } from '@/types/comms.types';
 
 // =============================================================================
@@ -23,7 +19,7 @@ import type { Conversation, MessageWithSender } from '@/types/comms.types';
 export interface ConversationListItem {
   id: string;
   org_id: string;
-  type: 'direct';
+  type: 'direct' | 'broadcast';
   subject: string | null;
   medic_id: string | null;
   created_by: string;
@@ -33,7 +29,7 @@ export interface ConversationListItem {
   updated_at: string;
   unread_count: number;
   participant_name: string;
-  participant_role: 'medic' | 'admin';
+  participant_role: 'medic' | 'admin' | 'broadcast';
 }
 
 // =============================================================================
@@ -70,11 +66,11 @@ export async function fetchConversationsWithUnread(
   const userId = user.id;
   const userRole = user.app_metadata?.role as string | undefined;
 
-  // 2. Fetch all direct conversations for the user's org (RLS scopes to org)
+  // 2. Fetch all conversations for the user's org (RLS scopes to org)
   const { data: conversations, error: convError } = await supabase
     .from('conversations')
     .select('*')
-    .eq('type', 'direct')
+    .in('type', ['direct', 'broadcast'])
     .order('last_message_at', { ascending: false, nullsFirst: false });
 
   if (convError) {
@@ -164,9 +160,13 @@ export async function fetchConversationsWithUnread(
   // 4. Build result array with participant names and unread counts
   return conversations.map((conv) => {
     let participantName = 'Unknown';
-    let participantRole: 'medic' | 'admin' = 'admin';
+    let participantRole: 'medic' | 'admin' | 'broadcast' = 'admin';
 
-    if (userRole === 'medic') {
+    if (conv.type === 'broadcast') {
+      // Broadcast conversation — universal label
+      participantName = 'Broadcasts';
+      participantRole = 'broadcast';
+    } else if (userRole === 'medic') {
       // Current user is a medic — the other party is the org admin
       participantName = 'Admin';
       participantRole = 'admin';
@@ -182,7 +182,7 @@ export async function fetchConversationsWithUnread(
     return {
       id: conv.id,
       org_id: conv.org_id,
-      type: 'direct' as const,
+      type: conv.type as 'direct' | 'broadcast',
       subject: conv.subject,
       medic_id: conv.medic_id,
       created_by: conv.created_by,
@@ -209,27 +209,6 @@ export async function fetchTotalUnreadCount(
 ): Promise<number> {
   const conversations = await fetchConversationsWithUnread(supabase);
   return conversations.reduce((sum, c) => sum + c.unread_count, 0);
-}
-
-// =============================================================================
-// CLIENT HOOKS
-// =============================================================================
-
-/**
- * Client-side hook for conversations.
- * Realtime subscriptions handle live updates (no polling).
- * Initial data comes from server-side fetch for SSR hydration.
- *
- * @param initialData - Server-side fetched conversations for SSR hydration
- */
-export function useConversations(initialData: ConversationListItem[]) {
-  const supabase = createClient();
-
-  return useQuery({
-    queryKey: ['conversations'],
-    queryFn: () => fetchConversationsWithUnread(supabase),
-    initialData,
-  });
 }
 
 // =============================================================================
@@ -319,100 +298,3 @@ export async function fetchMessagesForConversation(
   })) as MessageWithSender[];
 }
 
-/**
- * Client-side hook for messages in a conversation.
- * Realtime subscriptions handle live updates (no polling).
- * Initial data comes from server-side fetch for SSR hydration.
- *
- * @param conversationId - The conversation UUID
- * @param initialData - Server-side fetched messages for SSR hydration
- */
-export function useMessages(
-  conversationId: string,
-  initialData: MessageWithSender[]
-) {
-  const supabase = createClient();
-
-  return useQuery({
-    queryKey: ['messages', conversationId],
-    queryFn: () => fetchMessagesForConversation(supabase, conversationId),
-    initialData,
-  });
-}
-
-// =============================================================================
-// REALTIME SUBSCRIPTION HOOK (Phase 43)
-// =============================================================================
-
-/**
- * Supabase Realtime subscription hook that replaces polling.
- *
- * Creates a single Realtime channel per user/org and listens for:
- * - INSERT on `messages` table (new message arrival)
- * - UPDATE on `conversations` table (metadata changes like last_message_at)
- *
- * On Realtime event, invalidates the relevant TanStack Query cache entries
- * so components automatically re-render with fresh data.
- *
- * @param orgId - Current organisation UUID (required for channel filter)
- * @returns { isConnected: boolean } - Whether the Realtime channel is active
- */
-export function useRealtimeMessages(orgId: string | null) {
-  const [isConnected, setIsConnected] = useState(false);
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (!orgId) {
-      setIsConnected(false);
-      return;
-    }
-
-    const channelName = `web-messages:org_${orgId}`;
-
-    const channel: RealtimeChannel = realtimeSupabase
-      .channel(channelName)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `org_id=eq.${orgId}`,
-        },
-        (payload) => {
-          // Invalidate the specific conversation's messages query
-          const conversationId = payload.new?.conversation_id;
-          if (conversationId) {
-            queryClient.invalidateQueries({
-              queryKey: ['messages', conversationId],
-            });
-          }
-          // Also refresh the conversation list (preview, timestamp, unread count)
-          queryClient.invalidateQueries({ queryKey: ['conversations'] });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'conversations',
-          filter: `org_id=eq.${orgId}`,
-        },
-        () => {
-          // Refresh conversation list on any conversation metadata change
-          queryClient.invalidateQueries({ queryKey: ['conversations'] });
-        }
-      )
-      .subscribe((status) => {
-        setIsConnected(status === 'SUBSCRIBED');
-      });
-
-    return () => {
-      realtimeSupabase.removeChannel(channel);
-      setIsConnected(false);
-    };
-  }, [orgId, queryClient]);
-
-  return { isConnected };
-}
