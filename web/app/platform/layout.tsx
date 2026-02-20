@@ -23,6 +23,7 @@ import {
   Users,
   Shield,
   ShieldCheck,
+  LogOut,
 } from 'lucide-react';
 import { QueryProvider } from '@/components/providers/query-provider';
 import { useIsPlatformAdmin, useOrg } from '@/contexts/org-context';
@@ -230,6 +231,15 @@ export default function PlatformLayout({ children }: PlatformLayoutProps) {
                 <p className="text-purple-300 text-xs truncate">{userEmail}</p>
               </div>
             </div>
+            <form action="/api/auth/signout" method="POST" className="mt-2">
+              <button
+                type="submit"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-purple-300 hover:text-white hover:bg-purple-700/50 transition-all duration-200 text-sm font-medium"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </button>
+            </form>
           </div>
         </aside>
 

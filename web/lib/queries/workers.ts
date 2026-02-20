@@ -1,6 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase/client';
-import { Worker, Treatment } from '@/types/database.types';
+import type { Worker, Treatment } from '@/types/database.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
@@ -15,7 +13,7 @@ export async function fetchWorkers(supabase: SupabaseClient): Promise<Worker[]> 
     .limit(500);
 
   if (error) {
-    console.error('Error fetching workers:', error);
+    console.error(`Error fetching workers: message=${error.message}, code=${error.code}, details=${error.details}, hint=${error.hint}`);
     return [];
   }
 
@@ -95,16 +93,3 @@ export async function fetchWorkerConsentRecords(
   return data || [];
 }
 
-/**
- * Client-side hook for workers with polling
- */
-export function useWorkers(initialData: Worker[]) {
-  const supabase = createClient();
-
-  return useQuery({
-    queryKey: ['workers'],
-    queryFn: () => fetchWorkers(supabase),
-    initialData,
-    refetchInterval: 60_000, // 60 seconds
-  });
-}

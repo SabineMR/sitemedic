@@ -31,12 +31,14 @@ interface QuoteSubmissionFormProps {
   eventId: string;
   eventDurationHours: number;
   existingQuoteId?: string;
+  redirectPath?: string;
 }
 
 export default function QuoteSubmissionForm({
   eventId,
   eventDurationHours,
   existingQuoteId,
+  redirectPath,
 }: QuoteSubmissionFormProps) {
   const router = useRouter();
   const store = useQuoteFormStore();
@@ -175,7 +177,7 @@ export default function QuoteSubmissionForm({
       const quoteId = await store.submitQuote();
       toast.success('Quote submitted successfully!');
       // Redirect to event detail or success page
-      router.push(`/marketplace/events/${eventId}`);
+      router.push(redirectPath || `/marketplace/events/${eventId}`);
     } catch (error) {
       toast.error('Failed to submit quote');
     }

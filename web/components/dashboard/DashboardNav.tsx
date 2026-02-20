@@ -26,6 +26,7 @@ import {
   BarChart3,
   MessageSquare,
   Briefcase,
+  Store,
 } from 'lucide-react';
 
 const navigation = [
@@ -68,6 +69,11 @@ const navigation = [
     name: 'Jobs',
     href: '/dashboard/jobs',
     icon: Briefcase,
+  },
+  {
+    name: 'Marketplace',
+    href: '/dashboard/marketplace',
+    icon: Store,
   },
   {
     name: 'Reports',

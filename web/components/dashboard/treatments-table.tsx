@@ -10,7 +10,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { TreatmentWithWorker } from '@/types/database.types';
-import { useTreatments } from '@/lib/queries/treatments';
+import { useTreatments } from '@/lib/queries/treatments.hooks';
 import { DataTable } from './data-table';
 import { treatmentColumns } from './treatments-columns';
 import { DateRangeFilter } from './date-range-filter';

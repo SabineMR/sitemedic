@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { NearMissWithReporter } from '@/types/database.types';
-import { useNearMisses } from '@/lib/queries/near-misses';
+import { useNearMisses } from '@/lib/queries/near-misses.hooks';
 import { DataTable } from './data-table';
 import { nearMissesColumns } from './near-misses-columns';
 import { DateRangeFilter } from './date-range-filter';

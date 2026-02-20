@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Worker } from '@/types/database.types';
-import { useWorkers } from '@/lib/queries/workers';
+import { useWorkers } from '@/lib/queries/workers.hooks';
 import { DataTable } from './data-table';
 import { workersColumns } from './workers-columns';
 import { ExportButtons } from './export-buttons';

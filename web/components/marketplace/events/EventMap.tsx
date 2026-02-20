@@ -8,9 +8,10 @@ interface EventMapProps {
   events: MarketplaceEventWithDetails[];
   center: { lat: number; lng: number };
   radiusMiles?: number;
+  basePath?: string;
 }
 
-export default function EventMap({ events, center, radiusMiles }: EventMapProps) {
+export default function EventMap({ events, center, radiusMiles, basePath }: EventMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
@@ -80,7 +81,7 @@ export default function EventMap({ events, center, radiusMiles }: EventMapProps)
           <div style="font-size:12px;color:#6b7280;margin-bottom:4px">${EVENT_TYPE_LABELS[event.event_type] || event.event_type}</div>
           ${event.event_days.length > 0 ? `<div style="font-size:12px;color:#6b7280">${new Date(event.event_days[0].event_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}${event.event_days.length > 1 ? ` (+${event.event_days.length - 1} more days)` : ''}</div>` : ''}
           <div style="margin-top:6px">
-            <a href="/marketplace/events/${event.id}" style="font-size:12px;color:#2563eb;text-decoration:none">View Details →</a>
+            <a href="${basePath || '/marketplace/events'}/${event.id}" style="font-size:12px;color:#2563eb;text-decoration:none">View Details →</a>
           </div>
         </div>
       `;

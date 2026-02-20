@@ -15,7 +15,7 @@ import {
   useConversations,
   useRealtimeMessages,
   type ConversationListItem,
-} from '@/lib/queries/comms';
+} from '@/lib/queries/comms.hooks';
 import { ConversationRow } from './ConversationRow';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';

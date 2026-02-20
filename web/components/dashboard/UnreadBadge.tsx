@@ -15,8 +15,7 @@
 
 import Link from 'next/link';
 import { MessageSquare } from 'lucide-react';
-import { useConversations, type ConversationListItem } from '@/lib/queries/comms';
-import { useRealtimeMessages } from '@/lib/queries/comms';
+import { useConversations, useRealtimeMessages, type ConversationListItem } from '@/lib/queries/comms.hooks';
 
 interface UnreadBadgeProps {
   /** Server-side initial conversations for SSR hydration */

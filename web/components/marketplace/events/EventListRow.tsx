@@ -8,6 +8,7 @@ interface EventListRowProps {
   event: MarketplaceEventWithDetails;
   userLat?: number | null;
   userLng?: number | null;
+  basePath?: string;
 }
 
 /** Haversine distance in miles between two lat/lng pairs */
@@ -55,7 +56,7 @@ function staffingSummary(reqs: MarketplaceEventWithDetails['event_staffing_requi
   return reqs.length > 3 ? `${summary} +${reqs.length - 3} more` : summary;
 }
 
-export default function EventListRow({ event, userLat, userLng }: EventListRowProps) {
+export default function EventListRow({ event, userLat, userLng, basePath }: EventListRowProps) {
   const dl = deadlineText(event.quote_deadline);
 
   // Extract lat/lng from location_coordinates if available (API returns as object)
@@ -69,7 +70,7 @@ export default function EventListRow({ event, userLat, userLng }: EventListRowPr
 
   return (
     <Link
-      href={`/marketplace/events/${event.id}`}
+      href={`${basePath || '/marketplace/events'}/${event.id}`}
       className="block hover:bg-gray-50 transition-colors"
     >
       <div className="px-4 py-3 grid grid-cols-12 gap-2 items-center text-sm">

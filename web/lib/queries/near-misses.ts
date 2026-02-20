@@ -1,6 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase/client';
-import { NearMissWithReporter } from '@/types/database.types';
+import type { NearMissWithReporter } from '@/types/database.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
@@ -15,23 +13,9 @@ export async function fetchNearMisses(supabase: SupabaseClient): Promise<NearMis
     .limit(500);
 
   if (error) {
-    console.error('Error fetching near-misses:', error);
+    console.error(`Error fetching near-misses: message=${error.message}, code=${error.code}, details=${error.details}, hint=${error.hint}`);
     return [];
   }
 
   return data as NearMissWithReporter[];
-}
-
-/**
- * Client-side hook for near-misses with polling
- */
-export function useNearMisses(initialData: NearMissWithReporter[]) {
-  const supabase = createClient();
-
-  return useQuery({
-    queryKey: ['near-misses'],
-    queryFn: () => fetchNearMisses(supabase),
-    initialData,
-    refetchInterval: 60_000, // 60 seconds
-  });
 }

@@ -12,7 +12,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
-import { useMessages } from '@/lib/queries/comms';
+import { useMessages } from '@/lib/queries/comms.hooks';
 import type { MessageWithSender } from '@/types/comms.types';
 import { MessageItem } from './MessageItem';
 import { MessageInput } from './MessageInput';
