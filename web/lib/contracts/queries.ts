@@ -55,7 +55,7 @@ export async function getContracts(filters?: {
         name,
         version
       ),
-      currentVersion:contract_versions!contracts_current_version_id_fkey (
+      currentVersion:contract_versions!fk_current_version (
         id,
         version,
         storage_path,
@@ -87,7 +87,7 @@ export async function getContracts(filters?: {
   const { data, error } = await query;
 
   if (error) {
-    console.error('Error fetching contracts:', error);
+    console.error('Error fetching contracts:', error.message, error.code, error.details);
     return [];
   }
 

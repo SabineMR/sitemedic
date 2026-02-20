@@ -10026,6 +10026,18 @@ The separate marketing site (`web-app/`, port 30501) has been **merged into the 
 
 **Architecture change:** 3-app -> 2-app structure. `web-app/` (30501) is now deprecated. Marketing and auth all live on `web/` (30500).
 
+### Bug Fix (2026-02-20) — Contracts Page Error: FK Constraint Name Mismatch
+
+**Problem:** The contracts dashboard page (`/contracts`) showed `Error fetching contracts: {}` — an empty error object from Supabase PostgREST.
+
+**Root cause:** The `getContracts()` query in `web/lib/contracts/queries.ts` used `contracts_current_version_id_fkey` as the FK constraint name for the `currentVersion` join. However, the actual constraint was created via `ALTER TABLE contracts ADD CONSTRAINT fk_current_version ...` in migration `017_contract_management.sql` — so the real name is `fk_current_version`, not the auto-generated pattern.
+
+**Fix:**
+| File | Change |
+|------|--------|
+| `web/lib/contracts/queries.ts:58` | Changed `contract_versions!contracts_current_version_id_fkey` to `contract_versions!fk_current_version` |
+| `web/lib/contracts/queries.ts:90` | Improved error logging: `error` -> `error.message, error.code, error.details` (Supabase error objects don't stringify with `console.error`) |
+
 ---
 
 *This document is maintained by the SiteMedic product team. For questions or suggestions, contact the project lead.*
