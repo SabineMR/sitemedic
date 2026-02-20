@@ -1,5 +1,8 @@
 import Link from 'next/link';
 
+const PROVIDER_APP_URL = process.env.NEXT_PUBLIC_PROVIDER_APP_URL || 'http://localhost:30500';
+const MARKETING_URL = process.env.NEXT_PUBLIC_MARKETING_URL || 'http://localhost:30501';
+
 export default function MarketplaceFooter() {
   return (
     <footer className="bg-slate-900 text-slate-400">
@@ -31,27 +34,27 @@ export default function MarketplaceFooter() {
             <h4 className="text-white font-semibold mb-4 text-sm">For Clients</h4>
             <ul className="space-y-2.5 text-sm">
               <li>
-                <Link href="/marketplace" className="hover:text-white transition">
+                <Link href="/" className="hover:text-white transition">
                   Marketplace Home
                 </Link>
               </li>
               <li>
-                <Link href="/marketplace/for-clients" className="hover:text-white transition">
+                <Link href="/for-clients" className="hover:text-white transition">
                   How It Works
                 </Link>
               </li>
               <li>
-                <Link href="/marketplace/events/create" className="hover:text-white transition">
+                <Link href="/events/create" className="hover:text-white transition">
                   Post an Event
                 </Link>
               </li>
               <li>
-                <Link href="/marketplace/client-register" className="hover:text-white transition">
+                <Link href="/client-register" className="hover:text-white transition">
                   Client Sign Up
                 </Link>
               </li>
               <li>
-                <Link href="/marketplace/faq" className="hover:text-white transition">
+                <Link href="/faq" className="hover:text-white transition">
                   FAQ
                 </Link>
               </li>
@@ -63,22 +66,22 @@ export default function MarketplaceFooter() {
             <h4 className="text-white font-semibold mb-4 text-sm">For Companies</h4>
             <ul className="space-y-2.5 text-sm">
               <li>
-                <Link href="/marketplace/for-companies" className="hover:text-white transition">
+                <Link href="/for-companies" className="hover:text-white transition">
                   Why Join
                 </Link>
               </li>
               <li>
-                <Link href="/marketplace/register" className="hover:text-white transition">
+                <Link href="/register" className="hover:text-white transition">
                   Register Your Company
                 </Link>
               </li>
               <li>
-                <Link href="/marketplace/events" className="hover:text-white transition">
+                <Link href="/events" className="hover:text-white transition">
                   Browse Events
                 </Link>
               </li>
               <li>
-                <Link href="/marketplace/faq" className="hover:text-white transition">
+                <Link href="/faq" className="hover:text-white transition">
                   FAQ
                 </Link>
               </li>
@@ -90,29 +93,29 @@ export default function MarketplaceFooter() {
             <h4 className="text-white font-semibold mb-4 text-sm">Platform</h4>
             <ul className="space-y-2.5 text-sm">
               <li>
-                <Link href="/" className="hover:text-white transition">
-                  ASG Direct Booking
-                </Link>
+                <a href={PROVIDER_APP_URL} className="hover:text-white transition">
+                  Provider App
+                </a>
               </li>
               <li>
-                <Link href="/about" className="hover:text-white transition">
+                <a href={MARKETING_URL} className="hover:text-white transition">
                   About SiteMedic
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="/privacy-policy" className="hover:text-white transition">
+                <a href={PROVIDER_APP_URL + '/privacy-policy'} className="hover:text-white transition">
                   Privacy Policy
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="/terms-and-conditions" className="hover:text-white transition">
+                <a href={PROVIDER_APP_URL + '/terms-and-conditions'} className="hover:text-white transition">
                   Terms &amp; Conditions
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="/refund-policy" className="hover:text-white transition">
+                <a href={PROVIDER_APP_URL + '/refund-policy'} className="hover:text-white transition">
                   Refund Policy
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
@@ -146,9 +149,9 @@ export default function MarketplaceFooter() {
             </p>
             <p className="text-xs text-slate-700">
               Platform by{' '}
-              <Link href="/" className="text-slate-500 font-medium hover:text-white transition">
+              <a href={MARKETING_URL} className="text-slate-500 font-medium hover:text-white transition">
                 SiteMedic
-              </Link>
+              </a>
             </p>
           </div>
         </div>
