@@ -134,10 +134,14 @@ Plans:
   6. Full client records are created and stored (name, contact, address) as formal records in the system
   7. Company can assign medics from their roster to self-procured jobs with the same availability checking as marketplace
   8. Bidirectional ratings supported for self-procured jobs — client and company can rate each other
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 34.1 to break down)
+- [ ] 34.1-01-PLAN.md — Database migration (direct_clients table, marketplace_events source/agreed_price/client_id columns, direct job statuses), TypeScript types, Zod schemas, CRUD API routes
+- [ ] 34.1-02-PLAN.md — Job creation wizard (Zustand store, 6-step wizard UI, client details step with new/existing client, job info, schedule, staffing, pricing, review/submit), jobs list page with "Log Job" entry point
+- [ ] 34.1-03-PLAN.md — Dashboard integration (combined jobs view with source badges and filter, SourceBadge/SourceFilter components, combined API endpoint, marketplace events API excludes direct jobs)
+- [ ] 34.1-04-PLAN.md — Payment flow (Stripe deposit PaymentIntent, booking bridge with source='direct' and 0% commission, medic assignment with EXCLUSION constraint availability checking, job detail page)
+- [ ] 34.1-05-PLAN.md — Client portal access (client-safe API excluding medic details, read-only portal view, payment summary) and bidirectional ratings (job_ratings table, star rating + review form, ratings API)
 
 ### Phase 35: Award Flow & Payment
 **Goal**: Clients can award their chosen quote, pay a deposit via Stripe, and the system auto-creates a SiteMedic booking — with the remainder auto-charged after event completion and the medic paid via the existing payout pipeline
@@ -377,7 +381,7 @@ Plans:
 | 32. Foundation Schema & Registration | v4.0 | 4/4 | Complete | 2026-02-19 |
 | 33. Event Posting & Discovery | v4.0 | 3/3 | Complete | 2026-02-19 |
 | 34. Quote Submission & Comparison | v4.0 | 0/3 | Planned | - |
-| 34.1. Self-Procured Jobs (INSERTED) | v4.0 | 0/TBD | Not started | - |
+| 34.1. Self-Procured Jobs (INSERTED) | v4.0 | 0/5 | Planned | - |
 | 35. Award Flow & Payment | v4.0 | 0/4 | Not started | - |
 | 36. Ratings, Messaging & Disputes | v4.0 | 0/3 | Not started | - |
 | 37. Company Accounts | v4.0 | 0/3 | Not started | - |
