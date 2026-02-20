@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-20 (Phase 34.1 Self-Procured Jobs -- payment, booking bridge, medic assignment, job detail)
+**Last Updated**: 2026-02-20 (Phase 34 Quote Management -- edit, withdraw, deadline extension, my-quotes page)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -133,7 +133,7 @@ A Request-for-Quotes (RFQ) marketplace being added to SiteMedic where UK clients
 | Feature | Description | Phase |
 |---------|-------------|-------|
 | **Event Posting** | Clients post events with type, dates, location, staffing needs, budget range. Quote deadline enforced. | 33 |
-| **Quote Submission** | Medics submit quotes with total price, itemised breakdown, cover letter/pitch, staffing plan, availability. | 34 |
+| **Quote Submission & Management** | Companies submit itemised quotes (pricing, staffing, cover letter), edit in place (revised badge), withdraw, manage all quotes from dashboard. Deadline extension for clients. | 34 |
 | **Profile Gating** | Medic profiles (certs, rating, experience) visible only after they quote. Contact details hidden until award + deposit. | 34 |
 | **Award & Deposit** | Client awards quote, deposit charged (default 25%), booking auto-created in SiteMedic with `source='marketplace'`. | 35 |
 | **Remainder Payment** | Auto-charged after event via saved payment method. Retry logic + notifications on failure. | 35 |
@@ -234,8 +234,43 @@ A Request-for-Quotes (RFQ) marketplace being added to SiteMedic where UK clients
   - Common: event type, role needed, date range, clear filters
 - EventMap: Google Maps with event markers, InfoWindow popups (name, type, dates, "View Details" link), search radius circle overlay, auto-fit bounds
 - Event Detail Page: full event info with approximate location ONLY (`location_display`), "Exact address provided after you submit a quote" note, schedule table, staffing requirements table, equipment list, budget display
-- Quote button disabled with Phase 34 placeholder text
+- Quote button active (links to quote submission form) when event is open and deadline not passed
 - Breadcrumb navigation (Browse Events > Event Name)
+- "Extend Deadline" button visible only to event poster on open events (one-time extension via date picker dialog)
+
+### Implementation Progress (Phase 34 -- Quote Submission & Comparison)
+
+**Plan 01 -- Database Schema, Types, Validation, and Submission (Complete):**
+- `marketplace_quotes` table with RLS (company manages own, event poster views non-draft, admin sees all), triggers for event quote_count sync, 5 indexes
+- Quote status lifecycle: draft -> submitted -> revised | withdrawn (with submitted_at, last_revised_at, withdrawn_at timestamps)
+- TypeScript types: `MarketplaceQuote`, `MarketplaceQuoteWithCompany`, `PricingBreakdown`, `StaffingPlan` (discriminated union: named_medics OR headcount_and_quals)
+- Zod schemas: `quoteSubmissionSchema` (full validation), `draftSaveSchema` (loose validation for partial drafts)
+- Minimum rate enforcement (HARD block): paramedic GBP45/hr, emt GBP28/hr, first_aider GBP18/hr, nurse GBP40/hr, doctor GBP75/hr
+- Zustand store (`useQuoteFormStore`) with auto-save draft every 2 seconds (debounced)
+- POST `/api/marketplace/quotes/submit` -- create quote with full validation and minimum rate check
+- POST `/api/marketplace/quotes/save-draft` -- save partial quote as draft
+- GET `/api/marketplace/quotes/list` -- list quotes for an event with filtering
+- GET `/api/marketplace/quotes/[id]` -- single quote with company details
+- React Query hooks: `useQuoteList`, `useQuoteDetail`, `useMyQuotes`
+- QuoteSubmissionForm with PricingBreakdownSection (4 categories + custom line items), StaffingPlanSection (toggle mode), CoverLetterSection
+
+**Plan 02 -- Quote Comparison & Ranking (Complete):**
+- Ranked quote list with best-value scoring algorithm (60% price, 40% rating)
+- Sort/filter bar: best value, lowest price, highest price, highest rating, most recent
+- Expandable quote detail rows with company profile, full pricing breakdown, staffing plan
+- Company profile page at /marketplace/companies/[id] with certifications, insurance, rating placeholder
+
+**Plan 03 -- Quote Management (Complete):**
+- PATCH `/api/marketplace/quotes/[id]/update` -- edit submitted quote in place, sets status='revised' and last_revised_at
+- POST `/api/marketplace/quotes/[id]/withdraw` -- withdraw quote, sets status='withdrawn' and withdrawn_at, event quote_count auto-decrements via trigger
+- GET `/api/marketplace/quotes/my-quotes` -- company's quotes with event details, status filtering, pagination
+- POST `/api/marketplace/events/[id]/extend-deadline` -- one-time deadline extension for event poster (deadline_extended boolean guard)
+- Company quote management page at /marketplace/my-quotes with status filter tabs (All, Drafts, Submitted, Revised, Withdrawn)
+- MyQuoteCard with status badges, pricing, staffing summary, deadline countdown, and conditional action buttons
+- EditQuoteDialog -- full form in dialog (pricing, staffing, cover letter) with local useState (not Zustand) to avoid state conflicts, validates with quoteSubmissionSchema and minimum rates before PATCH
+- Withdraw confirmation via AlertDialog ("This cannot be undone")
+- "Revised" badge shows time delta: "Revised 2h ago" using last_revised_at timestamp
+- Event detail page extended with "Extend Deadline" button and date picker dialog for event poster (hidden after one extension)
 
 ### Implementation Progress (Phase 34.1 -- Self-Procured Jobs, INSERTED)
 
