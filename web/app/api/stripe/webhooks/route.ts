@@ -240,6 +240,33 @@ export async function POST(request: NextRequest) {
           break;
         }
 
+        // === MARKETPLACE REMAINDER ===
+        if (paymentType === 'remainder') {
+          const remainderBookingId = paymentIntent.metadata?.booking_id;
+
+          if (!remainderBookingId) {
+            console.error('[Webhook] Marketplace remainder missing booking_id');
+            return NextResponse.json({ received: true });
+          }
+
+          // Mark remainder as paid
+          const { error: remainderUpdateError } = await supabase
+            .from('bookings')
+            .update({
+              remainder_paid_at: new Date().toISOString(),
+              remainder_payment_intent_id: paymentIntent.id,
+            })
+            .eq('id', remainderBookingId);
+
+          if (remainderUpdateError) {
+            console.error('[Webhook] Failed to update remainder payment:', remainderUpdateError);
+          } else {
+            console.log('[Webhook] Remainder charged successfully for booking:', remainderBookingId);
+          }
+
+          break;
+        }
+
         // === EXISTING: Direct/standard booking payment ===
         const bookingId = paymentIntent.metadata.booking_id;
         const clientId = paymentIntent.metadata.client_id;
