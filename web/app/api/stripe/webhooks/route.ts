@@ -16,6 +16,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe/server';
 import { createClient } from '@/lib/supabase/server';
 import { createMarketplaceBooking } from '@/lib/marketplace/booking-bridge';
+import {
+  sendAwardNotification,
+  sendRejectionNotification,
+  sendClientDepositConfirmation,
+  sendRemainderFailedNotification,
+} from '@/lib/marketplace/notifications';
 import Stripe from 'stripe';
 
 export const dynamic = 'force-dynamic';
@@ -237,6 +243,119 @@ export async function POST(request: NextRequest) {
             losingQuoteIds,
           });
 
+          // --- Send email notifications (non-blocking) ---
+
+          // Fetch client (event poster) details
+          const { data: clientUser } = await supabase
+            .from('profiles')
+            .select('email, first_name, last_name')
+            .eq('id', mktEvent.posted_by)
+            .single();
+
+          // Fetch winning company details
+          const { data: winningCompany } = await supabase
+            .from('marketplace_companies')
+            .select('company_name, admin_user_id')
+            .eq('id', quote.company_id)
+            .single();
+
+          let winningCompanyEmail: string | null = null;
+          if (winningCompany?.admin_user_id) {
+            const { data: companyAdmin } = await supabase
+              .from('profiles')
+              .select('email')
+              .eq('id', winningCompany.admin_user_id)
+              .single();
+            winningCompanyEmail = companyAdmin?.email || null;
+          }
+
+          // Calculate remainder due date for email
+          const sortedDaysForEmail = [...(eventDays || [])].sort((a, b) =>
+            b.event_date.localeCompare(a.event_date)
+          );
+          const lastDayForEmail = sortedDaysForEmail[0];
+          const eventEndForEmail = lastDayForEmail
+            ? new Date(`${lastDayForEmail.event_date}T${lastDayForEmail.end_time}`)
+            : new Date();
+          const remainderDueDate = new Date(eventEndForEmail.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+          // Send award notification to winning company
+          if (winningCompanyEmail && winningCompany && clientUser) {
+            try {
+              await sendAwardNotification({
+                companyEmail: winningCompanyEmail,
+                companyName: winningCompany.company_name,
+                eventName: mktEvent.event_name,
+                eventId,
+                totalPrice: quote.total_price,
+                clientName: `${clientUser.first_name || ''} ${clientUser.last_name || ''}`.trim() || 'Client',
+                clientEmail: clientUser.email,
+                clientPhone: null,
+                eventAddress: mktEvent.location_address,
+                eventDates: (eventDays || []).map((d) => d.event_date),
+              });
+            } catch (emailErr) {
+              console.error('[Webhook] Award notification email failed:', emailErr);
+            }
+          }
+
+          // Send rejection notifications to losing companies
+          if (losingQuoteIds.length > 0) {
+            const { data: losingQuotes } = await supabase
+              .from('marketplace_quotes')
+              .select('company_id, total_price')
+              .in('id', losingQuoteIds);
+
+            if (losingQuotes) {
+              const companyIds = [...new Set(losingQuotes.map((q) => q.company_id))];
+              const { data: losingCompanies } = await supabase
+                .from('marketplace_companies')
+                .select('id, company_name, admin_user_id')
+                .in('id', companyIds);
+
+              for (const company of losingCompanies || []) {
+                try {
+                  if (!company.admin_user_id) continue;
+                  const { data: adminProfile } = await supabase
+                    .from('profiles')
+                    .select('email')
+                    .eq('id', company.admin_user_id)
+                    .single();
+                  if (!adminProfile?.email) continue;
+
+                  const companyQuote = losingQuotes.find((q) => q.company_id === company.id);
+                  await sendRejectionNotification({
+                    companyEmail: adminProfile.email,
+                    companyName: company.company_name,
+                    eventName: mktEvent.event_name,
+                    totalPrice: companyQuote?.total_price || 0,
+                  });
+                } catch (emailErr) {
+                  console.error('[Webhook] Rejection notification failed for company:', company.id, emailErr);
+                }
+              }
+            }
+          }
+
+          // Send deposit confirmation to client
+          if (clientUser?.email) {
+            try {
+              await sendClientDepositConfirmation({
+                clientEmail: clientUser.email,
+                clientName: `${clientUser.first_name || ''} ${clientUser.last_name || ''}`.trim() || 'Client',
+                eventName: mktEvent.event_name,
+                depositAmount,
+                depositPercent,
+                remainderAmount,
+                remainderDueDate: remainderDueDate.toISOString(),
+                companyName: winningCompany?.company_name || 'Your selected provider',
+                paymentIntentId: paymentIntent.id,
+              });
+            } catch (emailErr) {
+              console.error('[Webhook] Deposit confirmation email failed:', emailErr);
+            }
+          }
+
           break;
         }
 
@@ -339,13 +458,54 @@ export async function POST(request: NextRequest) {
               .eq('id', failedBookingId)
               .single();
 
+            const newAttemptCount = (failedBooking?.remainder_failed_attempts || 0) + 1;
+
             await supabase
               .from('bookings')
               .update({
-                remainder_failed_attempts: (failedBooking?.remainder_failed_attempts || 0) + 1,
+                remainder_failed_attempts: newAttemptCount,
                 remainder_last_failed_at: new Date().toISOString(),
               })
               .eq('id', failedBookingId);
+
+            // Send failure notification email to client
+            try {
+              const { data: failedBookingDetails } = await supabase
+                .from('bookings')
+                .select('site_name, remainder_amount, marketplace_event_id, stripe_customer_id')
+                .eq('id', failedBookingId)
+                .single();
+
+              if (failedBookingDetails?.stripe_customer_id) {
+                const { data: clientPm } = await supabase
+                  .from('client_payment_methods')
+                  .select('user_id')
+                  .eq('stripe_customer_id', failedBookingDetails.stripe_customer_id)
+                  .limit(1)
+                  .single();
+
+                if (clientPm?.user_id) {
+                  const { data: clientProfile } = await supabase
+                    .from('profiles')
+                    .select('email, first_name, last_name')
+                    .eq('id', clientPm.user_id)
+                    .single();
+
+                  if (clientProfile?.email) {
+                    await sendRemainderFailedNotification({
+                      clientEmail: clientProfile.email,
+                      clientName: `${clientProfile.first_name || ''} ${clientProfile.last_name || ''}`.trim() || 'Client',
+                      eventName: failedBookingDetails.site_name || 'Your event',
+                      remainderAmount: failedBookingDetails.remainder_amount || 0,
+                      attempt: newAttemptCount,
+                      maxAttempts: 3,
+                    });
+                  }
+                }
+              }
+            } catch (emailErr) {
+              console.error('[Webhook] Remainder failed notification email error:', emailErr);
+            }
           }
           break;
         }
