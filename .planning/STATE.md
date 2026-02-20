@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v4.0 MedBid Marketplace — Phase 35 (Award Flow & Payment) executing
+**Current focus:** v5.0 Internal Comms — Phase 43 (Real-Time Push Notifications) executing
 
 ## Current Position
 
-Phase: 35 of 47 (Award Flow & Payment — IN PROGRESS)
-Plan: 2 of 4 in current phase (35-01, 35-02 complete)
-Status: Executing phase 35
-Last activity: 2026-02-20 — Plan 35-02 complete (award UI, deposit payment form, webhook handler, booking bridge)
+Phase: 43 of 47 (Real-Time Push Notifications — IN PROGRESS)
+Plan: 2 of 3 in current phase (43-02 complete)
+Status: Executing phase 43
+Last activity: 2026-02-20 — Plan 43-02 complete (PushTokenService, NotificationContext, foreground toast, deep linking)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [██████░░░░] v4.0 50% | [█████░░░░░] v5.0 48%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [██████░░░░] v4.0 50% | [██████░░░░] v5.0 57%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 213 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 23 v4.0 + 11 v5.0)
+- Total plans completed: 214 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 23 v4.0 + 12 v5.0)
 - Average duration: 3.9 min
 - Total execution time: ~13.9 hours
 
@@ -32,7 +32,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
 | v4.0 | 8 | 23/32 | ~293 min | ~6.0 min |
-| v5.0 | 8 | 11/21 | ~58 min | ~5.3 min |
+| v5.0 | 8 | 12/21 | ~62 min | ~5.2 min |
 
 *Updated after each plan completion*
 
@@ -126,6 +126,11 @@ Recent decisions affecting current work:
 - [35-02]: Webhook checks payment_type metadata FIRST — marketplace deposit handled before falling through to existing logic
 - [35-02]: Losing quotes rejected immediately on deposit success (not waiting for any delay)
 - [35-02]: Medic commitments created in webhook with EXCLUSION error catch (already validated at award API time)
+- [43-02]: Permission prompt deferred to first Messages tab focus (not app launch) via AsyncStorage flag + Tabs listener
+- [43-02]: Module-level setNotificationHandler with shouldShowAlert:false prevents native banner; custom in-app toast used
+- [43-02]: Token staleness threshold 7 days -- avoids unnecessary DB writes while ensuring token freshness
+- [43-02]: NotificationProvider wraps tabs layout (not root) so it has access to AuthContext/OrgContext
+- [43-02]: TabsLayout split into outer wrapper (NotificationProvider) + inner component (TabsLayoutInner) for hook access
 
 ### Pending Todos
 
@@ -156,5 +161,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Phase 35 plans 01-02 complete, executing wave 3 (plans 03+04) next
+Stopped at: Completed 43-02-PLAN.md (iOS push notification infrastructure)
 Resume file: None
