@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v5.0 Internal Comms — Phase 42 (iOS Messaging & Offline)
+**Current focus:** v4.0 Marketplace — Phase 34.1 (Self-Procured Jobs)
 
 ## Current Position
 
-Phase: 42 of 47 (iOS Messaging & Offline)
-Plan: 1 of 3 in current phase
+Phase: 34.1 of 47 (Self-Procured Jobs — INSERTED)
+Plan: 2 of 5 in current phase
 Status: In progress
-Last activity: 2026-02-20 — Completed 42-01-PLAN.md (WatermelonDB models and message sync)
+Last activity: 2026-02-20 — Completed 34.1-02-PLAN.md (job creation wizard UI)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████░░░░░░] v4.0 28% | [████░░░░░░] v5.0 33%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████░░░░░░] v4.0 31% | [████░░░░░░] v5.0 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 195 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 10 v4.0 + 6 v5.0)
+- Total plans completed: 196 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 11 v4.0 + 6 v5.0)
 - Average duration: 3.9 min
-- Total execution time: ~13.1 hours
+- Total execution time: ~13.4 hours
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 10/26 | ~103 min | ~6.2 min |
+| v4.0 | 8 | 11/26 | ~119 min | ~6.5 min |
 | v5.0 | 8 | 6/21 | ~27 min | ~4.5 min |
 
 *Updated after each plan completion*
@@ -83,6 +83,9 @@ Recent decisions affecting current work:
 - [42-01]: Local messages use 'queued' status for offline (server schema only has sent/delivered/read)
 - [42-01]: Incremental sync via lastSyncedAt in AsyncStorage; first sync fetches last 100 messages per conversation
 - [42-01]: Participant/sender names denormalized on local models (medics see "Admin", admins see medic name)
+- [34.1-02]: Wizard at /dashboard/jobs (platform section, NOT marketplace) — 6 steps vs marketplace 4
+- [34.1-02]: Existing client selector pre-fills all fields but disables editing
+- [34.1-02]: Pricing step shows 0% platform commission prominently in payment breakdown
 
 ### Pending Todos
 
@@ -113,5 +116,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 42-01-PLAN.md (WatermelonDB models and message sync)
+Stopped at: Completed 34.1-02-PLAN.md (job creation wizard UI)
 Resume file: None
