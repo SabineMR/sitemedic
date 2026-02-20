@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-20 (Marketing site merged into web/ — SiteMedic rebrand)
+**Last Updated**: 2026-02-20 (Phase 38: Notifications & Alerts complete)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -1031,6 +1031,99 @@ Builds the company profile display and wires roster data to the quoting workflow
 | File | Change |
 |------|--------|
 | `web/components/marketplace/quote-submission/StaffingPlanSection.tsx` | Named medics flow uses RosterMedicPicker; auto-detects companyId; free-text fallback with warning |
+
+---
+
+### Phase 38: Notifications & Alerts (Complete — 2026-02-20)
+
+Phase 38 builds a unified multi-channel notification system for the marketplace and platform. Companies and clients receive timely notifications about matching events, marketplace actions (quotes, awards, payments, ratings, messages, disputes), and platform events through dashboard feed, email, and SMS. Users configure preferences to control what they receive and through which channels.
+
+**4 plans in 2 waves:**
+
+**Plan 01 -- Database Foundation & Notification Service (Wave 1):**
+
+Creates the database tables, Twilio SMS module, shared notification types, and fire-and-forget notification creation utility that all other plans depend on.
+
+- **`user_notifications` table** (migration 159): Stores all platform notifications scoped by `user_id` (not `org_id`). 12 notification types via CHECK constraint: new_event, quote_received, quote_awarded, quote_rejected, payment_received, payment_failed, rating_received, message_received, dispute_filed, dispute_resolved, event_cancelled, rating_nudge. Columns: title, body, link (deep link), metadata (JSONB), is_read, read_at, created_at. User-scoped RLS (SELECT + UPDATE for own, service-role INSERT). Indexed on (user_id, created_at DESC) and partial index on unread. Supabase Realtime enabled via ALTER PUBLICATION + REPLICA IDENTITY FULL for live feed updates.
+- **`marketplace_notification_preferences` table** (migration 160): Per-user channel x category matrix. Email preferences default TRUE. SMS preferences default FALSE (PECR compliance). SMS opt-in fields: sms_phone_number (E.164), sms_opted_in_at (audit trail). Event alert radius (miles, NULL = all UK). User-scoped RLS for all operations.
+- **Twilio SMS module** (`web/lib/marketplace/sms.ts`): Fire-and-forget SMS wrapper with dev-mode fallback (console.log when TWILIO_* env vars missing). Matches the Resend email pattern.
+- **Notification types** (`web/lib/marketplace/notification-types.ts`): Shared TypeScript constants, category groupings, and interfaces (UserNotification, NotificationPreferences).
+- **Create notification utility** (`web/lib/marketplace/create-notification.ts`): Fire-and-forget helper wrapping Supabase INSERT. Exports `createNotification` and `createBulkNotifications`. Never throws (always catches errors).
+
+| File | Purpose |
+|------|---------|
+| `supabase/migrations/159_user_notifications.sql` | Notification feed table with RLS + Realtime |
+| `supabase/migrations/160_marketplace_notification_preferences.sql` | Per-user channel x category preferences |
+| `web/lib/marketplace/sms.ts` | Twilio SMS wrapper with dev-mode fallback |
+| `web/lib/marketplace/notification-types.ts` | Shared notification type constants and interfaces |
+| `web/lib/marketplace/create-notification.ts` | Fire-and-forget notification creation utility |
+
+**Plan 02 -- Dashboard Notification Bell & Feed UI (Wave 2):**
+
+Builds the dashboard notification feed: bell icon dropdown in the header, full notifications page, Realtime hooks for live updates, and mark-as-read API.
+
+- **NotificationBell** (`web/components/dashboard/NotificationBell.tsx`): Bell icon in dashboard header (alongside existing UnreadBadge for messages). Popover dropdown showing last 5 notifications with title, body preview, timestamp, read/unread indicator. "View all" link to full page. Unread count badge (red circle, max "99+"). Realtime subscription keeps badge updated live.
+- **Notifications page** (`web/app/(dashboard)/dashboard/notifications/page.tsx`): Full notification history with mark-as-read and mark-all-as-read. Card-based list with unread dots, timestamps, action links. Load more pagination.
+- **Realtime hooks** (`web/lib/queries/notifications.hooks.ts`): TanStack Query hooks (useNotifications, useUnreadCount) + Supabase Realtime subscription (useRealtimeNotifications) following the exact pattern from comms.hooks.ts. Cache invalidation on INSERT and UPDATE events.
+- **API routes**: GET /api/marketplace/notifications (paginated feed with unread count), PATCH /api/marketplace/notifications/mark-read (mark individual or all as read).
+
+| File | Purpose |
+|------|---------|
+| `web/components/dashboard/NotificationBell.tsx` | Bell icon with popover dropdown and unread badge |
+| `web/app/(dashboard)/dashboard/notifications/page.tsx` | Full notification history page |
+| `web/lib/queries/notifications.hooks.ts` | TanStack Query + Supabase Realtime hooks |
+| `web/app/api/marketplace/notifications/route.ts` | GET notifications with pagination |
+| `web/app/api/marketplace/notifications/mark-read/route.ts` | PATCH mark notifications as read |
+| `web/app/(dashboard)/layout.tsx` | Modified: NotificationBell added to header |
+
+**Plan 03 -- Event Fan-Out & Marketplace Action Triggers (Wave 2):**
+
+Wires notification creation into all existing marketplace API routes. The event fan-out (new event -> notify all matching companies) is the most complex piece. Every marketplace action generates appropriate dashboard notifications.
+
+- **Event fan-out** (`web/lib/marketplace/event-fan-out.ts`): When a new event is posted with status='open', fetches all verified companies, creates dashboard notifications for each, sends email alerts (respecting email_new_events preference), and triggers SMS for urgent/high-value events (<7 days or >2000 GBP) to opted-in companies. Fire-and-forget via `void fanOutNewEventNotifications()` (no await). Daily SMS cap of 5 per user for event alerts.
+- **10+ existing API routes modified** to add dashboard notification triggers:
+  - Quote submission -> quote_received notification to event poster
+  - Quote award -> quote_awarded to winner, quote_rejected to all losers
+  - Payment webhook -> payment_received (deposit success), payment_failed (remainder failure)
+  - Rating submission -> rating_received to rated party
+  - Marketplace message -> message_received to recipient
+  - Dispute filed -> dispute_filed to other party
+  - Dispute resolved -> dispute_resolved to both parties
+  - Event cancellation -> event_cancelled to all companies with quotes
+  - Rating nudge cron -> rating_nudge dashboard notification alongside email
+- All triggers follow fire-and-forget pattern (individual try/catch, never blocking primary response).
+- Existing email notifications (sendAwardNotification, sendRejectionNotification, etc.) preserved alongside new dashboard notifications.
+
+**Plan 04 -- Notification Preferences UI & API (Wave 2):**
+
+Builds the channel x category matrix preferences page so users can configure which channels (dashboard, email, SMS) they receive for each notification category.
+
+- **Preferences API** (`web/app/api/marketplace/notification-preferences/route.ts`): GET returns current preferences (auto-creates defaults on first access via upsert). PUT validates with Zod (E.164 phone format, boolean toggles). SMS opt-in records sms_opted_in_at timestamp (PECR audit trail).
+- **Preferences page** (`web/app/(dashboard)/dashboard/marketplace/settings/notifications/page.tsx`): Channel x category matrix UI matching GitHub/Slack/LinkedIn notification settings pattern.
+- **NotificationPreferencesForm** (`web/components/dashboard/NotificationPreferencesForm.tsx`):
+  - Table/grid with Dashboard (always on, greyed out), Email, and SMS columns
+  - Row groups: Events, Quotes, Payments, Ratings, Messages, Disputes
+  - SMS toggles disabled until phone number entered and explicit opt-in checkbox checked
+  - Phone number input with +447xxxxxxxxx E.164 validation
+  - Event alert radius input (miles, empty = all UK nationwide)
+  - Save button with toast confirmation
+
+| File | Purpose |
+|------|---------|
+| `web/app/api/marketplace/notification-preferences/route.ts` | GET/PUT preferences with auto-create defaults |
+| `web/app/(dashboard)/dashboard/marketplace/settings/notifications/page.tsx` | Preferences settings page |
+| `web/components/dashboard/NotificationPreferencesForm.tsx` | Channel x category matrix form |
+
+**Key patterns used in Phase 38:**
+- **User-ID-scoped RLS** (matching v4.0 marketplace pattern)
+- **Fire-and-forget notifications** (individual try/catch, never blocking primary response)
+- **Supabase Realtime postgres_changes** for live feed updates (same as messaging Phase 43)
+- **TanStack Query cache invalidation** via Realtime events
+- **PECR-compliant SMS opt-in** (explicit consent checkbox + audit timestamp)
+- **Dev-mode fallback** for Twilio SMS (console.log when env vars missing)
+- **Upsert pattern** for auto-creating default preferences on first access
+
+**Dependencies added:** `twilio` (v5.x) for SMS delivery.
 
 ---
 
