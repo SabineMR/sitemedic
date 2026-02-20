@@ -94,6 +94,10 @@ Recent decisions affecting current work:
 - [34-03]: EditQuoteDialog uses local useState (not Zustand) to avoid state conflicts with create flow
 - [34-03]: Deadline extension is one-time only via deadline_extended boolean on marketplace_events
 - [34-03]: Quote edit sets status='revised' + last_revised_at; withdraw sets status='withdrawn' + withdrawn_at
+- [34.1-04]: Booking bridge sets client_id=null (direct_clients is separate from bookings.client_id which refs clients table)
+- [34.1-04]: agreed_price treated as total including VAT -- split into subtotal/vat for bookings schema compatibility
+- [34.1-04]: Dev mock PaymentIntent when no STRIPE_SECRET_KEY -- enables UI testing without Stripe credentials
+- [34.1-04]: Medic commitments created per event_day (not per job) -- EXCLUSION constraint checks each day independently
 
 ### Pending Todos
 
@@ -124,5 +128,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 42-02-PLAN.md (iOS Conversation List and Thread UI)
+Stopped at: Completed 34.1-04-PLAN.md (Payment, Booking Bridge, Medic Assignment, Job Detail)
 Resume file: None

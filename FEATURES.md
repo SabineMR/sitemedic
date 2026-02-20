@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-20 (Phase 42 iOS Messaging UI complete)
+**Last Updated**: 2026-02-20 (Phase 34.1 Self-Procured Jobs -- payment, booking bridge, medic assignment, job detail)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -236,6 +236,55 @@ A Request-for-Quotes (RFQ) marketplace being added to SiteMedic where UK clients
 - Event Detail Page: full event info with approximate location ONLY (`location_display`), "Exact address provided after you submit a quote" note, schedule table, staffing requirements table, equipment list, budget display
 - Quote button disabled with Phase 34 placeholder text
 - Breadcrumb navigation (Browse Events > Event Name)
+
+### Implementation Progress (Phase 34.1 -- Self-Procured Jobs, INSERTED)
+
+Phase 34.1 was inserted into the v4.0 roadmap between Phase 34 (Quote Submission) and Phase 35 (Award Flow). Companies with SiteMedic subscriptions can create and manage jobs they sourced themselves, outside the marketplace, with 0% platform commission.
+
+**Plan 01 -- Database Schema & Types (Complete):**
+- `direct_clients` table for formal client records, owned by marketplace company
+- `marketplace_events` extended with `source` ('marketplace'|'direct'), `agreed_price`, `client_id` columns
+- Status constraint extended: draft, open, closed, cancelled, awarded, confirmed, in_progress, completed
+- RLS policy for company-managed direct jobs (source='direct' AND posted_by = auth.uid())
+- TypeScript types: `DirectJob`, `DirectClient`, `DirectJobStatus`, `EventSource`
+- Zod schemas: 5-step wizard validation (clientDetails, jobInfo, jobSchedule, jobStaffing, jobPricing)
+- CRUD API routes: POST/GET /api/direct-jobs, GET/PUT/DELETE /api/direct-jobs/[id]
+
+**Plan 02 -- Job Creation Wizard UI (Complete):**
+- 6-step wizard at /dashboard/jobs/create (client details, job info, schedule, staffing, pricing, review)
+- Existing client selector with pre-fill and disabled editing
+- Pricing step shows 0% platform commission prominently in payment breakdown
+- Jobs list page at /dashboard/jobs with search, status filter, pagination
+
+**Plan 03 -- Combined Jobs View & Marketplace Integration (Complete):**
+- Combined view at /dashboard/jobs/combined showing marketplace + direct jobs together
+- Source badges (Marketplace/Direct), unified status colour map across 8 statuses
+- Marketplace events GET now excludes source='direct' via .neq() filter
+- Combined API returns all sources by default; source filter server-side, status/search client-side
+
+**Plan 04 -- Payment, Booking Bridge, Medic Assignment, Job Detail (Complete):**
+- `createDirectJobBooking` bridge function maps direct job fields to bookings table with source='direct', platform_fee=0, medic_payout=100%
+- Payment route (POST /api/direct-jobs/[id]/payment) creates Stripe PaymentIntent for deposit (25% default), with dev mock fallback when no STRIPE_SECRET_KEY
+- Confirm route (POST /api/direct-jobs/[id]/confirm) transitions draft->confirmed and calls createDirectJobBooking
+- Assign-medic route (POST/DELETE /api/direct-jobs/[id]/assign-medic) uses medic_commitments EXCLUSION constraint for availability checking (catches PostgreSQL 23P01 error for conflicts)
+- Job detail page at /dashboard/jobs/[id] (795 lines) with client details, job info, schedule, staffing requirements, pricing sidebar (0% commission highlighted), medic assignment with conflict detection, payment flow, status management buttons
+
+**Key Direct Jobs files:**
+
+| File | Purpose |
+|------|---------|
+| `web/lib/direct-jobs/types.ts` | DirectJob, DirectClient, DirectJobStatus types |
+| `web/lib/direct-jobs/schemas.ts` | Zod validation for 5-step wizard + update |
+| `web/lib/direct-jobs/booking-bridge.ts` | createDirectJobBooking with source='direct', 0% commission |
+| `web/app/api/direct-jobs/route.ts` | POST (create) + GET (list) direct jobs |
+| `web/app/api/direct-jobs/[id]/route.ts` | GET/PUT/DELETE single direct job |
+| `web/app/api/direct-jobs/[id]/payment/route.ts` | Stripe PaymentIntent for deposit |
+| `web/app/api/direct-jobs/[id]/confirm/route.ts` | Confirm job + create booking |
+| `web/app/api/direct-jobs/[id]/assign-medic/route.ts` | Assign/remove medics with EXCLUSION constraint |
+| `web/app/(dashboard)/dashboard/jobs/page.tsx` | Jobs list page |
+| `web/app/(dashboard)/dashboard/jobs/create/page.tsx` | 6-step creation wizard |
+| `web/app/(dashboard)/dashboard/jobs/[id]/page.tsx` | Job detail page |
+| `supabase/migrations/147_direct_jobs.sql` | direct_clients table, marketplace_events extensions |
 
 ### Planning Files
 
