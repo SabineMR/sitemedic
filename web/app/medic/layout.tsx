@@ -63,6 +63,7 @@ export default function MedicLayout({ children }: { children: ReactNode }) {
     { name: 'My Shifts', href: '/medic/shifts', icon: <Calendar className="w-5 h-5" /> },
     { name: 'Timesheets', href: '/medic/timesheets', icon: <Clock className="w-5 h-5" /> },
     { name: 'Payslips', href: '/medic/payslips', icon: <FileText className="w-5 h-5" /> },
+    { name: 'Documents', href: '/medic/documents', icon: <FileText className="w-5 h-5" /> },
     { name: 'My Profile', href: '/medic/profile', icon: <User className="w-5 h-5" /> },
   ];
 
