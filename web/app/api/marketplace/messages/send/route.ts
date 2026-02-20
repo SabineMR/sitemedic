@@ -125,21 +125,60 @@ export async function POST(request: NextRequest) {
       // Non-fatal: message was sent
     }
 
-    // Fire-and-forget: notification
+    // Fire-and-forget: email notification to the other party
     try {
-      const { sendMarketplaceMessageNotification } = await import('@/lib/marketplace/notifications');
-      if (typeof sendMarketplaceMessageNotification === 'function') {
+      const recipientId =
+        user.id === conversation.client_user_id
+          ? conversation.company_user_id
+          : conversation.client_user_id;
+
+      // Fetch recipient email and names
+      const { data: recipientProfile } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', recipientId)
+        .single();
+
+      const { data: senderProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+
+      // Fetch event name via conversation -> marketplace_events
+      const { data: convoFull } = await supabase
+        .from('marketplace_conversations')
+        .select('event_id')
+        .eq('id', conversation_id)
+        .single();
+
+      let eventName = 'Event';
+      if (convoFull?.event_id) {
+        const { data: evt } = await supabase
+          .from('marketplace_events')
+          .select('event_name')
+          .eq('id', convoFull.event_id)
+          .single();
+        eventName = evt?.event_name || 'Event';
+      }
+
+      if (recipientProfile?.email) {
+        const { sendMarketplaceMessageNotification } = await import(
+          '@/lib/marketplace/notifications'
+        );
         sendMarketplaceMessageNotification({
+          recipientEmail: recipientProfile.email,
+          recipientName: recipientProfile.full_name || 'there',
+          senderName: senderProfile?.full_name || 'Someone',
+          messagePreview: content,
+          eventName,
           conversationId: conversation_id,
-          senderId: user.id,
-          content,
         }).catch((err: unknown) => {
           console.warn('[Marketplace Send] Notification failed (non-fatal):', err);
         });
       }
     } catch {
-      // Notification module doesn't exist yet -- silently ignore
-      console.log('[Marketplace Send] Notification module not available yet');
+      // Non-fatal: notification failure shouldn't block message send
     }
 
     return NextResponse.json({ success: true, message });

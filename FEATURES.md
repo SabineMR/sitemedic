@@ -539,33 +539,149 @@ Phase 35 implements the full award-to-payment lifecycle: client awards a quote, 
 | `web/components/marketplace/award/AwardedEventDetails.tsx` | Post-award dashboard component |
 | `web/components/marketplace/award/PaymentMethodManager.tsx` | Card management UI |
 
-### Implementation Progress (Phase 36 -- Ratings, Messaging & Disputes) -- Partial
+### Phase 36: Ratings, Messaging & Disputes (Complete)
 
-Phase 36 implements dispute filing, event cancellation, and admin dispute resolution for the marketplace. These API routes enforce access control (event poster, awarded company admin, or platform admin), apply tiered refund policies via Stripe, and immediately freeze remainder payments when disputes are filed.
+Phase 36 adds three pillars of marketplace trust and communication: a blind-window rating system, per-event messaging between clients and companies, and a dispute/cancellation workflow with Stripe refund processing.
 
-**Plan 03 -- Disputes, Cancellation & Resolution API Routes (Complete):**
+---
+
+**Plan 01 -- Marketplace Ratings (Complete):**
+
+Implements a blind-window rating system where neither party sees the other's rating until both have submitted or 14 days have passed (Uber/Airbnb pattern to prevent retaliation). Ratings are aggregated on company profiles via a PostgreSQL trigger.
+
+- **POST /api/marketplace/events/[id]/ratings**: Submit a rating (1-5 stars + optional review text). Auto-determines `rater_type` (client = event poster, company = awarded quote admin). Computes `blind_window_expires_at` as last event day + 14 days. Only one rating per user per event. Must be a participant (poster or awarded company admin).
+- **GET /api/marketplace/events/[id]/ratings**: Fetch ratings with blind window enforcement -- ratings are only visible when both parties have rated OR the 14-day window has expired. Returns `visibility` status per rating (visible, blind_window, pending_other_party).
+- **POST /api/marketplace/ratings/[id]/report**: Flag a review for moderation. Requires reason text. Platform admins can directly remove with `admin_action: 'remove'` which sets `moderation_status = 'removed'`.
+- **GET /api/marketplace/companies/[id]/reviews**: Paginated client reviews for a company profile. Filters to only awarded events where blind window has expired. Returns rating distribution (count per star), aggregate stats, and paginated ReviewCard data.
+- **Aggregate trigger**: `update_company_rating_aggregate()` fires on INSERT/UPDATE/DELETE of `job_ratings` where `job_type = 'marketplace'`. Resolves the company via the awarded quote and recomputes `marketplace_companies.average_rating` + `review_count`.
+- **Quote scoring wired to real data**: `/api/marketplace/quotes/list` now returns `company_rating` and `company_review_count` from actual `marketplace_companies` aggregates instead of placeholder zeroes. Best-value sorting in `quote-scoring.ts` uses real ratings.
+
+**UI Components (Plan 01):**
+
+| Component | Description |
+|-----------|-------------|
+| `MarketplaceRatingForm.tsx` | 5-star interactive selector with blind window info callout, review textarea, submit handler |
+| `ReviewCard.tsx` | Individual review display with star rating, reviewer name, date, report button with reason modal |
+| `CompanyRatingsSummary.tsx` | Google Reviews-style aggregate: large rating number, 5-bar distribution chart, paginated ReviewCard list |
+
+**Key files created (Plan 01):**
+
+| File | Purpose |
+|------|---------|
+| `supabase/migrations/152_marketplace_ratings.sql` | Extends job_ratings with blind_window_expires_at, moderation columns; adds average_rating + review_count to marketplace_companies; creates aggregate trigger |
+| `web/lib/marketplace/rating-types.ts` | TypeScript types: ModerationStatus, RatingVisibility, MarketplaceRating, CompanyRatingAggregates |
+| `web/app/api/marketplace/events/[id]/ratings/route.ts` | GET + POST marketplace event ratings with blind window logic |
+| `web/app/api/marketplace/ratings/[id]/report/route.ts` | POST report/flag a review for moderation |
+| `web/app/api/marketplace/companies/[id]/reviews/route.ts` | GET paginated company reviews with distribution |
+| `web/components/marketplace/ratings/MarketplaceRatingForm.tsx` | Rating submission form |
+| `web/components/marketplace/ratings/ReviewCard.tsx` | Individual review card |
+| `web/components/marketplace/ratings/CompanyRatingsSummary.tsx` | Aggregate rating summary for company profile |
+
+**Files modified (Plan 01):**
+
+| File | Change |
+|------|--------|
+| `web/lib/marketplace/types.ts` | Added `average_rating` and `review_count` to MarketplaceCompany interface |
+| `web-marketplace/app/companies/[id]/page.tsx` | Replaced placeholder rating with real data; replaced reviews placeholder with CompanyRatingsSummary |
+| `web-marketplace/app/api/marketplace/quotes/list/route.ts` | Returns real `average_rating`/`review_count` from marketplace_companies instead of placeholder zeroes |
+
+---
+
+**Plan 02 -- Marketplace Messaging (Complete):**
+
+Implements per-event conversations between clients and companies with a central inbox, chat-style message threads, and Airbnb-style email notifications. Each event+company pair has at most one conversation (UNIQUE constraint). Uses user-ID-scoped RLS (different from org-scoped internal messaging).
+
+- **GET /api/marketplace/messages/conversations**: List all conversations for the current user with unread counts. Joins conversation_read_status to compute `unread_count` per conversation. Returns conversations sorted by `last_message_at` descending.
+- **POST /api/marketplace/messages/conversations**: Create or retrieve a conversation for a given event + company. If conversation exists, returns it. If not, verifies the requester is either the event poster or the company admin before creating. Returns the conversation ID.
+- **GET /api/marketplace/messages/conversations/[id]**: Fetch a conversation with all its messages. Verifies user is a participant. Auto-marks conversation as read (upserts read status to now). Returns conversation metadata + message array.
+- **PATCH /api/marketplace/messages/conversations/[id]/read**: Explicitly mark a conversation as read. Upserts `marketplace_conversation_read_status.last_read_at` to current time.
+- **POST /api/marketplace/messages/send**: Send a message in a conversation. Validates sender is a participant. Inserts message, updates conversation metadata (last_message_at, last_message_preview, last_message_sender_id), upserts sender's read status. Fire-and-forget Airbnb-style email notification to the other party via `sendMarketplaceMessageNotification()`.
+
+**UI Components (Plan 02):**
+
+| Component | Description |
+|-----------|-------------|
+| `MarketplaceConversationRow.tsx` | Conversation list row: other party name, event name, message preview, relative timestamp, unread badge |
+| `MarketplaceMessageInput.tsx` | Text input with send button, Enter to send, Shift+Enter for newline, 5000 char limit |
+| `MarketplaceMessageThread.tsx` | Chat-style thread with right-aligned blue bubbles (own) / left-aligned gray (other), 10s polling, auto-scroll to latest |
+| `MarketplaceInbox.tsx` | Two-panel layout: conversation list (left) + active thread (right), mobile single-panel mode, 30s conversation list polling |
+
+**Key files created (Plan 02):**
+
+| File | Purpose |
+|------|---------|
+| `supabase/migrations/153_marketplace_messaging.sql` | marketplace_conversations (UNIQUE event_id+company_id), marketplace_messages, marketplace_conversation_read_status, user-ID-scoped RLS |
+| `web/lib/marketplace/messaging-types.ts` | TypeScript types: MarketplaceConversation, MarketplaceMessage, read status, request/response types |
+| `web/app/api/marketplace/messages/conversations/route.ts` | GET list + POST create-or-get conversations |
+| `web/app/api/marketplace/messages/send/route.ts` | POST send message with notification |
+| `web/app/api/marketplace/messages/conversations/[id]/route.ts` | GET conversation + messages with auto-read |
+| `web/app/api/marketplace/messages/conversations/[id]/read/route.ts` | PATCH mark as read |
+| `web/components/marketplace/messaging/MarketplaceConversationRow.tsx` | Conversation row component |
+| `web/components/marketplace/messaging/MarketplaceMessageInput.tsx` | Message input with keyboard shortcuts |
+| `web/components/marketplace/messaging/MarketplaceMessageThread.tsx` | Chat-style message thread |
+| `web/components/marketplace/messaging/MarketplaceInbox.tsx` | Two-panel inbox layout |
+| `web-marketplace/app/messages/page.tsx` | Messages page with deep link support via ?conversation= query param |
+
+**Files modified (Plan 02):**
+
+| File | Change |
+|------|--------|
+| `web/lib/marketplace/notifications.ts` | Added `sendMarketplaceMessageNotification()`, `sendDisputeFiledNotification()`, `sendDisputeResolvedNotification()`, `sendCancellationNotification()` |
+| `web-marketplace/app/events/[id]/page.tsx` | Added Messages/Ratings tabs, conversation init, MarketplaceMessageThread in Messages tab, MarketplaceRatingForm in Ratings tab |
+
+---
+
+**Plan 03 -- Disputes, Cancellation & Resolution (Complete):**
+
+Implements dispute filing with remainder payment holds, tiered marketplace cancellation with Stripe refunds, and a platform admin dispute resolution queue.
 
 - **GET /api/marketplace/events/[id]/dispute**: Fetch all disputes for a marketplace event. Access restricted to event poster, awarded company admin, or platform admin. Returns disputes sorted by creation date descending.
 - **POST /api/marketplace/events/[id]/dispute**: File a new dispute on a marketplace event. Validates dispute category (no_show, late_cancellation, quality_issue, billing_dispute, safety_concern) and description via Zod. Auto-determines `filed_by_type` (client or company) from user's role. Only allowed on events with status completed, in_progress, or confirmed. Immediately sets `remainder_hold = true` on all related bookings to freeze pending remainder charges. Fire-and-forget email notification via `sendDisputeFiledNotification()`.
 - **POST /api/marketplace/events/[id]/cancel**: Cancel a marketplace event with tiered refund processing. Client cancellation uses `calculateMarketplaceCancellationRefund()` (>14 days = 100%, 7-14 days = 50%, <7 days = 0%). Company cancellation uses `calculateCompanyCancellationRefund()` (always 100%). Processes Stripe refunds per booking. Updates booking status to cancelled with refund metadata. Sets `remainder_due_at = null` to cancel pending remainder charges. Updates event status to cancelled. Fire-and-forget email via `sendCancellationNotification()`.
 - **POST /api/marketplace/disputes/[id]/resolve**: Platform admin resolves a dispute. Admin-only access (checked via `is_platform_admin` RPC). Four resolution types: full_refund (Stripe full refund + cancel booking), partial_refund (percentage-based Stripe refund), dismissed (no refund), suspend_party (log only). Releases `remainder_hold` on all event bookings after resolution. Fire-and-forget email via `sendDisputeResolvedNotification()`.
+- **GET /api/marketplace/disputes**: Platform admin disputes list with status filtering and event name enrichment.
 
-**Key files created (Phase 36 Plan 03):**
+**UI Components (Plan 03):**
+
+| Component | Description |
+|-----------|-------------|
+| `DisputeForm.tsx` | Category radio buttons, description textarea, evidence file upload (drag-drop, max 5 files), warning callout about payment hold |
+| `DisputeDetail.tsx` | Status badge, timeline (Filed > Under Review > Resolved), evidence thumbnails, admin resolution form |
+| `CancellationConfirmation.tsx` | Financial breakdown table (deposit, tier, refund amount, retained), cancellation reason dropdown, two-step confirmation |
+| `web/app/platform/disputes/page.tsx` | Admin disputes queue table with status filter pills, click-through to DisputeDetail, days-open indicator with color coding |
+
+**Key files created (Plan 03):**
 
 | File | Purpose |
 |------|---------|
+| `supabase/migrations/154_marketplace_disputes.sql` | marketplace_disputes table, bookings columns (remainder_hold, cancellation), dispute-evidence storage bucket, RLS policies |
+| `web/lib/marketplace/dispute-types.ts` | TypeScript types for disputes, cancellations, resolution types |
+| `web/lib/marketplace/cancellation.ts` | Tiered refund calculation functions (>14d=100%, 7-14d=50%, <7d=0%) |
 | `web/app/api/marketplace/events/[id]/dispute/route.ts` | GET + POST dispute filing and retrieval |
 | `web/app/api/marketplace/events/[id]/cancel/route.ts` | POST marketplace event cancellation with tiered Stripe refunds |
 | `web/app/api/marketplace/disputes/[id]/resolve/route.ts` | POST admin dispute resolution with Stripe refund processing |
-| `supabase/migrations/154_marketplace_disputes.sql` | marketplace_disputes table, bookings columns (remainder_hold, cancellation), dispute-evidence storage bucket, RLS policies |
-| `web/lib/marketplace/dispute-types.ts` | TypeScript types for disputes, cancellations, resolution |
-| `web/lib/marketplace/cancellation.ts` | Tiered refund calculation functions |
+| `web/app/api/marketplace/disputes/route.ts` | GET admin disputes list with event name enrichment |
+| `web/components/marketplace/disputes/DisputeForm.tsx` | Dispute filing form with evidence upload |
+| `web/components/marketplace/disputes/DisputeDetail.tsx` | Dispute detail view with resolution controls |
+| `web/components/marketplace/disputes/CancellationConfirmation.tsx` | Cancellation confirmation with financial breakdown |
+| `web/app/platform/disputes/page.tsx` | Platform admin disputes queue page |
 
-**Key patterns used:**
-- Dynamic Stripe import to avoid loading SDK when no refund is needed
-- Fire-and-forget notifications (try/catch + .catch()) -- notification failure never blocks API response
-- `marketplace_companies!inner(admin_user_id)` join pattern for awarded company admin verification
-- `remainder_hold` boolean on bookings to freeze pending remainder charges during disputes
+**Files modified (Plan 03):**
+
+| File | Change |
+|------|--------|
+| `web-marketplace/app/events/[id]/page.tsx` | Added Raise Dispute and Cancel Event buttons, DisputeForm/CancellationConfirmation dialogs, existing dispute display |
+
+---
+
+**Key patterns used across Phase 36:**
+- **Blind rating window**: Neither party sees ratings until both submit or 14 days pass (prevents retaliation)
+- **User-ID-scoped RLS**: Marketplace messaging checks `auth.uid() IN (client_user_id, company_user_id)` -- different from org-scoped internal messaging
+- **Denormalized aggregates**: PostgreSQL trigger keeps `average_rating`/`review_count` on marketplace_companies in sync
+- **Dynamic Stripe import**: `const { stripe } = await import('@/lib/stripe/server')` avoids loading SDK when no refund needed
+- **Fire-and-forget notifications**: All email notifications wrapped in try/catch + .catch() -- never blocks API responses
+- **`remainder_hold` boolean**: Filing a dispute freezes remainder payments; `charge-remainder-payment` cron skips held bookings
+- **`marketplace_companies!inner(admin_user_id)` join**: Pattern for verifying awarded company admin access
 
 ### Dashboard Marketplace Browsing (2026-02-19)
 
