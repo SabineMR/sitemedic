@@ -50,7 +50,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 - [x] **Phase 34: Quote Submission & Comparison** - Companies submit priced quotes with breakdowns, clients compare anonymised company profiles (companies only)
 - [x] **Phase 34.1: Self-Procured Jobs** (INSERTED) - Companies with SiteMedic subscriptions create and manage jobs they sourced themselves, with zero commission, full wizard entry, Stripe payment flow, and complete feature parity with marketplace jobs
 - [x] **Phase 35: Award Flow & Payment** - Client awards quote, deposit collected, booking auto-created, remainder charged after event, commission split, payouts
-- [ ] **Phase 36: Ratings, Messaging & Disputes** - Bidirectional ratings, per-quote messaging, cancellation policy, dispute resolution
+- [x] **Phase 36: Ratings, Messaging & Disputes** - Bidirectional ratings, per-quote messaging, cancellation policy, dispute resolution
 - [ ] **Phase 37: Company Accounts** - Company roster management, medic assignment to events, company profile display
 - [ ] **Phase 38: Notifications & Alerts** - Multi-channel notification system (dashboard feed, email, SMS) with medic preferences
 - [ ] **Phase 39: Admin Dashboard** - Platform admin marketplace metrics, event/quote/dispute management, configuration
@@ -175,9 +175,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 36-01-PLAN.md — Bidirectional ratings (migration 152: blind window + moderation columns + aggregate trigger; marketplace ratings API with 14-day blind window; MarketplaceRatingForm, ReviewCard, CompanyRatingsSummary components; company profile rating display; quote list wired to real rating data)
-- [ ] 36-02-PLAN.md — Marketplace messaging (migration 153: marketplace_conversations + marketplace_messages with user_id RLS; messaging API routes; MarketplaceInbox with conversation list + message thread; Airbnb-style email notifications; Messages tab on event detail page)
-- [ ] 36-03-PLAN.md — Disputes and cancellations (migration 154: marketplace_disputes table + dispute-evidence bucket + remainder_hold on bookings; dispute filing with evidence upload + auto remainder hold; admin dispute queue with resolution workflow; tiered cancellation policy with Stripe refunds; CancellationConfirmation with financial breakdown)
+- [x] 36-01-PLAN.md — Bidirectional ratings (migration 152: blind window + moderation columns + aggregate trigger; marketplace ratings API with 14-day blind window; MarketplaceRatingForm, ReviewCard, CompanyRatingsSummary components; company profile rating display; quote list wired to real rating data)
+- [x] 36-02-PLAN.md — Marketplace messaging (migration 153: marketplace_conversations + marketplace_messages with user_id RLS; messaging API routes; MarketplaceInbox with conversation list + message thread; Airbnb-style email notifications; Messages tab on event detail page)
+- [x] 36-03-PLAN.md — Disputes and cancellations (migration 154: marketplace_disputes table + dispute-evidence bucket + remainder_hold on bookings; dispute filing with evidence upload + auto remainder hold; admin dispute queue with resolution workflow; tiered cancellation policy with Stripe refunds; CancellationConfirmation with financial breakdown)
 
 ### Phase 37: Company Accounts
 **Goal**: Medic companies can manage a roster of individual medics, assign specific medics to events when quoting, and display rich company profiles — individual medics cannot bid independently on the marketplace (companies only)
@@ -384,7 +384,7 @@ Plans:
 | 34. Quote Submission & Comparison | v4.0 | 0/3 | Planned | - |
 | 34.1. Self-Procured Jobs (INSERTED) | v4.0 | 0/6 | Planned | - |
 | 35. Award Flow & Payment | v4.0 | 0/4 | Not started | - |
-| 36. Ratings, Messaging & Disputes | v4.0 | 0/3 | Not started | - |
+| 36. Ratings, Messaging & Disputes | v4.0 | 3/3 | Complete | 2026-02-20 |
 | 37. Company Accounts | v4.0 | 0/3 | Not started | - |
 | 38. Notifications & Alerts | v4.0 | 0/3 | Not started | - |
 | 39. Admin Dashboard | v4.0 | 0/3 | Not started | - |

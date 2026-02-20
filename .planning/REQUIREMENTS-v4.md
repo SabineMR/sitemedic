@@ -60,25 +60,25 @@
 
 ### RATE — Ratings & Reviews
 
-- [ ] **RATE-01**: After event completion, client can rate the medic/company with a star rating (1-5) and written review
-- [ ] **RATE-02**: After event completion, medic can rate the client with a star rating (1-5) and written review
-- [ ] **RATE-03**: Ratings are visible on profiles and influence quote comparison sorting
-- [ ] **RATE-04**: Both parties have 14 days after event completion to leave a rating — after that the review window closes
-- [ ] **RATE-05**: Platform admin can moderate reviews (remove inappropriate content, respond to disputes about reviews)
+- [x] **RATE-01**: After event completion, client can rate the medic/company with a star rating (1-5) and written review
+- [x] **RATE-02**: After event completion, medic can rate the client with a star rating (1-5) and written review
+- [x] **RATE-03**: Ratings are visible on profiles and influence quote comparison sorting
+- [x] **RATE-04**: Both parties have 14 days after event completion to leave a rating — after that the review window closes
+- [x] **RATE-05**: Platform admin can moderate reviews (remove inappropriate content, respond to disputes about reviews)
 
 ### MSG — Platform Messaging
 
-- [ ] **MSG-01**: Client can send messages to medics who have quoted on their event — conversation is visible to both parties within the platform
-- [ ] **MSG-02**: Medic can ask clarifying questions about an event before submitting a quote via platform messaging
-- [ ] **MSG-03**: All messages are stored on-platform — no external email/phone sharing before award + deposit
-- [ ] **MSG-04**: Email notification sent when a new message is received, with a link back to the platform conversation (message content NOT included in email to prevent off-platform communication)
+- [x] **MSG-01**: Client can send messages to medics who have quoted on their event — conversation is visible to both parties within the platform
+- [x] **MSG-02**: Medic can ask clarifying questions about an event before submitting a quote via platform messaging
+- [x] **MSG-03**: All messages are stored on-platform — no external email/phone sharing before award + deposit
+- [x] **MSG-04**: Email notification sent when a new message is received, with a link back to the platform conversation (message content NOT included in email to prevent off-platform communication)
 
 ### DISP — Dispute Resolution
 
-- [ ] **DISP-01**: Either party can raise a dispute after an event (medic no-show, client cancelled last minute, service quality issue, event not as described)
-- [ ] **DISP-02**: Disputes trigger a hold on the remainder payment until resolved
-- [ ] **DISP-03**: Platform admin can review disputes, communicate with both parties, and issue resolution (full payout, partial refund, full refund, deposit forfeiture)
-- [ ] **DISP-04**: Clear cancellation policy: client cancellation >14 days = full deposit refund; 7-14 days = 50% deposit retained; <7 days = full deposit retained by medic
+- [x] **DISP-01**: Either party can raise a dispute after an event (medic no-show, client cancelled last minute, service quality issue, event not as described)
+- [x] **DISP-02**: Disputes trigger a hold on the remainder payment until resolved
+- [x] **DISP-03**: Platform admin can review disputes, communicate with both parties, and issue resolution (full payout, partial refund, full refund, deposit forfeiture)
+- [x] **DISP-04**: Clear cancellation policy: client cancellation >14 days = full deposit refund; 7-14 days = 50% deposit retained; <7 days = full deposit retained by medic
 
 ### NOTIF — Notifications
 
@@ -164,19 +164,19 @@
 | COMP-03 | Phase 37 | Pending |
 | COMP-04 | Phase 37 | Pending |
 | COMP-05 | Phase 37 | Pending |
-| RATE-01 | Phase 36 | Pending |
-| RATE-02 | Phase 36 | Pending |
-| RATE-03 | Phase 36 | Pending |
-| RATE-04 | Phase 36 | Pending |
-| RATE-05 | Phase 36 | Pending |
-| MSG-01 | Phase 36 | Pending |
-| MSG-02 | Phase 36 | Pending |
-| MSG-03 | Phase 36 | Pending |
-| MSG-04 | Phase 36 | Pending |
-| DISP-01 | Phase 36 | Pending |
-| DISP-02 | Phase 36 | Pending |
-| DISP-03 | Phase 36 | Pending |
-| DISP-04 | Phase 36 | Pending |
+| RATE-01 | Phase 36 | Complete |
+| RATE-02 | Phase 36 | Complete |
+| RATE-03 | Phase 36 | Complete |
+| RATE-04 | Phase 36 | Complete |
+| RATE-05 | Phase 36 | Complete |
+| MSG-01 | Phase 36 | Complete |
+| MSG-02 | Phase 36 | Complete |
+| MSG-03 | Phase 36 | Complete |
+| MSG-04 | Phase 36 | Complete |
+| DISP-01 | Phase 36 | Complete |
+| DISP-02 | Phase 36 | Complete |
+| DISP-03 | Phase 36 | Complete |
+| DISP-04 | Phase 36 | Complete |
 | NOTIF-01 | Phase 38 | Pending |
 | NOTIF-02 | Phase 38 | Pending |
 | NOTIF-03 | Phase 38 | Pending |

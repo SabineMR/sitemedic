@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v5.0 Internal Comms — Phase 44 complete, Phase 45 next
+**Current focus:** v4.0 MedBid Marketplace — Phase 36 complete, Phase 37 next
 
 ## Current Position
 
-Phase: 44 of 47 (Broadcast Messaging — COMPLETE)
-Plan: 2 of 2 in current phase (all complete)
-Status: Phase 44 verified (4/4 must-haves), ready for Phase 45
-Last activity: 2026-02-20 — Completed Phase 44 (Broadcast Messaging)
+Phase: 36 of 47 (Ratings, Messaging & Disputes — COMPLETE)
+Plan: 3 of 3 in current phase (all complete)
+Status: Phase 36 complete (all 3 plans executed), ready for Phase 37
+Last activity: 2026-02-20 — Completed Phase 36 (Ratings, Messaging & Disputes)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [██████░░░░] v4.0 63% | [█████████░] v5.0 88%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [███████░░░] v4.0 75% | [█████████░] v5.0 88%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 224 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 27 v4.0 + 18 v5.0)
+- Total plans completed: 227 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 30 v4.0 + 18 v5.0)
 - Average duration: 3.9 min
 - Total execution time: ~14.0 hours
 
@@ -31,7 +31,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 27/32 | ~317 min | ~5.6 min |
+| v4.0 | 8 | 30/32 | ~332 min | ~5.5 min |
 | v5.0 | 8 | 18/21 | ~92 min | ~5.1 min |
 
 *Updated after each plan completion*
@@ -156,6 +156,15 @@ Recent decisions affecting current work:
 - [44-02]: Batched read summary query (single message_recipients query for all visible message IDs) avoids N+1
 - [44-02]: 30-second stale time on read summaries for admin (balance freshness vs query volume)
 - [44-02]: Broadcast mark-as-read updates both message_recipients.read_at AND conversation_read_status (dual update)
+- [36-01]: Blind rating window: neither party sees rating until both submit OR 14 days after event completion (prevents retaliation)
+- [36-01]: Company rating aggregates denormalized on marketplace_companies via PostgreSQL trigger on job_ratings INSERT/UPDATE/DELETE
+- [36-01]: Moderation columns on job_ratings (moderation_status, flagged_at/by/reason, moderated_at/by/notes) for admin review flagging
+- [36-02]: Marketplace messaging uses user-ID-scoped RLS (NOT org_id) — different from v5.0 internal messaging
+- [36-02]: UNIQUE(event_id, company_id) on marketplace_conversations — at most one conversation per event+company pair
+- [36-02]: Fire-and-forget Airbnb-style email notifications for marketplace messages (never blocks API response)
+- [36-03]: remainder_hold boolean on bookings — filing dispute immediately freezes remainder payments
+- [36-03]: Tiered client cancellation: >14d=100% refund, 7-14d=50%, <7d=0%; company cancellation always 100%
+- [36-03]: Admin dispute resolution: full_refund, partial_refund, dismissed, suspend_party — all release remainder_hold
 
 ### Pending Todos
 
@@ -186,5 +195,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed Phase 44 (Broadcast Messaging) — all 2 plans executed and verified (4/4 must-haves)
+Stopped at: Completed Phase 36 (Ratings, Messaging & Disputes) — all 3 plans executed
 Resume file: None
