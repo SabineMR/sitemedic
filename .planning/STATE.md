@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 37 of 47 (Company Accounts — In Progress)
-Plan: 1 of 3 in current phase (37-01 complete)
-Status: In progress — Plan 01 (Roster Data Layer & API) complete, Plans 02-03 pending
-Last activity: 2026-02-20 — Completed 37-01-PLAN.md (Roster Data Layer & API)
+Plan: 2 of 3 in current phase (37-01, 37-02 complete)
+Status: In progress — Plans 01-02 complete, Plan 03 (Assignment & Profile) pending
+Last activity: 2026-02-20 — Completed 37-02-PLAN.md (Roster Management UI)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████████░░] v4.0 78% | [██████████] v5.0 100%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████████░░] v4.0 81% | [██████████] v5.0 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 233 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 31 v4.0 + 23 v5.0)
+- Total plans completed: 234 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 32 v4.0 + 23 v5.0)
 - Average duration: 3.9 min
-- Total execution time: ~14.1 hours
+- Total execution time: ~14.3 hours
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 31/32 | ~348 min | ~5.6 min |
+| v4.0 | 8 | 32/32 | ~359 min | ~5.6 min |
 | v5.0 | 8 | 23/21 | ~116 min | ~5.0 min |
 
 *Updated after each plan completion*
@@ -180,6 +180,11 @@ Recent decisions affecting current work:
 - [37-01]: Multi-company roster membership allowed — UNIQUE on (company_id, medic_id), not just medic_id
 - [37-01]: 7-day JWT invitation expiry with company_id + email in payload
 - [37-01]: Fire-and-forget Resend email with console.log dev fallback (never blocks API)
+- [37-02]: Zustand store manages UI state only (filters, modals); data stays in React Query hooks
+- [37-02]: GET roster API updated to support status=all (default) instead of defaulting to active
+- [37-02]: AddMedicModal uses client-side Supabase ILIKE search against medics table (same as MedicPicker pattern)
+- [37-02]: RosterMedicCard uses AlertDialog for remove confirmation (not window.confirm)
+- [37-02]: Accept page wraps useSearchParams in Suspense boundary (Next.js 14+ requirement)
 
 ### Pending Todos
 
@@ -210,5 +215,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 37-01-PLAN.md (Roster Data Layer & API) — Phase 37 Plan 01 of 3
+Stopped at: Completed 37-02-PLAN.md (Roster Management UI) — Phase 37 Plan 02 of 3
 Resume file: None
