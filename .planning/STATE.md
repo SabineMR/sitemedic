@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v4.0 Marketplace — Phase 34.1 (Self-Procured Jobs)
+**Current focus:** v5.0 Internal Comms — Phase 42 (iOS Messaging & Offline)
 
 ## Current Position
 
-Phase: 34.1 of 47 (Self-Procured Jobs — INSERTED)
-Plan: 3 of 5 in current phase
+Phase: 42 of 47 (iOS Messaging & Offline)
+Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-20 — Completed 34.1-03-PLAN.md (combined jobs dashboard)
+Last activity: 2026-02-20 — Completed 42-01-PLAN.md (WatermelonDB models and message sync)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████░░░░░░] v4.0 28% | [███░░░░░░░] v5.0 29%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████░░░░░░] v4.0 28% | [████░░░░░░] v5.0 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 194 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 10 v4.0 + 5 v5.0)
+- Total plans completed: 195 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 10 v4.0 + 6 v5.0)
 - Average duration: 3.9 min
-- Total execution time: ~12.9 hours
+- Total execution time: ~13.1 hours
 
 **By Milestone:**
 
@@ -32,7 +32,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
 | v4.0 | 8 | 10/26 | ~103 min | ~6.2 min |
-| v5.0 | 8 | 5/21 | ~18 min | ~3.6 min |
+| v5.0 | 8 | 6/21 | ~27 min | ~4.5 min |
 
 *Updated after each plan completion*
 
@@ -79,6 +79,10 @@ Recent decisions affecting current work:
 - [34.1-03]: Marketplace events GET now excludes source='direct' via .neq() — My Events only shows marketplace
 - [34.1-03]: Combined API returns all sources by default; source filter applied server-side, status/search client-side
 - [34.1-03]: Combined status colour map covers 8 statuses spanning both marketplace and direct lifecycles
+- [42-01]: MessageSync is self-contained service -- does NOT modify existing SyncQueue.syncItem (clinical data untouched)
+- [42-01]: Local messages use 'queued' status for offline (server schema only has sent/delivered/read)
+- [42-01]: Incremental sync via lastSyncedAt in AsyncStorage; first sync fetches last 100 messages per conversation
+- [42-01]: Participant/sender names denormalized on local models (medics see "Admin", admins see medic name)
 
 ### Pending Todos
 
@@ -109,5 +113,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 34.1-03-PLAN.md (combined jobs dashboard with source badges and filters)
+Stopped at: Completed 42-01-PLAN.md (WatermelonDB models and message sync)
 Resume file: None
