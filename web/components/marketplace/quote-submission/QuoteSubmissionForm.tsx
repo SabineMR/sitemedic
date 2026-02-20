@@ -133,7 +133,7 @@ export default function QuoteSubmissionForm({
     const schemaValidation = quoteSubmissionSchema.safeParse(quoteData);
     if (!schemaValidation.success) {
       const newErrors: Record<string, string> = {};
-      schemaValidation.error.errors.forEach((err) => {
+      schemaValidation.error.issues.forEach((err) => {
         const path = err.path.join('.');
         newErrors[path] = err.message;
       });

@@ -9,10 +9,12 @@
  * - Online/offline connectivity state
  * - Manual sync trigger
  * - Sync queue enqueue method for components
+ * - Message sync status and trigger for messaging UI (Phase 42)
  *
  * Integrates:
  * - NetworkMonitor for connectivity detection
  * - SyncQueue for pending operations
+ * - MessageSync for messaging pull/push sync (Phase 42)
  * - AuditLogger for GDPR audit log sync
  * - AuthContext for current user (sets audit logger user)
  */
@@ -20,15 +22,18 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { networkMonitor } from '../services/NetworkMonitor'
 import { syncQueue } from '../services/SyncQueue'
+import { messageSync } from '../services/MessageSync'
 import { photoUploadQueue } from '../services/PhotoUploadQueue'
 import { syncScheduler } from '../utils/syncScheduler'
 import { auditLogger } from '../services/AuditLogger'
 import { useAuth } from './AuthContext'
 
 export type SyncStatus = 'synced' | 'syncing' | 'pending' | 'offline' | 'error'
+export type MessageSyncStatus = 'idle' | 'syncing' | 'error'
 
 export interface SyncState {
   status: SyncStatus
+  messageSyncStatus: MessageSyncStatus
   pendingCount: number
   pendingPhotoCount: number
   isOnline: boolean
@@ -40,6 +45,7 @@ export interface SyncState {
 export interface SyncContextType {
   state: SyncState
   triggerSync: () => Promise<void>
+  triggerMessageSync: () => Promise<void>
   enqueueSyncItem: (
     operation: 'create' | 'update' | 'delete',
     tableName: string,
@@ -60,6 +66,7 @@ export function SyncProvider({ children }: SyncProviderProps) {
 
   const [state, setState] = useState<SyncState>({
     status: 'synced',
+    messageSyncStatus: 'idle',
     pendingCount: 0,
     pendingPhotoCount: 0,
     isOnline: true,
@@ -138,6 +145,23 @@ export function SyncProvider({ children }: SyncProviderProps) {
       const auditCount = await auditLogger.syncPendingAuditLogs()
       console.log('[SyncContext] Synced audit logs:', auditCount)
 
+      // Message sync: push queued messages then pull new messages
+      if (auth.state.user && auth.state.user.orgId) {
+        setState((prev) => ({ ...prev, messageSyncStatus: 'syncing' }))
+        try {
+          const pushedCount = await messageSync.pushPendingMessages()
+          console.log('[SyncContext] Message push result:', pushedCount)
+
+          const pullResult = await messageSync.pullSync(auth.state.user.id, auth.state.user.orgId)
+          console.log('[SyncContext] Message pull result:', pullResult)
+
+          setState((prev) => ({ ...prev, messageSyncStatus: 'idle' }))
+        } catch (msgError) {
+          console.error('[SyncContext] Message sync failed:', msgError)
+          setState((prev) => ({ ...prev, messageSyncStatus: 'error' }))
+        }
+      }
+
       setState((prev) => ({
         ...prev,
         lastSyncAt: new Date(),
@@ -155,7 +179,32 @@ export function SyncProvider({ children }: SyncProviderProps) {
       // Refresh state after sync completes
       await refreshState()
     }
-  }, [state.isOnline, refreshState])
+  }, [state.isOnline, auth.state.user, auth.state.user?.orgId, refreshState])
+
+  /**
+   * Trigger message-only sync (pull-to-refresh in messaging UI).
+   * Pushes queued messages and pulls new conversations/messages from server.
+   */
+  const triggerMessageSync = useCallback(async () => {
+    if (!state.isOnline || !auth.state.user || !auth.state.user?.orgId) {
+      console.log('[SyncContext] Cannot sync messages: offline or no auth')
+      return
+    }
+
+    setState((prev) => ({ ...prev, messageSyncStatus: 'syncing' }))
+    try {
+      const pushedCount = await messageSync.pushPendingMessages()
+      console.log('[SyncContext] Message push (manual):', pushedCount)
+
+      const pullResult = await messageSync.pullSync(auth.state.user.id, auth.state.user?.orgId)
+      console.log('[SyncContext] Message pull (manual):', pullResult)
+
+      setState((prev) => ({ ...prev, messageSyncStatus: 'idle' }))
+    } catch (error) {
+      console.error('[SyncContext] Manual message sync failed:', error)
+      setState((prev) => ({ ...prev, messageSyncStatus: 'error' }))
+    }
+  }, [state.isOnline, auth.state.user, auth.state.user?.orgId])
 
   /**
    * Enqueue a sync item (wrapper for components).
@@ -231,6 +280,7 @@ export function SyncProvider({ children }: SyncProviderProps) {
   const value: SyncContextType = {
     state,
     triggerSync,
+    triggerMessageSync,
     enqueueSyncItem,
   }
 

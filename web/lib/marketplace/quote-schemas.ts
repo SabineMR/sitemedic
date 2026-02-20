@@ -138,6 +138,15 @@ export type QuoteSubmission = z.infer<typeof quoteSubmissionSchema>;
 // Only validates that data which is provided is well-formed
 // =============================================================================
 
+/** Loose pricing schema for drafts (no total > 0 refinement, all fields optional) */
+const draftPricingSchema = z.object({
+  staffCost: z.number().min(0).max(100000).optional(),
+  equipmentCost: z.number().min(0).max(100000).optional(),
+  transportCost: z.number().min(0).max(100000).optional(),
+  consumablesCost: z.number().min(0).max(100000).optional(),
+  customLineItems: z.array(customLineItemSchema).optional(),
+});
+
 export const draftSaveSchema = z.object({
   event_id: z.string()
     .uuid('Invalid event ID'),
@@ -145,7 +154,7 @@ export const draftSaveSchema = z.object({
     .uuid('Invalid draft ID')
     .optional()
     .nullable(),
-  pricing_breakdown: pricingSchema.partial().optional(),
+  pricing_breakdown: draftPricingSchema.optional(),
   staffing_plan: staffingPlanSchema.optional(),
   cover_letter: z.string()
     .max(5000, 'Cover letter too long')
