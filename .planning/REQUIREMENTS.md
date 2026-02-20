@@ -42,7 +42,7 @@
 ### Cross-Platform
 
 - [x] **PLAT-01**: Messaging works on both iOS app and web dashboard, synced
-- [ ] **PLAT-02**: Document upload works on both iOS app and web dashboard
+- [x] **PLAT-02**: Document upload works on both iOS app and web dashboard
 - [x] **PLAT-03**: All data is scoped to the organization (org_id RLS isolation)
 
 ## v5.1 Requirements (Deferred)
