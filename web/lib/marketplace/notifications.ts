@@ -530,6 +530,81 @@ interface CancellationNotificationParams {
   reason: string;
 }
 
+// =============================================================================
+// Rating Nudge Notification (Phase 36 Extension — Feature 7)
+// =============================================================================
+
+interface RatingNudgeNotificationParams {
+  recipientEmail: string;
+  recipientName: string;
+  eventName: string;
+  eventId: string;
+  recipientRole: 'client' | 'company';
+}
+
+export async function sendRatingNudgeNotification(
+  params: RatingNudgeNotificationParams
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const actionText = params.recipientRole === 'client'
+      ? 'Rate the company you worked with and help other clients make informed decisions.'
+      : 'Rate the client you worked with to build your company\'s reputation on the platform.';
+
+    await resend.emails.send({
+      from: FROM_ADDRESS,
+      to: params.recipientEmail,
+      subject: `How was your experience? Rate ${params.eventName}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); padding: 32px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">How Was Your Experience?</h1>
+          </div>
+          <div style="background: white; padding: 32px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+              Hi <strong>${params.recipientName}</strong>,
+            </p>
+            <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+              <strong>${params.eventName}</strong> has been completed. We'd love to hear how it went!
+            </p>
+
+            <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 16px; margin: 24px 0; border-radius: 4px;">
+              <p style="margin: 0; color: #92400e; font-size: 14px;">
+                ${actionText}
+              </p>
+            </div>
+
+            <div style="text-align: center; margin: 32px 0;">
+              <div style="margin-bottom: 16px;">
+                <span style="font-size: 32px;">&#9733; &#9733; &#9733; &#9733; &#9733;</span>
+              </div>
+              <a href="${SITE_URL}/marketplace/events/${params.eventId}" style="display: inline-block; background: #f59e0b; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                Leave Your Rating
+              </a>
+            </div>
+
+            <p style="color: #9ca3af; font-size: 12px; margin-top: 24px;">
+              Ratings help build trust in the SiteMedic Marketplace. Your feedback is anonymous until both parties have rated.
+            </p>
+
+            <p style="color: #6b7280; font-size: 14px; margin-top: 16px;">
+              Sent by SiteMedic Marketplace
+            </p>
+          </div>
+        </div>
+      `,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('[Notifications] Failed to send rating nudge:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+// =============================================================================
+// Cancellation Notification (Phase 36)
+// =============================================================================
+
 export async function sendCancellationNotification(
   params: CancellationNotificationParams
 ): Promise<{ success: boolean; error?: string }> {

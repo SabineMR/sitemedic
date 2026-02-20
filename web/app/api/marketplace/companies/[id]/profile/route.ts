@@ -42,9 +42,11 @@ export async function GET(
         coverage_areas,
         roster_size,
         average_rating,
+        raw_average_rating,
         review_count,
         insurance_status,
         verification_status,
+        trust_score,
         created_at
       `)
       .eq('id', companyId)
@@ -110,10 +112,12 @@ export async function GET(
       coverage_areas: company.coverage_areas,
       roster_size: company.roster_size || 0,
       average_rating: company.average_rating || 0,
+      raw_average_rating: company.raw_average_rating || 0,
       review_count: company.review_count || 0,
       total_events_completed: totalEventsCompleted || 0,
       insurance_status: company.insurance_status || 'unverified',
       verification_status: company.verification_status,
+      trust_score: company.trust_score || 0,
       created_at: company.created_at,
       team_preview: teamPreview,
     };

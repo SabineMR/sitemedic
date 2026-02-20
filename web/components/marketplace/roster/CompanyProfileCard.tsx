@@ -1,23 +1,25 @@
 /**
  * CompanyProfileCard Component
  * Phase 37: Company Accounts -- Plan 03
+ * Enhanced: Phase 36 Extension — Features 1, 9, 10
  *
  * Company header card displaying key metrics:
  *   - Company name with verified badge
  *   - Company description
- *   - Stats grid: Team Size, Rating, Insurance, Coverage
+ *   - Stats grid: Team Size, Rating (2 decimal), Trust Score, Insurance, Coverage
+ *   - "New" badge for companies with < 3 reviews (Feature 10)
+ *   - Trust Score display (Feature 9)
  *   - Member since date
- *
- * Used on the company profile page (/dashboard/marketplace/company/[id]).
  */
 
 'use client';
 
-import { Star, Users, Shield, MapPin, Calendar, CheckCircle2 } from 'lucide-react';
+import { Star, Users, Shield, MapPin, Calendar, CheckCircle2, Sparkles, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { VerifiedBadge } from '@/components/marketplace/VerifiedBadge';
-import { getInsuranceBadgeColor, formatMemberSince } from '@/lib/marketplace/company-profile';
+import { getInsuranceBadgeColor, formatMemberSince, hasEnoughReviews } from '@/lib/marketplace/company-profile';
+import { getTrustScoreLabel, getTrustScoreColor } from '@/lib/marketplace/trust-score';
 import { INSURANCE_STATUS_LABELS } from '@/lib/marketplace/roster-types';
 import type { CompanyProfileDisplay } from '@/lib/marketplace/roster-types';
 import type { VerificationStatus } from '@/lib/marketplace/types';
@@ -36,6 +38,9 @@ interface CompanyProfileCardProps {
 
 export function CompanyProfileCard({ company }: CompanyProfileCardProps) {
   const insuranceColors = getInsuranceBadgeColor(company.insurance_status);
+  const showNumericRating = hasEnoughReviews(company.review_count);
+  const trustScoreLabel = getTrustScoreLabel(company.trust_score);
+  const trustScoreColor = getTrustScoreColor(company.trust_score);
 
   return (
     <Card>
@@ -63,8 +68,8 @@ export function CompanyProfileCard({ company }: CompanyProfileCardProps) {
       </CardHeader>
 
       <CardContent>
-        {/* Stats Grid: 2 cols mobile, 5 cols md+ */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        {/* Stats Grid: 2 cols mobile, 6 cols md+ */}
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
           {/* Team Size */}
           <div className="text-center p-4 rounded-lg bg-gray-50">
             <Users className="h-5 w-5 text-blue-600 mx-auto mb-2" />
@@ -74,17 +79,36 @@ export function CompanyProfileCard({ company }: CompanyProfileCardProps) {
             <p className="text-xs text-gray-500 mt-1">Team Size</p>
           </div>
 
-          {/* Rating */}
+          {/* Rating (Feature 1: 2 decimal, Feature 10: New badge) */}
           <div className="text-center p-4 rounded-lg bg-gray-50">
             <Star className="h-5 w-5 text-amber-400 fill-amber-400 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900">
-              {company.average_rating > 0
-                ? company.average_rating.toFixed(1)
-                : '--'}
-            </p>
+            {showNumericRating ? (
+              <p className="text-2xl font-bold text-gray-900">
+                {company.average_rating > 0
+                  ? company.average_rating.toFixed(2)
+                  : '--'}
+              </p>
+            ) : (
+              <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                <Sparkles className="h-3 w-3 mr-0.5 inline" />
+                New
+              </Badge>
+            )}
             <p className="text-xs text-gray-500 mt-1">
               Rating{company.review_count > 0 && ` (${company.review_count})`}
             </p>
+          </div>
+
+          {/* Trust Score (Feature 9) */}
+          <div className="text-center p-4 rounded-lg bg-gray-50">
+            <ShieldCheck className="h-5 w-5 text-emerald-600 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-gray-900">
+              {company.trust_score}
+            </p>
+            <Badge className={`${trustScoreColor.bg} ${trustScoreColor.text} text-[10px] mt-1`}>
+              {trustScoreLabel}
+            </Badge>
+            <p className="text-xs text-gray-500 mt-1">Trust Score</p>
           </div>
 
           {/* Events Completed */}

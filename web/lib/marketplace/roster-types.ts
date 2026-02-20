@@ -98,10 +98,12 @@ export interface CompanyProfileDisplay {
   coverage_areas: string[] | null;
   roster_size: number;
   average_rating: number;
+  raw_average_rating: number;
   review_count: number;
   total_events_completed: number;
   insurance_status: InsuranceStatus;
   verification_status: string;
+  trust_score: number;
   created_at: string;
   team_preview: TeamMemberPreview[];
 }

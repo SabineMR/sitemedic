@@ -11,6 +11,24 @@
 import type { CompanyProfileDisplay, InsuranceStatus } from './roster-types';
 
 // =============================================================================
+// Constants
+// =============================================================================
+
+/**
+ * Minimum number of published client reviews required before showing a
+ * numeric average rating. Below this threshold, show "New" badge instead.
+ * (Feature 10: Minimum Review Threshold)
+ */
+export const MIN_REVIEWS_FOR_RATING = 3;
+
+/**
+ * Returns true if the company has enough reviews to display a numeric rating.
+ */
+export function hasEnoughReviews(reviewCount: number): boolean {
+  return reviewCount >= MIN_REVIEWS_FOR_RATING;
+}
+
+// =============================================================================
 // Format Company Profile for Display
 // =============================================================================
 
@@ -29,10 +47,12 @@ export function formatCompanyProfile(raw: Partial<CompanyProfileDisplay>): Compa
     coverage_areas: raw.coverage_areas ?? [],
     roster_size: raw.roster_size ?? 0,
     average_rating: raw.average_rating ?? 0,
+    raw_average_rating: raw.raw_average_rating ?? 0,
     review_count: raw.review_count ?? 0,
     total_events_completed: raw.total_events_completed ?? 0,
     insurance_status: raw.insurance_status ?? 'unverified',
     verification_status: raw.verification_status ?? 'pending',
+    trust_score: raw.trust_score ?? 0,
     created_at: raw.created_at ?? new Date().toISOString(),
     team_preview: raw.team_preview ?? [],
   };

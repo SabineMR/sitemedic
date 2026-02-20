@@ -817,6 +817,108 @@ Implements dispute filing with remainder payment holds, tiered marketplace cance
 - **`remainder_hold` boolean**: Filing a dispute freezes remainder payments; `charge-remainder-payment` cron skips held bookings
 - **`marketplace_companies!inner(admin_user_id)` join**: Pattern for verifying awarded company admin access
 
+### Phase 36 Extension: Enhanced Rating System — 10 Features + 2 Decimal Precision (Complete)
+
+Upgrades the marketplace rating system with 10 features that make ratings more meaningful, trustworthy, and actionable. Includes Bayesian averaging, recency weighting, multi-dimension ratings, company replies, rating nudge emails, composite trust score, and more.
+
+---
+
+**Feature 1 -- 2 Decimal Rating Precision:**
+
+Ratings now display to 2 decimal places (e.g. 4.27) instead of 1 (e.g. 4.3), allowing clients to distinguish between similarly-rated companies. `marketplace_companies.average_rating` changed from `NUMERIC(2,1)` to `NUMERIC(4,2)`. All `.toFixed(1)` calls updated to `.toFixed(2)`.
+
+**Feature 2 -- Bayesian (Weighted) Average:**
+
+A company with 1 review of 5.00 no longer outranks a company with 50 reviews averaging 4.70. The Bayesian formula blends toward the platform-wide mean: `bayesian_avg = (C * m + weighted_sum) / (C + weighted_count)` where `C = 5` (confidence threshold) and `m` = global average. Raw (simple) average stored in new `raw_average_rating` column for transparency.
+
+**Feature 3 -- Recency Weighting:**
+
+Recent reviews carry more weight than older ones. Weight tiers: last 3 months = 100%, 3-6 months = 75%, 6-12 months = 50%, older = 25%. Integrated into the Bayesian formula so both mechanisms work together.
+
+**Feature 4 -- Multi-Dimension Ratings:**
+
+Clients can optionally rate companies on 5 sub-dimensions (all 1-5, optional):
+- Response Time
+- Professionalism
+- Equipment & Preparedness
+- Communication
+- Value for Money
+
+Dimension ratings appear as small inline stars on ReviewCard and as averages in CompanyRatingsSummary. The MarketplaceRatingForm shows dimension inputs only for client raters.
+
+**Feature 5 -- Verified Booking Badge:**
+
+Reviews tied to actual platform bookings (`booking_id IS NOT NULL`) show a green "Verified Booking" badge on ReviewCard. No schema changes needed — purely UI using existing `booking_id` column.
+
+**Feature 6 -- Company Reply to Reviews:**
+
+Companies can respond to client reviews (like Google/Trustpilot). New `review_replies` table with UNIQUE constraint on `rating_id` (one reply per review). RLS policies allow company admin INSERT/UPDATE, all authenticated SELECT. Reply displayed below review text with edit capability for company admin.
+
+- **POST /api/marketplace/ratings/[id]/reply**: Create a reply (company admin only)
+- **PUT /api/marketplace/ratings/[id]/reply**: Update an existing reply
+- **GET /api/marketplace/ratings/[id]/reply**: Fetch reply for a rating
+
+**Feature 7 -- Rating Prompt/Nudge Emails:**
+
+Automated email reminders sent 48 hours after event completion to parties who haven't rated. Uses new `rating_nudge_sent_at` column on `marketplace_events` to track sent status. Amber-themed email with star icons and "Leave Your Rating" CTA.
+
+- **POST /api/marketplace/events/[id]/send-rating-nudge**: Trigger nudge for a specific event
+- **POST /api/cron/rating-nudges**: Cron endpoint scanning completed events needing nudges (batch of 50)
+
+**Feature 8 -- Repeat Client Indicator:**
+
+Shows "Booked N times" badge on ReviewCard when a client has booked the same company multiple times. Computed from `marketplace_quotes` awarded events count per reviewer. No schema changes — computed at API level.
+
+**Feature 9 -- Composite Trust Score (0-100):**
+
+Combines 7 signals into a single trust metric:
+| Signal | Weight |
+|--------|--------|
+| Bayesian average rating (normalized) | 30% |
+| Review volume (capped at 50) | 15% |
+| Insurance verified | 10% |
+| CQC/Platform verified | 10% |
+| Cancellation rate (inverse) | 15% |
+| Platform tenure (capped at 2 years) | 10% |
+| Quote response rate | 10% |
+
+Stored as `trust_score INTEGER` (0-100) on `marketplace_companies`. Recalculated in the rating trigger and by periodic cron job. Displayed in CompanyProfileCard stats grid with label (Excellent/Good/Fair/Building/New).
+
+- **POST /api/cron/trust-score-refresh**: Daily cron to recalculate all company trust scores
+
+**Feature 10 -- Minimum Review Threshold:**
+
+Companies with fewer than 3 reviews show a "New" badge instead of a numeric rating. Prevents misleading 5.00 from 1 review. `MIN_REVIEWS_FOR_RATING = 3` constant in `company-profile.ts`. Applied in both CompanyRatingsSummary and CompanyProfileCard.
+
+**Key files created (Enhanced Ratings):**
+
+| File | Purpose |
+|------|---------|
+| `supabase/migrations/158_enhanced_ratings.sql` | All schema changes: alter precision, add columns, create review_replies table, update trigger with Bayesian + recency + trust score |
+| `web/lib/marketplace/trust-score.ts` | Trust score calculation utility with label/color helpers |
+| `web/app/api/marketplace/ratings/[id]/reply/route.ts` | GET/POST/PUT company reply CRUD |
+| `web/app/api/marketplace/events/[id]/send-rating-nudge/route.ts` | Rating nudge trigger endpoint |
+| `web/app/api/cron/rating-nudges/route.ts` | Cron: scan completed events needing nudges |
+| `web/app/api/cron/trust-score-refresh/route.ts` | Cron: periodic trust score recalculation |
+
+**Files modified (Enhanced Ratings):**
+
+| File | Change |
+|------|--------|
+| `web/lib/marketplace/rating-types.ts` | Added dimension fields, ReviewReply interface, DimensionAverages, RATING_DIMENSION_LABELS, booking_count, raw_average_rating, trust_score to aggregates |
+| `web/lib/marketplace/roster-types.ts` | Added `raw_average_rating` and `trust_score` to CompanyProfileDisplay |
+| `web/lib/marketplace/company-profile.ts` | Added `MIN_REVIEWS_FOR_RATING` constant, `hasEnoughReviews()` helper, updated formatCompanyProfile defaults |
+| `web/lib/marketplace/notifications.ts` | Added `sendRatingNudgeNotification()` for nudge emails |
+| `web/components/marketplace/ratings/CompanyRatingsSummary.tsx` | 2 decimal precision, "New" badge for < 3 reviews, dimension averages grid |
+| `web/components/marketplace/ratings/ReviewCard.tsx` | Dimension mini-stars, Verified Booking badge, Repeat Client badge, Company Reply section with edit |
+| `web/components/marketplace/ratings/MarketplaceRatingForm.tsx` | Dimension star inputs for client raters (5 optional sub-dimensions) |
+| `web/components/marketplace/roster/CompanyProfileCard.tsx` | 2 decimal precision, "New" badge, Trust Score in stats grid (6-col layout) |
+| `web/app/api/marketplace/events/[id]/ratings/route.ts` | POST accepts 5 dimension fields, includes them in upsert for client raters |
+| `web/app/api/marketplace/companies/[id]/reviews/route.ts` | Returns dimension columns, dimensionAverages, booking_id, LEFT JOIN review_replies, booking_count per reviewer |
+| `web/app/api/marketplace/companies/[id]/profile/route.ts` | Selects raw_average_rating and trust_score, includes in profile response |
+
+---
+
 ### Phase 37: Company Accounts — Roster Management (Complete)
 
 Phase 37 builds the company roster system — the many-to-many relationship between marketplace companies and medics. Companies can add medics directly, invite them by email with signed JWT tokens, manage availability, and assign named medics to quotes. This is the data layer that all roster UI, assignment, and profile features depend on.

@@ -29,9 +29,17 @@ export const runtime = 'nodejs';
 // Validation
 // =============================================================================
 
+const dimensionRating = z.number().int().min(1).max(5).optional().nullable();
+
 const ratingSchema = z.object({
   rating: z.number().int().min(1, 'Rating must be at least 1').max(5, 'Rating cannot exceed 5'),
   review: z.string().max(2000, 'Review must be under 2000 characters').optional().nullable(),
+  // Multi-dimension ratings (Feature 4) — optional, client raters only
+  rating_response_time: dimensionRating,
+  rating_professionalism: dimensionRating,
+  rating_equipment: dimensionRating,
+  rating_communication: dimensionRating,
+  rating_value: dimensionRating,
 });
 
 // =============================================================================
@@ -175,7 +183,15 @@ export async function POST(
       );
     }
 
-    const { rating, review } = parsed.data;
+    const {
+      rating,
+      review,
+      rating_response_time,
+      rating_professionalism,
+      rating_equipment,
+      rating_communication,
+      rating_value,
+    } = parsed.data;
 
     // Verify the event exists and is completed
     const { data: event, error: eventError } = await supabase
@@ -259,24 +275,31 @@ export async function POST(
       }
     }
 
+    // Build upsert payload — include dimension ratings only for client raters
+    const upsertPayload: Record<string, unknown> = {
+      job_id: eventId,
+      rater_user_id: user.id,
+      rater_type: raterType,
+      rating,
+      review: review || null,
+      blind_window_expires_at: blindWindowExpiresAt.toISOString(),
+      moderation_status: 'published',
+      updated_at: new Date().toISOString(),
+    };
+
+    // Feature 4: Multi-dimension ratings (client raters only)
+    if (raterType === 'client') {
+      upsertPayload.rating_response_time = rating_response_time ?? null;
+      upsertPayload.rating_professionalism = rating_professionalism ?? null;
+      upsertPayload.rating_equipment = rating_equipment ?? null;
+      upsertPayload.rating_communication = rating_communication ?? null;
+      upsertPayload.rating_value = rating_value ?? null;
+    }
+
     // Upsert: insert if new, update if existing (UNIQUE on job_id + rater_user_id)
     const { data: upserted, error: upsertError } = await supabase
       .from('job_ratings')
-      .upsert(
-        {
-          job_id: eventId,
-          rater_user_id: user.id,
-          rater_type: raterType,
-          rating,
-          review: review || null,
-          blind_window_expires_at: blindWindowExpiresAt.toISOString(),
-          moderation_status: 'published',
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: 'job_id,rater_user_id',
-        }
-      )
+      .upsert(upsertPayload, { onConflict: 'job_id,rater_user_id' })
       .select()
       .single();
 

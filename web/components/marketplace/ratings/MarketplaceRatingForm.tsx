@@ -3,13 +3,18 @@
 /**
  * MarketplaceRatingForm Component
  * Phase 36: Ratings, Messaging & Disputes — Plan 01
+ * Enhanced: Phase 36 Extension — Feature 4 (Multi-Dimension Ratings)
  *
  * Rating form for marketplace events with blind window awareness.
- * Adapted from the direct jobs RatingForm pattern.
+ * Client raters see optional dimension rating inputs.
  */
 
 import { useState, useCallback } from 'react';
 import { Star, Loader2, CheckCircle2, Clock, Info } from 'lucide-react';
+import {
+  RATING_DIMENSION_LABELS,
+  type RatingDimension,
+} from '@/lib/marketplace/rating-types';
 
 // =============================================================================
 // Types
@@ -18,6 +23,11 @@ import { Star, Loader2, CheckCircle2, Clock, Info } from 'lucide-react';
 interface ExistingRating {
   rating: number;
   review: string | null;
+  rating_response_time?: number | null;
+  rating_professionalism?: number | null;
+  rating_equipment?: number | null;
+  rating_communication?: number | null;
+  rating_value?: number | null;
 }
 
 interface MarketplaceRatingFormProps {
@@ -38,12 +48,15 @@ function StarRatingInput({
   value,
   onChange,
   disabled,
+  size = 'lg',
 }: {
   value: number;
   onChange: (rating: number) => void;
   disabled?: boolean;
+  size?: 'sm' | 'lg';
 }) {
   const [hovered, setHovered] = useState(0);
+  const starSize = size === 'sm' ? 'h-5 w-5' : 'h-7 w-7';
 
   return (
     <div className="flex items-center gap-1">
@@ -61,7 +74,7 @@ function StarRatingInput({
             aria-label={`${star} star${star === 1 ? '' : 's'}`}
           >
             <Star
-              className={`h-7 w-7 transition-colors ${
+              className={`${starSize} transition-colors ${
                 isFilled
                   ? 'text-amber-400 fill-amber-400'
                   : 'text-gray-300'
@@ -98,7 +111,28 @@ export function MarketplaceRatingForm({
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
+  // Feature 4: Dimension ratings state (client raters only)
+  const dimensionKeys: RatingDimension[] = [
+    'rating_response_time',
+    'rating_professionalism',
+    'rating_equipment',
+    'rating_communication',
+    'rating_value',
+  ];
+
+  const [dimensions, setDimensions] = useState<Record<RatingDimension, number>>({
+    rating_response_time: existingRating?.rating_response_time || 0,
+    rating_professionalism: existingRating?.rating_professionalism || 0,
+    rating_equipment: existingRating?.rating_equipment || 0,
+    rating_communication: existingRating?.rating_communication || 0,
+    rating_value: existingRating?.rating_value || 0,
+  });
+
   const isEditing = !!existingRating;
+
+  const handleDimensionChange = (key: RatingDimension, value: number) => {
+    setDimensions((prev) => ({ ...prev, [key]: value }));
+  };
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -112,13 +146,25 @@ export function MarketplaceRatingForm({
       setError(null);
 
       try {
+        // Build payload
+        const payload: Record<string, unknown> = {
+          rating,
+          review: review.trim() || null,
+        };
+
+        // Include dimension ratings for client raters (only non-zero values)
+        if (raterType === 'client') {
+          for (const key of dimensionKeys) {
+            if (dimensions[key] > 0) {
+              payload[key] = dimensions[key];
+            }
+          }
+        }
+
         const res = await fetch(`/api/marketplace/events/${eventId}/ratings`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            rating,
-            review: review.trim() || null,
-          }),
+          body: JSON.stringify(payload),
         });
 
         const data = await res.json();
@@ -137,7 +183,7 @@ export function MarketplaceRatingForm({
         setSubmitting(false);
       }
     },
-    [eventId, rating, review, onRatingSubmitted]
+    [eventId, rating, review, dimensions, raterType, dimensionKeys, onRatingSubmitted]
   );
 
   // Rating window closed
@@ -208,7 +254,7 @@ export function MarketplaceRatingForm({
         </div>
       )}
 
-      {/* Star Rating */}
+      {/* Overall Star Rating */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           {isEditing
@@ -223,6 +269,30 @@ export function MarketplaceRatingForm({
           disabled={submitting}
         />
       </div>
+
+      {/* Feature 4: Dimension Ratings (client raters only) */}
+      {raterType === 'client' && (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-500">
+            Rate specific aspects (optional):
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {dimensionKeys.map((key) => (
+              <div key={key} className="flex items-center justify-between gap-2 p-2 rounded-md bg-gray-50">
+                <span className="text-xs text-gray-600">
+                  {RATING_DIMENSION_LABELS[key]}
+                </span>
+                <StarRatingInput
+                  value={dimensions[key]}
+                  onChange={(val) => handleDimensionChange(key, val)}
+                  disabled={submitting}
+                  size="sm"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Review Textarea */}
       <div>
