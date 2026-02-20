@@ -25,6 +25,7 @@ import {
   ShieldAlert,
   BarChart3,
   MessageSquare,
+  FileWarning,
   Briefcase,
   Store,
   ExternalLink,
@@ -98,6 +99,11 @@ const navigation = [
     name: 'Messages',
     href: '/messages',
     icon: MessageSquare,
+  },
+  {
+    name: 'Document Expiry',
+    href: '/admin/document-expiry',
+    icon: FileWarning,
   },
 ];
 
