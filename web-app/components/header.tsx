@@ -14,10 +14,14 @@ export default function Header() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  const PROVIDER_APP_URL = process.env.NEXT_PUBLIC_PROVIDER_APP_URL || 'http://localhost:30500';
+  const MARKETPLACE_URL = process.env.NEXT_PUBLIC_MARKETPLACE_URL || 'http://localhost:30502';
+
   const navLinks = [
     { href: '#features', label: 'Features' },
     { href: '#for-who', label: 'For Who' },
     { href: '#pricing', label: 'Pricing' },
+    { href: MARKETPLACE_URL, label: 'Marketplace', external: true },
   ];
 
   return (
@@ -42,16 +46,32 @@ export default function Header() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition font-medium"
-              >
-                {label}
-              </Link>
-            ))}
+            {navLinks.map(({ href, label, external }) =>
+              external ? (
+                <a
+                  key={href}
+                  href={href}
+                  className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition font-medium"
+                >
+                  {label}
+                </a>
+              ) : (
+                <Link
+                  key={href}
+                  href={href}
+                  className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition font-medium"
+                >
+                  {label}
+                </Link>
+              )
+            )}
             <div className="w-px h-5 bg-slate-200 mx-2" />
+            <a
+              href={PROVIDER_APP_URL + '/login'}
+              className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 rounded-lg transition font-medium"
+            >
+              Sign In
+            </a>
             <Link
               href="#get-started"
               className="bg-sky-600 text-white px-5 py-2 rounded-lg hover:bg-sky-700 text-sm font-semibold transition"
@@ -73,17 +93,35 @@ export default function Header() {
         {/* Mobile dropdown */}
         {mobileOpen && (
           <div className="md:hidden border-t border-slate-100 py-3 pb-4 space-y-1">
-            {navLinks.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
+            {navLinks.map(({ href, label, external }) =>
+              external ? (
+                <a
+                  key={href}
+                  href={href}
+                  onClick={() => setMobileOpen(false)}
+                  className="block px-4 py-2.5 text-sm text-slate-700 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition font-medium"
+                >
+                  {label}
+                </a>
+              ) : (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setMobileOpen(false)}
+                  className="block px-4 py-2.5 text-sm text-slate-700 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition font-medium"
+                >
+                  {label}
+                </Link>
+              )
+            )}
+            <div className="pt-2 px-4 space-y-2">
+              <a
+                href={PROVIDER_APP_URL + '/login'}
                 onClick={() => setMobileOpen(false)}
-                className="block px-4 py-2.5 text-sm text-slate-700 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition font-medium"
+                className="block w-full border border-slate-200 text-slate-700 px-5 py-3 rounded-lg hover:bg-slate-50 text-center font-medium text-sm transition"
               >
-                {label}
-              </Link>
-            ))}
-            <div className="pt-2 px-4">
+                Sign In
+              </a>
               <Link
                 href="#get-started"
                 onClick={() => setMobileOpen(false)}

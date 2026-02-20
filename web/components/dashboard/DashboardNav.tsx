@@ -27,7 +27,10 @@ import {
   MessageSquare,
   Briefcase,
   Store,
+  ExternalLink,
 } from 'lucide-react';
+
+const MARKETPLACE_URL = process.env.NEXT_PUBLIC_MARKETPLACE_URL || 'http://localhost:30502';
 
 const navigation = [
   {
@@ -76,6 +79,12 @@ const navigation = [
     icon: Store,
   },
   {
+    name: 'Marketplace (Full)',
+    href: MARKETPLACE_URL,
+    icon: ExternalLink,
+    external: true,
+  },
+  {
     name: 'Reports',
     href: '/reports',
     icon: FileText,
@@ -110,11 +119,18 @@ export function DashboardNav() {
     <SidebarMenu>
       {navigation.map((item) => (
         <SidebarMenuItem key={item.name}>
-          <SidebarMenuButton asChild isActive={isActive(item.href)}>
-            <Link href={item.href}>
-              <item.icon className="h-4 w-4" />
-              <span>{item.name}</span>
-            </Link>
+          <SidebarMenuButton asChild isActive={'external' in item ? false : isActive(item.href)}>
+            {'external' in item ? (
+              <a href={item.href} target="_blank" rel="noopener noreferrer">
+                <item.icon className="h-4 w-4" />
+                <span>{item.name}</span>
+              </a>
+            ) : (
+              <Link href={item.href}>
+                <item.icon className="h-4 w-4" />
+                <span>{item.name}</span>
+              </Link>
+            )}
           </SidebarMenuButton>
         </SidebarMenuItem>
       ))}

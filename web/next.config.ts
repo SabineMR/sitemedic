@@ -24,6 +24,22 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Redirect old /marketplace/* routes to the standalone marketplace app
+  async redirects() {
+    const marketplaceUrl = process.env.NEXT_PUBLIC_MARKETPLACE_URL || 'http://localhost:30502';
+    return [
+      {
+        source: '/marketplace',
+        destination: marketplaceUrl,
+        permanent: false,
+      },
+      {
+        source: '/marketplace/:path*',
+        destination: `${marketplaceUrl}/:path*`,
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
