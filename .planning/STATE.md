@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: Between milestones (v5.0 complete, v4.0 Phase 37 done — Phases 38-39 remain)
-Plan: —
-Status: Milestone v5.0 archived. Resume v4.0 or start new milestone.
-Last activity: 2026-02-20 — v5.0 Internal Comms & Document Management shipped (28/28 requirements)
+Phase: 38-notifications-alerts (Phase 1 of 2 remaining in v4.0)
+Plan: 01 of 04 complete
+Status: In progress — Plan 01 (Database Foundation) shipped
+Last activity: 2026-02-20 — Completed 38-01-PLAN.md (DB migrations + SMS/notification utilities)
 
-Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [########--] v4.0 81% | [##########] v5.0 100%
+Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [#########-] v4.0 84% | [##########] v5.0 100%
 
 ## Performance Metrics
 
@@ -122,6 +122,10 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 - [37-03]: Free-text fallback with amber warning when no company roster found (backward compatible)
 - [37-03]: RosterMedicPicker renders inline in form (not popover/dialog) for simpler UX
 - [37-03]: Insurance badge colour mapping: verified=green-100, expired=red-100, unverified=gray-100
+- [38-01]: createNotification uses service-role client (NOT anon-key) — fan-out inserts rows for other users which RLS denies for anon-key
+- [38-01]: REPLICA IDENTITY FULL on user_notifications — required for Realtime UPDATE payloads (mark-as-read live updates)
+- [38-01]: All sms_* preference columns default FALSE (PECR compliance); sms_opted_in_at provides consent audit trail
+- [38-01]: SMS dev-mode returns { success: true, sid: 'dev-mode-mock-sid' } — unblocks dev without Twilio credentials
 
 ### Pending Todos
 
@@ -147,6 +151,6 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 
 ## Session Continuity
 
-Last session: 2026-02-20
-Stopped at: v5.0 milestone archived. Next: resume v4.0 (Phase 38) or start new milestone.
+Last session: 2026-02-20T23:15:45Z
+Stopped at: Completed 38-01-PLAN.md (notifications database foundation + utilities)
 Resume file: None
