@@ -2,8 +2,54 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-20 (Phase 35: Award Flow & Payment — award, deposit, remainder automation, notifications, contact reveal)
+**Last Updated**: 2026-02-19 (Marketplace extraction into standalone app on port 30502)
 **Audience**: Web developers, technical reviewers, product team
+
+---
+
+## Architecture: 3-App Structure (2026-02-19)
+
+SiteMedic is now split into 3 Next.js apps sharing the same Supabase project (same auth, same data):
+
+| Port | Directory | Purpose | Branding |
+|------|-----------|---------|----------|
+| 30501 | `web-app/` | SiteMedic marketing/landing site | SiteMedic (neutral) |
+| **30502** | **`web-marketplace/`** | **SiteMedic Marketplace** — event posting, quote submission, provider registration, award flow | **SiteMedic (neutral)** |
+| 30500 | `web/` | Provider app (Apex) — dashboard, treatments, near-misses, workers, RIDDOR, contracts, messaging, analytics | Apex Safety Group (org-branded) |
+
+### Marketplace Extraction Details
+
+**What moved to `web-marketplace/` (port 30502):**
+- 21 page routes (landing, events CRUD, quotes, registration wizard, companies)
+- 20 API routes (events, quotes, awards, payments, registration, CQC verify)
+- 23+ marketplace components (event cards, quote forms, award modals, wizards)
+- Marketplace header & footer (SiteMedic branded, rewired links)
+- 17 lib files (types, schemas, business logic, notifications)
+- React Query hooks for events and quotes
+- 4 Zustand stores (registration, event posting, quote form, award checkout)
+- Simplified auth (magic link login, no role-based routing, no subdomain branding)
+- Simplified middleware (session refresh + public route allowlist only)
+
+**Route changes:** `/marketplace/events` is now `/events` (marketplace IS the app root)
+
+**Cross-app navigation:**
+- `web-app/` (30501): Header has "Marketplace" + "Sign In" links
+- `web/` (30500): Dashboard sidebar has "Marketplace (Full)" external link
+- `web/` (30500): Old `/marketplace/*` routes redirect to marketplace app via `next.config.ts` redirects
+- `web-marketplace/` (30502): Header has "Provider App" link, footer links to provider app for legal pages
+
+**Shared code (still in `web/`):**
+- `web/components/marketplace/` — still used by `web/app/(dashboard)/dashboard/marketplace/` (provider's in-dashboard marketplace view)
+- `web/lib/marketplace/` — shared types, schemas, business logic
+- `web/lib/queries/marketplace/` — React Query hooks used by dashboard
+- `web/stores/` — Zustand stores used by dashboard
+
+**Environment variables added:**
+- `web/.env.local`: `NEXT_PUBLIC_MARKETPLACE_URL=http://localhost:30502`
+- `web-app/.env.local`: `NEXT_PUBLIC_PROVIDER_APP_URL`, `NEXT_PUBLIC_MARKETPLACE_URL`
+- `web-marketplace/.env.local`: `NEXT_PUBLIC_PROVIDER_APP_URL`, `NEXT_PUBLIC_MARKETING_URL`
+
+**Auth on localhost:** Each port gets its own cookies, so users log in separately per app. In production with shared cookie domain (`.sitemedic.co.uk`), SSO would work across subdomains.
 
 ---
 

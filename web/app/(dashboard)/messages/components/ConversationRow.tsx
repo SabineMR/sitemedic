@@ -14,6 +14,7 @@ import Link from 'next/link';
 import type { ConversationListItem } from '@/lib/queries/comms';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Radio } from 'lucide-react';
 
 interface ConversationRowProps {
   conversation: ConversationListItem;
@@ -38,10 +39,16 @@ export function ConversationRow({
         isSelected && 'bg-muted'
       )}
     >
-      {/* Avatar circle with initial */}
-      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-        <span className="text-sm font-medium text-primary">{initial}</span>
-      </div>
+      {/* Avatar circle */}
+      {conversation.type === 'broadcast' ? (
+        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+          <Radio className="h-5 w-5 text-blue-600" />
+        </div>
+      ) : (
+        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <span className="text-sm font-medium text-primary">{initial}</span>
+        </div>
+      )}
 
       {/* Content */}
       <div className="flex-1 min-w-0">
@@ -54,6 +61,11 @@ export function ConversationRow({
           >
             {conversation.participant_name}
           </span>
+          {conversation.type === 'broadcast' && (
+            <Badge variant="secondary" className="text-[10px] ml-1">
+              Broadcast
+            </Badge>
+          )}
           <span className="text-xs text-muted-foreground flex-shrink-0">
             {timeDisplay}
           </span>
@@ -81,9 +93,11 @@ export function ConversationRow({
           )}
         </div>
         {/* Role indicator */}
-        <span className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">
-          {conversation.participant_role === 'medic' ? 'Medic' : 'Admin'}
-        </span>
+        {conversation.participant_role !== 'broadcast' && (
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">
+            {conversation.participant_role === 'medic' ? 'Medic' : 'Admin'}
+          </span>
+        )}
       </div>
     </Link>
   );

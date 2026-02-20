@@ -26,6 +26,8 @@ interface MessageThreadProps {
   participantName: string;
   initialMessages: MessageWithSender[];
   currentUserId: string;
+  conversationType?: 'direct' | 'broadcast';
+  userRole?: string;
 }
 
 export function MessageThread({
@@ -33,6 +35,8 @@ export function MessageThread({
   participantName,
   initialMessages,
   currentUserId,
+  conversationType,
+  userRole,
 }: MessageThreadProps) {
   const { data: messages } = useMessages(conversationId, initialMessages);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -68,15 +72,28 @@ export function MessageThread({
 
   // Mark as read on mount
   useEffect(() => {
-    fetch(`/api/messages/conversations/${conversationId}/read`, {
-      method: 'PATCH',
-    })
-      .then(() => {
-        // Invalidate conversations list to update unread counts
-        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    if (conversationType === 'broadcast' && userRole === 'medic') {
+      // Broadcast mark-as-read via broadcast-specific endpoint
+      fetch('/api/messages/broadcast/read', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationId }),
       })
-      .catch(console.error);
-  }, [conversationId, queryClient]);
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        })
+        .catch(console.error);
+    } else {
+      // Direct message mark-as-read
+      fetch(`/api/messages/conversations/${conversationId}/read`, {
+        method: 'PATCH',
+      })
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        })
+        .catch(console.error);
+    }
+  }, [conversationId, conversationType, userRole, queryClient]);
 
   // Handle successful message send
   const handleMessageSent = () => {
@@ -117,11 +134,19 @@ export function MessageThread({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Message input */}
-      <MessageInput
-        conversationId={conversationId}
-        onMessageSent={handleMessageSent}
-      />
+      {/* Message input or broadcast read-only notice */}
+      {conversationType === 'broadcast' ? (
+        <div className="px-4 py-3 border-t bg-muted/50 text-center text-sm text-muted-foreground">
+          {userRole === 'org_admin'
+            ? 'Use the Broadcast button to send a new broadcast'
+            : 'Broadcast messages are read-only'}
+        </div>
+      ) : (
+        <MessageInput
+          conversationId={conversationId}
+          onMessageSent={handleMessageSent}
+        />
+      )}
     </>
   );
 }
