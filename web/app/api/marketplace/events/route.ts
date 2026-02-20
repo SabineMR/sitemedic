@@ -203,9 +203,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Standard query (non-spatial)
+    // Exclude direct jobs — marketplace listing should only show marketplace-sourced events
     let query = supabase
       .from('marketplace_events')
-      .select('*, event_days(*), event_staffing_requirements(*)', { count: 'exact' });
+      .select('*, event_days(*), event_staffing_requirements(*)', { count: 'exact' })
+      .neq('source', 'direct');
 
     if (status) {
       query = query.eq('status', status);
