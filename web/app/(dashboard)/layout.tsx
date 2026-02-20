@@ -25,6 +25,7 @@ import { LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DashboardNav } from '@/components/dashboard/DashboardNav';
 import { UnreadBadge } from '@/components/dashboard/UnreadBadge';
+import { NotificationBell } from '@/components/dashboard/NotificationBell';
 import { fetchConversationsWithUnread } from '@/lib/queries/comms';
 
 export default async function DashboardLayout({
@@ -121,6 +122,7 @@ export default async function DashboardLayout({
             <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-16 lg:px-6">
               <SidebarTrigger />
               <div className="flex-1" />
+              <NotificationBell userId={user.id} />
               <UnreadBadge
                 initialConversations={initialConversations}
                 orgId={orgId}
