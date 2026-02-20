@@ -25,6 +25,7 @@ import {
   ShieldAlert,
   BarChart3,
   MessageSquare,
+  Briefcase,
 } from 'lucide-react';
 
 const navigation = [
@@ -62,6 +63,11 @@ const navigation = [
     name: 'Contracts',
     href: '/contracts',
     icon: FileSignature,
+  },
+  {
+    name: 'Jobs',
+    href: '/dashboard/jobs',
+    icon: Briefcase,
   },
   {
     name: 'Reports',
