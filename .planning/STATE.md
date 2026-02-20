@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 38-notifications-alerts (Phase 1 of 2 remaining in v4.0)
-Plan: 02 of 04 complete
-Status: In progress — Plan 02 (Notification Feed UI) shipped
-Last activity: 2026-02-20 — Completed 38-02-PLAN.md (Bell dropdown, notifications page, Realtime hooks)
+Phase: 38-notifications-alerts (Phase 1 of 2 remaining in v4.0) — COMPLETE
+Plan: 04 of 04 complete
+Status: Phase complete — All 4 Plans shipped (DB foundation, feed UI, trigger wiring, preferences UI)
+Last activity: 2026-02-20 — Completed 38-04-PLAN.md (notification preferences API + channel x category matrix UI)
 
-Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [#########-] v4.0 84% | [##########] v5.0 100%
+Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [##########] v4.0 88% | [##########] v5.0 100%
 
 ## Performance Metrics
 
@@ -130,6 +130,11 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 - [38-02]: Realtime channel filtered with user_id=eq.userId for per-user isolation (not org-wide)
 - [38-02]: NotificationBell placed immediately before UnreadBadge in layout header for visual grouping
 - [38-02]: Load-more pagination in notifications page: useState(limit) grows by 20 per click (simpler than cursor-based)
+- [38-04]: GET auto-creates preferences on first visit via PGRST116 detection + upsert defaults (no separate init call)
+- [38-04]: sms_opted_in_at set/cleared server-side by PUT handler based on effective SMS channel state (not sent directly from client)
+- [38-04]: Dashboard column always ON (greyed/disabled) — no schema column exists, pure UI enforcement
+- [38-04]: CSS Switch component (no @radix-ui/react-switch) — avoids new Radix dep for single component
+- [38-04]: SMS opt-in limited to 4 categories (events, quotes, awards, payments) — time-sensitive only per spec
 
 ### Pending Todos
 
@@ -155,6 +160,6 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 
 ## Session Continuity
 
-Last session: 2026-02-20T23:21:36Z
-Stopped at: Completed 38-02-PLAN.md (notification feed UI + Realtime hooks)
+Last session: 2026-02-20T23:24:25Z
+Stopped at: Completed 38-04-PLAN.md (notification preferences API + channel x category matrix UI) — Phase 38 COMPLETE
 Resume file: None
