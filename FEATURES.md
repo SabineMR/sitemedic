@@ -750,6 +750,62 @@ Implements dispute filing with remainder payment holds, tiered marketplace cance
 - **`remainder_hold` boolean**: Filing a dispute freezes remainder payments; `charge-remainder-payment` cron skips held bookings
 - **`marketplace_companies!inner(admin_user_id)` join**: Pattern for verifying awarded company admin access
 
+### Phase 37: Company Accounts — Roster Management (In Progress)
+
+Phase 37 builds the company roster system — the many-to-many relationship between marketplace companies and medics. Companies can add medics directly, invite them by email with signed JWT tokens, manage availability, and assign named medics to quotes. This is the data layer that all roster UI, assignment, and profile features depend on.
+
+---
+
+**Plan 01 -- Roster Data Layer & API (Complete):**
+
+Creates the database foundation, TypeScript types, Zod schemas, API routes, and React Query hooks for company roster management.
+
+- **Database table**: `company_roster_medics` junction table with status lifecycle (pending/active/inactive/suspended), company-specific role titles, hourly rate overrides, qualification lists, availability tracking (available boolean + unavailable date window), and full invitation workflow (email, JWT token, sent_at, accepted_at).
+- **UNIQUE(company_id, medic_id)** constraint prevents duplicate roster entries.
+- **4 RLS policies**: Company admin CRUD own roster, medics view own memberships, platform admin full access, any authenticated user can view active roster for verified companies (for profile display).
+- **`update_company_roster_aggregations()` trigger**: Fires on INSERT/UPDATE/DELETE of company_roster_medics, recalculates `marketplace_companies.roster_size` as count of active medics.
+- **`validate_quote_roster_membership()` trigger**: Fires BEFORE INSERT/UPDATE on marketplace_quotes, validates that all named medics in staffing_plan belong to the company's active roster. Prevents quoting with medics not on roster.
+- **Denormalized columns on marketplace_companies**: `roster_size` (INTEGER) and `insurance_status` (TEXT: verified/expired/unverified).
+
+**API Routes (Plan 01):**
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/api/marketplace/roster` | GET | List roster medics for a company (joins medic name/email), filterable by status |
+| `/api/marketplace/roster` | POST | Direct add medic to roster (validates company admin ownership) |
+| `/api/marketplace/roster/[id]` | PATCH | Update roster medic (title, qualifications, availability, hourly rate) |
+| `/api/marketplace/roster/[id]` | DELETE | Soft-remove: sets status='inactive' + left_at (preserves audit trail) |
+| `/api/marketplace/roster/invite` | POST | Email invitation with 7-day JWT token via Resend (dev fallback to console.log) |
+| `/api/marketplace/roster/accept` | POST | Accept invitation: verifies JWT, links medic record, activates membership |
+| `/api/marketplace/companies/[id]/profile` | GET | Company profile with denormalized aggregations + team preview (up to 5 active medics) |
+
+**Key files created (Plan 01):**
+
+| File | Purpose |
+|------|---------|
+| `supabase/migrations/156_company_roster_medics.sql` | Junction table, RLS, triggers (aggregation + quote validation), indexes, ALTER marketplace_companies |
+| `web/lib/marketplace/roster-types.ts` | TypeScript types: CompanyRosterMedic, CompanyRosterMedicWithDetails, CompanyProfileDisplay, RosterInvitation, status labels |
+| `web/lib/marketplace/roster-schemas.ts` | Zod schemas: rosterAddSchema, rosterInviteSchema, rosterUpdateSchema, rosterAcceptSchema |
+| `web/lib/marketplace/medic-availability.ts` | Availability utilities: isMedicAvailableOnDate, getAvailableRosterMedics (date-fns interval checking) |
+| `web/app/api/marketplace/roster/route.ts` | GET list + POST add roster endpoints |
+| `web/app/api/marketplace/roster/[id]/route.ts` | PATCH update + DELETE soft-remove endpoints |
+| `web/app/api/marketplace/roster/invite/route.ts` | POST invitation with jose JWT signing |
+| `web/app/api/marketplace/roster/accept/route.ts` | POST accept invitation with jose JWT verification |
+| `web/app/api/marketplace/companies/[id]/profile/route.ts` | GET company profile with team preview |
+| `web/lib/queries/marketplace/roster.ts` | React Query hooks: useCompanyRoster, useCompanyProfile |
+
+**Dependencies added:** `jose` (v6.1.3) for Edge-compatible JWT signing/verification of roster invitation tokens.
+
+**Key patterns used in Phase 37:**
+- **User-ID-scoped RLS** (matching v4.0 marketplace pattern, NOT org_id)
+- **Soft-delete for roster removal** (preserves audit trail + historical quote references)
+- **Denormalized aggregates via PostgreSQL triggers** (roster_size, same pattern as average_rating)
+- **JWT invitation workflow** with 7-day expiry (jose library for Edge compatibility)
+- **Fire-and-forget email** via Resend with dev fallback to console.log
+- **Unique constraint + 23505 catch** for idempotent roster operations
+
+---
+
 ### Dashboard Marketplace Browsing (2026-02-19)
 
 Logged-in medic companies can now browse marketplace events, view event details, and submit quotes entirely within the dashboard layout -- no need to navigate to the public `/marketplace/events` pages. All existing marketplace components are reused with a `basePath` prop to keep links inside the dashboard context.
