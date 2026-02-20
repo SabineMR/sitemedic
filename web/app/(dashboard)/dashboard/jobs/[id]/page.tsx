@@ -36,6 +36,7 @@ import {
   AlertTriangle,
   Banknote,
   Shield,
+  Star,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -45,6 +46,7 @@ import {
 import { EVENT_TYPE_LABELS } from '@/lib/marketplace/event-types';
 import { STAFFING_ROLE_LABELS, EQUIPMENT_TYPE_LABELS } from '@/lib/marketplace/event-types';
 import type { EventType, StaffingRole, EquipmentItem } from '@/lib/marketplace/event-types';
+import { RatingForm, StarDisplay } from '@/components/direct-jobs/RatingForm';
 
 // =============================================================================
 // Types
@@ -137,6 +139,15 @@ export default function DirectJobDetailPage() {
     mock?: boolean;
   } | null>(null);
 
+  // Ratings state
+  const [existingRating, setExistingRating] = useState<{
+    rating: number;
+    review: string | null;
+  } | null>(null);
+  const [allRatings, setAllRatings] = useState<
+    Array<{ id: string; rater_type: string; rating: number; review: string | null; created_at: string }>
+  >([]);
+
   // ── Fetch job ──────────────────────────────────────────────────────────────
 
   const fetchJob = useCallback(async () => {
@@ -160,6 +171,32 @@ export default function DirectJobDetailPage() {
   useEffect(() => {
     fetchJob();
   }, [fetchJob]);
+
+  // ── Fetch ratings (only for completed jobs) ────────────────────────────────
+
+  const fetchRatings = useCallback(async () => {
+    if (!job || job.status !== 'completed') return;
+    try {
+      const res = await fetch(`/api/direct-jobs/${id}/ratings`);
+      const data = await res.json();
+      if (res.ok) {
+        setAllRatings(data.ratings || []);
+        // Find the current user's rating (company admin)
+        const myRating = (data.ratings || []).find(
+          (r: { rater_type: string }) => r.rater_type === 'company'
+        );
+        if (myRating) {
+          setExistingRating({ rating: myRating.rating, review: myRating.review });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch ratings:', err);
+    }
+  }, [id, job]);
+
+  useEffect(() => {
+    fetchRatings();
+  }, [fetchRatings]);
 
   // ── Status Actions ─────────────────────────────────────────────────────────
 
@@ -782,6 +819,51 @@ export default function DirectJobDetailPage() {
               </div>
             )}
           </section>
+
+          {/* Ratings -- Only for completed jobs */}
+          {job.status === 'completed' && (
+            <section className="border rounded-lg p-5 space-y-4">
+              <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide flex items-center gap-2">
+                <Star className="h-4 w-4 text-amber-400" />
+                Job Rating
+              </h3>
+
+              {/* Existing ratings display */}
+              {allRatings.length > 0 && (
+                <div className="space-y-3">
+                  {allRatings.map((r) => (
+                    <div key={r.id} className="rounded-md bg-gray-50 p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <StarDisplay rating={r.rating} size="sm" />
+                          <span className="text-xs text-gray-500 capitalize">
+                            by {r.rater_type}
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-400">
+                          {new Date(r.created_at).toLocaleDateString('en-GB', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      </div>
+                      {r.review && (
+                        <p className="text-sm text-gray-700 mt-2">{r.review}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Rating form */}
+              <RatingForm
+                jobId={job.id}
+                existingRating={existingRating || undefined}
+                onRatingSubmitted={fetchRatings}
+              />
+            </section>
+          )}
 
           {/* Timestamps */}
           <section className="border rounded-lg p-5 text-sm text-gray-500">
