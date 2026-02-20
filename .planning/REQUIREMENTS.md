@@ -15,10 +15,10 @@
 - [x] **MSG-06**: Broadcast messages appear in each medic's conversation list (medics cannot reply to each other)
 - [x] **MSG-07**: Messages sent offline are queued locally and delivered when connectivity returns
 - [x] **MSG-08**: Previously loaded messages are viewable offline
-- [ ] **MSG-09**: Messages show delivery status: Sent → Delivered → Read
+- [x] **MSG-09**: Messages show delivery status: Sent → Delivered → Read
 - [x] **MSG-10**: Org admin sees broadcast read tracking ("12 of 15 medics read")
-- [ ] **MSG-11**: Users can search across all their conversations
-- [ ] **MSG-12**: Users can attach a document/file to a message
+- [x] **MSG-11**: Users can search across all their conversations
+- [x] **MSG-12**: Users can attach a document/file to a message
 
 ### Notifications
 
@@ -82,10 +82,10 @@
 | MSG-06 | Phase 44 | Complete |
 | MSG-07 | Phase 42 | Complete |
 | MSG-08 | Phase 42 | Complete |
-| MSG-09 | Phase 47 | Pending |
+| MSG-09 | Phase 47 | Complete |
 | MSG-10 | Phase 44 | Complete |
-| MSG-11 | Phase 47 | Pending |
-| MSG-12 | Phase 47 | Pending |
+| MSG-11 | Phase 47 | Complete |
+| MSG-12 | Phase 47 | Complete |
 | NOTIF-01 | Phase 43 | Complete |
 | NOTIF-02 | Phase 43 | Complete |
 | NOTIF-03 | Phase 43 | Complete |
@@ -110,4 +110,4 @@
 
 ---
 *Requirements defined: 2026-02-19*
-*Last updated: 2026-02-20 after Phase 44 completion -- MSG-05, MSG-06, MSG-10 marked Complete*
+*Last updated: 2026-02-20 after Phase 47 completion -- MSG-09, MSG-11, MSG-12 marked Complete. All v5.0 requirements complete.*

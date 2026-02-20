@@ -7,7 +7,7 @@
 - ✅ **v2.0 Multi-Vertical Platform Expansion** — Phases 18–23 (7 phases, 30 plans — shipped 2026-02-18)
 - ✅ **v3.0 White-Label Platform & Subscription Engine** — Phases 24–31 (8 phases, 30 plans — shipped 2026-02-19)
 - **v4.0 MedBid Marketplace** — Phases 32–39 (8 phases, TBD plans — in progress)
-- **v5.0 Internal Comms & Document Management** — Phases 40–47 (8 phases, TBD plans — planned)
+- ✅ **v5.0 Internal Comms & Document Management** — Phases 40–47 (8 phases, 24 plans — shipped 2026-02-20)
 
 ---
 
@@ -66,7 +66,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 - [x] **Phase 44: Broadcast Messaging** - Org admin can send broadcast messages to all medics with per-medic read tracking
 - [x] **Phase 45: Document Upload & Profile Storage** - Medics upload categorised compliance documents from iOS or web, stored on their profile with versioning
 - [x] **Phase 46: Expiry Tracking & Alerts** - Status badges, progressive expiry alerts, and bulk expiry dashboard for org admins
-- [ ] **Phase 47: Message Polish** - Delivery/read status indicators, cross-conversation search, and file attachments in messages
+- [x] **Phase 47: Message Polish** - Delivery/read status indicators, cross-conversation search, and file attachments in messages
 
 ## Phase Details
 
@@ -350,9 +350,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 47-01-PLAN.md — Delivery and read status (migration 156 with updated_at trigger + tsvector FTS column + GIN index + REPLICA IDENTITY; PATCH /api/messages/[messageId]/status with forward-only state machine; MessageStatusIndicator component with Lucide Check/CheckCheck icons; Realtime UPDATE subscription for live status changes; auto-delivered on Realtime INSERT; mark-as-read on thread open advances messages to 'read')
-- [ ] 47-02-PLAN.md — Cross-conversation search (GET /api/messages/search using PostgreSQL textSearch with websearch type; ConversationSearch overlay panel with debounced input; SearchResultItem with conversation name, sender, snippet, timestamp; useMessageSearch hook; ConversationList search toggle integration)
-- [ ] 47-03-PLAN.md — Message file attachments (POST /api/messages/attachments/upload with FormData to message-attachments bucket; GET /api/messages/attachments/download with signed URL; AttachmentPicker with Paperclip button and file validation; MessageAttachment with image thumbnail or file icon display; MessageInput pending file preview and dual send mode; MessageItem attachment rendering)
+- [x] 47-01-PLAN.md — Delivery and read status (migration 157 with updated_at trigger + tsvector FTS column + GIN index + REPLICA IDENTITY; PATCH /api/messages/[messageId]/status with forward-only state machine; MessageStatusIndicator component with Lucide Check/CheckCheck icons; Realtime UPDATE subscription for live status changes; auto-delivered on Realtime INSERT; mark-as-read on thread open advances messages to 'read')
+- [x] 47-02-PLAN.md — Cross-conversation search (GET /api/messages/search using PostgreSQL textSearch with websearch type; ConversationSearch overlay panel with debounced input; SearchResultItem with conversation name, sender, snippet, timestamp; useMessageSearch hook; ConversationList search toggle integration)
+- [x] 47-03-PLAN.md — Message file attachments (POST /api/messages/attachments/upload with FormData to message-attachments bucket; GET /api/messages/attachments/download with signed URL; AttachmentPicker with Paperclip button and file validation; MessageAttachment with image thumbnail or file icon display; MessageInput pending file preview and dual send mode; MessageItem attachment rendering)
 
 ---
 
@@ -395,4 +395,4 @@ Plans:
 | 44. Broadcast Messaging | v5.0 | 2/2 | Complete | 2026-02-20 |
 | 45. Document Upload & Profile Storage | v5.0 | 3/3 | Complete | 2026-02-20 |
 | 46. Expiry Tracking & Alerts | v5.0 | 2/2 | Complete | 2026-02-20 |
-| 47. Message Polish | v5.0 | 0/3 | Not started | - |
+| 47. Message Polish | v5.0 | 3/3 | Complete | 2026-02-20 |

@@ -331,13 +331,80 @@ Org admins can send broadcast messages to all medics in their organisation. Broa
 - Category filter uses slug-based matching from useDocumentCategories hook
 - Three tab views: 30-day window (default), all expiring (365-day window), expired only
 
+### Phase 47: Message Polish (2026-02-20)
+
+#### Delivery & Read Status Indicators (Plan 01)
+
+| Feature | Description | Key Files |
+|---------|-------------|-----------|
+| **Message Status Migration** | Migration 157 adds `updated_at` trigger on messages table (for Realtime UPDATE detection), `fts` tsvector GENERATED column with GIN index (for full-text search), and REPLICA IDENTITY FULL (required for Supabase Realtime UPDATE payloads to include all columns). | `supabase/migrations/157_message_polish.sql` |
+| **Status PATCH API** | `PATCH /api/messages/[messageId]/status` enforces forward-only state machine: sent → delivered → read. Prevents sender from marking own messages. Supports batch mode via `?conversationId=xxx` query param to advance all other-sender messages in a conversation to 'read'. Returns 200 idempotently even if no rows updated. | `web/app/api/messages/[messageId]/status/route.ts` |
+| **Message Status Indicator** | Client component rendering delivery ticks: single Check (sent), double CheckCheck (delivered), blue CheckCheck (read) using Lucide icons. Only displayed on sender's own messages. | `web/app/(dashboard)/messages/components/MessageStatusIndicator.tsx` |
+| **Realtime Status Updates** | Supabase Realtime UPDATE subscription on messages table. When a message status changes (e.g., delivered → read), the query cache is invalidated and ticks update live without page refresh. | `web/lib/queries/comms.hooks.ts` |
+| **Auto-Delivered Logic** | When a Realtime INSERT fires for another user's message, the client auto-fires a fire-and-forget PATCH to mark the message as 'delivered'. This happens transparently in the background. | `web/lib/queries/comms.hooks.ts` |
+| **Mark-as-Read on Thread Open** | Opening a conversation thread marks all other-sender messages as 'read' via the existing read endpoint. Advances both `conversation_read_status` and individual message status fields in a single operation. | `web/app/api/messages/conversations/[id]/read/route.ts` |
+
+**Key decisions:**
+- Forward-only state machine prevents status regression (read cannot go back to delivered)
+- Auto-delivered fires on Realtime INSERT (not on API response) to cover multi-device scenarios
+- REPLICA IDENTITY FULL required because Supabase Realtime UPDATE events only include changed columns by default
+- Ticks only shown on sender's own messages (recipients don't see their own delivery status)
+
+#### Cross-Conversation Search (Plan 02)
+
+| Feature | Description | Key Files |
+|---------|-------------|-----------|
+| **Full-Text Search API** | `GET /api/messages/search?q=keyword` uses Supabase `textSearch('fts', q, { type: 'websearch' })` on the tsvector GENERATED column. Results enriched server-side with sender names (from medics/profiles tables) and conversation names. Short queries (< 2 chars) return empty array gracefully. | `web/app/api/messages/search/route.ts` |
+| **Search Client Function** | `searchMessages(query)` client-side function in comms.ts calling the search API endpoint. | `web/lib/queries/comms.ts` |
+| **useMessageSearch Hook** | TanStack Query hook with `enabled: query.length >= 2` to prevent short-query API calls. 300ms debounce, 60s staleTime, placeholderData for smooth transitions between results. | `web/lib/queries/comms.hooks.ts` |
+| **MessageSearchResult Type** | Interface with id, conversation_id, content, sender_id, sender_name, created_at, conversation_name, conversation_type fields. | `web/types/comms.types.ts` |
+| **ConversationSearch Overlay** | Overlay panel triggered by SearchCode icon button in ConversationList header. Debounced text input (300ms), scrollable results list, empty states for no query / short query / no results / loading. | `web/app/(dashboard)/messages/components/ConversationSearch.tsx` |
+| **SearchResultItem** | Result row component showing conversation name, message snippet, sender name, and timestamp. Wrapped in Link to `/messages/${conversation_id}` for click-to-navigate. | `web/app/(dashboard)/messages/components/SearchResultItem.tsx` |
+| **ConversationList Integration** | SearchCode icon button added next to search input. Toggles ConversationSearch overlay with `relative` positioning for proper overlay layering. | `web/app/(dashboard)/messages/components/ConversationList.tsx` |
+
+**Key decisions:**
+- PostgreSQL websearch type supports natural queries ("meeting tomorrow" → `meeting & tomorrow`)
+- tsvector GENERATED column auto-updates on message content changes (no manual indexing)
+- GIN index enables fast full-text queries across all messages
+- Results show conversation context (name, type) so user knows which thread the match is in
+- Minimum 2-character query prevents excessive API calls
+
+#### File Attachments (Plan 03)
+
+| Feature | Description | Key Files |
+|---------|-------------|-----------|
+| **Attachment Upload API** | `POST /api/messages/attachments/upload` accepts FormData (file + conversationId + optional caption). Validates file size (10MB max) and MIME type (PDF, JPEG, PNG, Word). Stores in `message-attachments` Supabase Storage bucket at path `{orgId}/{conversationId}/{timestamp}-{uuid8}-{sanitizedFileName}`. Creates message with `message_type='attachment'` and metadata JSONB containing storage_path, file_name, file_size_bytes, mime_type. Updates conversation preview with "📎 filename" prefix. | `web/app/api/messages/attachments/upload/route.ts` |
+| **Attachment Download API** | `GET /api/messages/attachments/download?path=...` generates 1-hour signed URL from Supabase Storage. Security: validates storage path starts with user's orgId to prevent cross-org access. | `web/app/api/messages/attachments/download/route.ts` |
+| **AttachmentMetadata Type** | Interface defining attachment metadata shape: storage_path, file_name, file_size_bytes, mime_type. Stored in message.metadata JSONB column. | `web/types/comms.types.ts` |
+| **AttachmentPicker** | Paperclip icon button with hidden file input. Client-side validation (10MB, PDF/JPEG/PNG/Word) with toast error messages via sonner. Returns selected File object to parent. | `web/app/(dashboard)/messages/components/AttachmentPicker.tsx` |
+| **MessageAttachment** | Inline display component for attachment messages. Image files (JPEG/PNG) show lazy-loaded thumbnails via signed URL fetch on component mount. Documents (PDF/Word) show file icon cards with name and size. Download button generates signed URL and opens in new tab. `formatFileSize` utility converts bytes to B/KB/MB. | `web/app/(dashboard)/messages/components/MessageAttachment.tsx` |
+| **MessageInput Integration** | Extended with AttachmentPicker, pending file preview strip (shows filename + X remove button), dual send mode: FormData upload for attachments, JSON POST for text-only messages. Placeholder changes to "Add a caption (optional)..." when file selected. Send button enabled if text OR file present. | `web/app/(dashboard)/messages/components/MessageInput.tsx` |
+| **MessageItem Attachment Rendering** | Renders `MessageAttachment` component for messages with `message_type === 'attachment'`. Metadata cast via `message.metadata as unknown as AttachmentMetadata` with type guard. Optional text caption shown below attachment. | `web/app/(dashboard)/messages/components/MessageItem.tsx` |
+
+**Key decisions:**
+- Storage path `{orgId}/{conversationId}/{timestamp}-{uuid8}-{sanitizedFileName}` for collision resistance and org isolation
+- File validation both client-side (toast errors) and server-side (400 response) for defense in depth
+- Conversation preview shows emoji prefix "📎 filename.pdf" for quick visual scanning
+- Image thumbnails lazy-loaded via signed URL fetch on component mount (not eagerly)
+- Optional text caption alongside attachment (content field on message)
+- Download opens signed URL in new tab (browser-native download/preview)
+- Cross-org access prevented by validating storage path starts with user's orgId
+
+### v5.0 Milestone Complete (2026-02-20)
+
+All 28 v5.0 requirements delivered across 8 phases (40-47):
+- **Messaging**: 1:1 conversations, broadcast messages, offline queue, real-time sync, delivery/read status, search, file attachments
+- **Notifications**: iOS push via APNS, GDPR-compliant (sender name only), Supabase Realtime
+- **Documents**: Upload/categorise/version compliance docs, expiry tracking, progressive alerts, bulk expiry dashboard
+- **Cross-platform**: iOS app + web dashboard synced, org-scoped RLS isolation
+
 ### Planning Files
 
 | File | Purpose |
 |------|---------|
 | `.planning/PROJECT.md` | Updated with v5.0 milestone context |
-| `.planning/REQUIREMENTS.md` | 28 requirements across 4 categories |
-| `.planning/ROADMAP.md` | 8 phases (40–47), 21 plans |
+| `.planning/REQUIREMENTS.md` | 28 requirements across 4 categories — all complete |
+| `.planning/ROADMAP.md` | 8 phases (40–47), 21 plans — all complete |
 | `.planning/research/v5/` | Stack, features, architecture, pitfalls research |
 
 ---
