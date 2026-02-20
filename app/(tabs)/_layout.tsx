@@ -220,6 +220,17 @@ function TabsLayoutInner() {
         }}
       />
       <Tabs.Screen
+        name="documents"
+        options={{
+          title: 'Documents',
+          headerTitle: 'Documents',
+          tabBarLabel: 'Documents',
+          tabBarIcon: ({ color }) => (
+            <Text style={[styles.iconText, { color }]}>📄</Text>
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="events"
         options={{
           title: 'Events',
