@@ -172,12 +172,12 @@ Plans:
   3. Client can message medics who have quoted on their event, and medics can ask clarifying questions before quoting — all messages stored on-platform with email notifications (message content not in email)
   4. Either party can raise a dispute after an event (no-show, late cancel, quality issue) which triggers a hold on the remainder payment until platform admin resolves it
   5. Clear cancellation policy is enforced: client cancel >14 days = full deposit refund; 7-14 days = 50% deposit retained; <7 days = full deposit retained by medic
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 36-01: Bidirectional ratings (star rating + review, 14-day window, profile display, sort influence)
-- [ ] 36-02: Platform messaging (per-quote conversations, pre/post-award, email notifications, contact gating)
-- [ ] 36-03: Disputes and cancellations (dispute workflow, remainder hold, admin resolution, tiered cancellation policy)
+- [ ] 36-01-PLAN.md — Bidirectional ratings (migration 152: blind window + moderation columns + aggregate trigger; marketplace ratings API with 14-day blind window; MarketplaceRatingForm, ReviewCard, CompanyRatingsSummary components; company profile rating display; quote list wired to real rating data)
+- [ ] 36-02-PLAN.md — Marketplace messaging (migration 153: marketplace_conversations + marketplace_messages with user_id RLS; messaging API routes; MarketplaceInbox with conversation list + message thread; Airbnb-style email notifications; Messages tab on event detail page)
+- [ ] 36-03-PLAN.md — Disputes and cancellations (migration 154: marketplace_disputes table + dispute-evidence bucket + remainder_hold on bookings; dispute filing with evidence upload + auto remainder hold; admin dispute queue with resolution workflow; tiered cancellation policy with Stripe refunds; CancellationConfirmation with financial breakdown)
 
 ### Phase 37: Company Accounts
 **Goal**: Medic companies can manage a roster of individual medics, assign specific medics to events when quoting, and display rich company profiles — individual medics cannot bid independently on the marketplace (companies only)
