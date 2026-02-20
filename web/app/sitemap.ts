@@ -18,6 +18,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteUrl}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${siteUrl}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
 
+    // Marketplace marketing pages
+    { url: `${siteUrl}/marketplace`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${siteUrl}/marketplace/for-clients`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${siteUrl}/marketplace/for-companies`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${siteUrl}/marketplace/faq`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+
     // Booking entry point (public)
     { url: `${siteUrl}/book`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
 

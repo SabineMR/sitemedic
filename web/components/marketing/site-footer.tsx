@@ -80,6 +80,9 @@ export default function SiteFooter() {
                 <Link href="/contact" className="hover:text-white transition">Contact Us</Link>
               </li>
               <li>
+                <Link href="/marketplace" className="hover:text-white transition">Marketplace</Link>
+              </li>
+              <li>
                 <Link href="/book" className="hover:text-white transition">Book a Medic</Link>
               </li>
               <li>

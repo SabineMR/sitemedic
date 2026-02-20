@@ -33,6 +33,7 @@ export default function SiteHeader() {
     { href: '/', label: 'Home' },
     { href: '/services', label: 'Services' },
     { href: '/pricing', label: 'Pricing' },
+    { href: '/marketplace', label: 'Marketplace' },
     { href: '/about', label: 'About' },
     { href: '/contact', label: 'Contact' },
   ];
