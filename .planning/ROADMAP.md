@@ -272,9 +272,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 42-01-PLAN.md — WatermelonDB models and sync (Conversation + Message models, schema v4 to v5 migration, MessageSync service with pull/push sync, SyncContext integration)
-- [ ] 42-02-PLAN.md — iOS conversation list and thread UI (Messages tab in bottom bar, ConversationList with unread badges and pull-to-refresh, MessageThread with flat Slack-style layout, MessageInput with Return-to-send, MedicPicker for new conversations)
-- [ ] 42-03-PLAN.md — Offline queue and delivery (connectivity-triggered push/pull sync, queued message styling with greyed out + clock indicator, idempotency_key deduplication, offline banners, failed message retry, human verification checkpoint)
+- [x] 42-01-PLAN.md — WatermelonDB models and sync (Conversation + Message models, schema v4 to v5 migration, MessageSync service with pull/push sync, SyncContext integration)
+- [x] 42-02-PLAN.md — iOS conversation list and thread UI (Messages tab in bottom bar, ConversationList with unread badges and pull-to-refresh, MessageThread with flat Slack-style layout, MessageInput with Return-to-send, MedicPicker for new conversations)
+- [x] 42-03-PLAN.md — Offline queue and delivery (connectivity-triggered push/pull sync, queued message styling with greyed out + clock indicator, idempotency_key deduplication, offline banners, failed message retry, human verification checkpoint)
 
 ### Phase 43: Real-time & Push Notifications
 **Goal**: Messages arrive instantly when the app or web dashboard is open (no manual refresh), and medics receive iOS push notifications for new messages when the app is backgrounded -- with GDPR-safe notification content
@@ -288,9 +288,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 43-01: Supabase Realtime subscription (single channel per user filtering on org_id + user_id; message insert listener; conversation list live update; thread live update)
-- [ ] 43-02: iOS push notification setup (Expo Notifications configuration; APNs certificate; device token registration; Edge Function to send push via Expo Push API)
-- [ ] 43-03: Push notification Edge Function (trigger on message insert; resolve recipient device tokens; format GDPR-safe payload with sender name only; send via Expo Push API; handle token cleanup for uninstalled apps)
+- [ ] 43-01-PLAN.md — Supabase Realtime subscription (single channel per user filtering on org_id; message INSERT + read status UPDATE listeners; WatermelonDB upsert on iOS; TanStack Query invalidation on web; polling completely replaced)
+- [ ] 43-02-PLAN.md — iOS push notification setup (PushTokenService for token registration in profiles.push_token; NotificationContext for foreground toast, background tap deep linking, app badge count; permission prompt on first Messages tab visit)
+- [ ] 43-03-PLAN.md — Push notification Edge Function and DB trigger (send-message-notification Edge Function via Expo Push API; GDPR-safe payload with sender name only; AFTER INSERT trigger on messages via pg_net; DeviceNotRegistered token cleanup)
 
 ### Phase 44: Broadcast Messaging
 **Goal**: Org admins can send broadcast messages to all medics in their organisation, broadcasts appear in each medic's conversation list as a distinct message type, and the admin can track how many medics have read each broadcast
