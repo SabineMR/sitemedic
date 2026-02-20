@@ -255,10 +255,16 @@ A Request-for-Quotes (RFQ) marketplace being added to SiteMedic where UK clients
 - QuoteSubmissionForm with PricingBreakdownSection (4 categories + custom line items), StaffingPlanSection (toggle mode), CoverLetterSection
 
 **Plan 02 -- Quote Comparison & Ranking (Complete):**
-- Ranked quote list with best-value scoring algorithm (60% price, 40% rating)
-- Sort/filter bar: best value, lowest price, highest price, highest rating, most recent
-- Expandable quote detail rows with company profile, full pricing breakdown, staffing plan
-- Company profile page at /marketplace/companies/[id] with certifications, insurance, rating placeholder
+- Best-value scoring algorithm (`calculateBestValueScore`): normalises price to 0-100 (lower = higher score), rating to 0-100, blends 60% price + 40% rating. Edge cases: single quote = 100, same price = 50. Tiebreaker: submitted_at DESC then company_rating DESC.
+- `rankQuotesByBestValue()` returns sorted array with score and rank attached
+- Quote anonymisation utility (`anonymiseQuoteForDisplay`): masks phone, email, address, and medic full names (to "First L." format) until event is awarded AND deposit is paid. Company name always visible. Authors always see own details.
+- `canViewContactDetails()` checks eventStatus + isDepositPaid + user identity
+- `maskName("James Smith")` returns "James S." -- single names unchanged, empty returns empty
+- Sort/filter bar: 5 sort modes (best value, lowest price, highest price, highest rating, most recent) + 3 filter types (qualification dropdown, price range min/max inputs, minimum star rating). Collapsible on mobile.
+- Expandable quote rank rows (Checkatrade/Bark pattern): collapsed shows rank badge, company name, verified icon, star rating, qualification summary, response time, best-value score, total price. Expanded reveals full pricing breakdown table (4 categories + custom lines), staffing plan (named medics with masked names or headcount), cover letter (truncated at 500 chars), "View Company Profile" link.
+- Company profile page at /marketplace/companies/[id]: CQC registration status, certifications, insurance with expiry, coverage areas, star rating, reviews placeholder (Phase 36), past events placeholder. Contact details gated behind award + deposit banner. Access-controlled: only viewable if company submitted a quote on one of the viewer's events.
+- Client-facing quotes page at /marketplace/events/[id]/quotes: breadcrumb navigation, event header, access denied if not event poster, renders QuoteListView
+- Event detail page "View Quotes (N)" button: only visible to event poster, links to quotes page
 
 **Plan 03 -- Quote Management (Complete):**
 - PATCH `/api/marketplace/quotes/[id]/update` -- edit submitted quote in place, sets status='revised' and last_revised_at
