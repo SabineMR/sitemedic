@@ -320,9 +320,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 45-01: Web document upload (upload form with category picker, expiry date input, file dropzone; Supabase Storage upload; document record creation; versioning logic that archives previous version)
-- [ ] 45-02: iOS document upload (React Native document picker / camera capture; same category + expiry flow; Supabase Storage upload from iOS; same versioning logic)
-- [ ] 45-03: Document profile views (medic profile documents tab; org admin medic profile view with all documents; download original file; version history display)
+- [ ] 45-01-PLAN.md — Web document upload and API foundation (4 API routes: categories list/create, document upload with versioning, document list, signed URL download; medic /documents page with drag-and-drop upload dialog, category picker, expiry date with does-not-expire toggle, document list grouped by category, download and version replacement actions)
+- [ ] 45-02-PLAN.md — iOS document upload (Documents tab in bottom bar; upload screen with expo-document-picker for files and expo-image-picker for camera capture; category selection, expiry date, certificate number; direct Supabase Storage upload; same versioning logic; document list with download and new version actions)
+- [ ] 45-03-PLAN.md — Admin document views and custom categories (admin medic document view with category grouping, expiry badges, download, version history; custom category management page for org admins to create/toggle org-specific categories)
 
 ### Phase 46: Expiry Tracking & Alerts
 **Goal**: Documents show colour-coded status badges based on expiry proximity, medics and admins receive progressive email alerts as documents approach expiry, and org admins have a bulk view of all documents expiring across their organisation in the next 30 days
