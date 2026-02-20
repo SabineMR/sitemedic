@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-20 (Migration fixes + messaging error logging improvements)
+**Last Updated**: 2026-02-20 (Platform admin sign out button + dashboard marketplace browsing + migration fixes + messaging error logging improvements)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -131,6 +131,47 @@ WatermelonDB local data layer, full iOS messaging UI, and offline queue with con
 - Avatar colors consistent between ConversationRow and MessageItem (same hash function)
 - Idempotency_key stored in Supabase messages.metadata JSONB (no schema change needed)
 - 24-hour timeout for failed messages (not retry-count based) to simplify model
+
+### Phase 43: Real-Time Push Notifications — Plans 01-03 (COMPLETE)
+
+Supabase Realtime subscriptions replace polling, Expo push notification registration, and server-side push delivery pipeline via PostgreSQL triggers and Edge Functions.
+
+**Plan 01 — Realtime Subscriptions Replacing Polling:**
+
+| Feature | Implementation | Files |
+|---------|---------------|-------|
+| **Web RealtimeProvider** | Single Supabase Realtime channel per authenticated user, subscribed to messages INSERT filtered by org_id. Dispatches new messages to conversation list and active threads. Replaces 30s/10s polling. | `web/components/providers/RealtimeProvider.tsx` |
+| **iOS RealtimeProvider** | Supabase Realtime channel in React Native, writes incoming messages to WatermelonDB via serialized write queue (avoids concurrent db.write conflicts). 3-tier sender name resolution: session cache > local DB > Supabase query. | `src/contexts/RealtimeContext.tsx` |
+| **UnreadBadge (Web)** | Client component replaces server-rendered header badge for live unread count updates via Realtime. | `web/components/messaging/UnreadBadge.tsx` |
+| **Polling Removal** | All polling intervals removed from web messaging (30s conversations, 10s messages). Realtime-only delivery. | `web/app/(dashboard)/messages/page.tsx`, `web/app/(dashboard)/messages/[conversationId]/page.tsx` |
+
+**Plan 02 — iOS Push Token Registration and Permission Flow:**
+
+| Feature | Implementation | Files |
+|---------|---------------|-------|
+| **Deferred Permission Prompt** | Push notification permission requested on first Messages tab focus (not app launch). AsyncStorage flag prevents re-prompting. | `src/contexts/NotificationContext.tsx` |
+| **Token Registration** | Expo push token stored in profiles.push_token with 7-day staleness threshold to avoid unnecessary DB writes. | `src/contexts/NotificationContext.tsx` |
+| **NotificationProvider** | Wraps tabs layout (not root) so it has access to Auth/Org contexts. Module-level setNotificationHandler with shouldShowAlert:false prevents native banner; custom in-app toast used instead. | `src/contexts/NotificationContext.tsx`, `app/(tabs)/_layout.tsx` |
+| **In-App Toast** | Custom toast notification for messages received while app is foregrounded. Navigates to conversation on tap. | `src/contexts/NotificationContext.tsx` |
+
+**Plan 03 — Server-Side Push Notification Pipeline:**
+
+| Feature | Implementation | Files |
+|---------|---------------|-------|
+| **Edge Function** | Deno Edge Function receives message_id, conversation_id, sender_id, org_id from database trigger. Resolves sender name from medics/profiles tables. Sends GDPR-safe push notification ("New message from [Name]") via Expo Push API. Handles both direct and broadcast messages. Batches tokens in groups of 100. | `supabase/functions/send-message-notification/index.ts` |
+| **Database Trigger** | AFTER INSERT trigger on messages table fires for every new message. Calls Edge Function via pg_net (async, non-blocking). Uses Vault secrets for authentication. | `supabase/migrations/150_message_notification_trigger.sql` |
+| **Token Cleanup** | DeviceNotRegistered tokens automatically cleared from profiles table when Expo Push API reports them invalid. | `supabase/functions/send-message-notification/index.ts` |
+| **GDPR Compliance** | Notification payload contains only sender name and conversation deep link. Message content is NEVER included in the push notification body or data payload. | `supabase/functions/send-message-notification/index.ts` |
+| **Sender Exclusion** | Sender never receives their own notification. Direct: resolves other participant. Broadcast: queries all org members except sender. | `supabase/functions/send-message-notification/index.ts` |
+
+**Key decisions:**
+- Single Realtime channel per user (not per conversation) to avoid WebSocket explosion
+- Push permission deferred to first Messages tab focus (not app launch)
+- 7-day token staleness threshold for push token updates
+- GDPR: sender name only, never message content in notifications
+- pg_net async trigger (non-blocking, does not delay message INSERT)
+- Vault secrets for Edge Function authentication (same pattern as RIDDOR trigger)
+- Migration numbered 150 (149 was taken by marketplace_award_payment)
 
 ### Planning Files
 
@@ -347,6 +388,40 @@ Phase 34.1 was inserted into the v4.0 roadmap between Phase 34 (Quote Submission
 | `web/app/(dashboard)/dashboard/jobs/create/page.tsx` | 6-step creation wizard |
 | `web/app/(dashboard)/dashboard/jobs/[id]/page.tsx` | Job detail page |
 | `supabase/migrations/147_direct_jobs.sql` | direct_clients table, marketplace_events extensions |
+
+### Dashboard Marketplace Browsing (2026-02-19)
+
+Logged-in medic companies can now browse marketplace events, view event details, and submit quotes entirely within the dashboard layout -- no need to navigate to the public `/marketplace/events` pages. All existing marketplace components are reused with a `basePath` prop to keep links inside the dashboard context.
+
+**What was added:**
+
+| Feature | Description |
+|---------|-------------|
+| **Sidebar nav item** | "Marketplace" entry (Store icon) added to `DashboardNav.tsx` between Jobs and Reports |
+| **Browse page** | `/dashboard/marketplace` -- full event list with filters, list/map toggle, pagination, Google Maps. Reuses `EventFilters`, `EventListRow`, `EventMap` components |
+| **Event detail page** | `/dashboard/marketplace/[id]` -- full event detail with breadcrumb back to dashboard marketplace. Submit Quote links to dashboard quote page |
+| **Quote submission page** | `/dashboard/marketplace/[id]/quote` -- server-validated quote form (event open, deadline not passed). Redirects back to dashboard event detail after submission |
+| **basePath prop** | `EventListRow` and `EventMap` accept optional `basePath` to route links to `/dashboard/marketplace/[id]` instead of `/marketplace/events/[id]` |
+| **redirectPath prop** | `QuoteSubmissionForm` accepts optional `redirectPath` to redirect after submission to the dashboard event detail instead of the public one |
+
+**Files modified (4):**
+
+| File | Change |
+|------|--------|
+| `web/components/marketplace/events/EventListRow.tsx` | Added `basePath` prop, link uses `basePath` or `/marketplace/events` |
+| `web/components/marketplace/events/EventMap.tsx` | Added `basePath` prop, InfoWindow link uses `basePath` or `/marketplace/events` |
+| `web/components/marketplace/quote-submission/QuoteSubmissionForm.tsx` | Added `redirectPath` prop, post-submit redirect uses `redirectPath` or default |
+| `web/components/dashboard/DashboardNav.tsx` | Added Marketplace nav item with Store icon |
+
+**Files created (3):**
+
+| File | Purpose |
+|------|---------|
+| `web/app/(dashboard)/dashboard/marketplace/page.tsx` | Browse page (client component) -- adapts public browse page for dashboard layout |
+| `web/app/(dashboard)/dashboard/marketplace/[id]/page.tsx` | Event detail page (client component) -- adapts public detail page with dashboard breadcrumbs/links |
+| `web/app/(dashboard)/dashboard/marketplace/[id]/quote/page.tsx` | Quote submission page (server component) -- validates event status, renders form with dashboard redirect |
+
+**No regression:** Public `/marketplace/events` pages still work unchanged -- `basePath` and `redirectPath` default to existing paths when not provided.
 
 ### Planning Files
 
@@ -3458,6 +3533,7 @@ The previous homepage was a generic "book a paramedic for compliance" page. The 
 | **Platform layout showed hardcoded "Platform Admin" / "Super User" / "PA"** | `web/app/platform/layout.tsx` — added `useState`/`useEffect` + `createClient().auth.getUser()` to display real user name and email; initials derived from name |
 | **`/platform/users` returned 404** | Created `web/app/platform/users/page.tsx` — lists all users from `org_memberships` + `profiles`, filterable by role and searchable by name/email/org; role colour badges |
 | **`/platform/settings` returned 404** | Created `web/app/platform/settings/page.tsx` — Feature flags toggles, notification preferences, email config, session security settings |
+| **Platform sidebar had no sign out button** | `web/app/platform/layout.tsx` — added `LogOut` icon import and sign out form (POST to `/api/auth/signout`) below user info section, matching admin layout pattern with purple theme styling |
 
 #### Legal Pages Fix
 

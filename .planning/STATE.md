@@ -9,17 +9,17 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 
 ## Current Position
 
-Phase: 43 of 47 (Real-Time Push Notifications — IN PROGRESS)
-Plan: 2 of 3 in current phase (43-01 + 43-02 complete)
-Status: Executing phase 43
-Last activity: 2026-02-20 — Completed 43-01-PLAN.md (Realtime subscriptions replacing polling)
+Phase: 43 of 47 (Real-Time Push Notifications — COMPLETE)
+Plan: 3 of 3 in current phase (43-01 + 43-02 + 43-03 complete)
+Status: Phase 43 complete
+Last activity: 2026-02-20 — Completed 43-03-PLAN.md (Server-side push notification pipeline)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [██████░░░░] v4.0 50% | [██████░░░░] v5.0 62%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [██████░░░░] v4.0 50% | [███████░░░] v5.0 67%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 215 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 23 v4.0 + 13 v5.0)
+- Total plans completed: 216 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 23 v4.0 + 14 v5.0)
 - Average duration: 3.9 min
 - Total execution time: ~14.0 hours
 
@@ -32,7 +32,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
 | v4.0 | 8 | 23/32 | ~293 min | ~6.0 min |
-| v5.0 | 8 | 13/21 | ~69 min | ~5.3 min |
+| v5.0 | 8 | 14/21 | ~71 min | ~5.1 min |
 
 *Updated after each plan completion*
 
@@ -137,13 +137,17 @@ Recent decisions affecting current work:
 - [43-01]: Web Realtime uses @/lib/supabase singleton (not SSR client) for persistent WebSocket channel
 - [43-01]: UnreadBadge client component replaces server-rendered badge for live updates
 - [43-01]: All polling removed from web messaging (30s conversations, 10s messages) -- Realtime only
+- [43-03]: Migration numbered 150 (not 149) because 149_marketplace_award_payment.sql already existed
+- [43-03]: Vault secrets pattern for Edge Function URL/key (matching migration 033 RIDDOR trigger)
+- [43-03]: Sender name resolution: medics.first_name+last_name > profiles.full_name > "Someone" fallback
+- [43-03]: Direct message recipient resolved via medics.user_id comparison with sender_id
 
 ### Pending Todos
 
 - Configure external services for production deployment (Stripe, Google Maps, Resend, webhooks, pg_cron, Vault) -- carried from v1.1
 - Obtain DPA template + solicitor review before first org onboarding (non-code blocker for v3.0 launch)
 - **Configure Vercel wildcard `*.sitemedic.co.uk` and DNS CNAME** -- checkpoint from 26-01; 72h propagation
-- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142, 143, 144, 146, 147, 148) to production** -- migrations 132-144 verified, 146 for marketplace quotes, 147 for direct jobs, 148 for job ratings
+- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142, 143, 144, 146, 147, 148, 149, 149b, 150) to production** -- migrations 132-144 verified, 146 for marketplace quotes, 147 for direct jobs, 148 for job ratings, 149/149b for marketplace award/payment, 150 for message notification trigger
 - **Add `NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.co.uk` to Vercel env vars** -- needed for production subdomain routing
 - **Create Stripe Products/Prices and register billing webhook** -- checkpoint from 25-01
 - **CQC legal opinion required** -- must determine if marketplace model requires CQC registration before launch
@@ -167,5 +171,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 43-01-PLAN.md (Realtime subscriptions replacing polling)
+Stopped at: Completed 43-03-PLAN.md (Server-side push notification pipeline — Phase 43 complete)
 Resume file: None
