@@ -288,12 +288,13 @@ export async function POST(
     };
 
     // Feature 4: Multi-dimension ratings (client raters only)
+    // Always include all dimension fields on upsert so cleared dimensions are set to null
     if (raterType === 'client') {
-      upsertPayload.rating_response_time = rating_response_time ?? null;
-      upsertPayload.rating_professionalism = rating_professionalism ?? null;
-      upsertPayload.rating_equipment = rating_equipment ?? null;
-      upsertPayload.rating_communication = rating_communication ?? null;
-      upsertPayload.rating_value = rating_value ?? null;
+      upsertPayload.rating_response_time = rating_response_time || null;
+      upsertPayload.rating_professionalism = rating_professionalism || null;
+      upsertPayload.rating_equipment = rating_equipment || null;
+      upsertPayload.rating_communication = rating_communication || null;
+      upsertPayload.rating_value = rating_value || null;
     }
 
     // Upsert: insert if new, update if existing (UNIQUE on job_id + rater_user_id)

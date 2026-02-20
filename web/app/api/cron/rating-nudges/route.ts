@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     const { data: events, error: eventsError } = await supabase
       .from('marketplace_events')
-      .select('id, title, posted_by, updated_at')
+      .select('id, event_name, posted_by, updated_at')
       .eq('status', 'completed')
       .is('rating_nudge_sent_at', null)
       .lte('updated_at', cutoffDate)
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
           await sendRatingNudgeNotification({
             recipientEmail: clientProfile.email,
             recipientName: clientName || 'there',
-            eventName: event.title,
+            eventName: event.event_name,
             eventId: event.id,
             recipientRole: 'client',
           });
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
           await sendRatingNudgeNotification({
             recipientEmail: company.company_email,
             recipientName: company.company_name,
-            eventName: event.title,
+            eventName: event.event_name,
             eventId: event.id,
             recipientRole: 'company',
           });

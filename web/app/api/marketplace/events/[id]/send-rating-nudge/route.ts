@@ -25,7 +25,7 @@ export async function POST(
     // Fetch event details
     const { data: event, error: eventError } = await supabase
       .from('marketplace_events')
-      .select('id, title, posted_by, status, rating_nudge_sent_at')
+      .select('id, event_name, posted_by, status, rating_nudge_sent_at')
       .eq('id', eventId)
       .single();
 
@@ -77,12 +77,12 @@ export async function POST(
     const results: { client?: any; company?: any } = {};
 
     // Send nudge to client if they haven't rated
-    if (clientProfile && !ratedUserIds.has(event.posted_by)) {
+    if (clientProfile?.email && !ratedUserIds.has(event.posted_by)) {
       const clientName = `${clientProfile.first_name || ''} ${clientProfile.last_name || ''}`.trim();
       results.client = await sendRatingNudgeNotification({
         recipientEmail: clientProfile.email,
         recipientName: clientName || 'there',
-        eventName: event.title,
+        eventName: event.event_name,
         eventId: event.id,
         recipientRole: 'client',
       });
@@ -93,17 +93,20 @@ export async function POST(
       results.company = await sendRatingNudgeNotification({
         recipientEmail: company.company_email,
         recipientName: company.company_name,
-        eventName: event.title,
+        eventName: event.event_name,
         eventId: event.id,
         recipientRole: 'company',
       });
     }
 
-    // Mark nudge as sent
-    await supabase
-      .from('marketplace_events')
-      .update({ rating_nudge_sent_at: new Date().toISOString() })
-      .eq('id', eventId);
+    // Mark nudge as sent only if at least one email succeeded
+    const anySent = results.client?.success || results.company?.success;
+    if (anySent) {
+      await supabase
+        .from('marketplace_events')
+        .update({ rating_nudge_sent_at: new Date().toISOString() })
+        .eq('id', eventId);
+    }
 
     return NextResponse.json({ success: true, results });
   } catch (error) {

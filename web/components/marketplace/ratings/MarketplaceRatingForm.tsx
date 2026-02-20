@@ -93,6 +93,18 @@ function StarRatingInput({
 }
 
 // =============================================================================
+// Constants (outside component to avoid re-creation on each render)
+// =============================================================================
+
+const DIMENSION_KEYS: RatingDimension[] = [
+  'rating_response_time',
+  'rating_professionalism',
+  'rating_equipment',
+  'rating_communication',
+  'rating_value',
+];
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -112,14 +124,6 @@ export function MarketplaceRatingForm({
   const [submitted, setSubmitted] = useState(false);
 
   // Feature 4: Dimension ratings state (client raters only)
-  const dimensionKeys: RatingDimension[] = [
-    'rating_response_time',
-    'rating_professionalism',
-    'rating_equipment',
-    'rating_communication',
-    'rating_value',
-  ];
-
   const [dimensions, setDimensions] = useState<Record<RatingDimension, number>>({
     rating_response_time: existingRating?.rating_response_time || 0,
     rating_professionalism: existingRating?.rating_professionalism || 0,
@@ -154,7 +158,7 @@ export function MarketplaceRatingForm({
 
         // Include dimension ratings for client raters (only non-zero values)
         if (raterType === 'client') {
-          for (const key of dimensionKeys) {
+          for (const key of DIMENSION_KEYS) {
             if (dimensions[key] > 0) {
               payload[key] = dimensions[key];
             }
@@ -183,7 +187,7 @@ export function MarketplaceRatingForm({
         setSubmitting(false);
       }
     },
-    [eventId, rating, review, dimensions, raterType, dimensionKeys, onRatingSubmitted]
+    [eventId, rating, review, dimensions, raterType, onRatingSubmitted]
   );
 
   // Rating window closed
@@ -277,7 +281,7 @@ export function MarketplaceRatingForm({
             Rate specific aspects (optional):
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {dimensionKeys.map((key) => (
+            {DIMENSION_KEYS.map((key) => (
               <div key={key} className="flex items-center justify-between gap-2 p-2 rounded-md bg-gray-50">
                 <span className="text-xs text-gray-600">
                   {RATING_DIMENSION_LABELS[key]}

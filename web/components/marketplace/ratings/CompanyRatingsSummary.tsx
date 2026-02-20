@@ -89,7 +89,8 @@ export function CompanyRatingsSummary({
     fetchReviews(newPage);
   };
 
-  const totalPages = Math.ceil(reviewCount / perPage);
+  const totalFiltered = reviews?.total ?? reviewCount;
+  const totalPages = Math.ceil(totalFiltered / perPage);
   const showNumericRating = hasEnoughReviews(reviewCount);
 
   // Build distribution from fetched data or fallback to empty

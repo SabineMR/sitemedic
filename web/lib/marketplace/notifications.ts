@@ -518,19 +518,6 @@ export async function sendDisputeResolvedNotification(
 }
 
 // =============================================================================
-// Cancellation Notification (Phase 36)
-// =============================================================================
-
-interface CancellationNotificationParams {
-  recipientEmail: string;
-  recipientName: string;
-  eventName: string;
-  cancelledBy: string;
-  refundAmount: number;
-  reason: string;
-}
-
-// =============================================================================
 // Rating Nudge Notification (Phase 36 Extension — Feature 7)
 // =============================================================================
 
@@ -604,6 +591,15 @@ export async function sendRatingNudgeNotification(
 // =============================================================================
 // Cancellation Notification (Phase 36)
 // =============================================================================
+
+interface CancellationNotificationParams {
+  recipientEmail: string;
+  recipientName: string;
+  eventName: string;
+  cancelledBy: string;
+  refundAmount: number;
+  reason: string;
+}
 
 export async function sendCancellationNotification(
   params: CancellationNotificationParams

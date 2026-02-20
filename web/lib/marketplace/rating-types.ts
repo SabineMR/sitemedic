@@ -121,7 +121,7 @@ export interface RatingReportRequest {
 /** Response from the marketplace ratings API */
 export interface MarketplaceRatingsResponse {
   ratings: MarketplaceRating[];
-  averageRating: number;
+  averageRating: number | null;
   count: number;
   canRate: boolean;
   blindWindowActive: boolean;
