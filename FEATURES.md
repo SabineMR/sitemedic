@@ -254,6 +254,44 @@ Org admins can send broadcast messages to all medics in their organisation. Broa
 - 30-second stale time on read summaries (balance freshness vs query volume)
 - Broadcast mark-as-read updates both `message_recipients.read_at` AND `conversation_read_status` (dual update)
 
+### Phase 45: Document Upload & Profile Storage (2026-02-20)
+
+#### Web Document Upload System
+
+| Feature | Description | Key Files |
+|---------|-------------|-----------|
+| **Document Categories API** | GET `/api/documents/categories` returns active categories for org. POST creates custom category (admin only) with auto-slug from name, duplicate detection (409). Default categories: Insurance, DBS, Qualification, ID, Other. | `web/app/api/documents/categories/route.ts` |
+| **Document Upload API** | POST `/api/documents/upload` accepts FormData (file, categoryId, expiryDate, certificateNumber, notes, replaceDocumentId). Validates PDF/JPEG/PNG, 10MB max. Storage path: `{org_id}/{medic_id}/{category_slug}/{timestamp}-{filename}`. Versioning: replaceDocumentId creates new version with incremented version_number. | `web/app/api/documents/upload/route.ts` |
+| **Document List API** | GET `/api/documents` returns documents with current version and category info. Optional `medicId` param for admin. Auto-resolves medic from auth for medic role. | `web/app/api/documents/route.ts` |
+| **Document Download API** | GET `/api/documents/[id]/download` generates 1-hour signed URL via `createSignedUrl`. Supports optional `versionId` query param for archived versions. Verifies document belongs to user's org. | `web/app/api/documents/[id]/download/route.ts` |
+| **Upload Dialog** | Dark theme modal with drag-and-drop dropzone. Image preview for JPEG/PNG, PDF icon for PDFs. Category dropdown, expiry date with "does not expire" checkbox, certificate number, notes. Supports `replaceDocumentId` and `presetCategoryId` props. | `web/components/documents/document-upload-dialog.tsx` |
+| **Document List** | Dark theme medic portal component. Documents grouped by category with expiry badges (green Current >30d, amber Expiring Soon ≤30d, red Expired, gray No Expiry). File type icons, version badges, download buttons, version history toggle. | `web/components/documents/document-list.tsx` |
+| **Medic Documents Page** | Client component at `/medic/documents`. Parallel fetch of documents and categories. Upload dialog and version replacement flow. Added to medic sidebar nav. | `web/app/medic/documents/page.tsx`, `web/app/medic/layout.tsx` |
+
+#### iOS Document Upload
+
+| Feature | Description | Key Files |
+|---------|-------------|-----------|
+| **iOS Upload Screen** | `expo-document-picker` for PDF/JPEG/PNG, `expo-image-picker` for camera capture (quality 0.8). Category chip picker from Supabase. Expiry date with "does not expire" Switch. Direct Supabase Storage upload. Same versioning logic as web. Route params: replaceDocumentId, presetCategoryId. | `app/documents/upload.tsx` |
+| **iOS Documents Tab** | Documents grouped by category with expiry badges (color-coded). Download via `supabase.storage.createSignedUrl` + `Linking.openURL`. "New Version" navigates to upload screen. Pull-to-refresh, auto-refresh on tab focus via `useFocusEffect`. | `app/(tabs)/documents.tsx` |
+
+#### Admin Document Views
+
+| Feature | Description | Key Files |
+|---------|-------------|-----------|
+| **Admin Document View** | Light theme (shadcn/ui) client component for viewing a medic's documents. Documents grouped by category with Badge components, download buttons, version history toggle. ExpiryBadge uses shadcn Badge variants. | `web/components/documents/admin-document-view.tsx` |
+| **Admin Medic Documents Page** | Server component at `/admin/medics/[id]/documents`. Shows medic name/email header with back button, then AdminDocumentView component. | `web/app/(dashboard)/admin/medics/[id]/documents/page.tsx` |
+| **Category Management Page** | Client component at `/admin/document-categories`. Shows all categories (including inactive) with Default/Custom badges. Create custom categories (name → auto-slug). Toggle active/inactive for custom categories. Default categories cannot be deactivated. | `web/app/(dashboard)/admin/document-categories/page.tsx` |
+
+**Key decisions:**
+- Private `medic-documents` bucket with org-scoped RLS via `(storage.foldername(name))[1] = (SELECT get_user_org_id())::text`
+- Multiple documents per category allowed (not one-per-category replacement)
+- Version archiving via `replaceDocumentId` — old versions stay in `document_versions` table, version_number incremented
+- Private bucket requires `createSignedUrl()` (not `getPublicUrl()`)
+- iOS uses direct Supabase Storage upload (not through API routes)
+- Admin medic documents at `/admin/medics/[id]/documents` (workers/[id] is for patients)
+- Category management page accessible via direct URL (no sidebar nav item to avoid clutter)
+
 ### Planning Files
 
 | File | Purpose |

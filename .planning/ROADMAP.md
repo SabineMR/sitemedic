@@ -64,7 +64,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 - [x] **Phase 42: iOS Messaging & Offline** - WatermelonDB models for messages, offline send queue, cross-platform sync between iOS app and web
 - [x] **Phase 43: Real-time & Push Notifications** - Supabase Realtime for live message delivery, iOS push notifications with GDPR-safe content
 - [x] **Phase 44: Broadcast Messaging** - Org admin can send broadcast messages to all medics with per-medic read tracking
-- [ ] **Phase 45: Document Upload & Profile Storage** - Medics upload categorised compliance documents from iOS or web, stored on their profile with versioning
+- [x] **Phase 45: Document Upload & Profile Storage** - Medics upload categorised compliance documents from iOS or web, stored on their profile with versioning
 - [ ] **Phase 46: Expiry Tracking & Alerts** - Status badges, progressive expiry alerts, and bulk expiry dashboard for org admins
 - [ ] **Phase 47: Message Polish** - Delivery/read status indicators, cross-conversation search, and file attachments in messages
 
@@ -320,9 +320,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 45-01-PLAN.md — Web document upload and API foundation (4 API routes: categories list/create, document upload with versioning, document list, signed URL download; medic /documents page with drag-and-drop upload dialog, category picker, expiry date with does-not-expire toggle, document list grouped by category, download and version replacement actions)
-- [ ] 45-02-PLAN.md — iOS document upload (Documents tab in bottom bar; upload screen with expo-document-picker for files and expo-image-picker for camera capture; category selection, expiry date, certificate number; direct Supabase Storage upload; same versioning logic; document list with download and new version actions)
-- [ ] 45-03-PLAN.md — Admin document views and custom categories (admin medic document view with category grouping, expiry badges, download, version history; custom category management page for org admins to create/toggle org-specific categories)
+- [x] 45-01-PLAN.md — Web document upload and API foundation (4 API routes: categories list/create, document upload with versioning, document list, signed URL download; medic /documents page with drag-and-drop upload dialog, category picker, expiry date with does-not-expire toggle, document list grouped by category, download and version replacement actions)
+- [x] 45-02-PLAN.md — iOS document upload (Documents tab in bottom bar; upload screen with expo-document-picker for files and expo-image-picker for camera capture; category selection, expiry date, certificate number; direct Supabase Storage upload; same versioning logic; document list with download and new version actions)
+- [x] 45-03-PLAN.md — Admin document views and custom categories (admin medic document view with category grouping, expiry badges, download, version history; custom category management page for org admins to create/toggle org-specific categories)
 
 ### Phase 46: Expiry Tracking & Alerts
 **Goal**: Documents show colour-coded status badges based on expiry proximity, medics and admins receive progressive email alerts as documents approach expiry, and org admins have a bulk view of all documents expiring across their organisation in the next 30 days
@@ -393,6 +393,6 @@ Plans:
 | 42. iOS Messaging & Offline | v5.0 | 3/3 | Complete | 2026-02-20 |
 | 43. Real-time & Push Notifications | v5.0 | 3/3 | Complete | 2026-02-20 |
 | 44. Broadcast Messaging | v5.0 | 2/2 | Complete | 2026-02-20 |
-| 45. Document Upload & Profile Storage | v5.0 | 0/3 | Not started | - |
+| 45. Document Upload & Profile Storage | v5.0 | 3/3 | Complete | 2026-02-20 |
 | 46. Expiry Tracking & Alerts | v5.0 | 0/2 | Not started | - |
 | 47. Message Polish | v5.0 | 0/3 | Not started | - |
