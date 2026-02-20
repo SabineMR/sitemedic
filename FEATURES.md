@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-20 (Platform admin sign out button + dashboard marketplace browsing + migration fixes + messaging error logging improvements)
+**Last Updated**: 2026-02-20 (Phase 35: Award Flow & Payment — award, deposit, remainder automation, notifications, contact reveal)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -388,6 +388,65 @@ Phase 34.1 was inserted into the v4.0 roadmap between Phase 34 (Quote Submission
 | `web/app/(dashboard)/dashboard/jobs/create/page.tsx` | 6-step creation wizard |
 | `web/app/(dashboard)/dashboard/jobs/[id]/page.tsx` | Job detail page |
 | `supabase/migrations/147_direct_jobs.sql` | direct_clients table, marketplace_events extensions |
+
+### Implementation Progress (Phase 35 -- Award Flow & Payment) ✅ VERIFIED
+
+Phase 35 implements the full award-to-payment lifecycle: client awards a quote, pays a configurable deposit via Stripe, the system auto-creates SiteMedic bookings, and the remainder is auto-charged 14 days after event completion. Commission is deducted using the existing platform_fee_percent/medic_payout_percent pattern.
+
+**Plan 01 -- Award Foundation (Complete):**
+- Migration 149: expanded `marketplace_quotes` status CHECK to include 'awarded'/'rejected', added 12 payment columns to `bookings` (deposit_amount, deposit_percent, remainder_amount, remainder_due_at, stripe_customer_id, stripe_payment_method_id, deposit_payment_intent_id, remainder_payment_intent_id, remainder_paid_at, remainder_failed_attempts, remainder_last_failed_at, marketplace_quote_id), created `marketplace_award_history` audit table, created `client_payment_methods` table with RLS
+- TypeScript types: AwardCheckoutStep, PaymentBreakdown, MarketplaceCommission, MarketplaceAwardHistory, ClientPaymentMethod
+- Zod v4 schemas: awardRequestSchema (eventId, quoteId, depositPercent optional 1-100 default 25)
+- Award calculations: `getDepositPercentForEventType()` (construction/motorsport=50%, others=25%), `calculateMarketplaceCommission()`, `calculateRemainderDueDate()` (event end + 14 days)
+- POST /api/marketplace/quotes/[id]/award: authenticates user, validates quote status, verifies event ownership, checks EXCLUSION constraints for named medics, creates Stripe PaymentIntent with `setup_future_usage:'off_session'`, supports dev mock mode
+- Zustand store: multi-step checkout flow (confirm → payment → processing → success | error)
+
+**Plan 02 -- Award UI and Deposit Flow (Complete):**
+- AwardConfirmationModal: multi-step dialog (confirm → payment → processing → success | error). Calls award API, wraps DepositPaymentForm in Stripe Elements provider
+- PaymentBreakdownSection: read-only display of subtotal (ex. VAT), VAT (20%), total, deposit due now, remainder due date
+- DepositPaymentForm: Stripe Payment Element with `redirect: 'if_required'`, handles succeeded/requires_action/error
+- Marketplace booking bridge: `createMarketplaceBooking()` creates one booking per event day with `source='marketplace'`, calculates commission (60/40 default), sets remainder due 14 days after event end
+- Webhook handler (deposit success): creates booking via bridge, updates winning quote to 'awarded', event to 'awarded', rejects other quotes, records award history, saves payment method, creates medic commitments with EXCLUSION catch
+
+**Plan 03 -- Remainder Charge Automation (Complete):**
+- Edge Function `charge-remainder-payment`: queries due remainders, creates off-session PaymentIntents with `confirm: true`. 3-attempt retry (1d, 3d, 7d intervals). Idempotency keys prevent double charges.
+- pg_cron migration (149b): daily 8 AM UTC schedule using Vault secrets pattern (vault.decrypted_secrets for URL and service_role_key)
+- Remainder webhook handler: success updates `remainder_paid_at`; failure tracks attempts (does NOT cancel marketplace bookings)
+- Payment method API (GET/PUT): clients view saved cards (enriched from Stripe), update default card (attaches to customer, updates all unpaid bookings)
+- PaymentMethodManager: dashboard UI showing current card (brand, last4, expiry), upcoming remainder charges with "Due soon" badge
+
+**Plan 04 -- Award Notifications & Contact Reveal (Complete):**
+- 4 email notification functions via shared Resend client with dev mode fallback:
+  - `sendAwardNotification()`: to winning company with full client contact (name, email, phone, address, event dates)
+  - `sendRejectionNotification()`: to losing companies with courteous message and browse events link
+  - `sendClientDepositConfirmation()`: to client with payment summary, remainder schedule, manage card link
+  - `sendRemainderFailedNotification()`: to client with failure details, attempt count, update payment link
+- Webhook email integration: each email in own try/catch (failure never blocks webhook response)
+- GET /api/marketplace/events/[id]/awarded: returns full event + client contact ONLY when event is awarded AND deposit is paid (contact gating). Access restricted to winning company admin or event poster.
+- AwardedEventDetails: dual-view component — company sees client contact card + payment status; client sees payment summary + awarded company
+- Award button added to QuoteRankRow: green "Award This Quote" button visible for submitted/revised quotes when event is open/closed
+
+**Key files created (Phase 35):**
+
+| File | Purpose |
+|------|---------|
+| `supabase/migrations/149_marketplace_award_payment.sql` | Payment columns, award history, client_payment_methods |
+| `supabase/migrations/149b_remainder_charge_cron.sql` | pg_cron daily remainder charge schedule |
+| `supabase/functions/charge-remainder-payment/index.ts` | Deno Edge Function for off-session remainder charges |
+| `web/lib/marketplace/award-types.ts` | TypeScript types for award flow |
+| `web/lib/marketplace/award-schemas.ts` | Zod v4 validation schemas |
+| `web/lib/marketplace/award-calculations.ts` | Deposit %, commission, remainder due date |
+| `web/lib/marketplace/booking-bridge.ts` | Creates marketplace bookings from awarded quotes |
+| `web/lib/marketplace/notifications.ts` | 4 email notification functions |
+| `web/app/api/marketplace/quotes/[id]/award/route.ts` | POST award API with EXCLUSION check + Stripe PI |
+| `web/app/api/marketplace/events/[id]/awarded/route.ts` | GET awarded event with contact gating |
+| `web/app/api/marketplace/payments/method/route.ts` | GET/PUT saved payment methods |
+| `web/stores/useAwardCheckoutStore.ts` | Zustand multi-step checkout store |
+| `web/components/marketplace/award/AwardConfirmationModal.tsx` | Multi-step award dialog |
+| `web/components/marketplace/award/PaymentBreakdownSection.tsx` | Pricing breakdown display |
+| `web/components/marketplace/award/DepositPaymentForm.tsx` | Stripe Payment Element form |
+| `web/components/marketplace/award/AwardedEventDetails.tsx` | Post-award dashboard component |
+| `web/components/marketplace/award/PaymentMethodManager.tsx` | Card management UI |
 
 ### Dashboard Marketplace Browsing (2026-02-19)
 
