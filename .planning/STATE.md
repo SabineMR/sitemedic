@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 35 of 47 (Award Flow & Payment — IN PROGRESS)
-Plan: 1 of 4 in current phase (35-01 complete)
+Plan: 2 of 4 in current phase (35-01, 35-02 complete)
 Status: Executing phase 35
-Last activity: 2026-02-20 — Plan 35-01 complete (migration 149, award types/schemas/calculations, API route, Zustand store)
+Last activity: 2026-02-20 — Plan 35-02 complete (award UI, deposit payment form, webhook handler, booking bridge)
 
 Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [██████░░░░] v4.0 50% | [█████░░░░░] v5.0 48%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 212 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 22 v4.0 + 11 v5.0)
+- Total plans completed: 213 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 23 v4.0 + 11 v5.0)
 - Average duration: 3.9 min
 - Total execution time: ~13.9 hours
 
@@ -31,7 +31,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 22/32 | ~285 min | ~6.0 min |
+| v4.0 | 8 | 23/32 | ~293 min | ~6.0 min |
 | v5.0 | 8 | 11/21 | ~58 min | ~5.3 min |
 
 *Updated after each plan completion*
@@ -122,6 +122,10 @@ Recent decisions affecting current work:
 - [35-01]: EXCLUSION constraint check at award time for named_medics staffing plans (queries medic_commitments for time overlaps)
 - [35-01]: client_payment_methods table uses auth.users FK (not profiles) for marketplace client identity
 - [35-01]: Dev mock PaymentIntent pattern from direct-jobs reused for marketplace award API
+- [35-02]: Marketplace booking bridge creates one booking per event day (consistent with Phase 34.1)
+- [35-02]: Webhook checks payment_type metadata FIRST — marketplace deposit handled before falling through to existing logic
+- [35-02]: Losing quotes rejected immediately on deposit success (not waiting for any delay)
+- [35-02]: Medic commitments created in webhook with EXCLUSION error catch (already validated at award API time)
 
 ### Pending Todos
 
@@ -152,5 +156,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Phase 35 plan 01 complete, executing plan 02 next
+Stopped at: Phase 35 plans 01-02 complete, executing wave 3 (plans 03+04) next
 Resume file: None
