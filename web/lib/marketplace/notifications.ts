@@ -323,3 +323,260 @@ export async function sendRemainderFailedNotification(
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
+
+// =============================================================================
+// Marketplace Message Notification — Airbnb-style (Phase 36)
+// =============================================================================
+
+interface MarketplaceMessageNotificationParams {
+  recipientEmail: string;
+  recipientName: string;
+  senderName: string;
+  messagePreview: string;
+  eventName: string;
+  conversationId: string;
+}
+
+export async function sendMarketplaceMessageNotification(
+  params: MarketplaceMessageNotificationParams
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const preview = params.messagePreview.length > 100
+      ? params.messagePreview.slice(0, 100) + '...'
+      : params.messagePreview;
+
+    await resend.emails.send({
+      from: FROM_ADDRESS,
+      to: params.recipientEmail,
+      subject: `New message about ${params.eventName}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); padding: 32px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">New Message</h1>
+          </div>
+          <div style="background: white; padding: 32px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+              Hi <strong>${params.recipientName}</strong>,
+            </p>
+            <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+              <strong>${params.senderName}</strong> sent you a message about <strong>${params.eventName}</strong>.
+            </p>
+
+            <div style="background: #f9fafb; border-left: 4px solid #3b82f6; padding: 16px; margin: 24px 0; border-radius: 4px;">
+              <p style="margin: 0; color: #4b5563; font-size: 14px; font-style: italic;">
+                "${preview}"
+              </p>
+            </div>
+
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${SITE_URL}/marketplace/messages?conversation=${params.conversationId}" style="display: inline-block; background: #3b82f6; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                Reply on SiteMedic
+              </a>
+            </div>
+
+            <p style="color: #9ca3af; font-size: 12px; margin-top: 24px;">
+              For your privacy, only a preview is shown in this email. Log in to SiteMedic to see the full message and reply.
+            </p>
+
+            <p style="color: #6b7280; font-size: 14px; margin-top: 16px;">
+              Sent by SiteMedic Marketplace
+            </p>
+          </div>
+        </div>
+      `,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('[Notifications] Failed to send marketplace message notification:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+// =============================================================================
+// Dispute Filed Notification (Phase 36)
+// =============================================================================
+
+interface DisputeFiledNotificationParams {
+  recipientEmail: string;
+  recipientName: string;
+  eventName: string;
+  eventId: string;
+  disputeCategory: string;
+  filedByName: string;
+}
+
+export async function sendDisputeFiledNotification(
+  params: DisputeFiledNotificationParams
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await resend.emails.send({
+      from: FROM_ADDRESS,
+      to: params.recipientEmail,
+      subject: `Dispute filed for ${params.eventName}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); padding: 32px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">Dispute Filed</h1>
+          </div>
+          <div style="background: white; padding: 32px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+              Hi <strong>${params.recipientName}</strong>,
+            </p>
+            <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+              A dispute has been filed for <strong>${params.eventName}</strong> by ${params.filedByName}.
+            </p>
+
+            <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 24px 0; border-radius: 4px;">
+              <p style="margin: 0 0 4px 0; color: #991b1b; font-weight: 600;">Category: ${params.disputeCategory}</p>
+              <p style="margin: 0; color: #991b1b; font-size: 14px;">
+                Any pending remainder payments have been placed on hold until the dispute is resolved.
+              </p>
+            </div>
+
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${SITE_URL}/marketplace/events/${params.eventId}" style="display: inline-block; background: #dc2626; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                View Dispute Details
+              </a>
+            </div>
+
+            <p style="color: #6b7280; font-size: 14px; margin-top: 32px;">
+              Sent by SiteMedic Marketplace
+            </p>
+          </div>
+        </div>
+      `,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('[Notifications] Failed to send dispute filed notification:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+// =============================================================================
+// Dispute Resolved Notification (Phase 36)
+// =============================================================================
+
+interface DisputeResolvedNotificationParams {
+  recipientEmail: string;
+  recipientName: string;
+  eventName: string;
+  resolutionType: string;
+  resolutionNotes: string;
+}
+
+export async function sendDisputeResolvedNotification(
+  params: DisputeResolvedNotificationParams
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const resolutionLabels: Record<string, string> = {
+      full_refund: 'Full refund to client',
+      partial_refund: 'Partial refund',
+      dismissed: 'Dispute dismissed',
+      suspend_party: 'Account action taken',
+    };
+
+    await resend.emails.send({
+      from: FROM_ADDRESS,
+      to: params.recipientEmail,
+      subject: `Dispute resolved for ${params.eventName}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 32px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">Dispute Resolved</h1>
+          </div>
+          <div style="background: white; padding: 32px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+              Hi <strong>${params.recipientName}</strong>,
+            </p>
+            <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+              The dispute for <strong>${params.eventName}</strong> has been resolved.
+            </p>
+
+            <div style="background: #ecfdf5; border-left: 4px solid #059669; padding: 16px; margin: 24px 0; border-radius: 4px;">
+              <p style="margin: 0 0 4px 0; color: #065f46; font-weight: 600;">
+                Resolution: ${resolutionLabels[params.resolutionType] || params.resolutionType}
+              </p>
+              ${params.resolutionNotes ? `<p style="margin: 0; color: #065f46; font-size: 14px;">${params.resolutionNotes}</p>` : ''}
+            </div>
+
+            <p style="color: #6b7280; font-size: 14px; margin-top: 32px;">
+              Sent by SiteMedic Marketplace
+            </p>
+          </div>
+        </div>
+      `,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('[Notifications] Failed to send dispute resolved notification:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+// =============================================================================
+// Cancellation Notification (Phase 36)
+// =============================================================================
+
+interface CancellationNotificationParams {
+  recipientEmail: string;
+  recipientName: string;
+  eventName: string;
+  cancelledBy: string;
+  refundAmount: number;
+  reason: string;
+}
+
+export async function sendCancellationNotification(
+  params: CancellationNotificationParams
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await resend.emails.send({
+      from: FROM_ADDRESS,
+      to: params.recipientEmail,
+      subject: `Event cancelled: ${params.eventName}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); padding: 32px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">Event Cancelled</h1>
+          </div>
+          <div style="background: white; padding: 32px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+              Hi <strong>${params.recipientName}</strong>,
+            </p>
+            <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+              <strong>${params.eventName}</strong> has been cancelled by ${params.cancelledBy}.
+            </p>
+
+            <div style="background: #f9fafb; padding: 16px; margin: 24px 0; border-radius: 8px;">
+              <table style="width: 100%; font-size: 14px; color: #374151;">
+                <tr><td style="padding: 4px 0; font-weight: 600;">Reason:</td><td>${params.reason}</td></tr>
+                <tr><td style="padding: 4px 0; font-weight: 600;">Refund amount:</td><td>&pound;${params.refundAmount.toFixed(2)}</td></tr>
+              </table>
+            </div>
+
+            ${params.refundAmount > 0 ? `
+              <div style="background: #ecfdf5; border-left: 4px solid #059669; padding: 16px; margin: 24px 0; border-radius: 4px;">
+                <p style="margin: 0; color: #065f46; font-size: 14px;">
+                  Your refund of &pound;${params.refundAmount.toFixed(2)} will be processed to your original payment method within 5-10 business days.
+                </p>
+              </div>
+            ` : ''}
+
+            <p style="color: #6b7280; font-size: 14px; margin-top: 32px;">
+              Sent by SiteMedic Marketplace
+            </p>
+          </div>
+        </div>
+      `,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('[Notifications] Failed to send cancellation notification:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}

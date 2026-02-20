@@ -25,8 +25,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CalendarPlus } from 'lucide-react';
+import { CalendarPlus, MessageSquare, Star, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { MarketplaceMessageThread } from '@/components/marketplace/messaging/MarketplaceMessageThread';
+import { MarketplaceRatingForm } from '@/components/marketplace/ratings/MarketplaceRatingForm';
+import { DisputeForm } from '@/components/marketplace/disputes/DisputeForm';
+import { DisputeDetail } from '@/components/marketplace/disputes/DisputeDetail';
+import { CancellationConfirmation } from '@/components/marketplace/disputes/CancellationConfirmation';
+import type { MarketplaceRatingsResponse } from '@/lib/marketplace/rating-types';
+import type { MarketplaceDispute, CancellationReason } from '@/lib/marketplace/dispute-types';
 
 const STATUS_COLOURS: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-700',
@@ -77,6 +84,100 @@ export default function EventDetailPage() {
   const [extendDialogOpen, setExtendDialogOpen] = useState(false);
   const [newDeadline, setNewDeadline] = useState('');
   const [isExtending, setIsExtending] = useState(false);
+
+  // Messaging state
+  const [activeTab, setActiveTab] = useState<'details' | 'messages' | 'ratings'>('details');
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [loadingConversation, setLoadingConversation] = useState(false);
+
+  // Rating state
+  const [ratingsData, setRatingsData] = useState<MarketplaceRatingsResponse | null>(null);
+
+  // Fetch or create conversation when Messages tab is selected
+  useEffect(() => {
+    if (activeTab !== 'messages' || !currentUserId || !event) return;
+
+    const initConversation = async () => {
+      setLoadingConversation(true);
+      try {
+        // Try to get existing conversations for this event
+        const res = await fetch('/api/marketplace/messages/conversations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event_id: eventId,
+            company_id: event.awarded_company_id || '',
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setConversationId(data.id || data.conversation?.id);
+        }
+      } catch (err) {
+        console.error('Failed to init conversation:', err);
+      } finally {
+        setLoadingConversation(false);
+      }
+    };
+
+    initConversation();
+  }, [activeTab, currentUserId, event, eventId]);
+
+  // Dispute and cancellation state
+  const [showDisputeForm, setShowDisputeForm] = useState(false);
+  const [showCancelForm, setShowCancelForm] = useState(false);
+  const [existingDispute, setExistingDispute] = useState<MarketplaceDispute | null>(null);
+
+  // Fetch existing disputes
+  useEffect(() => {
+    if (!event || !currentUserId) return;
+    const fetchDispute = async () => {
+      try {
+        const res = await fetch(`/api/marketplace/events/${eventId}/dispute`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.disputes && data.disputes.length > 0) {
+            setExistingDispute(data.disputes[0]);
+          }
+        }
+      } catch {}
+    };
+    fetchDispute();
+  }, [event, eventId, currentUserId]);
+
+  const handleCancelEvent = async (reason: CancellationReason, reasonDetail?: string) => {
+    const res = await fetch(`/api/marketplace/events/${eventId}/cancel`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason, reason_detail: reasonDetail }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Failed to cancel event');
+    }
+    toast.success('Event cancelled successfully');
+    setShowCancelForm(false);
+    queryClient.invalidateQueries({ queryKey: ['marketplace-event', eventId] });
+  };
+
+  // Fetch ratings when tab is selected
+  useEffect(() => {
+    if (activeTab !== 'ratings' || !event) return;
+
+    const fetchRatings = async () => {
+      try {
+        const res = await fetch(`/api/marketplace/events/${eventId}/ratings`);
+        if (res.ok) {
+          const data = await res.json();
+          setRatingsData(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch ratings:', err);
+      }
+    };
+
+    fetchRatings();
+  }, [activeTab, event, eventId]);
 
   const handleExtendDeadline = async () => {
     if (!newDeadline) return;
@@ -299,6 +400,164 @@ export default function EventDetailPage() {
         </section>
       </div>
 
+      {/* Tabs: Details / Messages / Ratings */}
+      {event.status !== 'draft' && event.status !== 'open' && (
+        <div className="mt-6 border-b border-gray-200">
+          <nav className="flex gap-6">
+            <button
+              type="button"
+              onClick={() => setActiveTab('details')}
+              className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'details'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Details
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('messages')}
+              className={`pb-3 text-sm font-medium border-b-2 transition-colors inline-flex items-center gap-1.5 ${
+                activeTab === 'messages'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <MessageSquare className="h-4 w-4" />
+              Messages
+            </button>
+            {event.status === 'completed' && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('ratings')}
+                className={`pb-3 text-sm font-medium border-b-2 transition-colors inline-flex items-center gap-1.5 ${
+                  activeTab === 'ratings'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <Star className="h-4 w-4" />
+                Rating
+              </button>
+            )}
+          </nav>
+        </div>
+      )}
+
+      {/* Messages Tab Content */}
+      {activeTab === 'messages' && currentUserId && (
+        <div className="mt-6">
+          {loadingConversation ? (
+            <div className="flex items-center justify-center h-[400px]">
+              <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full" />
+            </div>
+          ) : conversationId ? (
+            <div className="h-[500px] border border-gray-200 rounded-lg overflow-hidden">
+              <MarketplaceMessageThread
+                conversationId={conversationId}
+                currentUserId={currentUserId}
+              />
+            </div>
+          ) : (
+            <div className="text-center py-12 text-sm text-gray-400">
+              No conversation available for this event.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Ratings Tab Content */}
+      {activeTab === 'ratings' && currentUserId && event.status === 'completed' && (
+        <div className="mt-6 space-y-6">
+          <section className="border rounded-lg p-5">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Rate this Event</h2>
+            {ratingsData ? (
+              <MarketplaceRatingForm
+                eventId={eventId}
+                existingRating={
+                  ratingsData.viewerRating
+                    ? { rating: ratingsData.viewerRating.rating, review: ratingsData.viewerRating.review }
+                    : undefined
+                }
+                onRatingSubmitted={() => {
+                  // Refetch ratings
+                  fetch(`/api/marketplace/events/${eventId}/ratings`)
+                    .then((r) => r.json())
+                    .then(setRatingsData)
+                    .catch(() => {});
+                }}
+                raterType={currentUserId === event.posted_by ? 'client' : 'company'}
+                canRate={ratingsData.canRate}
+                blindWindowActive={ratingsData.blindWindowActive}
+                blindWindowExpiresAt={ratingsData.blindWindowExpiresAt}
+              />
+            ) : (
+              <p className="text-sm text-gray-400">Loading rating data...</p>
+            )}
+          </section>
+        </div>
+      )}
+
+      {/* Dispute / Cancellation Dialogs */}
+      {showDisputeForm && (
+        <Dialog open={showDisputeForm} onOpenChange={setShowDisputeForm}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Raise a Dispute</DialogTitle>
+              <DialogDescription>
+                File a dispute for this event. Our team will review and resolve it.
+              </DialogDescription>
+            </DialogHeader>
+            <DisputeForm
+              eventId={eventId}
+              onDisputeFiled={() => {
+                setShowDisputeForm(false);
+                toast.success('Dispute filed successfully');
+                // Refetch dispute
+                fetch(`/api/marketplace/events/${eventId}/dispute`)
+                  .then((r) => r.json())
+                  .then((data) => {
+                    if (data.disputes?.length > 0) setExistingDispute(data.disputes[0]);
+                  })
+                  .catch(() => {});
+              }}
+              onCancel={() => setShowDisputeForm(false)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {showCancelForm && (
+        <Dialog open={showCancelForm} onOpenChange={setShowCancelForm}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Cancel Event</DialogTitle>
+              <DialogDescription>
+                Review the cancellation terms before proceeding.
+              </DialogDescription>
+            </DialogHeader>
+            <CancellationConfirmation
+              eventId={eventId}
+              eventName={event.event_name}
+              depositPaid={0}
+              eventStartDate={event.event_days?.[0]?.event_date || new Date().toISOString()}
+              isCompanyCancellation={currentUserId !== event.posted_by}
+              onConfirm={handleCancelEvent}
+              onCancel={() => setShowCancelForm(false)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Existing Dispute Display */}
+      {existingDispute && (
+        <div className="mt-6 border rounded-lg p-5">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Dispute</h2>
+          <DisputeDetail dispute={existingDispute} />
+        </div>
+      )}
+
       {/* Action bar */}
       <div className="mt-8 flex items-center gap-3">
         {event.status === 'open' && !isPastDeadline ? (
@@ -328,6 +587,34 @@ export default function EventDetailPage() {
             View Quotes ({event.quote_count})
           </Link>
         )}
+
+        {/* Raise Dispute — visible when event is completed/in_progress and no existing dispute */}
+        {currentUserId &&
+          ['completed', 'in_progress'].includes(event.status) &&
+          !existingDispute && (
+            <Button
+              variant="outline"
+              size="default"
+              onClick={() => setShowDisputeForm(true)}
+              className="text-red-700 border-red-300 hover:bg-red-50"
+            >
+              <AlertTriangle className="h-4 w-4 mr-1.5" />
+              Raise Dispute
+            </Button>
+          )}
+
+        {/* Cancel Event — visible when event is awarded/confirmed */}
+        {currentUserId &&
+          ['awarded', 'confirmed'].includes(event.status) && (
+            <Button
+              variant="outline"
+              size="default"
+              onClick={() => setShowCancelForm(true)}
+              className="text-red-700 border-red-300 hover:bg-red-50"
+            >
+              Cancel Event
+            </Button>
+          )}
 
         {/* Extend Deadline button — only visible to event poster, open events, not yet extended */}
         {currentUserId &&

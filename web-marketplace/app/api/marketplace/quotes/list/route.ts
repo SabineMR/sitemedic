@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
 
     const { data: companies, error: companiesError } = await supabase
       .from('marketplace_companies')
-      .select('id, company_name, verification_status')
+      .select('id, company_name, verification_status, average_rating, review_count')
       .in('id', companyIds);
 
     if (companiesError) {
@@ -131,8 +131,8 @@ export async function GET(request: NextRequest) {
       return {
         ...quote,
         company_name: company.company_name || 'Unknown Company',
-        company_rating: 0, // Placeholder — Phase 36 adds ratings
-        company_review_count: 0, // Placeholder
+        company_rating: company.average_rating || 0,
+        company_review_count: company.review_count || 0,
         company_verification_status: company.verification_status,
       };
     });

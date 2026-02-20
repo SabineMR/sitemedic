@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-20 (Phase 44 Broadcast Messaging complete)
+**Last Updated**: 2026-02-20 (Phase 36 Plan 03 Disputes/Cancellation/Resolution API routes)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -33,7 +33,7 @@ SiteMedic is now split into 3 Next.js apps sharing the same Supabase project (sa
 **Route changes:** `/marketplace/events` is now `/events` (marketplace IS the app root)
 
 **Cross-app navigation:**
-- `web-app/` (30501): Header has "Marketplace" + "Sign In" links
+- `web-app/` (30501): Header has "Marketplace" + "Sign In" links (Sign In stays on 30501 with its own login page + auth callback, then redirects to provider app dashboard after successful authentication)
 - `web/` (30500): Dashboard sidebar has "Marketplace (Full)" external link
 - `web/` (30500): Old `/marketplace/*` routes redirect to marketplace app via `next.config.ts` redirects
 - `web-marketplace/` (30502): Header has "Provider App" link, footer links to provider app for legal pages
@@ -46,10 +46,19 @@ SiteMedic is now split into 3 Next.js apps sharing the same Supabase project (sa
 
 **Environment variables added:**
 - `web/.env.local`: `NEXT_PUBLIC_MARKETPLACE_URL=http://localhost:30502`
-- `web-app/.env.local`: `NEXT_PUBLIC_PROVIDER_APP_URL`, `NEXT_PUBLIC_MARKETPLACE_URL`
+- `web-app/.env.local`: `NEXT_PUBLIC_PROVIDER_APP_URL`, `NEXT_PUBLIC_MARKETPLACE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `web-marketplace/.env.local`: `NEXT_PUBLIC_PROVIDER_APP_URL`, `NEXT_PUBLIC_MARKETING_URL`
 
 **Auth on localhost:** Each port gets its own cookies, so users log in separately per app. In production with shared cookie domain (`.sitemedic.co.uk`), SSO would work across subdomains.
+
+### Marketing Site Auth (web-app, 30501)
+
+The marketing site has its own Supabase-powered login page at `/login` with magic link (passwordless) authentication. This means users clicking "Sign In" on the marketing site stay on the same port (30501) throughout the login flow:
+
+- **Login page** (`web-app/app/login/page.tsx`): Magic link form using `@supabase/ssr` browser client. Email is persisted in localStorage. Styled with plain Tailwind to match the marketing site design language.
+- **Auth callback** (`web-app/app/auth/callback/route.ts`): Exchanges the magic link code for a session, then redirects to the provider app (`NEXT_PUBLIC_PROVIDER_APP_URL`) based on user role (`platform_admin` -> `/platform`, `org_admin` -> `/admin`, `medic` -> `/medic`, default -> `/dashboard`).
+- **Supabase client utilities**: `web-app/lib/supabase/client.ts` (browser) and `web-app/lib/supabase/server.ts` (server) — same pattern as `web/`.
+- **Dependencies added**: `@supabase/ssr`, `@supabase/supabase-js`
 
 ---
 
@@ -529,6 +538,34 @@ Phase 35 implements the full award-to-payment lifecycle: client awards a quote, 
 | `web/components/marketplace/award/DepositPaymentForm.tsx` | Stripe Payment Element form |
 | `web/components/marketplace/award/AwardedEventDetails.tsx` | Post-award dashboard component |
 | `web/components/marketplace/award/PaymentMethodManager.tsx` | Card management UI |
+
+### Implementation Progress (Phase 36 -- Ratings, Messaging & Disputes) -- Partial
+
+Phase 36 implements dispute filing, event cancellation, and admin dispute resolution for the marketplace. These API routes enforce access control (event poster, awarded company admin, or platform admin), apply tiered refund policies via Stripe, and immediately freeze remainder payments when disputes are filed.
+
+**Plan 03 -- Disputes, Cancellation & Resolution API Routes (Complete):**
+
+- **GET /api/marketplace/events/[id]/dispute**: Fetch all disputes for a marketplace event. Access restricted to event poster, awarded company admin, or platform admin. Returns disputes sorted by creation date descending.
+- **POST /api/marketplace/events/[id]/dispute**: File a new dispute on a marketplace event. Validates dispute category (no_show, late_cancellation, quality_issue, billing_dispute, safety_concern) and description via Zod. Auto-determines `filed_by_type` (client or company) from user's role. Only allowed on events with status completed, in_progress, or confirmed. Immediately sets `remainder_hold = true` on all related bookings to freeze pending remainder charges. Fire-and-forget email notification via `sendDisputeFiledNotification()`.
+- **POST /api/marketplace/events/[id]/cancel**: Cancel a marketplace event with tiered refund processing. Client cancellation uses `calculateMarketplaceCancellationRefund()` (>14 days = 100%, 7-14 days = 50%, <7 days = 0%). Company cancellation uses `calculateCompanyCancellationRefund()` (always 100%). Processes Stripe refunds per booking. Updates booking status to cancelled with refund metadata. Sets `remainder_due_at = null` to cancel pending remainder charges. Updates event status to cancelled. Fire-and-forget email via `sendCancellationNotification()`.
+- **POST /api/marketplace/disputes/[id]/resolve**: Platform admin resolves a dispute. Admin-only access (checked via `is_platform_admin` RPC). Four resolution types: full_refund (Stripe full refund + cancel booking), partial_refund (percentage-based Stripe refund), dismissed (no refund), suspend_party (log only). Releases `remainder_hold` on all event bookings after resolution. Fire-and-forget email via `sendDisputeResolvedNotification()`.
+
+**Key files created (Phase 36 Plan 03):**
+
+| File | Purpose |
+|------|---------|
+| `web/app/api/marketplace/events/[id]/dispute/route.ts` | GET + POST dispute filing and retrieval |
+| `web/app/api/marketplace/events/[id]/cancel/route.ts` | POST marketplace event cancellation with tiered Stripe refunds |
+| `web/app/api/marketplace/disputes/[id]/resolve/route.ts` | POST admin dispute resolution with Stripe refund processing |
+| `supabase/migrations/154_marketplace_disputes.sql` | marketplace_disputes table, bookings columns (remainder_hold, cancellation), dispute-evidence storage bucket, RLS policies |
+| `web/lib/marketplace/dispute-types.ts` | TypeScript types for disputes, cancellations, resolution |
+| `web/lib/marketplace/cancellation.ts` | Tiered refund calculation functions |
+
+**Key patterns used:**
+- Dynamic Stripe import to avoid loading SDK when no refund is needed
+- Fire-and-forget notifications (try/catch + .catch()) -- notification failure never blocks API response
+- `marketplace_companies!inner(admin_user_id)` join pattern for awarded company admin verification
+- `remainder_hold` boolean on bookings to freeze pending remainder charges during disputes
 
 ### Dashboard Marketplace Browsing (2026-02-19)
 

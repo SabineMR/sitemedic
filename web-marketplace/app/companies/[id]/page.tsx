@@ -34,6 +34,7 @@ import {
   Award,
   FileCheck,
 } from 'lucide-react';
+import { CompanyRatingsSummary } from '@/components/marketplace/ratings/CompanyRatingsSummary';
 
 // =============================================================================
 // Types
@@ -106,7 +107,9 @@ export default function CompanyProfilePage() {
             insurance_expiry,
             cqc_provider_id,
             cqc_registration_status,
-            verification_status
+            verification_status,
+            average_rating,
+            review_count
           `
           )
           .eq('id', companyId)
@@ -171,8 +174,8 @@ export default function CompanyProfilePage() {
 
         setCompany({
           ...companyData,
-          rating: 0, // Placeholder — Phase 36 adds ratings
-          review_count: 0, // Placeholder
+          rating: companyData.average_rating || 0,
+          review_count: companyData.review_count || 0,
           certifications: [], // TODO: fetch from compliance_documents
           can_view_contact: canViewContact,
         });
@@ -450,13 +453,14 @@ export default function CompanyProfilePage() {
           )}
         </Card>
 
-        {/* Reviews (Placeholder for Phase 36) */}
+        {/* Reviews */}
         <Card className="p-5">
           <h2 className="text-lg font-semibold text-gray-900 mb-3">Reviews</h2>
-          <p className="text-sm text-gray-400 italic">
-            Client reviews will be available in a future update. This company has{' '}
-            {company.review_count} review{company.review_count !== 1 ? 's' : ''}.
-          </p>
+          <CompanyRatingsSummary
+            companyId={companyId}
+            averageRating={company.rating}
+            reviewCount={company.review_count}
+          />
         </Card>
 
         {/* Past Events (Placeholder) */}
