@@ -569,7 +569,7 @@ export class MessageSync {
         const unreadMessages = await database.collections
           .get<Message>('messages')
           .query(
-            Q.where('conversation_id', conv.serverId || ''),
+            Q.where('conversation_id', conv.id),
             Q.where('sender_id', Q.notEq(userId)),
             Q.where('created_at', Q.gt(lastReadAt))
           )
