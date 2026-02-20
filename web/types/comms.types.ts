@@ -140,6 +140,16 @@ export interface BroadcastRecipientDetail {
   status: 'read' | 'unread';
 }
 
+/** Attachment metadata stored in messages.metadata JSONB (Phase 47) */
+export interface AttachmentMetadata {
+  attachment: {
+    storage_path: string;
+    file_name: string;
+    file_size_bytes: number;
+    mime_type: string;
+  };
+}
+
 /** Search result for cross-conversation message search (Phase 47) */
 export interface MessageSearchResult {
   id: string;
