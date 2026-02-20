@@ -1003,7 +1003,7 @@ const EVENT_TRANSITIONS: Record<string, string[]> = {
   open:      ['reviewing', 'awarded', 'cancelled', 'expired'],
   reviewing: ['open', 'awarded', 'cancelled'],
   awarded:   ['completed', 'cancelled'],
-  completed: [],  // terminal
+               completed: [],  // terminal
   cancelled: [],  // terminal
   expired:   [],  // terminal
 };
