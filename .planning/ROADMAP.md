@@ -48,7 +48,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 - [x] **Phase 32: Foundation Schema & Registration** - Database tables, RLS policies, race-condition prevention, and CQC-registered company/client registration with verification
 - [x] **Phase 33: Event Posting & Discovery** - Clients create event listings, medics browse and filter by location/qualifications
 - [x] **Phase 34: Quote Submission & Comparison** - Companies submit priced quotes with breakdowns, clients compare anonymised company profiles (companies only)
-- [ ] **Phase 34.1: Self-Procured Jobs** (INSERTED) - Companies with SiteMedic subscriptions create and manage jobs they sourced themselves, with zero commission, full wizard entry, Stripe payment flow, and complete feature parity with marketplace jobs
+- [x] **Phase 34.1: Self-Procured Jobs** (INSERTED) - Companies with SiteMedic subscriptions create and manage jobs they sourced themselves, with zero commission, full wizard entry, Stripe payment flow, and complete feature parity with marketplace jobs
 - [ ] **Phase 35: Award Flow & Payment** - Client awards quote, deposit collected, booking auto-created, remainder charged after event, commission split, payouts
 - [ ] **Phase 36: Ratings, Messaging & Disputes** - Bidirectional ratings, per-quote messaging, cancellation policy, dispute resolution
 - [ ] **Phase 37: Company Accounts** - Company roster management, medic assignment to events, company profile display
@@ -137,12 +137,12 @@ Plans:
 **Plans**: 6 plans
 
 Plans:
-- [ ] 34.1-01-PLAN.md — Database migration (direct_clients table, marketplace_events source/agreed_price/client_id columns, direct job statuses), TypeScript types, Zod schemas, CRUD API routes
-- [ ] 34.1-02-PLAN.md — Job creation wizard (Zustand store, 6-step wizard UI, client details step with new/existing client, job info, schedule, staffing, pricing, review/submit), jobs list page with "Log Job" entry point
-- [ ] 34.1-03-PLAN.md — Dashboard integration (combined jobs view with source badges and filter, SourceBadge/SourceFilter components, combined API endpoint, marketplace events API excludes direct jobs)
-- [ ] 34.1-04-PLAN.md — Payment flow (Stripe deposit PaymentIntent, booking bridge with source='direct' and 0% commission, medic assignment with EXCLUSION constraint availability checking, job detail page)
-- [ ] 34.1-05-PLAN.md — Client portal access (client-safe API excluding medic details, read-only portal view, payment summary) and bidirectional ratings (job_ratings table, star rating + review form, ratings API)
-- [ ] 34.1-06-PLAN.md — Gap closure: subscription check on direct job creation, client portal link from job detail page, deposit_paid wired to booking status
+- [x] 34.1-01-PLAN.md — Database migration (direct_clients table, marketplace_events source/agreed_price/client_id columns, direct job statuses), TypeScript types, Zod schemas, CRUD API routes
+- [x] 34.1-02-PLAN.md — Job creation wizard (Zustand store, 6-step wizard UI, client details step with new/existing client, job info, schedule, staffing, pricing, review/submit), jobs list page with "Log Job" entry point
+- [x] 34.1-03-PLAN.md — Dashboard integration (combined jobs view with source badges and filter, SourceBadge/SourceFilter components, combined API endpoint, marketplace events API excludes direct jobs)
+- [x] 34.1-04-PLAN.md — Payment flow (Stripe deposit PaymentIntent, booking bridge with source='direct' and 0% commission, medic assignment with EXCLUSION constraint availability checking, job detail page)
+- [x] 34.1-05-PLAN.md — Client portal access (client-safe API excluding medic details, read-only portal view, payment summary) and bidirectional ratings (job_ratings table, star rating + review form, ratings API)
+- [x] 34.1-06-PLAN.md — Gap closure: subscription check on direct job creation, client portal link from job detail page, deposit_paid wired to booking status
 
 ### Phase 35: Award Flow & Payment
 **Goal**: Clients can award their chosen quote, pay a deposit via Stripe, and the system auto-creates a SiteMedic booking — with the remainder auto-charged after event completion and the medic paid via the existing payout pipeline
