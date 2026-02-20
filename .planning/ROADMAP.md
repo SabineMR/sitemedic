@@ -62,7 +62,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 - [x] **Phase 40: Comms & Docs Foundation** - Database schema for conversations, messages, and documents; Supabase Storage buckets; org-scoped RLS policies
 - [x] **Phase 41: Web Messaging Core** - 1:1 conversations between org admin and medics on the web dashboard with conversation list and message threads
 - [x] **Phase 42: iOS Messaging & Offline** - WatermelonDB models for messages, offline send queue, cross-platform sync between iOS app and web
-- [ ] **Phase 43: Real-time & Push Notifications** - Supabase Realtime for live message delivery, iOS push notifications with GDPR-safe content
+- [x] **Phase 43: Real-time & Push Notifications** - Supabase Realtime for live message delivery, iOS push notifications with GDPR-safe content
 - [ ] **Phase 44: Broadcast Messaging** - Org admin can send broadcast messages to all medics with per-medic read tracking
 - [ ] **Phase 45: Document Upload & Profile Storage** - Medics upload categorised compliance documents from iOS or web, stored on their profile with versioning
 - [ ] **Phase 46: Expiry Tracking & Alerts** - Status badges, progressive expiry alerts, and bulk expiry dashboard for org admins
@@ -288,9 +288,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 43-01-PLAN.md — Supabase Realtime subscription (single channel per user filtering on org_id; message INSERT + read status UPDATE listeners; WatermelonDB upsert on iOS; TanStack Query invalidation on web; polling completely replaced)
-- [ ] 43-02-PLAN.md — iOS push notification setup (PushTokenService for token registration in profiles.push_token; NotificationContext for foreground toast, background tap deep linking, app badge count; permission prompt on first Messages tab visit)
-- [ ] 43-03-PLAN.md — Push notification Edge Function and DB trigger (send-message-notification Edge Function via Expo Push API; GDPR-safe payload with sender name only; AFTER INSERT trigger on messages via pg_net; DeviceNotRegistered token cleanup)
+- [x] 43-01-PLAN.md — Supabase Realtime subscription (single channel per user filtering on org_id; message INSERT + read status UPDATE listeners; WatermelonDB upsert on iOS; TanStack Query invalidation on web; polling completely replaced)
+- [x] 43-02-PLAN.md — iOS push notification setup (PushTokenService for token registration in profiles.push_token; NotificationContext for foreground toast, background tap deep linking, app badge count; permission prompt on first Messages tab visit)
+- [x] 43-03-PLAN.md — Push notification Edge Function and DB trigger (send-message-notification Edge Function via Expo Push API; GDPR-safe payload with sender name only; AFTER INSERT trigger on messages via pg_net; DeviceNotRegistered token cleanup)
 
 ### Phase 44: Broadcast Messaging
 **Goal**: Org admins can send broadcast messages to all medics in their organisation, broadcasts appear in each medic's conversation list as a distinct message type, and the admin can track how many medics have read each broadcast
@@ -391,7 +391,7 @@ Plans:
 | 40. Comms & Docs Foundation | v5.0 | 2/2 | Complete | 2026-02-19 |
 | 41. Web Messaging Core | v5.0 | 3/3 | Complete | 2026-02-19 |
 | 42. iOS Messaging & Offline | v5.0 | 3/3 | Complete | 2026-02-20 |
-| 43. Real-time & Push Notifications | v5.0 | 0/3 | Not started | - |
+| 43. Real-time & Push Notifications | v5.0 | 3/3 | Complete | 2026-02-20 |
 | 44. Broadcast Messaging | v5.0 | 0/2 | Not started | - |
 | 45. Document Upload & Profile Storage | v5.0 | 0/3 | Not started | - |
 | 46. Expiry Tracking & Alerts | v5.0 | 0/2 | Not started | - |

@@ -22,9 +22,9 @@
 
 ### Notifications
 
-- [ ] **NOTIF-01**: Medic receives iOS push notification when a new message arrives (app backgrounded)
-- [ ] **NOTIF-02**: Push notification shows sender name only — never message content (GDPR)
-- [ ] **NOTIF-03**: Messages arrive in real-time when app/web is open (Supabase Realtime)
+- [x] **NOTIF-01**: Medic receives iOS push notification when a new message arrives (app backgrounded)
+- [x] **NOTIF-02**: Push notification shows sender name only — never message content (GDPR)
+- [x] **NOTIF-03**: Messages arrive in real-time when app/web is open (Supabase Realtime)
 
 ### Document Management
 
@@ -86,9 +86,9 @@
 | MSG-10 | Phase 44 | Pending |
 | MSG-11 | Phase 47 | Pending |
 | MSG-12 | Phase 47 | Pending |
-| NOTIF-01 | Phase 43 | Pending |
-| NOTIF-02 | Phase 43 | Pending |
-| NOTIF-03 | Phase 43 | Pending |
+| NOTIF-01 | Phase 43 | Complete |
+| NOTIF-02 | Phase 43 | Complete |
+| NOTIF-03 | Phase 43 | Complete |
 | DOC-01 | Phase 45 | Pending |
 | DOC-02 | Phase 45 | Pending |
 | DOC-03 | Phase 45 | Pending |
