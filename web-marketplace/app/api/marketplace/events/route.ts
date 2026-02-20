@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { eventFormSchema } from '@/lib/marketplace/event-schemas';
+import { fanOutNewEventNotifications } from '@/lib/marketplace/event-fan-out';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -139,6 +140,32 @@ export async function POST(request: NextRequest) {
       if (staffingError) {
         console.error('[Events POST] Failed to insert staffing requirements:', staffingError);
       }
+    }
+
+    // Fire-and-forget fan-out: notify all verified companies of the new event
+    // Only fan out when event is published (not draft)
+    if (!saveAsDraft) {
+      const firstEventDate =
+        data.event_days.length > 0
+          ? new Date(data.event_days[0].event_date)
+          : null;
+
+      void fanOutNewEventNotifications({
+        event: {
+          id: event.id,
+          event_name: data.event_name,
+          event_type: data.event_type,
+          budget_max: data.budget_max ?? null,
+          posted_by: user.id,
+          location_coordinates:
+            data.location_lat != null && data.location_lng != null
+              ? { lat: data.location_lat, lng: data.location_lng }
+              : null,
+          location_postcode: data.location_postcode,
+          location_display: data.location_display ?? null,
+        },
+        firstEventDate,
+      });
     }
 
     return NextResponse.json({ success: true, eventId: event.id }, { status: 201 });
