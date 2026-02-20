@@ -750,7 +750,7 @@ Implements dispute filing with remainder payment holds, tiered marketplace cance
 - **`remainder_hold` boolean**: Filing a dispute freezes remainder payments; `charge-remainder-payment` cron skips held bookings
 - **`marketplace_companies!inner(admin_user_id)` join**: Pattern for verifying awarded company admin access
 
-### Phase 37: Company Accounts — Roster Management (In Progress)
+### Phase 37: Company Accounts — Roster Management (Complete)
 
 Phase 37 builds the company roster system — the many-to-many relationship between marketplace companies and medics. Companies can add medics directly, invite them by email with signed JWT tokens, manage availability, and assign named medics to quotes. This is the data layer that all roster UI, assignment, and profile features depend on.
 
@@ -803,6 +803,65 @@ Creates the database foundation, TypeScript types, Zod schemas, API routes, and 
 - **JWT invitation workflow** with 7-day expiry (jose library for Edge compatibility)
 - **Fire-and-forget email** via Resend with dev fallback to console.log
 - **Unique constraint + 23505 catch** for idempotent roster operations
+
+---
+
+**Plan 02 -- Roster Management UI (Complete):**
+
+Builds the company admin interface for managing the medic roster: viewing, searching, filtering, adding, inviting, and removing medics.
+
+- **Zustand store** (`useCompanyRosterStore`): Manages UI state for filters (status, search term), modal open/close (add, invite), and selected medic ID. Data fetching stays in React Query hooks.
+- **Roster page** (`/dashboard/marketplace/roster`): Detects current user's company via Supabase query, shows "Register first" if no company. Header with company name, medic count badge, and Add/Invite action buttons. Status filter tabs (All, Active, Pending, Inactive) and search input for name/email filtering.
+- **RosterList**: Grid layout (1/2/3 columns responsive) with loading skeleton, empty state with CTAs, and RosterMedicCard rendering.
+- **RosterMedicCard**: Displays medic name, title, email, status badge (colour-coded: green/amber/gray/red), qualification badges (from STAFFING_ROLE_LABELS), temporary unavailability indicator with date range. Active medics get Edit + Remove (with AlertDialog confirmation) buttons. Pending medics show "Invitation sent" date + Resend button. Remove calls DELETE API (soft-remove to inactive).
+- **AddMedicModal**: Dialog with search input querying medics table (ILIKE on first_name/last_name, limit 10). Select a medic to see details, optionally set title and qualifications, then POST to `/api/marketplace/roster`. Toast feedback + cache invalidation on success.
+- **InviteMedicModal**: Dialog with email input, optional title and qualifications. POST to `/api/marketplace/roster/invite`. Shows 7-day expiry note. Toast feedback + cache invalidation on success.
+- **Invitation acceptance page** (`/dashboard/marketplace/roster/accept?token=X`): Reads JWT token from URL, calls POST `/api/marketplace/roster/accept`. Shows loading/success/error states. Redirects unauthenticated users to login with return URL.
+
+**Key files created (Plan 02):**
+
+| File | Purpose |
+|------|---------|
+| `web/stores/useCompanyRosterStore.ts` | Zustand store: statusFilter, searchTerm, modal states, selectedMedicId |
+| `web/app/(dashboard)/dashboard/marketplace/roster/page.tsx` | Roster management page: company detection, filters, roster list, modals |
+| `web/components/marketplace/roster/RosterList.tsx` | Grid list with loading/empty states |
+| `web/components/marketplace/roster/RosterMedicCard.tsx` | Medic card: status badges, qualifications, actions (edit, remove, resend) |
+| `web/components/marketplace/roster/AddMedicModal.tsx` | Search + direct add modal |
+| `web/components/marketplace/roster/InviteMedicModal.tsx` | Email invitation modal |
+| `web/app/(dashboard)/dashboard/marketplace/roster/accept/page.tsx` | JWT invitation acceptance page |
+
+**API fix (Plan 02):** Updated GET `/api/marketplace/roster` to support `status=all` (returns all statuses) instead of defaulting to `status=active`. The query now conditionally applies the status filter.
+
+---
+
+**Plan 03 -- Company Profile & Quote Roster Wiring (Complete):**
+
+Builds the company profile display and wires roster data to the quoting workflow. Clients see rich company profiles with stats, team preview, and ratings. Companies select real roster medics when quoting (not free-text names). Availability management ensures accurate capacity planning.
+
+- **Company Profile Page** (`/dashboard/marketplace/company/[id]`): Displays company stats card, "Meet the Team" section, and ratings summary. Detects `isOwnProfile` by comparing current user's company admin_user_id. Loading skeleton and "Company not found" error state.
+- **CompanyProfileCard**: Company header card with 4-stat grid (Team Size, Rating with star icon, Insurance status badge, Coverage areas). Verified badge shown for verified/cqc_verified companies. Member since date. Insurance badge colours: green (verified), red (expired), gray (unverified).
+- **MeetTheTeam**: Team preview showing up to 6 active roster medics with names, qualification badges, titles, and "Temporarily unavailable" amber badge. Grid layout (1/2/3 columns responsive). "+X more" text when roster exceeds 6. "Manage Roster" link for own profile.
+- **company-profile.ts**: Helper utilities -- `formatCompanyProfile()` transforms API response with null handling and defaults, `getInsuranceBadgeColor()` returns Tailwind classes per insurance status, `getVerificationBadgeLabel()` maps status codes to human-readable labels, `formatMemberSince()` for date display.
+- **MedicAvailabilityModal**: Dialog for company admin to set/clear medic date-range unavailability. "Unavailable from" and "Unavailable until" date inputs, optional reason text. "Clear availability" button restores availability. PATCH `/api/marketplace/roster/[id]` with availability fields. Pre-populates form with existing dates. Sonner toast + query cache invalidation on success.
+- **RosterMedicPicker**: Inline picker for selecting roster medics in quote staffing plans. Fetches active roster via `useCompanyRoster`. Filters by `excludeIds` (already selected) and `requiredQualification`. Green/amber availability dots with tooltips. Qualification badges per medic. Empty state messages for no matches or all assigned.
+- **StaffingPlanSection update**: Named medics flow now uses RosterMedicPicker instead of free-text entry. Auto-detects company ID from current user's marketplace company. Falls back to free-text entry (with amber warning) if no company found. Medic IDs are real roster IDs (not generated UUIDs). Headcount + qualifications flow remains completely unchanged.
+
+**Key files created (Plan 03):**
+
+| File | Purpose |
+|------|---------|
+| `web/lib/marketplace/company-profile.ts` | Display utilities: formatCompanyProfile, getInsuranceBadgeColor, getVerificationBadgeLabel, formatMemberSince |
+| `web/components/marketplace/roster/CompanyProfileCard.tsx` | Company header card with stats grid (team size, rating, insurance, coverage) |
+| `web/components/marketplace/roster/MeetTheTeam.tsx` | Team preview: up to 6 active medics with qualifications and availability |
+| `web/components/marketplace/roster/MedicAvailabilityModal.tsx` | Date-range unavailability modal with clear and pre-populate |
+| `web/components/marketplace/roster/RosterMedicPicker.tsx` | Qualification-filtered, availability-aware medic picker for quote staffing |
+| `web/app/(dashboard)/dashboard/marketplace/company/[id]/page.tsx` | Company profile page with stats, team, and ratings |
+
+**Files modified (Plan 03):**
+
+| File | Change |
+|------|--------|
+| `web/components/marketplace/quote-submission/StaffingPlanSection.tsx` | Named medics flow uses RosterMedicPicker; auto-detects companyId; free-text fallback with warning |
 
 ---
 
