@@ -17,6 +17,7 @@ import { redirect } from 'next/navigation';
 import { ConversationList } from '../components/ConversationList';
 import { MessageThread } from '../components/MessageThread';
 import { MedicPicker } from '../components/MedicPicker';
+import { BroadcastComposeDialog } from '../components/BroadcastComposeDialog';
 
 interface PageProps {
   params: Promise<{ conversationId: string }>;
@@ -26,28 +27,39 @@ export default async function ConversationPage({ params }: PageProps) {
   const { conversationId } = await params;
   const supabase = await createClient();
 
-  // Fetch conversation details + messages + sidebar conversations in parallel
-  const [conversation, messages, conversations] = await Promise.all([
-    fetchConversationById(supabase, conversationId),
-    fetchMessagesForConversation(supabase, conversationId),
-    fetchConversationsWithUnread(supabase),
-  ]);
+  // Get current user for role, org_id, and thread component
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const orgId = (user?.app_metadata?.org_id as string) ?? '';
+  const role = (user?.app_metadata?.role as string) ?? '';
+
+  // Fetch conversation details + messages + sidebar conversations + medic count in parallel
+  const [conversation, messages, conversations, medicCountResult] =
+    await Promise.all([
+      fetchConversationById(supabase, conversationId),
+      fetchMessagesForConversation(supabase, conversationId),
+      fetchConversationsWithUnread(supabase),
+      supabase
+        .from('medics')
+        .select('id', { count: 'exact', head: true })
+        .eq('org_id', orgId),
+    ]);
+
+  const medicCount = medicCountResult.count ?? 0;
 
   if (!conversation) {
     redirect('/messages');
   }
 
-  // Get current user for the thread component and org_id for Realtime
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const orgId = (user?.app_metadata?.org_id as string) ?? '';
-
   // Find participant name from conversations list (the one matching this conversation)
   const currentConversation = conversations.find(
     (c) => c.id === conversationId
   );
-  const participantName = currentConversation?.participant_name ?? 'Unknown';
+  const participantName =
+    conversation.type === 'broadcast'
+      ? 'Broadcasts'
+      : currentConversation?.participant_name ?? 'Unknown';
 
   // Extract existing conversation data for MedicPicker duplicate prevention
   const existingConversationMedicIds = conversations
@@ -64,10 +76,15 @@ export default async function ConversationPage({ params }: PageProps) {
       <div className="hidden md:flex w-80 min-w-80 border-r flex-col">
         <div className="p-4 border-b flex items-center justify-between">
           <h1 className="text-lg font-semibold">Messages</h1>
-          <MedicPicker
-            existingConversationMedicIds={existingConversationMedicIds}
-            existingConversations={existingConversations}
-          />
+          <div className="flex items-center gap-2">
+            {role === 'org_admin' && (
+              <BroadcastComposeDialog medicCount={medicCount} />
+            )}
+            <MedicPicker
+              existingConversationMedicIds={existingConversationMedicIds}
+              existingConversations={existingConversations}
+            />
+          </div>
         </div>
         <ConversationList
           initialConversations={conversations}
@@ -83,6 +100,8 @@ export default async function ConversationPage({ params }: PageProps) {
           participantName={participantName}
           initialMessages={messages}
           currentUserId={user?.id ?? ''}
+          conversationType={conversation.type as 'direct' | 'broadcast'}
+          userRole={role}
         />
       </div>
     </div>

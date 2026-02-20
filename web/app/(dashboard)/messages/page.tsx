@@ -12,6 +12,7 @@ import { fetchConversationsWithUnread } from '@/lib/queries/comms';
 import { ConversationList } from './components/ConversationList';
 import { EmptyState } from './components/EmptyState';
 import { MedicPicker } from './components/MedicPicker';
+import { BroadcastComposeDialog } from './components/BroadcastComposeDialog';
 
 export default async function MessagesPage() {
   const supabase = await createClient();
@@ -23,7 +24,15 @@ export default async function MessagesPage() {
   const role = (user?.app_metadata?.role as 'org_admin' | 'medic') ?? null;
   const orgId = (user?.app_metadata?.org_id as string) ?? '';
 
-  const conversations = await fetchConversationsWithUnread(supabase);
+  const [conversations, medicCountResult] = await Promise.all([
+    fetchConversationsWithUnread(supabase),
+    supabase
+      .from('medics')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', orgId),
+  ]);
+
+  const medicCount = medicCountResult.count ?? 0;
 
   // Extract existing conversation data for MedicPicker duplicate prevention
   const existingConversationMedicIds = conversations
@@ -40,10 +49,15 @@ export default async function MessagesPage() {
       <div className="w-full md:w-80 md:min-w-80 border-r flex flex-col">
         <div className="p-4 border-b flex items-center justify-between">
           <h1 className="text-lg font-semibold">Messages</h1>
-          <MedicPicker
-            existingConversationMedicIds={existingConversationMedicIds}
-            existingConversations={existingConversations}
-          />
+          <div className="flex items-center gap-2">
+            {role === 'org_admin' && (
+              <BroadcastComposeDialog medicCount={medicCount} />
+            )}
+            <MedicPicker
+              existingConversationMedicIds={existingConversationMedicIds}
+              existingConversations={existingConversations}
+            />
+          </div>
         </div>
         {conversations.length === 0 ? (
           <EmptyState
