@@ -18,14 +18,14 @@
 
 ### QUOT — Quote Submission & Browsing
 
-- [ ] **QUOT-01**: Verified medic can submit a quote on an open event with: total price, itemised breakdown (staff costs, equipment, transport, consumables), cover letter/pitch, and availability confirmation
-- [ ] **QUOT-02**: Medic can attach a proposed staffing plan to their quote (who they would deploy, with what qualifications)
-- [ ] **QUOT-03**: Medic can withdraw a submitted quote at any time before the event is awarded
-- [ ] **QUOT-04**: Client sees a list of received quotes with: price, medic/company rating, qualification summary, and response time — but NO contact details
-- [ ] **QUOT-05**: Client can view full medic profile (certifications, star rating, experience, past event history) only after the medic has submitted a quote
-- [ ] **QUOT-06**: Client can sort quotes by price, rating, or response time and filter by qualification level
-- [ ] **QUOT-07**: Medic contact details (phone, email) remain hidden until the event is awarded AND deposit is paid
-- [ ] **QUOT-08**: A medic who is already quoted by their company on an event cannot submit an independent quote on the same event (double-up prevention)
+- [x] **QUOT-01**: Verified medic can submit a quote on an open event with: total price, itemised breakdown (staff costs, equipment, transport, consumables), cover letter/pitch, and availability confirmation
+- [x] **QUOT-02**: Medic can attach a proposed staffing plan to their quote (who they would deploy, with what qualifications)
+- [x] **QUOT-03**: Medic can withdraw a submitted quote at any time before the event is awarded
+- [x] **QUOT-04**: Client sees a list of received quotes with: price, medic/company rating, qualification summary, and response time — but NO contact details
+- [x] **QUOT-05**: Client can view full medic profile (certifications, star rating, experience, past event history) only after the medic has submitted a quote
+- [x] **QUOT-06**: Client can sort quotes by price, rating, or response time and filter by qualification level
+- [x] **QUOT-07**: Medic contact details (phone, email) remain hidden until the event is awarded AND deposit is paid
+- ~~**QUOT-08**: A medic who is already quoted by their company on an event cannot submit an independent quote on the same event (double-up prevention)~~ — N/A (companies only, no individual medic bidding)
 
 ### AWRD — Award Flow & Payment
 
@@ -134,14 +134,14 @@
 | EVNT-06 | Phase 33 | Pending |
 | EVNT-07 | Phase 33 | Pending |
 | EVNT-08 | Phase 33 | Pending |
-| QUOT-01 | Phase 34 | Pending |
-| QUOT-02 | Phase 34 | Pending |
-| QUOT-03 | Phase 34 | Pending |
-| QUOT-04 | Phase 34 | Pending |
-| QUOT-05 | Phase 34 | Pending |
-| QUOT-06 | Phase 34 | Pending |
-| QUOT-07 | Phase 34 | Pending |
-| QUOT-08 | Phase 34 | Pending |
+| QUOT-01 | Phase 34 | Complete |
+| QUOT-02 | Phase 34 | Complete |
+| QUOT-03 | Phase 34 | Complete |
+| QUOT-04 | Phase 34 | Complete |
+| QUOT-05 | Phase 34 | Complete |
+| QUOT-06 | Phase 34 | Complete |
+| QUOT-07 | Phase 34 | Complete |
+| QUOT-08 | Phase 34 | N/A |
 | AWRD-01 | Phase 35 | Pending |
 | AWRD-02 | Phase 35 | Pending |
 | AWRD-03 | Phase 35 | Pending |

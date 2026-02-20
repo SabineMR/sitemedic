@@ -47,7 +47,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 
 - [x] **Phase 32: Foundation Schema & Registration** - Database tables, RLS policies, race-condition prevention, and CQC-registered company/client registration with verification
 - [x] **Phase 33: Event Posting & Discovery** - Clients create event listings, medics browse and filter by location/qualifications
-- [ ] **Phase 34: Quote Submission & Comparison** - Companies submit priced quotes with breakdowns, clients compare anonymised company profiles (companies only)
+- [x] **Phase 34: Quote Submission & Comparison** - Companies submit priced quotes with breakdowns, clients compare anonymised company profiles (companies only)
 - [ ] **Phase 34.1: Self-Procured Jobs** (INSERTED) - Companies with SiteMedic subscriptions create and manage jobs they sourced themselves, with zero commission, full wizard entry, Stripe payment flow, and complete feature parity with marketplace jobs
 - [ ] **Phase 35: Award Flow & Payment** - Client awards quote, deposit collected, booking auto-created, remainder charged after event, commission split, payouts
 - [ ] **Phase 36: Ratings, Messaging & Disputes** - Bidirectional ratings, per-quote messaging, cancellation policy, dispute resolution
