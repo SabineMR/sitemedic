@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v5.0 Internal Comms & Document Management -- Phase 47 Message Polish complete, v5.0 MILESTONE COMPLETE
+**Current focus:** v4.0 MedBid Marketplace — Phase 37 complete, Phase 38 next
 
 ## Current Position
 
-Phase: 47 of 47 (Message Polish -- COMPLETE)
-Plan: 3 of 3 in current phase (47-01, 47-02, 47-03 complete)
-Status: Phase 47 and v5.0 milestone complete
-Last activity: 2026-02-20 -- Completed Phase 47 (Message Polish -- delivery status, search, attachments)
+Phase: 37 of 47 (Company Accounts — COMPLETE)
+Plan: 3 of 3 in current phase (all complete)
+Status: Phase 37 complete (3 plans + gap fixes executed, verified), ready for Phase 38
+Last activity: 2026-02-20 — Completed Phase 37 (Company Accounts — roster, profiles, quote assignment)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [█████████░] v4.0 84% | [██████████] v5.0 100%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████████░░] v4.0 81% | [██████████] v5.0 100%
 
 ## Performance Metrics
 

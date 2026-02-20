@@ -51,7 +51,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 - [x] **Phase 34.1: Self-Procured Jobs** (INSERTED) - Companies with SiteMedic subscriptions create and manage jobs they sourced themselves, with zero commission, full wizard entry, Stripe payment flow, and complete feature parity with marketplace jobs
 - [x] **Phase 35: Award Flow & Payment** - Client awards quote, deposit collected, booking auto-created, remainder charged after event, commission split, payouts
 - [x] **Phase 36: Ratings, Messaging & Disputes** - Bidirectional ratings, per-quote messaging, cancellation policy, dispute resolution
-- [ ] **Phase 37: Company Accounts** - Company roster management, medic assignment to events, company profile display
+- [x] **Phase 37: Company Accounts** - Company roster management, medic assignment to events, company profile display
 - [ ] **Phase 38: Notifications & Alerts** - Multi-channel notification system (dashboard feed, email, SMS) with medic preferences
 - [ ] **Phase 39: Admin Dashboard** - Platform admin marketplace metrics, event/quote/dispute management, configuration
 
@@ -192,9 +192,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 37-01-PLAN.md — Database foundation (migration 156: company_roster_medics junction table, RLS policies, roster validation trigger on quotes, aggregation trigger, TypeScript types, Zod schemas, 7 API routes, React Query hooks, availability utilities)
-- [ ] 37-02-PLAN.md — Roster management UI (Zustand store, roster page at /dashboard/marketplace/roster, add/invite medic modals, roster list with status badges and actions, invitation acceptance page)
-- [ ] 37-03-PLAN.md — Company profile and quote assignment (company profile page with stats and Meet the Team, medic availability modal, RosterMedicPicker for named-staff quotes, StaffingPlanSection wired to real roster data)
+- [x] 37-01-PLAN.md — Database foundation (migration 156: company_roster_medics junction table, RLS policies, roster validation trigger on quotes, aggregation trigger, TypeScript types, Zod schemas, 7 API routes, React Query hooks, availability utilities)
+- [x] 37-02-PLAN.md — Roster management UI (Zustand store, roster page at /dashboard/marketplace/roster, add/invite medic modals, roster list with status badges and actions, invitation acceptance page)
+- [x] 37-03-PLAN.md — Company profile and quote assignment (company profile page with stats and Meet the Team, medic availability modal, RosterMedicPicker for named-staff quotes, StaffingPlanSection wired to real roster data)
 
 ### Phase 38: Notifications & Alerts
 **Goal**: Medics receive timely notifications about matching events through their preferred channels, and all marketplace actions (quotes, awards, payments, ratings, messages) generate appropriate alerts
@@ -385,7 +385,7 @@ Plans:
 | 34.1. Self-Procured Jobs (INSERTED) | v4.0 | 0/6 | Planned | - |
 | 35. Award Flow & Payment | v4.0 | 0/4 | Not started | - |
 | 36. Ratings, Messaging & Disputes | v4.0 | 3/3 | Complete | 2026-02-20 |
-| 37. Company Accounts | v4.0 | 0/3 | Not started | - |
+| 37. Company Accounts | v4.0 | 3/3 | Complete | 2026-02-20 |
 | 38. Notifications & Alerts | v4.0 | 0/3 | Not started | - |
 | 39. Admin Dashboard | v4.0 | 0/3 | Not started | - |
 | 40. Comms & Docs Foundation | v5.0 | 2/2 | Complete | 2026-02-19 |
