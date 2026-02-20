@@ -90,7 +90,7 @@ export default function MyQuotesPage() {
     <div className="mx-auto max-w-4xl px-4 py-8">
       {/* Breadcrumb */}
       <nav className="mb-4 text-sm">
-        <Link href="/marketplace/events" className="text-blue-600 hover:text-blue-800">
+        <Link href="/events" className="text-blue-600 hover:text-blue-800">
           Marketplace
         </Link>
         <span className="mx-2 text-gray-400">/</span>
@@ -160,7 +160,7 @@ export default function MyQuotesPage() {
             Browse open events and submit your first quote to get started.
           </p>
           <Link
-            href="/marketplace/events"
+            href="/events"
             className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
           >
             Browse Events

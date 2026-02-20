@@ -159,13 +159,13 @@ export default function MarketplaceLanding() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-14">
             <Link
-              href="/marketplace/events/create"
+              href="/events/create"
               className="bg-white text-slate-900 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-blue-50 active:scale-95 transition shadow-xl text-center"
             >
               Post an Event
             </Link>
             <Link
-              href="/marketplace/register"
+              href="/register"
               className="border-2 border-white/50 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white/10 hover:border-white transition flex items-center justify-center gap-2"
             >
               Register as a Provider <ArrowRight className="w-5 h-5" />
@@ -268,7 +268,7 @@ export default function MarketplaceLanding() {
                 ))}
               </ul>
               <Link
-                href="/marketplace/for-clients"
+                href="/for-clients"
                 className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold text-sm transition"
               >
                 Learn more <ArrowRight className="w-4 h-4" />
@@ -296,7 +296,7 @@ export default function MarketplaceLanding() {
                 ))}
               </ul>
               <Link
-                href="/marketplace/for-companies"
+                href="/for-companies"
                 className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-semibold text-sm transition"
               >
                 Learn more <ArrowRight className="w-4 h-4" />
@@ -576,13 +576,13 @@ export default function MarketplaceLanding() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/marketplace/events/create"
+              href="/events/create"
               className="bg-white text-blue-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-blue-50 active:scale-95 transition shadow-xl"
             >
               Post Your First Event
             </Link>
             <Link
-              href="/marketplace/register"
+              href="/register"
               className="border-2 border-white/70 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-blue-700 hover:border-white transition flex items-center justify-center gap-2"
             >
               Join as a Provider <ArrowRight className="w-5 h-5" />

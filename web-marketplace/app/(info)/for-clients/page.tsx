@@ -78,13 +78,13 @@ export default function ForClients() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/marketplace/events/create"
+              href="/events/create"
               className="bg-white text-slate-900 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-blue-50 active:scale-95 transition shadow-xl text-center"
             >
               Post an Event
             </Link>
             <Link
-              href="/marketplace/client-register"
+              href="/client-register"
               className="border-2 border-white/50 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white/10 hover:border-white transition text-center"
             >
               Sign Up Free
@@ -385,13 +385,13 @@ export default function ForClients() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/marketplace/events/create"
+              href="/events/create"
               className="bg-white text-blue-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-blue-50 active:scale-95 transition shadow-xl"
             >
               Post an Event
             </Link>
             <Link
-              href="/marketplace"
+              href="/"
               className="border-2 border-white/70 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-blue-700 hover:border-white transition flex items-center justify-center gap-2"
             >
               Back to Marketplace <ArrowRight className="w-5 h-5" />

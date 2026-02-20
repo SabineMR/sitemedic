@@ -73,7 +73,7 @@ export default function EventQuotesPage() {
         <div className="rounded-md bg-red-50 border border-red-200 p-4">
           <p className="text-sm text-red-700">Event not found or could not be loaded.</p>
           <Link
-            href="/marketplace/events"
+            href="/events"
             className="text-sm text-blue-600 hover:text-blue-800 mt-2 inline-block"
           >
             Back to Browse Events
@@ -100,7 +100,7 @@ export default function EventQuotesPage() {
               Only the event poster can view received quotes.
             </p>
             <Link
-              href={`/marketplace/events/${eventId}`}
+              href={`/events/${eventId}`}
               className="text-sm text-blue-600 hover:text-blue-800 mt-2 inline-block"
             >
               Back to Event Details
@@ -119,12 +119,12 @@ export default function EventQuotesPage() {
     <div className="mx-auto max-w-4xl px-4 py-8">
       {/* Breadcrumb */}
       <nav className="mb-4 text-sm">
-        <Link href="/marketplace/events" className="text-blue-600 hover:text-blue-800">
+        <Link href="/events" className="text-blue-600 hover:text-blue-800">
           Browse Events
         </Link>
         <span className="mx-2 text-gray-400">/</span>
         <Link
-          href={`/marketplace/events/${eventId}`}
+          href={`/events/${eventId}`}
           className="text-blue-600 hover:text-blue-800"
         >
           {event.event_name}

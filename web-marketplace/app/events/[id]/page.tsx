@@ -122,7 +122,7 @@ export default function EventDetailPage() {
       <div className="mx-auto max-w-4xl px-4 py-8">
         <div className="rounded-md bg-red-50 border border-red-200 p-4">
           <p className="text-sm text-red-700">Event not found or could not be loaded.</p>
-          <Link href="/marketplace/events" className="text-sm text-blue-600 hover:text-blue-800 mt-2 inline-block">
+          <Link href="/events" className="text-sm text-blue-600 hover:text-blue-800 mt-2 inline-block">
             Back to Browse Events
           </Link>
         </div>
@@ -136,7 +136,7 @@ export default function EventDetailPage() {
     <div className="mx-auto max-w-4xl px-4 py-8">
       {/* Breadcrumb */}
       <nav className="mb-4 text-sm">
-        <Link href="/marketplace/events" className="text-blue-600 hover:text-blue-800">
+        <Link href="/events" className="text-blue-600 hover:text-blue-800">
           Browse Events
         </Link>
         <span className="mx-2 text-gray-400">/</span>
@@ -303,7 +303,7 @@ export default function EventDetailPage() {
       <div className="mt-8 flex items-center gap-3">
         {event.status === 'open' && !isPastDeadline ? (
           <Link
-            href={`/marketplace/events/${eventId}/quote`}
+            href={`/events/${eventId}/quote`}
             className="rounded-md bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
           >
             Submit a Quote
@@ -322,7 +322,7 @@ export default function EventDetailPage() {
         {/* View Quotes button — only visible to event poster */}
         {currentUserId && currentUserId === event.posted_by && (
           <Link
-            href={`/marketplace/events/${eventId}/quotes`}
+            href={`/events/${eventId}/quotes`}
             className="rounded-md border border-gray-300 bg-white px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
             View Quotes ({event.quote_count})

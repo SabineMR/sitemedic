@@ -105,7 +105,7 @@ export default function MyEventsPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">My Events</h1>
         <Link
-          href="/marketplace/events/create"
+          href="/events/create"
           className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           Post New Event
@@ -176,7 +176,7 @@ export default function MyEventsPage() {
           </p>
           {events.length === 0 && (
             <Link
-              href="/marketplace/events/create"
+              href="/events/create"
               className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
             >
               Post Your First Event
@@ -232,7 +232,7 @@ export default function MyEventsPage() {
                       {event.status === 'draft' && (
                         <>
                           <Link
-                            href={`/marketplace/events/${event.id}/edit`}
+                            href={`/events/${event.id}/edit`}
                             className="text-blue-600 hover:text-blue-800 text-xs"
                           >
                             Edit
@@ -255,7 +255,7 @@ export default function MyEventsPage() {
                       {event.status === 'open' && (
                         <>
                           <Link
-                            href={`/marketplace/events/${event.id}/edit`}
+                            href={`/events/${event.id}/edit`}
                             className="text-blue-600 hover:text-blue-800 text-xs"
                           >
                             Edit
@@ -276,7 +276,7 @@ export default function MyEventsPage() {
                       )}
                       {['closed', 'cancelled', 'awarded'].includes(event.status) && (
                         <Link
-                          href={`/marketplace/events/${event.id}`}
+                          href={`/events/${event.id}`}
                           className="text-blue-600 hover:text-blue-800 text-xs"
                         >
                           View

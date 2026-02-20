@@ -73,7 +73,7 @@ export default function ClientRegisterPage() {
             asChild
             className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-500 hover:to-blue-600"
           >
-            <Link href="/marketplace/events/new">
+            <Link href="/events/new">
               Post Your First Event
               <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
@@ -167,7 +167,7 @@ export default function ClientRegisterPage() {
         <div className="text-center text-sm">
           <span className="text-gray-500">Are you a medic company? </span>
           <Link
-            href="/marketplace/register"
+            href="/register"
             className="text-blue-400 hover:text-blue-300 font-medium"
           >
             Register as a provider

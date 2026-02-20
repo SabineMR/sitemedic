@@ -216,7 +216,7 @@ export default function FAQ() {
               Contact Us
             </Link>
             <Link
-              href="/marketplace"
+              href="/"
               className="border border-slate-200 text-slate-700 px-6 py-3 rounded-xl text-sm font-semibold hover:bg-white transition flex items-center justify-center gap-2"
             >
               Back to Marketplace <ArrowRight className="w-4 h-4" />

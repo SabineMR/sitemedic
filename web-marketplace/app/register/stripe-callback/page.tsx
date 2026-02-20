@@ -188,7 +188,7 @@ function StripeCallbackContent() {
           </p>
         </div>
         <div className="flex gap-4 mt-4">
-          <Link href="/marketplace/register/success">
+          <Link href="/register/success">
             <Button className="bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-500 hover:to-green-600">
               Continue
               <ArrowRight className="w-4 h-4 ml-2" />
@@ -224,7 +224,7 @@ function StripeCallbackContent() {
             <RefreshCw className="w-4 h-4 mr-2" />
             Check Again
           </Button>
-          <Link href="/marketplace/register/success">
+          <Link href="/register/success">
             <Button className="bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-500 hover:to-blue-600">
               Continue
               <ArrowRight className="w-4 h-4 ml-2" />
@@ -286,7 +286,7 @@ function StripeCallbackContent() {
         </p>
       </div>
       <div className="flex gap-4 mt-4">
-        <Link href="/marketplace/register">
+        <Link href="/register">
           <Button
             variant="outline"
             className="text-gray-300 border-gray-600 hover:bg-gray-700/50"

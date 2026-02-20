@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { OrgProvider } from '@/contexts/org-context';
+import { QueryProvider } from '@/components/providers/query-provider';
 import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
@@ -19,8 +21,12 @@ export default function RootLayout({
   return (
     <html lang="en-GB">
       <body className="antialiased">
-        {children}
-        <Toaster richColors position="top-right" />
+        <QueryProvider>
+          <OrgProvider>
+            {children}
+            <Toaster richColors position="top-right" />
+          </OrgProvider>
+        </QueryProvider>
       </body>
     </html>
   );

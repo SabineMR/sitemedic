@@ -150,7 +150,7 @@ export default function EditEventPage() {
         return;
       }
 
-      router.push('/marketplace/my-events');
+      router.push('/my-events');
     } catch {
       setError('An unexpected error occurred');
     } finally {
@@ -177,7 +177,7 @@ export default function EditEventPage() {
         return;
       }
 
-      router.push('/marketplace/my-events');
+      router.push('/my-events');
     } catch {
       setError('An unexpected error occurred');
     } finally {
@@ -201,7 +201,7 @@ export default function EditEventPage() {
       <div className="mx-auto max-w-3xl px-4 py-8">
         <div className="rounded-md bg-red-50 border border-red-200 p-4">
           <p className="text-sm text-red-700">Event not found.</p>
-          <Link href="/marketplace/my-events" className="text-sm text-blue-600 hover:text-blue-800 mt-2 inline-block">
+          <Link href="/my-events" className="text-sm text-blue-600 hover:text-blue-800 mt-2 inline-block">
             Back to My Events
           </Link>
         </div>
@@ -266,7 +266,7 @@ export default function EditEventPage() {
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
-            <Link href="/marketplace/my-events" className="text-sm text-gray-600 hover:text-gray-800">
+            <Link href="/my-events" className="text-sm text-gray-600 hover:text-gray-800">
               Cancel
             </Link>
           </div>
@@ -326,7 +326,7 @@ export default function EditEventPage() {
               <button onClick={handleSavePreQuotes} disabled={saving} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>
-              <Link href="/marketplace/my-events" className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+              <Link href="/my-events" className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
                 Cancel
               </Link>
             </>

@@ -320,7 +320,7 @@ export default function QuoteRankRow({
 
           {/* Actions */}
           <div className="flex items-center gap-3 pt-2 border-t">
-            <Link href={`/marketplace/companies/${quote.company_id}`}>
+            <Link href={`/companies/${quote.company_id}`}>
               <Button variant="outline" size="sm" className="gap-1.5">
                 <ExternalLink className="h-3.5 w-3.5" />
                 View Company Profile

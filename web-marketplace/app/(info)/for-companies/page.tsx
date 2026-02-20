@@ -77,13 +77,13 @@ export default function ForCompanies() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/marketplace/register"
+              href="/register"
               className="bg-emerald-500 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-emerald-600 active:scale-95 transition shadow-xl text-center"
             >
               Register Your Company
             </Link>
             <Link
-              href="/marketplace/events"
+              href="/events"
               className="border-2 border-white/50 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white/10 hover:border-white transition text-center"
             >
               Browse Events
@@ -277,7 +277,7 @@ export default function ForCompanies() {
                 ))}
               </ul>
               <Link
-                href="/marketplace/register"
+                href="/register"
                 className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-semibold text-sm transition"
               >
                 Register to get started <ArrowRight className="w-4 h-4" />
@@ -324,13 +324,13 @@ export default function ForCompanies() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/marketplace/register"
+              href="/register"
               className="bg-white text-emerald-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-emerald-50 active:scale-95 transition shadow-xl"
             >
               Register Your Company
             </Link>
             <Link
-              href="/marketplace"
+              href="/"
               className="border-2 border-white/70 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-emerald-700 hover:border-white transition flex items-center justify-center gap-2"
             >
               Back to Marketplace <ArrowRight className="w-5 h-5" />

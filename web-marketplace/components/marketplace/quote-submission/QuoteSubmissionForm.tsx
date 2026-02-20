@@ -177,7 +177,7 @@ export default function QuoteSubmissionForm({
       const quoteId = await store.submitQuote();
       toast.success('Quote submitted successfully!');
       // Redirect to event detail or success page
-      router.push(redirectPath || `/marketplace/events/${eventId}`);
+      router.push(redirectPath || `/events/${eventId}`);
     } catch (error) {
       toast.error('Failed to submit quote');
     }

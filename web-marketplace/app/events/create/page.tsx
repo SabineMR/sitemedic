@@ -158,7 +158,7 @@ export default function CreateEventPage() {
       }
 
       store.reset();
-      router.push('/marketplace/my-events');
+      router.push('/my-events');
     } catch {
       store.setError('An unexpected error occurred');
     } finally {

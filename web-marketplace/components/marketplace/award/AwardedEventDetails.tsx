@@ -360,7 +360,7 @@ export default function AwardedEventDetails({ eventId }: AwardedEventDetailsProp
           </div>
           <div className="mt-4 pt-3 border-t">
             <Link
-              href="/marketplace/payments"
+              href="/payments"
               className="text-sm text-blue-600 hover:text-blue-800"
             >
               Manage payment method

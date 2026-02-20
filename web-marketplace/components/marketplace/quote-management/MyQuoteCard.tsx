@@ -201,7 +201,7 @@ export default function MyQuoteCard({ quote, onEdit, onRefresh }: MyQuoteCardPro
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="min-w-0 flex-1">
           <Link
-            href={`/marketplace/events/${event.id}`}
+            href={`/events/${event.id}`}
             className="text-base font-semibold text-gray-900 hover:text-blue-600 transition-colors inline-flex items-center gap-1"
           >
             {event.event_name}
@@ -249,7 +249,7 @@ export default function MyQuoteCard({ quote, onEdit, onRefresh }: MyQuoteCardPro
         {/* Draft actions */}
         {quote.status === 'draft' && (
           <>
-            <Link href={`/marketplace/events/${event.id}/quote`}>
+            <Link href={`/events/${event.id}/quote`}>
               <Button variant="default" size="sm">
                 <Pencil className="h-3.5 w-3.5 mr-1" />
                 Continue Editing

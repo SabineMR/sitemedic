@@ -813,7 +813,7 @@ function StepReviewSubmit({ onBack }: { onBack: () => void }) {
 
   const handleSkipStripe = () => {
     store.reset();
-    router.push('/marketplace/register/success');
+    router.push('/register/success');
   };
 
   // ---- Post-registration: Stripe onboarding step ----
