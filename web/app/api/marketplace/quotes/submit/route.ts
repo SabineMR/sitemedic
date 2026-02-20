@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           message: 'Validation failed',
-          errors: validation.error.errors,
+          errors: validation.error.issues,
         },
         { status: 400 }
       );
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     // 2. Authenticate user
     // =========================================================================
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const {
       data: { user },

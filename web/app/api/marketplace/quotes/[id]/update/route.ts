@@ -176,7 +176,7 @@ export async function PATCH(
         {
           success: false,
           message: 'Validation failed',
-          errors: validation.error.errors,
+          errors: validation.error.issues,
         },
         { status: 400 }
       );

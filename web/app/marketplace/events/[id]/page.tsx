@@ -1,8 +1,11 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { createBrowserClient } from '@supabase/ssr';
 import { useMarketplaceEvent } from '@/lib/queries/marketplace/events';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   EVENT_TYPE_LABELS,
   EVENT_STATUS_LABELS,
@@ -11,6 +14,19 @@ import {
   INDOOR_OUTDOOR_LABELS,
 } from '@/lib/marketplace/event-types';
 import type { EventDay, EventStaffingRequirement } from '@/lib/marketplace/event-types';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { CalendarPlus } from 'lucide-react';
+import { toast } from 'sonner';
 
 const STATUS_COLOURS: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-700',
@@ -41,8 +57,53 @@ function formatDate(dateStr: string): string {
 export default function EventDetailPage() {
   const params = useParams();
   const eventId = params.id as string;
+  const queryClient = useQueryClient();
   const { data, isLoading, error } = useMarketplaceEvent(eventId);
   const event = data?.event;
+
+  // Get current user to determine if they are the event poster
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUserId(user?.id || null);
+    });
+  }, []);
+
+  // Extend Deadline state
+  const [extendDialogOpen, setExtendDialogOpen] = useState(false);
+  const [newDeadline, setNewDeadline] = useState('');
+  const [isExtending, setIsExtending] = useState(false);
+
+  const handleExtendDeadline = async () => {
+    if (!newDeadline) return;
+    setIsExtending(true);
+    try {
+      const res = await fetch(`/api/marketplace/events/${eventId}/extend-deadline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_deadline: new Date(newDeadline).toISOString() }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Failed to extend deadline');
+      }
+
+      toast.success('Deadline extended');
+      setExtendDialogOpen(false);
+      setNewDeadline('');
+      queryClient.invalidateQueries({ queryKey: ['marketplace-event', eventId] });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to extend deadline';
+      toast.error(message);
+    } finally {
+      setIsExtending(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -257,7 +318,82 @@ export default function EventDetailPage() {
             Submit a Quote
           </button>
         )}
+
+        {/* View Quotes button — only visible to event poster */}
+        {currentUserId && currentUserId === event.posted_by && (
+          <Link
+            href={`/marketplace/events/${eventId}/quotes`}
+            className="rounded-md border border-gray-300 bg-white px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            View Quotes ({event.quote_count})
+          </Link>
+        )}
+
+        {/* Extend Deadline button — only visible to event poster, open events, not yet extended */}
+        {currentUserId &&
+          currentUserId === event.posted_by &&
+          event.status === 'open' &&
+          !event.deadline_extended && (
+            <Button
+              variant="outline"
+              size="default"
+              onClick={() => setExtendDialogOpen(true)}
+              className="text-amber-700 border-amber-300 hover:bg-amber-50"
+            >
+              <CalendarPlus className="h-4 w-4 mr-1.5" />
+              Extend Deadline
+            </Button>
+          )}
       </div>
+
+      {/* Extend Deadline Dialog */}
+      <Dialog open={extendDialogOpen} onOpenChange={setExtendDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Extend Quote Deadline</DialogTitle>
+            <DialogDescription>
+              Choose a new deadline for quote submissions. You can only extend the deadline once.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-3">
+            <div>
+              <Label className="text-sm">Current Deadline</Label>
+              <p className="text-sm text-gray-600 mt-1">
+                {new Date(event.quote_deadline).toLocaleDateString('en-GB', {
+                  weekday: 'short',
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="newDeadline" className="text-sm">New Deadline</Label>
+              <Input
+                id="newDeadline"
+                type="datetime-local"
+                value={newDeadline}
+                onChange={(e) => setNewDeadline(e.target.value)}
+                min={new Date(event.quote_deadline).toISOString().slice(0, 16)}
+                className="mt-1"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExtendDialogOpen(false)} disabled={isExtending}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleExtendDeadline}
+              disabled={isExtending || !newDeadline}
+            >
+              {isExtending ? 'Extending...' : 'Extend Deadline'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

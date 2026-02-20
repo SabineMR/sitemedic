@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     // 2. Fetch quotes for event (non-draft only)
     // =========================================================================
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
     let query = supabase
       .from('marketplace_quotes')

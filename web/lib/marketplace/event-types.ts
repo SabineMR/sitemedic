@@ -63,6 +63,7 @@ export interface MarketplaceEvent {
   status: EventStatus;
   has_quotes: boolean;
   quote_count: number;
+  deadline_extended: boolean;
   equipment_required: EquipmentItem[];
   created_at: string;
   updated_at: string;

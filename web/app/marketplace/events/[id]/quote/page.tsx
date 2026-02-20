@@ -15,12 +15,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
 interface QuotePageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function QuotePage({ params }: QuotePageProps) {
-  const eventId = params.id;
-  const supabase = createClient();
+  const { id: eventId } = await params;
+  const supabase = await createClient();
 
   // =========================================================================
   // Fetch event details

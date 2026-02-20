@@ -42,7 +42,7 @@ export default function QuoteSubmissionForm({
   const store = useQuoteFormStore();
   const [rateViolations, setRateViolations] = useState<any[]>([]);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const draftSaveTimerRef = useRef<NodeJS.Timeout>();
+  const draftSaveTimerRef = useRef<NodeJS.Timeout>(undefined);
 
   // =========================================================================
   // Initialization
