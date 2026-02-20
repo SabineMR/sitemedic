@@ -78,6 +78,8 @@ const STATUS_STYLES: Record<QuoteStatus, string> = {
   submitted: 'bg-green-100 text-green-700',
   revised: 'bg-amber-100 text-amber-700',
   withdrawn: 'bg-red-100 text-red-700',
+  awarded: 'bg-blue-100 text-blue-700',
+  rejected: 'bg-slate-100 text-slate-600',
 };
 
 const STATUS_LABELS: Record<QuoteStatus, string> = {
@@ -85,6 +87,8 @@ const STATUS_LABELS: Record<QuoteStatus, string> = {
   submitted: 'Submitted',
   revised: 'Revised',
   withdrawn: 'Withdrawn',
+  awarded: 'Awarded',
+  rejected: 'Not Selected',
 };
 
 function timeAgo(dateStr: string): string {
