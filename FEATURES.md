@@ -294,6 +294,28 @@ Org admins can send broadcast messages to all medics in their organisation. Broa
 
 ### Phase 46: Expiry Tracking & Alerts (2026-02-20)
 
+#### Document Expiry Alert Infrastructure (Plan 01)
+
+| Feature | Description | Key Files |
+|---------|-------------|-----------|
+| **Expiry Reminders Audit Table** | `document_expiry_reminders` table tracks all sent alerts with deduplication. Columns: document_id, document_version_id, medic_id, org_id, days_before (30/14/7/1), sent_at, resend_message_id, recipient_type (medic/admin). Composite index on (document_version_id, days_before, recipient_type) prevents duplicate alerts. RLS enabled with org-scoped SELECT policy. | `supabase/migrations/155_document_expiry_reminders.sql` |
+| **Get Documents Expiring RPC** | `get_documents_expiring_in_days(days_ahead)` function returns documents whose current version expiry_date matches CURRENT_DATE + days_ahead. JOINs documents -> document_versions (via current_version_id) -> medics -> document_categories. Excludes NULL expiry_date, archived documents, and medics without email. Returns document_id, version_id, medic info, category_name, file_name, formatted expiry_date, days_remaining. SECURITY DEFINER for Edge Function use. | `supabase/migrations/155_document_expiry_reminders.sql` |
+| **Mark Expired Documents** | `mark_expired_documents()` function sets documents.status = 'expired' for documents whose current version expiry_date < CURRENT_DATE. Excludes already archived or expired documents. Called daily after alert processing. | `supabase/migrations/155_document_expiry_reminders.sql` |
+| **Daily pg_cron Job** | Scheduled at 08:00 UTC (8am GMT / 9am BST) via pg_cron. Calls document-expiry-checker Edge Function using Vault secrets (project_url, service_role_key) for authentication. Idempotent with DO $$ block to unschedule existing job before re-creating. | `supabase/migrations/155_document_expiry_reminders.sql` |
+| **Document Expiry Checker Edge Function** | Deno Edge Function processes 4 reminder stages (30, 14, 7, 1 days). For each stage: queries RPC, deduplicates via reminders table, groups by medic, sends digest emails. Admin org-wide digest at critical stages (14, 7, 1). Each stage wrapped in try/catch for batch resilience. Calls mark_expired_documents after all stages. Returns JSON with medic/admin reminder counts. | `supabase/functions/document-expiry-checker/index.ts` |
+| **Medic Digest Email Template** | `sendMedicDigestEmail()` sends one email per medic listing all their documents hitting a threshold. Escalating urgency: blue (30d), blue (14d), amber (7d), red (1d). HTML table with Category, File, Expiry Date, Days columns. CTA button "Upload Replacement Document" linking to /documents. Subject line escalates: Reminder -> Action Required -> URGENT -> CRITICAL. | `supabase/functions/document-expiry-checker/email-templates.ts` |
+| **Admin Digest Email Template** | `sendAdminDigestEmail()` sends org-wide digest to site_manager (fallback: org_settings.admin_email). Groups documents by medic name with separate tables per medic. CTA button "View Expiry Dashboard" linking to /admin/document-expiry. Same urgency escalation as medic emails. | `supabase/functions/document-expiry-checker/email-templates.ts` |
+| **Dev Mode Email Fallback** | When RESEND_API_KEY is not configured, emails are logged to console instead of sent. Returns 'dev-mode-mock-id' as message ID. Enables development without Resend credentials. | `supabase/functions/document-expiry-checker/email-templates.ts` |
+
+**Key decisions:**
+- Daily digest format (not one email per document) -- medic receives one email listing all documents at a threshold
+- Admin receives separate org-wide digest at critical stages only (14/7/1 days, not 30)
+- Deduplication tracks document_version_id (not document_id) -- new version upload naturally avoids stale alerts
+- Only current document version expiry_date is queried (via documents.current_version_id JOIN)
+- NULL expiry_date and archived documents excluded from all queries
+- mark_expired_documents sets status to 'expired' (informational, no blocking)
+- Admin email resolution: profiles.role='site_manager' first, org_settings.admin_email as fallback
+
 #### Bulk Document Expiry Dashboard (Plan 02)
 
 | Feature | Description | Key Files |
