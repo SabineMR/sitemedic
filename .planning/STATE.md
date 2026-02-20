@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v5.0 Internal Comms — Phase 42 (iOS Messaging & Offline)
+**Current focus:** v4.0 Marketplace — Phase 34.1 (Self-Procured Jobs)
 
 ## Current Position
 
-Phase: 42 of 47 (iOS Messaging & Offline)
-Plan: 2 of 3 in current phase
+Phase: 34.1 of 47 (Self-Procured Jobs — INSERTED)
+Plan: 4 of 5 in current phase
 Status: In progress
-Last activity: 2026-02-20 — Completed 42-02-PLAN.md (iOS Conversation List and Thread UI)
+Last activity: 2026-02-20 — Completed 34.1-04-PLAN.md (Payment, Booking Bridge, Medic Assignment, Job Detail)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████░░░░░░] v4.0 31% | [████░░░░░░] v5.0 38%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████░░░░░░] v4.0 35% | [████░░░░░░] v5.0 38%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 197 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 11 v4.0 + 7 v5.0)
+- Total plans completed: 198 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 12 v4.0 + 7 v5.0)
 - Average duration: 3.9 min
-- Total execution time: ~13.5 hours
+- Total execution time: ~13.6 hours
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 11/26 | ~119 min | ~6.5 min |
+| v4.0 | 8 | 12/26 | ~128 min | ~6.4 min |
 | v5.0 | 8 | 7/21 | ~33 min | ~4.7 min |
 
 *Updated after each plan completion*
@@ -91,6 +91,9 @@ Recent decisions affecting current work:
 - [42-02]: Return key sends message (no multi-line), matching CONTEXT.md requirement
 - [42-02]: MedicPicker talks to Supabase directly (not Next.js API routes) for iOS app
 - [42-02]: Mark-as-read fires on thread mount (local WatermelonDB + Supabase upsert)
+- [34-03]: EditQuoteDialog uses local useState (not Zustand) to avoid state conflicts with create flow
+- [34-03]: Deadline extension is one-time only via deadline_extended boolean on marketplace_events
+- [34-03]: Quote edit sets status='revised' + last_revised_at; withdraw sets status='withdrawn' + withdrawn_at
 
 ### Pending Todos
 
