@@ -9,17 +9,17 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 
 ## Current Position
 
-Phase: 34 of 47 (Quote Submission & Comparison — COMPLETE)
-Plan: 3 of 3 in current phase (PHASE COMPLETE — VERIFIED)
-Status: Phase complete, verified ✓
-Last activity: 2026-02-20 — Phase 34 verified (7/7 must-haves, 27/27 artifacts)
+Phase: 34.1 of 47 (Self-Procured Jobs — Gap Closure COMPLETE)
+Plan: 6 of 6 in current phase (PHASE COMPLETE)
+Status: Phase 34.1 gap closure complete
+Last activity: 2026-02-20 — Completed 34.1-06-PLAN.md (subscription gate + client portal wiring)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [█████░░░░░] v4.0 38% | [████░░░░░░] v5.0 38%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [██████░░░░] v4.0 42% | [████░░░░░░] v5.0 38%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 200 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 14 v4.0 + 7 v5.0)
+- Total plans completed: 201 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 15 v4.0 + 7 v5.0)
 - Average duration: 3.9 min
 - Total execution time: ~13.8 hours
 
@@ -31,7 +31,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 14/26 | ~228 min | ~6.8 min |
+| v4.0 | 8 | 15/26 | ~229 min | ~6.6 min |
 | v5.0 | 8 | 7/21 | ~33 min | ~4.7 min |
 
 *Updated after each plan completion*
@@ -107,6 +107,9 @@ Recent decisions affecting current work:
 - [34-02]: Company name always visible before award; medic names masked as "First L."
 - [34-02]: Company profile access-controlled via quote relationship check (must have quote on viewer's event)
 - [34-02]: Zod v4 now installed in web package (v4.3.6) -- .errors renamed to .issues, .partial() disallowed on refined schemas
+- [34.1-06]: Subscription check uses marketplace_companies.org_id -> organizations join (NOT requireTier helper, which resolves from user app_metadata)
+- [34.1-06]: NULL subscription_status treated as active (legacy orgs per migration 133 convention)
+- [34.1-06]: Booking existence check for deposit_paid uses name+postcode+org+date matching (TODO for proper FK)
 
 ### Pending Todos
 
@@ -137,5 +140,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 34-02-PLAN.md (Quote Comparison & Company Profile)
+Stopped at: Completed 34.1-06-PLAN.md (Gap Closure: subscription gate + client portal wiring)
 Resume file: None
