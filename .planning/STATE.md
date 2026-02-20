@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v5.0 Internal Comms — Phase 43 (Real-time & Push Notifications) next
+**Current focus:** v4.0 MedBid Marketplace — Phase 35 (Award Flow & Payment) executing
 
 ## Current Position
 
-Phase: 42 of 47 (iOS Messaging & Offline — COMPLETE)
-Plan: 3 of 3 in current phase (PHASE COMPLETE — VERIFIED)
-Status: Phase complete, verified ✓
-Last activity: 2026-02-20 — Phase 42 verified (4/4 must-haves, 2 gap fixes applied)
+Phase: 35 of 47 (Award Flow & Payment — IN PROGRESS)
+Plan: 1 of 4 in current phase (35-01 complete)
+Status: Executing phase 35
+Last activity: 2026-02-20 — Plan 35-01 complete (migration 149, award types/schemas/calculations, API route, Zustand store)
 
 Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [██████░░░░] v4.0 50% | [█████░░░░░] v5.0 48%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 211 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 21 v4.0 + 11 v5.0)
+- Total plans completed: 212 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 22 v4.0 + 11 v5.0)
 - Average duration: 3.9 min
 - Total execution time: ~13.9 hours
 
@@ -31,7 +31,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 21/32 | ~279 min | ~6.0 min |
+| v4.0 | 8 | 22/32 | ~285 min | ~6.0 min |
 | v5.0 | 8 | 11/21 | ~58 min | ~5.3 min |
 
 *Updated after each plan completion*
@@ -117,6 +117,11 @@ Recent decisions affecting current work:
 - [42-03]: 24-hour timeout for stale queued messages (time-based, not retry-count-based)
 - [42-03]: Push-then-pull ordering on reconnect (send queued first, then fetch new)
 - [42-03]: Offline banners use amber-100 (#FEF3C7) consistent across messaging screens
+- [35-01]: Deposit % configurable by event type (construction/motorsport=50%, others=25%) via const map (admin UI in Phase 39)
+- [35-01]: Two Stripe PaymentIntents: deposit with setup_future_usage:'off_session' + separate remainder PI later
+- [35-01]: EXCLUSION constraint check at award time for named_medics staffing plans (queries medic_commitments for time overlaps)
+- [35-01]: client_payment_methods table uses auth.users FK (not profiles) for marketplace client identity
+- [35-01]: Dev mock PaymentIntent pattern from direct-jobs reused for marketplace award API
 
 ### Pending Todos
 
@@ -147,5 +152,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed Phase 42 (iOS Messaging & Offline) — verified 4/4 must-haves with 2 gap fixes
+Stopped at: Phase 35 plan 01 complete, executing plan 02 next
 Resume file: None
