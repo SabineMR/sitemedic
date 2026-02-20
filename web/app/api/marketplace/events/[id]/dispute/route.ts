@@ -19,6 +19,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createNotification } from '@/lib/marketplace/create-notification';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -267,21 +268,77 @@ export async function POST(
       }
     }
 
-    // Fire-and-forget: send dispute filed notification
+    // Fire-and-forget: notify the other party that a dispute was filed
     try {
-      const { sendDisputeFiledNotification } = await import('@/lib/marketplace/notifications');
-      sendDisputeFiledNotification({
-        recipientEmail: '', // Will be populated by notification service
-        recipientName: '',
-        eventName: '',
-        eventId,
-        disputeCategory: category,
-        filedByName: filedByType === 'client' ? 'the client' : 'the company',
-      }).catch((err: unknown) => {
-        console.warn('[Marketplace Disputes POST] Notification failed (non-fatal):', err);
-      });
-    } catch {
-      console.log('[Marketplace Disputes POST] Notification module not available yet');
+      // Determine who to notify (the other party)
+      let recipientUserId: string | null = null;
+      let recipientEmail: string | null = null;
+      let recipientName = '';
+
+      if (filedByType === 'client') {
+        // Filer = client, notify = awarded company admin
+        const { data: awardedQ } = await supabase
+          .from('marketplace_quotes')
+          .select('company_id, marketplace_companies!inner(admin_user_id, company_name, company_email)')
+          .eq('event_id', eventId)
+          .eq('status', 'awarded')
+          .single();
+
+        if (awardedQ) {
+          const co = awardedQ.marketplace_companies as unknown as {
+            admin_user_id: string;
+            company_name: string;
+            company_email: string;
+          };
+          recipientUserId = co.admin_user_id;
+          recipientEmail = co.company_email;
+          recipientName = co.company_name;
+        }
+      } else {
+        // Filer = company, notify = event poster (client)
+        recipientUserId = event.posted_by;
+        const { data: clientProfile } = await supabase
+          .from('profiles')
+          .select('email, full_name')
+          .eq('id', event.posted_by)
+          .single();
+        recipientEmail = clientProfile?.email ?? null;
+        recipientName = clientProfile?.full_name ?? 'Client';
+      }
+
+      if (recipientUserId) {
+        createNotification({
+          userId: recipientUserId,
+          type: 'dispute_filed',
+          title: 'Dispute filed',
+          body: `A ${category.replace('_', ' ')} dispute was filed for event "${eventId}"`,
+          link: `/marketplace/events/${eventId}`,
+          metadata: {
+            event_id: eventId,
+            dispute_id: dispute.id,
+            category,
+            filed_by_type: filedByType,
+          },
+        }).catch((err: unknown) => {
+          console.warn('[Marketplace Disputes POST] Dashboard notification failed (non-fatal):', err);
+        });
+      }
+
+      if (recipientEmail) {
+        const { sendDisputeFiledNotification } = await import('@/lib/marketplace/notifications');
+        sendDisputeFiledNotification({
+          recipientEmail,
+          recipientName,
+          eventName: eventId, // event name not available here without extra query
+          eventId,
+          disputeCategory: category,
+          filedByName: filedByType === 'client' ? 'the client' : 'the company',
+        }).catch((err: unknown) => {
+          console.warn('[Marketplace Disputes POST] Email notification failed (non-fatal):', err);
+        });
+      }
+    } catch (notifErr) {
+      console.warn('[Marketplace Disputes POST] Notification setup failed (non-fatal):', notifErr);
     }
 
     return NextResponse.json({ success: true, dispute });

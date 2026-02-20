@@ -20,6 +20,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createNotification } from '@/lib/marketplace/create-notification';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -76,7 +77,23 @@ export async function GET(
     // Fetch all ratings for this event
     const { data: ratings, error: ratingsError } = await supabase
       .from('job_ratings')
-      .select('id, rater_user_id, rater_type, rating, review, blind_window_expires_at, created_at, updated_at')
+      .select(`
+        id,
+        booking_id,
+        rater_user_id,
+        rater_type,
+        rating,
+        review,
+        blind_window_expires_at,
+        moderation_status,
+        created_at,
+        updated_at,
+        rating_response_time,
+        rating_professionalism,
+        rating_equipment,
+        rating_communication,
+        rating_value
+      `)
       .eq('job_id', eventId)
       .order('created_at', { ascending: true });
 
@@ -307,6 +324,47 @@ export async function POST(
     if (upsertError) {
       console.error('[Marketplace Ratings POST] Upsert error:', upsertError);
       return NextResponse.json({ error: 'Failed to submit rating' }, { status: 500 });
+    }
+
+    // Fire-and-forget: notify the other party that a rating was received
+    // (during blind window, recipient won't see it until window expires — but
+    //  the notification itself is created immediately and marked unread)
+    try {
+      // Determine who to notify: if rater is client -> notify company admin; if company -> notify client
+      let recipientUserId: string | null = null;
+
+      if (raterType === 'client') {
+        // Notify the awarded company admin
+        const { data: awarded } = await supabase
+          .from('marketplace_quotes')
+          .select('marketplace_companies!inner(admin_user_id)')
+          .eq('event_id', eventId)
+          .eq('status', 'awarded')
+          .single();
+
+        const awardedCo = awarded?.marketplace_companies as unknown as { admin_user_id: string } | null;
+        recipientUserId = awardedCo?.admin_user_id ?? null;
+      } else {
+        // Notify the event poster (client)
+        recipientUserId = event.posted_by;
+      }
+
+      if (recipientUserId) {
+        await createNotification({
+          userId: recipientUserId,
+          type: 'rating_received',
+          title: 'You received a new rating',
+          body: `A rating has been submitted for your event "${eventId}"`,
+          link: `/marketplace/events/${eventId}`,
+          metadata: {
+            event_id: eventId,
+            rater_type: raterType,
+            rating,
+          },
+        });
+      }
+    } catch (notifErr) {
+      console.error('[Marketplace Ratings POST] Notification failed (non-fatal):', notifErr);
     }
 
     return NextResponse.json({ success: true, rating: upserted });

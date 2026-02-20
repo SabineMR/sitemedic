@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendRatingNudgeNotification } from '@/lib/marketplace/notifications';
+import { createNotification } from '@/lib/marketplace/create-notification';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -33,15 +34,12 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Find completed events from 48+ hours ago that haven't had nudges sent
-    const cutoffDate = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
-
+    // Find completed events that haven't had nudges sent
     const { data: events, error: eventsError } = await supabase
       .from('marketplace_events')
-      .select('id, event_name, posted_by, updated_at')
+      .select('id, event_name, posted_by')
       .eq('status', 'completed')
       .is('rating_nudge_sent_at', null)
-      .lte('updated_at', cutoffDate)
       .limit(50); // Process in batches
 
     if (eventsError) {
@@ -56,8 +54,27 @@ export async function POST(request: NextRequest) {
     let processed = 0;
     let errors = 0;
 
+    const cutoffMs = 48 * 60 * 60 * 1000; // 48 hours in ms
+
     for (const event of events) {
       try {
+        // Check last event day — only nudge if 48+ hours after last event day
+        const { data: lastDay } = await supabase
+          .from('event_days')
+          .select('date')
+          .eq('event_id', event.id)
+          .order('date', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (lastDay) {
+          const lastDayEnd = new Date(lastDay.date);
+          lastDayEnd.setHours(23, 59, 59, 999); // End of last event day
+          if (Date.now() - lastDayEnd.getTime() < cutoffMs) {
+            continue; // Too soon — skip this event
+          }
+        }
+
         // Get awarded company
         const { data: awardedQuote } = await supabase
           .from('marketplace_quotes')
@@ -109,6 +126,19 @@ export async function POST(request: NextRequest) {
             eventId: event.id,
             recipientRole: 'client',
           });
+          // Dashboard notification alongside email
+          try {
+            await createNotification({
+              userId: event.posted_by,
+              type: 'rating_nudge',
+              title: 'Don\'t forget to leave a rating',
+              body: `How was your experience with "${event.event_name}"? Your feedback matters.`,
+              link: `/marketplace/events/${event.id}`,
+              metadata: { event_id: event.id, recipient_role: 'client' },
+            });
+          } catch (notifErr) {
+            console.error(`[Rating Nudge Cron] Dashboard notification failed for client ${event.posted_by}:`, notifErr);
+          }
         }
 
         if (!ratedUserIds.has(company.admin_user_id)) {
@@ -119,6 +149,19 @@ export async function POST(request: NextRequest) {
             eventId: event.id,
             recipientRole: 'company',
           });
+          // Dashboard notification alongside email
+          try {
+            await createNotification({
+              userId: company.admin_user_id,
+              type: 'rating_nudge',
+              title: 'Don\'t forget to leave a rating',
+              body: `How was your experience with "${event.event_name}"? Your feedback helps build trust.`,
+              link: `/marketplace/events/${event.id}`,
+              metadata: { event_id: event.id, recipient_role: 'company' },
+            });
+          } catch (notifErr) {
+            console.error(`[Rating Nudge Cron] Dashboard notification failed for company ${company.admin_user_id}:`, notifErr);
+          }
         }
 
         // Mark nudge as sent

@@ -22,6 +22,7 @@ import {
   sendClientDepositConfirmation,
   sendRemainderFailedNotification,
 } from '@/lib/marketplace/notifications';
+import { createNotification, createBulkNotifications } from '@/lib/marketplace/create-notification';
 import Stripe from 'stripe';
 
 export const dynamic = 'force-dynamic';
@@ -356,6 +357,89 @@ export async function POST(request: NextRequest) {
             }
           }
 
+          // --- Dashboard notifications (fire-and-forget) ---
+
+          // quote_awarded → winning company admin
+          if (winningCompany?.admin_user_id) {
+            try {
+              await createNotification({
+                userId: winningCompany.admin_user_id,
+                type: 'quote_awarded',
+                title: 'Quote awarded',
+                body: `Your quote for "${mktEvent.event_name}" has been awarded. Deposit confirmed.`,
+                link: `/marketplace/events/${eventId}`,
+                metadata: { event_id: eventId, quote_id: quoteId, deposit_amount: depositAmount },
+              });
+            } catch (notifErr) {
+              console.error('[Webhook] quote_awarded notification failed:', notifErr);
+            }
+          }
+
+          // payment_received → both winning company admin and event poster (client)
+          const paymentReceivedNotifs = [];
+          if (winningCompany?.admin_user_id) {
+            paymentReceivedNotifs.push({
+              userId: winningCompany.admin_user_id,
+              type: 'payment_received' as const,
+              title: 'Deposit received',
+              body: `Deposit of £${depositAmount.toFixed(2)} received for "${mktEvent.event_name}"`,
+              link: `/marketplace/events/${eventId}`,
+              metadata: { event_id: eventId, quote_id: quoteId, deposit_amount: depositAmount },
+            });
+          }
+          if (mktEvent.posted_by) {
+            paymentReceivedNotifs.push({
+              userId: mktEvent.posted_by,
+              type: 'payment_received' as const,
+              title: 'Deposit confirmed',
+              body: `Your deposit of £${depositAmount.toFixed(2)} for "${mktEvent.event_name}" was processed successfully`,
+              link: `/marketplace/events/${eventId}`,
+              metadata: { event_id: eventId, quote_id: quoteId, deposit_amount: depositAmount },
+            });
+          }
+          if (paymentReceivedNotifs.length > 0) {
+            try {
+              await createBulkNotifications(paymentReceivedNotifs);
+            } catch (notifErr) {
+              console.error('[Webhook] payment_received notifications failed:', notifErr);
+            }
+          }
+
+          // quote_rejected → all losing company admins
+          if (losingQuoteIds.length > 0) {
+            try {
+              const { data: losingQuoteCompanies } = await supabase
+                .from('marketplace_quotes')
+                .select('company_id')
+                .in('id', losingQuoteIds);
+
+              if (losingQuoteCompanies && losingQuoteCompanies.length > 0) {
+                const losingCompanyIds = [...new Set(losingQuoteCompanies.map((q) => q.company_id))];
+                const { data: losingCos } = await supabase
+                  .from('marketplace_companies')
+                  .select('admin_user_id')
+                  .in('id', losingCompanyIds);
+
+                const rejectedNotifs = (losingCos || [])
+                  .filter((c) => c.admin_user_id)
+                  .map((c) => ({
+                    userId: c.admin_user_id as string,
+                    type: 'quote_rejected' as const,
+                    title: 'Quote not selected',
+                    body: `Your quote for "${mktEvent.event_name}" was not selected`,
+                    link: `/marketplace/events`,
+                    metadata: { event_id: eventId },
+                  }));
+
+                if (rejectedNotifs.length > 0) {
+                  await createBulkNotifications(rejectedNotifs);
+                }
+              }
+            } catch (notifErr) {
+              console.error('[Webhook] quote_rejected notifications failed:', notifErr);
+            }
+          }
+
           break;
         }
 
@@ -500,6 +584,26 @@ export async function POST(request: NextRequest) {
                       attempt: newAttemptCount,
                       maxAttempts: 3,
                     });
+                  }
+
+                  // payment_failed dashboard notification → client
+                  if (clientPm?.user_id) {
+                    try {
+                      await createNotification({
+                        userId: clientPm.user_id,
+                        type: 'payment_failed',
+                        title: 'Remainder payment failed',
+                        body: `We were unable to charge your card for "${failedBookingDetails?.site_name || 'your event'}". Please update your payment method.`,
+                        link: '/marketplace/payments',
+                        metadata: {
+                          booking_id: failedBookingId,
+                          remainder_amount: failedBookingDetails?.remainder_amount,
+                          attempt: newAttemptCount,
+                        },
+                      });
+                    } catch (notifErr) {
+                      console.error('[Webhook] payment_failed notification failed:', notifErr);
+                    }
                   }
                 }
               }

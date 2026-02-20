@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { quoteSubmissionSchema } from '@/lib/marketplace/quote-schemas';
 import { validateAgainstMinimumRates } from '@/lib/marketplace/minimum-rates';
 
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     const { data: company, error: companyError } = await supabase
       .from('marketplace_companies')
-      .select('id')
+      .select('id, company_name')
       .eq('admin_user_id', user.id)
       .eq('verification_status', 'verified')
       .eq('can_submit_quotes', true)
@@ -117,7 +118,7 @@ export async function POST(request: NextRequest) {
 
     const { data: event, error: eventError } = await supabase
       .from('marketplace_events')
-      .select('id, status, quote_deadline')
+      .select('id, status, quote_deadline, posted_by, event_name')
       .eq('id', quoteData.event_id)
       .single();
 
@@ -215,6 +216,9 @@ export async function POST(request: NextRequest) {
     // 7. Insert or update quote
     // =========================================================================
 
+    let finalQuoteId: string;
+    let responseStatus: 200 | 201;
+
     if (existingQuote && existingQuote.status === 'draft') {
       // Update existing draft
       const { data: updatedQuote, error: updateError } = await supabase
@@ -241,14 +245,8 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      return NextResponse.json(
-        {
-          success: true,
-          message: 'Quote submitted successfully',
-          quoteId: updatedQuote.id,
-        },
-        { status: 200 }
-      );
+      finalQuoteId = updatedQuote.id;
+      responseStatus = 200;
     } else {
       // Create new quote
       const { data: newQuote, error: insertError } = await supabase
@@ -275,15 +273,47 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      return NextResponse.json(
-        {
-          success: true,
-          message: 'Quote submitted successfully',
-          quoteId: newQuote.id,
-        },
-        { status: 201 }
-      );
+      finalQuoteId = newQuote.id;
+      responseStatus = 201;
     }
+
+    // Fire-and-forget: notify event poster of new quote received
+    // Uses service-role client (inline) so the INSERT works even though
+    // the anon-key client would be denied by RLS for other users' rows.
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (supabaseUrl && serviceKey && event.posted_by) {
+        const srClient = createServiceClient(supabaseUrl, serviceKey, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        });
+        srClient.from('user_notifications').insert({
+          user_id: event.posted_by,
+          type: 'quote_received',
+          title: 'New quote received',
+          body: `${company.company_name} submitted a quote for "${event.event_name}"`,
+          link: `/marketplace/events/${quoteData.event_id}`,
+          metadata: {
+            event_id: quoteData.event_id,
+            quote_id: finalQuoteId,
+            company_id: company.id,
+          },
+        }).then(({ error: notifError }) => {
+          if (notifError) console.error('[Notifications] quote_received insert failed:', notifError);
+        });
+      }
+    } catch (notifErr) {
+      console.error('[Notifications] Failed to create quote_received notification:', notifErr);
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Quote submitted successfully',
+        quoteId: finalQuoteId,
+      },
+      { status: responseStatus }
+    );
   } catch (error) {
     console.error('POST /api/marketplace/quotes/submit error:', error);
     return NextResponse.json(

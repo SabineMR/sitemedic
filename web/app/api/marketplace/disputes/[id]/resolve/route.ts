@@ -16,6 +16,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createBulkNotifications } from '@/lib/marketplace/create-notification';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -190,20 +191,113 @@ export async function POST(
       // Non-fatal: dispute resolved, hold release failed
     }
 
-    // Fire-and-forget: send dispute resolved notification
+    // Fire-and-forget: notify BOTH parties of dispute resolution
     try {
-      const { sendDisputeResolvedNotification } = await import('@/lib/marketplace/notifications');
-      sendDisputeResolvedNotification({
-        recipientEmail: '',
-        recipientName: '',
-        eventName: '',
-        resolutionType: resolution_type,
-        resolutionNotes: resolution_notes,
-      }).catch((err: unknown) => {
-        console.warn('[Dispute Resolve] Notification failed (non-fatal):', err);
-      });
-    } catch {
-      console.log('[Dispute Resolve] Notification module not available yet');
+      // Fetch event info and both parties
+      const { data: resolvedEvent } = await supabase
+        .from('marketplace_events')
+        .select('id, posted_by, event_name')
+        .eq('id', dispute.event_id)
+        .single();
+
+      const { data: awardedQuote } = await supabase
+        .from('marketplace_quotes')
+        .select('marketplace_companies!inner(admin_user_id, company_name, company_email)')
+        .eq('event_id', dispute.event_id)
+        .eq('status', 'awarded')
+        .single();
+
+      const disputeNotifBody = `Dispute resolved: ${resolution_type.replace('_', ' ')} for event "${resolvedEvent?.event_name ?? dispute.event_id}"`;
+      const disputeLink = `/marketplace/events/${dispute.event_id}`;
+
+      const resolveNotifs = [];
+
+      // Client (event poster)
+      if (resolvedEvent?.posted_by) {
+        resolveNotifs.push({
+          userId: resolvedEvent.posted_by,
+          type: 'dispute_resolved' as const,
+          title: 'Dispute resolved',
+          body: disputeNotifBody,
+          link: disputeLink,
+          metadata: {
+            event_id: dispute.event_id,
+            dispute_id: disputeId,
+            resolution_type,
+          },
+        });
+      }
+
+      // Company admin
+      if (awardedQuote) {
+        const co = awardedQuote.marketplace_companies as unknown as {
+          admin_user_id: string;
+          company_name: string;
+          company_email: string;
+        };
+        if (co.admin_user_id) {
+          resolveNotifs.push({
+            userId: co.admin_user_id,
+            type: 'dispute_resolved' as const,
+            title: 'Dispute resolved',
+            body: disputeNotifBody,
+            link: disputeLink,
+            metadata: {
+              event_id: dispute.event_id,
+              dispute_id: disputeId,
+              resolution_type,
+            },
+          });
+        }
+
+        // Send email to company
+        try {
+          const { sendDisputeResolvedNotification } = await import('@/lib/marketplace/notifications');
+          sendDisputeResolvedNotification({
+            recipientEmail: co.company_email,
+            recipientName: co.company_name,
+            eventName: resolvedEvent?.event_name ?? dispute.event_id,
+            resolutionType: resolution_type,
+            resolutionNotes: resolution_notes,
+          }).catch((err: unknown) => {
+            console.warn('[Dispute Resolve] Company email notification failed (non-fatal):', err);
+          });
+        } catch {
+          // Non-fatal
+        }
+      }
+
+      // Send email to client
+      if (resolvedEvent?.posted_by) {
+        try {
+          const { data: clientProf } = await supabase
+            .from('profiles')
+            .select('email, full_name')
+            .eq('id', resolvedEvent.posted_by)
+            .single();
+
+          if (clientProf?.email) {
+            const { sendDisputeResolvedNotification } = await import('@/lib/marketplace/notifications');
+            sendDisputeResolvedNotification({
+              recipientEmail: clientProf.email,
+              recipientName: clientProf.full_name ?? 'Client',
+              eventName: resolvedEvent.event_name,
+              resolutionType: resolution_type,
+              resolutionNotes: resolution_notes,
+            }).catch((err: unknown) => {
+              console.warn('[Dispute Resolve] Client email notification failed (non-fatal):', err);
+            });
+          }
+        } catch {
+          // Non-fatal
+        }
+      }
+
+      if (resolveNotifs.length > 0) {
+        await createBulkNotifications(resolveNotifs);
+      }
+    } catch (notifErr) {
+      console.warn('[Dispute Resolve] Notification setup failed (non-fatal):', notifErr);
     }
 
     return NextResponse.json({ success: true, dispute: updatedDispute });

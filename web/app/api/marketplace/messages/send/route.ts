@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createNotification } from '@/lib/marketplace/create-notification';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -125,12 +126,28 @@ export async function POST(request: NextRequest) {
       // Non-fatal: message was sent
     }
 
-    // Fire-and-forget: email notification to the other party
+    // Fire-and-forget: dashboard notification + email to the other party
     try {
       const recipientId =
         user.id === conversation.client_user_id
           ? conversation.company_user_id
           : conversation.client_user_id;
+
+      // Dashboard notification — message_received
+      createNotification({
+        userId: recipientId,
+        type: 'message_received',
+        title: 'New message',
+        body: content.length > 80 ? content.substring(0, 80) + '…' : content,
+        link: `/marketplace/messages?conversation=${conversation_id}`,
+        metadata: {
+          conversation_id,
+          sender_id: user.id,
+          message_id: message.id,
+        },
+      }).catch((err: unknown) => {
+        console.warn('[Marketplace Send] Dashboard notification failed (non-fatal):', err);
+      });
 
       // Fetch recipient email and names
       const { data: recipientProfile } = await supabase

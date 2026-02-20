@@ -25,6 +25,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { awardRequestSchema } from '@/lib/marketplace/award-schemas';
 import {
   calculateAwardAmounts,
@@ -259,6 +260,43 @@ export async function POST(
         totalPrice: quote.total_price,
       };
 
+      // Fire-and-forget: notify winning company that quote selected (pending payment)
+      try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (supabaseUrl && serviceKey) {
+          const srClient = createServiceClient(supabaseUrl, serviceKey, {
+            auth: { autoRefreshToken: false, persistSession: false },
+          });
+
+          const { data: company } = await srClient
+            .from('marketplace_companies')
+            .select('admin_user_id')
+            .eq('id', quote.company_id)
+            .single();
+
+          if (company?.admin_user_id) {
+            srClient.from('user_notifications').insert({
+              user_id: company.admin_user_id,
+              type: 'quote_awarded',
+              title: 'Quote selected — awaiting payment',
+              body: `Your quote for "${event.event_name}" has been selected. Awaiting deposit payment confirmation.`,
+              link: `/marketplace/events/${eventId}`,
+              metadata: {
+                event_id: eventId,
+                quote_id: quoteId,
+                deposit_amount: breakdown.depositAmount,
+                status: 'pending_payment',
+              },
+            }).then(({ error: notifError }) => {
+              if (notifError) console.error('[Award] quote_awarded notification failed:', notifError);
+            });
+          }
+        }
+      } catch (notifErr) {
+        console.error('[Award] Failed to create award notification (non-fatal):', notifErr);
+      }
+
       return NextResponse.json(response);
     }
 
@@ -266,6 +304,45 @@ export async function POST(
     const mockCustomerId = `cus_mock_${user.id.slice(0, 8)}`;
     const mockClientSecret = `pi_mock_${quoteId}_secret_${Date.now()}`;
     const mockPaymentIntentId = `pi_mock_${quoteId}`;
+
+    // Fire-and-forget: notify winning company that their quote has been selected
+    // (pending deposit payment — full award confirmed in Stripe webhook)
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (supabaseUrl && serviceKey) {
+        const srClient = createServiceClient(supabaseUrl, serviceKey, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        });
+
+        // Fetch company admin user ID
+        const { data: company } = await srClient
+          .from('marketplace_companies')
+          .select('admin_user_id, company_name')
+          .eq('id', quote.company_id)
+          .single();
+
+        if (company?.admin_user_id) {
+          srClient.from('user_notifications').insert({
+            user_id: company.admin_user_id,
+            type: 'quote_awarded',
+            title: 'Quote selected — awaiting payment',
+            body: `Your quote for "${event.event_name}" has been selected. Awaiting deposit payment confirmation.`,
+            link: `/marketplace/events/${eventId}`,
+            metadata: {
+              event_id: eventId,
+              quote_id: quoteId,
+              deposit_amount: breakdown.depositAmount,
+              status: 'pending_payment',
+            },
+          }).then(({ error: notifError }) => {
+            if (notifError) console.error('[Award] quote_awarded notification failed:', notifError);
+          });
+        }
+      }
+    } catch (notifErr) {
+      console.error('[Award] Failed to create award notification (non-fatal):', notifErr);
+    }
 
     const response: AwardApiResponse = {
       clientSecret: mockClientSecret,

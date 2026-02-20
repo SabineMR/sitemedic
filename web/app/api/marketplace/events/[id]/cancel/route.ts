@@ -20,6 +20,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createBulkNotifications } from '@/lib/marketplace/create-notification';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -255,21 +256,95 @@ export async function POST(
       // Non-fatal: bookings were already updated
     }
 
-    // Fire-and-forget: send cancellation notification
+    // Fire-and-forget: notify all companies with quotes on this event
     try {
-      const { sendCancellationNotification } = await import('@/lib/marketplace/notifications');
-      sendCancellationNotification({
-        recipientEmail: '',
-        recipientName: '',
-        eventName: '',
-        cancelledBy: cancellerType === 'client' ? 'the client' : 'the company',
-        refundAmount,
-        reason,
-      }).catch((err: unknown) => {
-        console.warn('[Marketplace Cancel] Notification failed (non-fatal):', err);
-      });
-    } catch {
-      console.log('[Marketplace Cancel] Notification module not available yet');
+      // Fetch event name for notification text
+      const { data: cancelledEvent } = await supabase
+        .from('marketplace_events')
+        .select('event_name')
+        .eq('id', eventId)
+        .single();
+
+      const eventName = cancelledEvent?.event_name ?? eventId;
+      const cancellerLabel = cancellerType === 'client' ? 'the client' : 'the company';
+      const notifBody = `"${eventName}" has been cancelled by ${cancellerLabel}`;
+      const refundNote = refundAmount > 0 ? ` Refund of £${refundAmount.toFixed(2)} will be processed.` : '';
+
+      // Collect user IDs of all companies with any quote on this event
+      const { data: quotingCompanies } = await supabase
+        .from('marketplace_quotes')
+        .select('company_id, marketplace_companies!inner(admin_user_id, company_name, company_email)')
+        .eq('event_id', eventId);
+
+      const cancelNotifs: Array<{
+        userId: string;
+        type: 'event_cancelled';
+        title: string;
+        body: string;
+        link: string;
+        metadata: Record<string, unknown>;
+      }> = [];
+
+      for (const q of quotingCompanies ?? []) {
+        const co = q.marketplace_companies as unknown as {
+          admin_user_id: string;
+          company_name: string;
+          company_email: string;
+        };
+        if (!co.admin_user_id) continue;
+
+        cancelNotifs.push({
+          userId: co.admin_user_id,
+          type: 'event_cancelled',
+          title: 'Event cancelled',
+          body: notifBody + refundNote,
+          link: `/marketplace/events`,
+          metadata: {
+            event_id: eventId,
+            cancelled_by: cancellerType,
+            refund_amount: refundAmount,
+          },
+        });
+
+        // Email each company
+        try {
+          const { sendCancellationNotification } = await import('@/lib/marketplace/notifications');
+          sendCancellationNotification({
+            recipientEmail: co.company_email,
+            recipientName: co.company_name,
+            eventName,
+            cancelledBy: cancellerLabel,
+            refundAmount,
+            reason,
+          }).catch((err: unknown) => {
+            console.warn('[Marketplace Cancel] Company email failed (non-fatal):', err);
+          });
+        } catch {
+          // Non-fatal
+        }
+      }
+
+      // Also notify the event poster if cancelled by company
+      if (cancellerType === 'company' && event.posted_by) {
+        cancelNotifs.push({
+          userId: event.posted_by,
+          type: 'event_cancelled',
+          title: 'Event cancelled',
+          body: notifBody + refundNote,
+          link: `/marketplace/events`,
+          metadata: {
+            event_id: eventId,
+            cancelled_by: cancellerType,
+            refund_amount: refundAmount,
+          },
+        });
+      }
+
+      if (cancelNotifs.length > 0) {
+        await createBulkNotifications(cancelNotifs);
+      }
+    } catch (notifErr) {
+      console.warn('[Marketplace Cancel] Notification setup failed (non-fatal):', notifErr);
     }
 
     return NextResponse.json({
