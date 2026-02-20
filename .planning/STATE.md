@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 
 ## Current Position
 
-Phase: 45 of 47 (Document Upload & Profile Storage — COMPLETE)
-Plan: 3 of 3 in current phase (all complete)
-Status: Phase 45 complete (all 3 plans executed), ready for Phase 46
-Last activity: 2026-02-20 — Completed Phase 45 (Document Upload & Profile Storage)
+Phase: 46 of 47 (Expiry Tracking & Alerts — IN PROGRESS)
+Plan: 2 of 2 in current phase (plan 02 complete)
+Status: Phase 46 in progress — plan 02 (bulk expiry dashboard) complete
+Last activity: 2026-02-20 — Completed 46-02-PLAN.md (Bulk Document Expiry Dashboard)
 
 Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [███████░░░] v4.0 75% | [██████████] v5.0 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 230 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 30 v4.0 + 21 v5.0)
+- Total plans completed: 231 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 30 v4.0 + 22 v5.0)
 - Average duration: 3.9 min
-- Total execution time: ~14.0 hours
+- Total execution time: ~14.1 hours
 
 **By Milestone:**
 
@@ -32,7 +32,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
 | v4.0 | 8 | 30/32 | ~332 min | ~5.5 min |
-| v5.0 | 8 | 21/21 | ~107 min | ~5.1 min |
+| v5.0 | 8 | 22/21 | ~111 min | ~5.0 min |
 
 *Updated after each plan completion*
 
@@ -165,6 +165,9 @@ Recent decisions affecting current work:
 - [36-03]: remainder_hold boolean on bookings — filing dispute immediately freezes remainder payments
 - [36-03]: Tiered client cancellation: >14d=100% refund, 7-14d=50%, <7d=0%; company cancellation always 100%
 - [36-03]: Admin dispute resolution: full_refund, partial_refund, dismissed, suspend_party — all release remainder_hold
+- [46-02]: Bulk expiry dashboard excludes null-expiry documents (only time-bound documents shown)
+- [46-02]: Three tab views for expiry dashboard: 30-day (default), all expiring (365d), expired only
+- [46-02]: Status badges use light theme colours for admin dashboard (red/amber/green with bg-*-50)
 
 ### Pending Todos
 
@@ -195,5 +198,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed Phase 45 (Document Upload & Profile Storage) — all 3 plans executed
+Stopped at: Completed 46-02-PLAN.md (Bulk Document Expiry Dashboard)
 Resume file: None

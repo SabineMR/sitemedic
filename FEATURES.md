@@ -292,6 +292,23 @@ Org admins can send broadcast messages to all medics in their organisation. Broa
 - Admin medic documents at `/admin/medics/[id]/documents` (workers/[id] is for patients)
 - Category management page accessible via direct URL (no sidebar nav item to avoid clutter)
 
+### Phase 46: Expiry Tracking & Alerts (2026-02-20)
+
+#### Bulk Document Expiry Dashboard (Plan 02)
+
+| Feature | Description | Key Files |
+|---------|-------------|-----------|
+| **TanStack Query Hooks** | Three org-scoped hooks: `useExpiringDocuments` (filterable by daysWindow, categorySlug, includeExpired), `useDocumentExpirySummary` (aggregate counts), `useDocumentCategories` (filter dropdown). 60s polling, 30s stale time. Client-side date computation for days_remaining and status classification. | `web/lib/queries/admin/document-expiry.ts` |
+| **Bulk Expiry Dashboard** | Admin page at `/admin/document-expiry` with summary cards (expired/red, expiring soon/amber, current/green), tabbed data table (30 Days, All Expiring, Expired), category filter dropdown. Table shows medic name, document category, file name, expiry date, days remaining (colour-coded), status badge. Sorted by urgency (days_remaining ascending). | `web/app/(dashboard)/admin/document-expiry/page.tsx` |
+| **Sidebar Navigation** | "Document Expiry" nav item with FileWarning icon added to DashboardNav after Messages. Links to `/admin/document-expiry`. | `web/components/dashboard/DashboardNav.tsx` |
+
+**Key decisions:**
+- Dashboard queries documents table with joins to medics, document_categories, and document_versions via fk_documents_current_version
+- Documents without expiry dates (null) excluded from dashboard (only shows time-bound documents)
+- Status badges use light theme colours (admin dashboard): red bg for expired, amber bg for expiring soon, green bg for current
+- Category filter uses slug-based matching from useDocumentCategories hook
+- Three tab views: 30-day window (default), all expiring (365-day window), expired only
+
 ### Planning Files
 
 | File | Purpose |
