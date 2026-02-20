@@ -13,6 +13,7 @@
 import type { MessageWithSender } from '@/types/comms.types';
 import { cn } from '@/lib/utils';
 import { BroadcastReadSummary } from './BroadcastReadSummary';
+import { MessageStatusIndicator } from './MessageStatusIndicator';
 
 interface MessageItemProps {
   message: MessageWithSender;
@@ -57,8 +58,9 @@ export function MessageItem({
         <p className="text-sm mt-0.5 whitespace-pre-wrap break-words">
           {message.content}
         </p>
-        <span className="text-[11px] text-muted-foreground mt-1 inline-block">
+        <span className="text-[11px] text-muted-foreground mt-1 inline-flex items-center gap-1">
           {timeDisplay}
+          {isOwnMessage && <MessageStatusIndicator status={message.status} />}
         </span>
         {readSummary && onReadDrilldown && (
           <BroadcastReadSummary

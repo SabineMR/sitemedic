@@ -10,7 +10,7 @@
  * Phase 43: Polling replaced with Supabase Realtime subscriptions
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import { supabase as realtimeSupabase } from '@/lib/supabase';
