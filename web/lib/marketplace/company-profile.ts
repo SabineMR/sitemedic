@@ -30,6 +30,7 @@ export function formatCompanyProfile(raw: Partial<CompanyProfileDisplay>): Compa
     roster_size: raw.roster_size ?? 0,
     average_rating: raw.average_rating ?? 0,
     review_count: raw.review_count ?? 0,
+    total_events_completed: raw.total_events_completed ?? 0,
     insurance_status: raw.insurance_status ?? 'unverified',
     verification_status: raw.verification_status ?? 'pending',
     created_at: raw.created_at ?? new Date().toISOString(),

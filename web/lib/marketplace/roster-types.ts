@@ -99,6 +99,7 @@ export interface CompanyProfileDisplay {
   roster_size: number;
   average_rating: number;
   review_count: number;
+  total_events_completed: number;
   insurance_status: InsuranceStatus;
   verification_status: string;
   created_at: string;

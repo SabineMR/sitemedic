@@ -13,7 +13,7 @@
 
 'use client';
 
-import { Star, Users, Shield, MapPin, Calendar } from 'lucide-react';
+import { Star, Users, Shield, MapPin, Calendar, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { VerifiedBadge } from '@/components/marketplace/VerifiedBadge';
@@ -63,8 +63,8 @@ export function CompanyProfileCard({ company }: CompanyProfileCardProps) {
       </CardHeader>
 
       <CardContent>
-        {/* Stats Grid: 2 cols mobile, 4 cols md+ */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Stats Grid: 2 cols mobile, 5 cols md+ */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {/* Team Size */}
           <div className="text-center p-4 rounded-lg bg-gray-50">
             <Users className="h-5 w-5 text-blue-600 mx-auto mb-2" />
@@ -85,6 +85,15 @@ export function CompanyProfileCard({ company }: CompanyProfileCardProps) {
             <p className="text-xs text-gray-500 mt-1">
               Rating{company.review_count > 0 && ` (${company.review_count})`}
             </p>
+          </div>
+
+          {/* Events Completed */}
+          <div className="text-center p-4 rounded-lg bg-gray-50">
+            <CheckCircle2 className="h-5 w-5 text-emerald-600 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-gray-900">
+              {company.total_events_completed}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">Events Completed</p>
           </div>
 
           {/* Insurance */}

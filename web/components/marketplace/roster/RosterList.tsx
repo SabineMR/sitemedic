@@ -24,9 +24,10 @@ interface RosterListProps {
   roster: CompanyRosterMedicWithDetails[];
   isLoading: boolean;
   companyId: string;
+  onEditAvailability?: (medic: CompanyRosterMedicWithDetails) => void;
 }
 
-export default function RosterList({ roster, isLoading, companyId }: RosterListProps) {
+export default function RosterList({ roster, isLoading, companyId, onEditAvailability }: RosterListProps) {
   const store = useCompanyRosterStore();
 
   // =========================================================================
@@ -98,6 +99,7 @@ export default function RosterList({ roster, isLoading, companyId }: RosterListP
           key={medic.id}
           medic={medic}
           companyId={companyId}
+          onEditAvailability={onEditAvailability}
         />
       ))}
     </div>

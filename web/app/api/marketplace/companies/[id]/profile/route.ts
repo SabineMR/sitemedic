@@ -54,6 +54,21 @@ export async function GET(
       return NextResponse.json({ error: 'Company not found' }, { status: 404 });
     }
 
+    // Count total events completed (awarded events with status 'completed')
+    const { count: totalEventsCompleted } = await supabase
+      .from('marketplace_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'completed')
+      .in('id',
+        // Events where this company won the award
+        (await supabase
+          .from('marketplace_quotes')
+          .select('event_id')
+          .eq('company_id', companyId)
+          .eq('status', 'awarded')
+        ).data?.map((q: any) => q.event_id) || []
+      );
+
     // Fetch up to 5 active roster medics for team preview
     // Limited public info: name, qualification, title, available (no email/phone/private details)
     const { data: rosterMedics } = await supabase
@@ -96,6 +111,7 @@ export async function GET(
       roster_size: company.roster_size || 0,
       average_rating: company.average_rating || 0,
       review_count: company.review_count || 0,
+      total_events_completed: totalEventsCompleted || 0,
       insurance_status: company.insurance_status || 'unverified',
       verification_status: company.verification_status,
       created_at: company.created_at,

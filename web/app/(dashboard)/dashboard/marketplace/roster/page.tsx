@@ -17,13 +17,15 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useCompanyRoster } from '@/lib/queries/marketplace/roster';
 import { useCompanyRosterStore, type RosterStatusFilter } from '@/stores/useCompanyRosterStore';
 import RosterList from '@/components/marketplace/roster/RosterList';
 import AddMedicModal from '@/components/marketplace/roster/AddMedicModal';
 import InviteMedicModal from '@/components/marketplace/roster/InviteMedicModal';
+import { MedicAvailabilityModal } from '@/components/marketplace/roster/MedicAvailabilityModal';
+import type { CompanyRosterMedicWithDetails } from '@/lib/marketplace/roster-types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +41,15 @@ export default function RosterPage() {
   const [companyName, setCompanyName] = useState<string>('');
   const [loadingCompany, setLoadingCompany] = useState(true);
   const [noCompany, setNoCompany] = useState(false);
+
+  // =========================================================================
+  // Availability modal state
+  // =========================================================================
+  const [editingMedic, setEditingMedic] = useState<CompanyRosterMedicWithDetails | null>(null);
+
+  const handleEditAvailability = useCallback((medic: CompanyRosterMedicWithDetails) => {
+    setEditingMedic(medic);
+  }, []);
 
   // =========================================================================
   // Zustand store for UI state
@@ -222,11 +233,22 @@ export default function RosterPage() {
         roster={roster}
         isLoading={isLoading}
         companyId={companyId ?? ''}
+        onEditAvailability={handleEditAvailability}
       />
 
       {/* Modals */}
       <AddMedicModal companyId={companyId ?? ''} />
       <InviteMedicModal companyId={companyId ?? ''} />
+      <MedicAvailabilityModal
+        medicId={editingMedic?.id ?? null}
+        medicName={editingMedic?.medic_name || editingMedic?.invitation_email || 'Medic'}
+        isOpen={!!editingMedic}
+        onClose={() => setEditingMedic(null)}
+        companyId={companyId ?? ''}
+        currentUnavailableFrom={editingMedic?.unavailable_from}
+        currentUnavailableUntil={editingMedic?.unavailable_until}
+        currentUnavailableReason={editingMedic?.unavailable_reason}
+      />
     </div>
   );
 }

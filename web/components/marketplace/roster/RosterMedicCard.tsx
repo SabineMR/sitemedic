@@ -43,6 +43,7 @@ import { toast } from 'sonner';
 interface RosterMedicCardProps {
   medic: CompanyRosterMedicWithDetails;
   companyId: string;
+  onEditAvailability?: (medic: CompanyRosterMedicWithDetails) => void;
 }
 
 // =============================================================================
@@ -63,7 +64,7 @@ const STATUS_LABELS: Record<RosterMedicStatus, string> = {
   suspended: 'Suspended',
 };
 
-export default function RosterMedicCard({ medic, companyId }: RosterMedicCardProps) {
+export default function RosterMedicCard({ medic, companyId, onEditAvailability }: RosterMedicCardProps) {
   const queryClient = useQueryClient();
   const [isRemoving, setIsRemoving] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -242,8 +243,9 @@ export default function RosterMedicCard({ medic, companyId }: RosterMedicCardPro
             size="sm"
             className="flex-1"
             onClick={() => {
-              // Edit functionality - placeholder for now
-              toast.info('Edit functionality coming soon');
+              if (onEditAvailability) {
+                onEditAvailability(medic);
+              }
             }}
           >
             <Pencil className="h-3.5 w-3.5 mr-1.5" />
