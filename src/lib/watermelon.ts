@@ -24,7 +24,7 @@ export async function initDatabase(): Promise<Database> {
     // WatermelonDB's SQLCipher support is not yet merged (PR #907)
   })
 
-  // Create database instance with all 6 model classes (including AuditLogEntry)
+  // Create database instance with all 8 model classes (including Conversation + Message for messaging)
   database = new Database({
     adapter,
     modelClasses,

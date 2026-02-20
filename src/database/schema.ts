@@ -5,7 +5,7 @@ import { appSchema, tableSchema } from '@nozbe/watermelondb'
 // See: https://nozbe.github.io/WatermelonDB/Advanced/Migrations.html
 
 export const schema = appSchema({
-  version: 4,
+  version: 5,
   tables: [
     tableSchema({
       name: 'treatments',
@@ -123,6 +123,41 @@ export const schema = appSchema({
         { name: 'context', type: 'string', isOptional: true }, // why the access happened
         { name: 'synced', type: 'boolean' }, // false until synced to Supabase audit_logs table
         { name: 'created_at', type: 'number' }, // epoch milliseconds
+      ],
+    }),
+    // v5: iOS messaging offline cache (Phase 42)
+    tableSchema({
+      name: 'conversations',
+      columns: [
+        { name: 'server_id', type: 'string', isOptional: true }, // Supabase UUID, populated after sync
+        { name: 'org_id', type: 'string', isIndexed: true },
+        { name: 'type', type: 'string' }, // 'direct' | 'broadcast'
+        { name: 'subject', type: 'string', isOptional: true }, // for broadcast conversations
+        { name: 'medic_id', type: 'string', isOptional: true }, // for direct conversations
+        { name: 'created_by', type: 'string' }, // user who created the conversation
+        { name: 'last_message_at', type: 'number', isOptional: true }, // epoch ms of last message
+        { name: 'last_message_preview', type: 'string', isOptional: true }, // truncated last message content
+        { name: 'participant_name', type: 'string', isOptional: true }, // denormalized name for display
+        { name: 'unread_count', type: 'number' }, // locally computed unread count (default 0)
+        { name: 'last_read_at', type: 'number', isOptional: true }, // epoch ms of current user's last read
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' },
+      ],
+    }),
+    tableSchema({
+      name: 'messages',
+      columns: [
+        { name: 'server_id', type: 'string', isOptional: true }, // Supabase UUID
+        { name: 'conversation_id', type: 'string', isIndexed: true }, // links to local conversation
+        { name: 'org_id', type: 'string', isIndexed: true },
+        { name: 'sender_id', type: 'string' }, // Supabase user UUID of sender
+        { name: 'sender_name', type: 'string', isOptional: true }, // denormalized sender display name
+        { name: 'message_type', type: 'string' }, // 'text' | 'attachment' | 'system'
+        { name: 'content', type: 'string', isOptional: true }, // message text
+        { name: 'status', type: 'string' }, // 'queued' | 'sent' | 'delivered' | 'read'
+        { name: 'idempotency_key', type: 'string', isOptional: true }, // client-generated UUID for deduplication
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' },
       ],
     }),
   ],
