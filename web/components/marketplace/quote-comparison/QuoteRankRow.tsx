@@ -17,7 +17,7 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ChevronDown, ChevronUp, Star, Clock, ExternalLink, ShieldCheck } from 'lucide-react';
+import { ChevronDown, ChevronUp, Star, Clock, ExternalLink, ShieldCheck, Award } from 'lucide-react';
 import { anonymiseQuoteForDisplay, maskName } from '@/lib/anonymization/quote-anonymizer';
 import { STAFFING_ROLE_LABELS, type EventStatus } from '@/lib/marketplace/event-types';
 import type { MarketplaceQuoteWithCompany, StaffingPlan, PricingBreakdown } from '@/lib/marketplace/quote-types';
@@ -33,6 +33,7 @@ interface QuoteRankRowProps {
   eventStatus: EventStatus;
   isDepositPaid: boolean;
   isAuthor: boolean;
+  onAward?: (quoteId: string) => void;
 }
 
 // =============================================================================
@@ -110,6 +111,7 @@ export default function QuoteRankRow({
   eventStatus,
   isDepositPaid,
   isAuthor,
+  onAward,
 }: QuoteRankRowProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -324,6 +326,27 @@ export default function QuoteRankRow({
                 View Company Profile
               </Button>
             </Link>
+            {onAward &&
+              (eventStatus === 'open' || eventStatus === 'closed') &&
+              (quote.status === 'submitted' || quote.status === 'revised') && (
+                <Button
+                  size="sm"
+                  className="gap-1.5 bg-green-600 hover:bg-green-700"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAward(quote.id);
+                  }}
+                >
+                  <Award className="h-3.5 w-3.5" />
+                  Award This Quote
+                </Button>
+              )}
+            {quote.status === 'awarded' && (
+              <Badge className="bg-green-100 text-green-700">Awarded</Badge>
+            )}
+            {quote.status === 'rejected' && (
+              <Badge variant="secondary" className="text-slate-600">Not Selected</Badge>
+            )}
           </div>
         </div>
       )}

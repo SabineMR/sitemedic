@@ -22,6 +22,8 @@ import type { MarketplaceQuoteWithCompany } from '@/lib/marketplace/quote-types'
 import type { EventStatus } from '@/lib/marketplace/event-types';
 import SortFilterBar, { type SortMode, type QuoteFilters } from './SortFilterBar';
 import QuoteRankRow from './QuoteRankRow';
+import AwardConfirmationModal from '@/components/marketplace/award/AwardConfirmationModal';
+import AwardedEventDetails from '@/components/marketplace/award/AwardedEventDetails';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FileSearch } from 'lucide-react';
 
@@ -32,6 +34,7 @@ import { FileSearch } from 'lucide-react';
 interface QuoteListViewProps {
   eventId: string;
   eventStatus: EventStatus;
+  eventType?: string;
   isDepositPaid: boolean;
   isEventPoster: boolean;
   currentUserId: string;
@@ -44,6 +47,7 @@ interface QuoteListViewProps {
 export default function QuoteListView({
   eventId,
   eventStatus,
+  eventType = 'other',
   isDepositPaid,
   isEventPoster,
   currentUserId,
@@ -55,6 +59,8 @@ export default function QuoteListView({
     priceMax: '',
     minRating: '',
   });
+  const [awardQuoteId, setAwardQuoteId] = useState<string | null>(null);
+  const [awardModalOpen, setAwardModalOpen] = useState(false);
 
   // Build filter params for API call
   const filterParams: QuoteListFilterParams = useMemo(
@@ -158,8 +164,51 @@ export default function QuoteListView({
   }
 
   // =========================================================================
-  // Render
+  // Award handler
   // =========================================================================
+
+  const handleAward = (quoteId: string) => {
+    setAwardQuoteId(quoteId);
+    setAwardModalOpen(true);
+  };
+
+  // =========================================================================
+  // Render — Awarded state
+  // =========================================================================
+
+  if (eventStatus === 'awarded') {
+    return (
+      <div className="space-y-6">
+        <AwardedEventDetails eventId={eventId} />
+
+        {/* Still show quotes for reference */}
+        <div>
+          <h3 className="text-sm font-medium text-gray-500 mb-3">All Quotes</h3>
+          <div className="space-y-3 opacity-75">
+            {rankedQuotes.map((ranked) => (
+              <QuoteRankRow
+                key={ranked.quote.id}
+                quote={ranked.quote}
+                rank={ranked.rank}
+                bestValueScore={ranked.bestValueScore}
+                eventStatus={eventStatus}
+                isDepositPaid={isDepositPaid}
+                isAuthor={false}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // Render — Normal state
+  // =========================================================================
+
+  const selectedQuote = awardQuoteId
+    ? rankedQuotes.find((r) => r.quote.id === awardQuoteId)?.quote
+    : null;
 
   return (
     <div className="space-y-4">
@@ -185,10 +234,24 @@ export default function QuoteListView({
             bestValueScore={ranked.bestValueScore}
             eventStatus={eventStatus}
             isDepositPaid={isDepositPaid}
-            isAuthor={false} // Viewing as event poster, not as company
+            isAuthor={false}
+            onAward={isEventPoster ? handleAward : undefined}
           />
         ))}
       </div>
+
+      {/* Award Confirmation Modal */}
+      {selectedQuote && (
+        <AwardConfirmationModal
+          open={awardModalOpen}
+          onOpenChange={setAwardModalOpen}
+          eventId={eventId}
+          quoteId={selectedQuote.id}
+          companyName={selectedQuote.company_name}
+          totalPrice={selectedQuote.total_price}
+          eventType={eventType}
+        />
+      )}
     </div>
   );
 }

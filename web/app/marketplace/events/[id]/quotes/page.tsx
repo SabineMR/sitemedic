@@ -148,7 +148,8 @@ export default function EventQuotesPage() {
       <QuoteListView
         eventId={eventId}
         eventStatus={event.status}
-        isDepositPaid={false} /* Deposit tracking added in Phase 35 */
+        eventType={event.event_type}
+        isDepositPaid={false} /* Updated after award via AwardedEventDetails */
         isEventPoster={true}
         currentUserId={currentUserId || ''}
       />
