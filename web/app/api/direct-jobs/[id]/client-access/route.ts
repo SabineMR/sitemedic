@@ -137,6 +137,48 @@ export async function GET(
     const depositAmount = Math.round(agreedPrice * (depositPercent / 100) * 100) / 100;
     const remainderAmount = Math.round((agreedPrice - depositAmount) * 100) / 100;
 
+    // Check payment status via booking existence
+    // TODO: Add marketplace_events.id FK on bookings table for reliable reverse lookup
+    //       (current approach uses name+postcode+org matching)
+    let depositPaid = false;
+    let totalPaid = 0;
+
+    // Get the company's org_id for scoping the booking lookup
+    const { data: companyForBooking } = await supabase
+      .from('marketplace_companies')
+      .select('org_id')
+      .eq('admin_user_id', user.id)
+      .single();
+
+    const firstDay = ((job.event_days || []) as Array<{ event_date: string; start_time: string; end_time: string }>)
+      .sort((a, b) => a.event_date.localeCompare(b.event_date))[0];
+
+    // The booking bridge creates bookings with source='direct', job name in site_name, and org_id
+    const bookingQuery = supabase
+      .from('bookings')
+      .select('id, status, total')
+      .eq('source', 'direct')
+      .eq('site_name', job.event_name)
+      .eq('site_postcode', job.location_postcode)
+      .in('status', ['confirmed', 'in_progress', 'completed']);
+
+    if (companyForBooking?.org_id) {
+      bookingQuery.eq('org_id', companyForBooking.org_id);
+    }
+    if (firstDay) {
+      bookingQuery.eq('shift_date', firstDay.event_date);
+    }
+
+    const { data: relatedBooking } = await bookingQuery.limit(1).maybeSingle();
+
+    if (relatedBooking) {
+      depositPaid = true;
+      totalPaid = depositAmount; // Deposit was paid if booking is confirmed
+      if (relatedBooking.status === 'completed') {
+        totalPaid = agreedPrice; // Full amount paid on completion
+      }
+    }
+
     // Build the client-safe response -- NO medic IDs, names, or contact info
     const clientSafe: ClientSafeJob = {
       id: job.id,
@@ -174,11 +216,11 @@ export async function GET(
         : null,
       payment: {
         deposit_amount: depositAmount,
-        deposit_paid: false, // Will be driven by Stripe PaymentIntent status in Phase 35
+        deposit_paid: depositPaid,
         remainder_amount: remainderAmount,
-        total_paid: 0, // Will be updated when payment integration is complete
+        total_paid: totalPaid,
       },
-      compliance_reports: [], // Will be populated when compliance reporting is integrated
+      compliance_reports: [], // No compliance reporting system exists yet — remains empty until one is built
     };
 
     return NextResponse.json({ job: clientSafe });

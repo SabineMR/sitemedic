@@ -37,6 +37,7 @@ import {
   Banknote,
   Shield,
   Star,
+  ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -396,6 +397,13 @@ export default function DirectJobDetailPage() {
               <Shield className="h-3 w-3 mr-1" />
               0% Commission
             </span>
+            <Link
+              href={`/dashboard/jobs/${id}/client-portal`}
+              className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Client Portal
+            </Link>
           </div>
         </div>
       </div>

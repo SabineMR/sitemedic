@@ -51,13 +51,44 @@ export async function POST(request: NextRequest) {
     // Verify user is a company admin with marketplace registration
     const { data: company, error: companyError } = await supabase
       .from('marketplace_companies')
-      .select('id, verification_status')
+      .select('id, verification_status, org_id')
       .eq('admin_user_id', user.id)
       .single();
 
     if (companyError || !company) {
       return NextResponse.json(
         { error: 'You must be registered as a marketplace company to create direct jobs' },
+        { status: 403 }
+      );
+    }
+
+    // Verify company's organization has an active SiteMedic subscription
+    if (!company.org_id) {
+      return NextResponse.json(
+        { error: 'Your company must be linked to a SiteMedic organization with an active subscription to create direct jobs' },
+        { status: 403 }
+      );
+    }
+
+    const { data: org, error: orgError } = await supabase
+      .from('organizations')
+      .select('subscription_tier, subscription_status')
+      .eq('id', company.org_id)
+      .single();
+
+    if (orgError || !org || !org.subscription_tier) {
+      return NextResponse.json(
+        { error: 'An active SiteMedic subscription is required to create direct jobs' },
+        { status: 403 }
+      );
+    }
+
+    // Block past_due or cancelled subscriptions
+    // NULL subscription_status = legacy org not yet on Stripe billing — treat as active (per migration 133)
+    const blockedStatuses = ['past_due', 'cancelled'];
+    if (org.subscription_status && blockedStatuses.includes(org.subscription_status)) {
+      return NextResponse.json(
+        { error: 'Your SiteMedic subscription must be active to create direct jobs' },
         { status: 403 }
       );
     }
