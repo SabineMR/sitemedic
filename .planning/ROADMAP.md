@@ -189,12 +189,12 @@ Plans:
   3. Company profiles display company name, roster size, average rating, total events completed, and insurance status
   4. Company admin can manage medic availability and qualifications within the roster
   5. Roster changes are reflected in the company's quoting capabilities (e.g. removing a paramedic from roster means fewer paramedic-qualified staff available for quotes)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 37-01: Company roster management (add/remove medics, individual profiles within company)
-- [ ] 37-02: Medic assignment and company profile (assign roster medics to events, company profile display)
-- [ ] 37-03: Roster availability management (medic availability tracking, qualification-based capacity)
+- [ ] 37-01-PLAN.md — Database foundation (migration 156: company_roster_medics junction table, RLS policies, roster validation trigger on quotes, aggregation trigger, TypeScript types, Zod schemas, 7 API routes, React Query hooks, availability utilities)
+- [ ] 37-02-PLAN.md — Roster management UI (Zustand store, roster page at /dashboard/marketplace/roster, add/invite medic modals, roster list with status badges and actions, invitation acceptance page)
+- [ ] 37-03-PLAN.md — Company profile and quote assignment (company profile page with stats and Meet the Team, medic availability modal, RosterMedicPicker for named-staff quotes, StaffingPlanSection wired to real roster data)
 
 ### Phase 38: Notifications & Alerts
 **Goal**: Medics receive timely notifications about matching events through their preferred channels, and all marketplace actions (quotes, awards, payments, ratings, messages) generate appropriate alerts
