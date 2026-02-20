@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v4.0 MedBid Marketplace — Phase 36 complete, Phase 37 next
+**Current focus:** v4.0 MedBid Marketplace — Phase 37 Company Accounts in progress
 
 ## Current Position
 
-Phase: 46 of 47 (Expiry Tracking & Alerts — COMPLETE)
-Plan: 2 of 2 in current phase (all complete)
-Status: Phase 46 complete (both plans executed), ready for Phase 47
-Last activity: 2026-02-20 — Completed 46-01-PLAN.md (Document Expiry Alert Infrastructure)
+Phase: 37 of 47 (Company Accounts — In Progress)
+Plan: 1 of 3 in current phase (37-01 complete)
+Status: In progress — Plan 01 (Roster Data Layer & API) complete, Plans 02-03 pending
+Last activity: 2026-02-20 — Completed 37-01-PLAN.md (Roster Data Layer & API)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [███████░░░] v4.0 75% | [██████████] v5.0 100%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████████░░] v4.0 78% | [██████████] v5.0 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 232 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 30 v4.0 + 23 v5.0)
+- Total plans completed: 233 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 31 v4.0 + 23 v5.0)
 - Average duration: 3.9 min
 - Total execution time: ~14.1 hours
 
@@ -31,7 +31,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 30/32 | ~332 min | ~5.5 min |
+| v4.0 | 8 | 31/32 | ~348 min | ~5.6 min |
 | v5.0 | 8 | 23/21 | ~116 min | ~5.0 min |
 
 *Updated after each plan completion*
@@ -174,13 +174,19 @@ Recent decisions affecting current work:
 - [46-02]: Bulk expiry dashboard excludes null-expiry documents (only time-bound documents shown)
 - [46-02]: Three tab views for expiry dashboard: 30-day (default), all expiring (365d), expired only
 - [46-02]: Status badges use light theme colours for admin dashboard (red/amber/green with bg-*-50)
+- [37-01]: Soft-delete for roster removal (status=inactive, left_at=now) preserves audit trail and historical quote references
+- [37-01]: jose library (v6.1.3) for JWT invitation tokens — Edge-compatible, ESM-native (not jsonwebtoken)
+- [37-01]: v_medic_id loop variable in validate_quote_roster_membership trigger to avoid column name ambiguity
+- [37-01]: Multi-company roster membership allowed — UNIQUE on (company_id, medic_id), not just medic_id
+- [37-01]: 7-day JWT invitation expiry with company_id + email in payload
+- [37-01]: Fire-and-forget Resend email with console.log dev fallback (never blocks API)
 
 ### Pending Todos
 
 - Configure external services for production deployment (Stripe, Google Maps, Resend, webhooks, pg_cron, Vault) -- carried from v1.1
 - Obtain DPA template + solicitor review before first org onboarding (non-code blocker for v3.0 launch)
 - **Configure Vercel wildcard `*.sitemedic.co.uk` and DNS CNAME** -- checkpoint from 26-01; 72h propagation
-- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142, 143, 144, 146, 147, 148, 149, 149b, 150, 151, 155) to production** -- migrations 132-144 verified, 146 for marketplace quotes, 147 for direct jobs, 148 for job ratings, 149/149b for marketplace award/payment, 150 for message notification trigger, 151 for broadcast indexes, 155 for document expiry reminders
+- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142, 143, 144, 146, 147, 148, 149, 149b, 150, 151, 155, 156) to production** -- migrations 132-144 verified, 146 for marketplace quotes, 147 for direct jobs, 148 for job ratings, 149/149b for marketplace award/payment, 150 for message notification trigger, 151 for broadcast indexes, 155 for document expiry reminders, 156 for company roster medics
 - **Add `NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.co.uk` to Vercel env vars** -- needed for production subdomain routing
 - **Create Stripe Products/Prices and register billing webhook** -- checkpoint from 25-01
 - **CQC legal opinion required** -- must determine if marketplace model requires CQC registration before launch
@@ -204,5 +210,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed Phase 46 (Expiry Tracking & Alerts) — all 2 plans executed, verified, ready for Phase 47
+Stopped at: Completed 37-01-PLAN.md (Roster Data Layer & API) — Phase 37 Plan 01 of 3
 Resume file: None
