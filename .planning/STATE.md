@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 34.1 of 47 (Self-Procured Jobs — INSERTED)
-Plan: 4 of 5 in current phase
-Status: In progress
-Last activity: 2026-02-20 — Completed 34.1-04-PLAN.md (Payment, Booking Bridge, Medic Assignment, Job Detail)
+Plan: 5 of 5 in current phase (PHASE COMPLETE)
+Status: Phase complete
+Last activity: 2026-02-20 — Completed 34.1-05-PLAN.md (Client Portal & Bidirectional Ratings)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████░░░░░░] v4.0 35% | [████░░░░░░] v5.0 38%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [█████░░░░░] v4.0 38% | [████░░░░░░] v5.0 38%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 198 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 12 v4.0 + 7 v5.0)
+- Total plans completed: 199 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 13 v4.0 + 7 v5.0)
 - Average duration: 3.9 min
-- Total execution time: ~13.6 hours
+- Total execution time: ~13.8 hours
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 12/26 | ~128 min | ~6.4 min |
+| v4.0 | 8 | 13/26 | ~141 min | ~6.5 min |
 | v5.0 | 8 | 7/21 | ~33 min | ~4.7 min |
 
 *Updated after each plan completion*
@@ -98,13 +98,17 @@ Recent decisions affecting current work:
 - [34.1-04]: agreed_price treated as total including VAT -- split into subtotal/vat for bookings schema compatibility
 - [34.1-04]: Dev mock PaymentIntent when no STRIPE_SECRET_KEY -- enables UI testing without Stripe credentials
 - [34.1-04]: Medic commitments created per event_day (not per job) -- EXCLUSION constraint checks each day independently
+- [34.1-05]: job_ratings table in separate migration 148 (not appended to 147)
+- [34.1-05]: Rating section only visible when job status is 'completed'
+- [34.1-05]: deposit_percent defaults to 25% in client-access API (no DB column)
+- [34.1-05]: RLS uses split INSERT/UPDATE/DELETE policies for rater's own ratings
 
 ### Pending Todos
 
 - Configure external services for production deployment (Stripe, Google Maps, Resend, webhooks, pg_cron, Vault) -- carried from v1.1
 - Obtain DPA template + solicitor review before first org onboarding (non-code blocker for v3.0 launch)
 - **Configure Vercel wildcard `*.sitemedic.co.uk` and DNS CNAME** -- checkpoint from 26-01; 72h propagation
-- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142, 143, 144, 146, 147) to production** -- migrations 132-144 verified, 146 for marketplace quotes, 147 for direct jobs
+- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142, 143, 144, 146, 147, 148) to production** -- migrations 132-144 verified, 146 for marketplace quotes, 147 for direct jobs, 148 for job ratings
 - **Add `NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.co.uk` to Vercel env vars** -- needed for production subdomain routing
 - **Create Stripe Products/Prices and register billing webhook** -- checkpoint from 25-01
 - **CQC legal opinion required** -- must determine if marketplace model requires CQC registration before launch
@@ -128,5 +132,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 34.1-04-PLAN.md (Payment, Booking Bridge, Medic Assignment, Job Detail)
+Stopped at: Completed 34.1-05-PLAN.md (Client Portal & Bidirectional Ratings) -- Phase 34.1 COMPLETE
 Resume file: None
