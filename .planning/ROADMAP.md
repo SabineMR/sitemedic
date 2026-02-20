@@ -350,9 +350,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 47-01: Delivery and read status (message status column: sent/delivered/read; update to "delivered" when recipient's client receives via Realtime; update to "read" when thread is opened; real-time status indicator in thread UI)
-- [ ] 47-02: Conversation search (search input on conversation list page; full-text search across messages scoped to user's conversations; result list with message preview, conversation name, sender, timestamp; navigate to message in thread)
-- [ ] 47-03: Message file attachments (attach button in message compose; file picker/dropzone; upload to message-attachments bucket; attachment metadata on message record; inline attachment display in thread with download link)
+- [ ] 47-01-PLAN.md — Delivery and read status (migration 156 with updated_at trigger + tsvector FTS column + GIN index + REPLICA IDENTITY; PATCH /api/messages/[messageId]/status with forward-only state machine; MessageStatusIndicator component with Lucide Check/CheckCheck icons; Realtime UPDATE subscription for live status changes; auto-delivered on Realtime INSERT; mark-as-read on thread open advances messages to 'read')
+- [ ] 47-02-PLAN.md — Cross-conversation search (GET /api/messages/search using PostgreSQL textSearch with websearch type; ConversationSearch overlay panel with debounced input; SearchResultItem with conversation name, sender, snippet, timestamp; useMessageSearch hook; ConversationList search toggle integration)
+- [ ] 47-03-PLAN.md — Message file attachments (POST /api/messages/attachments/upload with FormData to message-attachments bucket; GET /api/messages/attachments/download with signed URL; AttachmentPicker with Paperclip button and file validation; MessageAttachment with image thumbnail or file icon display; MessageInput pending file preview and dual send mode; MessageItem attachment rendering)
 
 ---
 
