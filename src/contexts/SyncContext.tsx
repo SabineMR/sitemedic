@@ -277,6 +277,22 @@ export function SyncProvider({ children }: SyncProviderProps) {
     }
   }, [auth.state.user])
 
+  /**
+   * Start/stop message auto-sync when user authenticates.
+   * On reconnect, pushes queued messages then pulls new ones.
+   */
+  useEffect(() => {
+    if (auth.state.user && auth.state.user.orgId) {
+      messageSync.startAutoSync(auth.state.user.id, auth.state.user.orgId)
+    } else {
+      messageSync.stopAutoSync()
+    }
+
+    return () => {
+      messageSync.stopAutoSync()
+    }
+  }, [auth.state.user])
+
   const value: SyncContextType = {
     state,
     triggerSync,

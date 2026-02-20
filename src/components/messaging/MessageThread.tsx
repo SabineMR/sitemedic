@@ -8,7 +8,7 @@
  * Phase 42: iOS Messaging & Offline
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   FlatList,
@@ -22,6 +22,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useOrg } from '../../contexts/OrgContext';
 import { useSync } from '../../contexts/SyncContext';
 import { getDatabase } from '../../lib/watermelon';
+import { messageSync } from '../../services/MessageSync';
 import MessageModel from '../../database/models/Message';
 import { MessageItem } from './MessageItem';
 import { MessageInput } from './MessageInput';
@@ -36,6 +37,8 @@ export function MessageThread({ conversationId }: MessageThreadProps) {
   const { triggerMessageSync } = useSync();
   const [messages, setMessages] = useState<MessageModel[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const flatListRef = useRef<FlatList>(null);
+  const prevMessageCount = useRef(0);
 
   const userId = authState.user?.id || '';
   const userName = authState.user?.fullName || 'You';
@@ -61,6 +64,40 @@ export function MessageThread({ conversationId }: MessageThreadProps) {
   }, [conversationId]);
 
   /**
+   * Scroll to the latest message when a new message is added.
+   * Since FlatList is inverted, scrolling to offset 0 shows the newest message.
+   */
+  useEffect(() => {
+    if (messages.length > prevMessageCount.current && messages.length > 0) {
+      // New message added — scroll to bottom (offset 0 in inverted list)
+      setTimeout(() => {
+        flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+      }, 100);
+    }
+    prevMessageCount.current = messages.length;
+  }, [messages.length]);
+
+  /**
+   * Handle retry for a failed message: reset status to 'queued' and trigger push.
+   */
+  const handleRetry = useCallback(async (msg: MessageModel) => {
+    try {
+      const database = getDatabase();
+      await database.write(async () => {
+        await msg.update((record: any) => {
+          record.status = 'queued';
+        });
+      });
+      // Trigger push sync
+      messageSync.pushPendingMessages().catch((err) => {
+        console.error('[MessageThread] Retry push failed:', err);
+      });
+    } catch (err) {
+      console.error('[MessageThread] Failed to reset message for retry:', err);
+    }
+  }, []);
+
+  /**
    * Pull-to-refresh: trigger message sync for fresh data.
    */
   const handleRefresh = useCallback(async () => {
@@ -81,6 +118,7 @@ export function MessageThread({ conversationId }: MessageThreadProps) {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <FlatList
+        ref={flatListRef}
         data={messages}
         keyExtractor={(item) => item.id}
         inverted
@@ -91,6 +129,11 @@ export function MessageThread({ conversationId }: MessageThreadProps) {
             createdAt={item.createdAt}
             status={item.status}
             isOwnMessage={item.senderId === userId}
+            onRetry={
+              item.status === 'failed'
+                ? () => handleRetry(item)
+                : undefined
+            }
           />
         )}
         refreshControl={

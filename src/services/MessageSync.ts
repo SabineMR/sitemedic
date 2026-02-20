@@ -20,6 +20,7 @@ import { Q } from '@nozbe/watermelondb'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { getDatabase } from '../lib/watermelon'
 import { supabase } from '../lib/supabase'
+import { networkMonitor } from './NetworkMonitor'
 import Conversation from '../database/models/Conversation'
 import Message from '../database/models/Message'
 
@@ -27,10 +28,51 @@ const LAST_SYNCED_KEY = 'messaging_last_synced_at'
 const CONVERSATIONS_LIMIT = 200
 const MESSAGES_LIMIT = 500
 const INITIAL_MESSAGES_PER_CONVERSATION = 100
+const QUEUED_MESSAGE_MAX_AGE_MS = 24 * 60 * 60 * 1000 // 24 hours
 
 export class MessageSync {
   private isSyncing: boolean = false
   private lastSyncedAt: number = 0 // epoch ms, loaded from AsyncStorage
+  private autoSyncUnsubscribe: (() => void) | null = null
+
+  /**
+   * Start automatic sync on connectivity changes.
+   * When the device comes back online, pushes queued messages first,
+   * then pulls new messages from the server.
+   *
+   * @param userId - Current authenticated user's Supabase UUID
+   * @param orgId - Current organisation ID
+   */
+  startAutoSync(userId: string, orgId: string): void {
+    // Avoid double-subscribing
+    this.stopAutoSync()
+
+    this.autoSyncUnsubscribe = networkMonitor.addListener((isOnline) => {
+      if (isOnline) {
+        console.log('[MessageSync] Network reconnected — triggering auto push+pull')
+        // Push first (send queued messages), then pull (receive new messages)
+        this.pushPendingMessages()
+          .then(() => this.pullSync(userId, orgId))
+          .catch((err) => {
+            console.error('[MessageSync] Auto sync on reconnect failed:', err)
+          })
+      }
+    })
+
+    console.log('[MessageSync] Auto sync started (listening for connectivity changes)')
+  }
+
+  /**
+   * Stop automatic sync on connectivity changes.
+   * Unsubscribes the NetworkMonitor listener.
+   */
+  stopAutoSync(): void {
+    if (this.autoSyncUnsubscribe) {
+      this.autoSyncUnsubscribe()
+      this.autoSyncUnsubscribe = null
+      console.log('[MessageSync] Auto sync stopped')
+    }
+  }
 
   /**
    * Pull conversations and messages from Supabase into WatermelonDB.
@@ -339,13 +381,17 @@ export class MessageSync {
   /**
    * Push locally-queued messages to Supabase.
    * Queries WatermelonDB for messages with status='queued',
-   * POSTs them to Supabase, and updates local status to 'sent' on success.
+   * POSTs them to Supabase with idempotency_key in metadata for deduplication,
+   * and updates local status to 'sent' on success.
+   *
+   * Messages older than 24 hours that are still queued get marked as 'failed'.
    *
    * @returns Count of messages pushed
    */
   async pushPendingMessages(): Promise<number> {
     const database = getDatabase()
     let pushedCount = 0
+    const now = Date.now()
 
     // Find all locally-queued messages
     const queuedMessages = await database.collections
@@ -361,6 +407,18 @@ export class MessageSync {
 
     for (const localMsg of queuedMessages) {
       try {
+        // Check if message is older than 24 hours — mark as permanently failed
+        const messageAge = now - localMsg.createdAt
+        if (messageAge > QUEUED_MESSAGE_MAX_AGE_MS) {
+          console.warn(`[MessageSync] Message ${localMsg.id} is >24h old (${Math.round(messageAge / 3600000)}h), marking as failed`)
+          await database.write(async () => {
+            await localMsg.update((record: any) => {
+              record.status = 'failed'
+            })
+          })
+          continue
+        }
+
         // Look up the conversation's server_id (need it for Supabase API)
         const conversationServerId = await this.resolveConversationServerId(localMsg.conversationId)
         if (!conversationServerId) {
@@ -368,7 +426,29 @@ export class MessageSync {
           continue
         }
 
-        // POST message to Supabase
+        // Deduplication: check if a message with the same idempotency_key already exists
+        if (localMsg.idempotencyKey) {
+          const { data: existing } = await supabase
+            .from('messages')
+            .select('id')
+            .eq('conversation_id', conversationServerId as any)
+            .contains('metadata', { idempotency_key: localMsg.idempotencyKey } as any)
+            .maybeSingle()
+
+          if (existing) {
+            console.log(`[MessageSync] Duplicate detected via idempotency_key ${localMsg.idempotencyKey}, treating as success`)
+            await database.write(async () => {
+              await localMsg.update((record: any) => {
+                record.serverId = (existing as any).id
+                record.status = 'sent'
+              })
+            })
+            pushedCount++
+            continue
+          }
+        }
+
+        // POST message to Supabase with idempotency_key in metadata
         const { data, error } = await supabase
           .from('messages')
           .insert({
@@ -378,14 +458,17 @@ export class MessageSync {
             message_type: localMsg.messageType || 'text',
             content: localMsg.content || '',
             status: 'sent',
+            metadata: localMsg.idempotencyKey
+              ? { idempotency_key: localMsg.idempotencyKey }
+              : undefined,
           } as any)
           .select()
           .single()
 
         if (error) {
-          // Handle idempotency: if duplicate detected, treat as success
+          // Handle idempotency: if duplicate detected via unique constraint, treat as success
           if (error.code === '23505') {
-            console.log(`[MessageSync] Duplicate message detected (idempotency), treating as success`)
+            console.log(`[MessageSync] Duplicate message detected (23505), treating as success`)
             await database.write(async () => {
               await localMsg.update((record: any) => {
                 record.status = 'sent'
@@ -395,7 +478,7 @@ export class MessageSync {
             continue
           }
           console.error(`[MessageSync] Failed to push message ${localMsg.id}:`, error)
-          continue // Leave as 'queued' for retry on next sync
+          continue // Leave as 'queued' for retry on next pushPendingMessages call
         }
 
         // Update conversation metadata on server
@@ -435,7 +518,7 @@ export class MessageSync {
         pushedCount++
       } catch (error) {
         console.error(`[MessageSync] Error pushing message ${localMsg.id}:`, error)
-        // Leave as 'queued' for retry on next sync
+        // Leave as 'queued' for retry on next pushPendingMessages call
       }
     }
 

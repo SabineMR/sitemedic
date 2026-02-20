@@ -13,6 +13,7 @@ import {
   View,
   FlatList,
   TextInput,
+  Text,
   RefreshControl,
   StyleSheet,
 } from 'react-native';
@@ -38,6 +39,7 @@ export function ConversationList() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [pickerVisible, setPickerVisible] = useState(false);
+  const isOffline = !syncState.isOnline;
 
   /**
    * Subscribe to WatermelonDB conversations collection with reactive observation.
@@ -58,17 +60,22 @@ export function ConversationList() {
 
   /**
    * Pull-to-refresh: trigger message sync then re-observe.
+   * When offline, completes the refresh without error.
    */
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await triggerMessageSync();
+      if (isOffline) {
+        console.log('[ConversationList] Cannot sync while offline');
+      } else {
+        await triggerMessageSync();
+      }
     } catch (err) {
       console.error('[ConversationList] Refresh failed:', err);
     } finally {
       setRefreshing(false);
     }
-  }, [triggerMessageSync]);
+  }, [triggerMessageSync, isOffline]);
 
   /**
    * Navigate to conversation thread.
@@ -101,6 +108,15 @@ export function ConversationList() {
 
   return (
     <View style={styles.container}>
+      {/* Offline banner */}
+      {isOffline && (
+        <View style={styles.offlineBanner}>
+          <Text style={styles.offlineBannerText}>
+            Offline - showing cached messages
+          </Text>
+        </View>
+      )}
+
       {/* Search filter */}
       <View style={styles.searchContainer}>
         <TextInput
@@ -165,6 +181,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  offlineBanner: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    height: 28,
+    justifyContent: 'center',
+  },
+  offlineBannerText: {
+    fontSize: 12,
+    color: '#92400E',
+    textAlign: 'center',
   },
   searchContainer: {
     paddingHorizontal: 16,

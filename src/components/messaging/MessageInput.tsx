@@ -19,6 +19,7 @@ import {
   Platform,
 } from 'react-native';
 import { getDatabase } from '../../lib/watermelon';
+import { useSync } from '../../contexts/SyncContext';
 import { messageSync } from '../../services/MessageSync';
 import Message from '../../database/models/Message';
 import Conversation from '../../database/models/Conversation';
@@ -52,8 +53,10 @@ export function MessageInput({
   userId,
   userName,
 }: MessageInputProps) {
+  const { state: syncState } = useSync();
   const [content, setContent] = useState('');
   const [sending, setSending] = useState(false);
+  const isOffline = !syncState.isOnline;
 
   const handleSend = useCallback(async () => {
     const trimmed = content.trim();
@@ -111,6 +114,13 @@ export function MessageInput({
 
   return (
     <View style={styles.container}>
+      {isOffline && (
+        <View style={styles.offlineBanner}>
+          <Text style={styles.offlineBannerText}>
+            You're offline. Messages will be sent when you reconnect.
+          </Text>
+        </View>
+      )}
       <View style={styles.inputRow}>
         <TextInput
           style={styles.input}
@@ -154,6 +164,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     backgroundColor: '#FFFFFF',
+  },
+  offlineBanner: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginBottom: 6,
+    height: 28,
+    justifyContent: 'center',
+  },
+  offlineBannerText: {
+    fontSize: 12,
+    color: '#92400E',
+    textAlign: 'center',
   },
   inputRow: {
     flexDirection: 'row',

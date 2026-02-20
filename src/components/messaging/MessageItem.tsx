@@ -9,7 +9,7 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 interface MessageItemProps {
   senderName: string;
@@ -17,6 +17,7 @@ interface MessageItemProps {
   createdAt: number;
   status: string;
   isOwnMessage: boolean;
+  onRetry?: () => void;
 }
 
 /**
@@ -83,14 +84,17 @@ export function MessageItem({
   createdAt,
   status,
   isOwnMessage,
+  onRetry,
 }: MessageItemProps) {
   const initial = (senderName || '?').charAt(0).toUpperCase();
   const avatarColor = getAvatarColor(senderName || '');
   const timeDisplay = formatMessageTime(createdAt);
   const isQueued = status === 'queued';
+  const isFailed = status === 'failed';
+  const isPending = isQueued || isFailed;
 
   return (
-    <View style={[styles.container, isQueued && styles.containerQueued]}>
+    <View style={[styles.container, isPending && styles.containerPending]}>
       {/* Avatar */}
       <View
         style={[
@@ -130,6 +134,16 @@ export function MessageItem({
           {isQueued && (
             <Text style={styles.queuedIndicator}>Sending...</Text>
           )}
+          {isFailed && (
+            <View style={styles.failedRow}>
+              <Text style={styles.failedIndicator}>Failed to send</Text>
+              {onRetry && (
+                <TouchableOpacity onPress={onRetry} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Text style={styles.retryButton}>Tap to retry</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
         </View>
       </View>
     </View>
@@ -143,7 +157,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     gap: 10,
   },
-  containerQueued: {
+  containerPending: {
     opacity: 0.5,
   },
   avatar: {
@@ -196,5 +210,20 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#9CA3AF',
     fontStyle: 'italic',
+  },
+  failedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  failedIndicator: {
+    fontSize: 11,
+    color: '#DC2626',
+    fontStyle: 'italic',
+  },
+  retryButton: {
+    fontSize: 11,
+    color: '#2563EB',
+    fontWeight: '600',
   },
 });
