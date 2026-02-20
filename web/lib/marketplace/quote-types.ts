@@ -15,8 +15,8 @@ import type { StaffingRole } from './event-types';
 // Enums / Union Types
 // =============================================================================
 
-/** Quote status lifecycle: draft → submitted → revised | withdrawn */
-export type QuoteStatus = 'draft' | 'submitted' | 'revised' | 'withdrawn';
+/** Quote status lifecycle: draft → submitted → revised | withdrawn | awarded | rejected */
+export type QuoteStatus = 'draft' | 'submitted' | 'revised' | 'withdrawn' | 'awarded' | 'rejected';
 
 /** Staffing plan type: naming specific medics or specifying headcount + qualifications */
 export type StaffingPlanType = 'named_medics' | 'headcount_and_quals';
@@ -132,6 +132,8 @@ export const QUOTE_STATUS_LABELS: Record<QuoteStatus, string> = {
   submitted: 'Submitted',
   revised: 'Revised',
   withdrawn: 'Withdrawn',
+  awarded: 'Awarded',
+  rejected: 'Not Selected',
 };
 
 /** Human-readable labels for staffing plan type */
