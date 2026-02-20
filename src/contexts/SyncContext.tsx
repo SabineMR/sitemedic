@@ -179,14 +179,14 @@ export function SyncProvider({ children }: SyncProviderProps) {
       // Refresh state after sync completes
       await refreshState()
     }
-  }, [state.isOnline, auth.state.user, auth.state.user?.orgId, refreshState])
+  }, [state.isOnline, auth.state.user, refreshState])
 
   /**
    * Trigger message-only sync (pull-to-refresh in messaging UI).
    * Pushes queued messages and pulls new conversations/messages from server.
    */
   const triggerMessageSync = useCallback(async () => {
-    if (!state.isOnline || !auth.state.user || !auth.state.user?.orgId) {
+    if (!state.isOnline || !auth.state.user || !auth.state.user.orgId) {
       console.log('[SyncContext] Cannot sync messages: offline or no auth')
       return
     }
@@ -196,7 +196,7 @@ export function SyncProvider({ children }: SyncProviderProps) {
       const pushedCount = await messageSync.pushPendingMessages()
       console.log('[SyncContext] Message push (manual):', pushedCount)
 
-      const pullResult = await messageSync.pullSync(auth.state.user.id, auth.state.user?.orgId)
+      const pullResult = await messageSync.pullSync(auth.state.user.id, auth.state.user.orgId)
       console.log('[SyncContext] Message pull (manual):', pullResult)
 
       setState((prev) => ({ ...prev, messageSyncStatus: 'idle' }))
@@ -204,7 +204,7 @@ export function SyncProvider({ children }: SyncProviderProps) {
       console.error('[SyncContext] Manual message sync failed:', error)
       setState((prev) => ({ ...prev, messageSyncStatus: 'error' }))
     }
-  }, [state.isOnline, auth.state.user, auth.state.user?.orgId])
+  }, [state.isOnline, auth.state.user])
 
   /**
    * Enqueue a sync item (wrapper for components).
