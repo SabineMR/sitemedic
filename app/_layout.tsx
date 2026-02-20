@@ -23,6 +23,7 @@ import { DatabaseProvider } from '@nozbe/watermelondb/react';
 import { AuthProvider } from '../src/contexts/AuthContext';
 import { OrgProvider } from '../src/contexts/OrgContext';
 import { SyncProvider } from '../src/contexts/SyncContext';
+import { RealtimeProvider } from '../src/contexts/RealtimeContext';
 import { initDatabase } from '../src/lib/watermelon';
 import { beaconService } from '../services/BeaconService';
 import { emergencyAlertService } from '../services/EmergencyAlertService';
@@ -89,6 +90,7 @@ export default function RootLayout() {
         <AuthProvider>
           <OrgProvider>
             <SyncProvider>
+              <RealtimeProvider>
               <BottomSheetModalProvider>
                 <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
                 {/* Emergency alert receiver — listens for push notifications on every screen */}
@@ -159,6 +161,7 @@ export default function RootLayout() {
                   />
                 </Stack>
               </BottomSheetModalProvider>
+              </RealtimeProvider>
             </SyncProvider>
           </OrgProvider>
           {/* SOSButton inside AuthProvider so it can check auth state and hide when signed out */}
