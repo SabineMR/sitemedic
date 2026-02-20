@@ -21,11 +21,11 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { LogOut, MessageSquare } from 'lucide-react';
-import Link from 'next/link';
+import { LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DashboardNav } from '@/components/dashboard/DashboardNav';
-import { fetchTotalUnreadCount } from '@/lib/queries/comms';
+import { UnreadBadge } from '@/components/dashboard/UnreadBadge';
+import { fetchConversationsWithUnread } from '@/lib/queries/comms';
 
 export default async function DashboardLayout({
   children,
@@ -42,11 +42,12 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
-  // Get user email for display
+  // Get user email and org_id for display and Realtime subscription
   const userEmail = user.email || 'Unknown';
+  const orgId = (user.app_metadata?.org_id as string) ?? '';
 
-  // Fetch total unread message count for header badge
-  const totalUnread = await fetchTotalUnreadCount(supabase);
+  // Fetch conversations for SSR hydration of the UnreadBadge client component
+  const initialConversations = await fetchConversationsWithUnread(supabase);
 
   // Read org branding from middleware headers (server component — direct access)
   const headersList = await headers();
@@ -120,17 +121,10 @@ export default async function DashboardLayout({
             <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-16 lg:px-6">
               <SidebarTrigger />
               <div className="flex-1" />
-              <Link
-                href="/messages"
-                className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <MessageSquare className="h-5 w-5" />
-                {totalUnread > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-destructive-foreground">
-                    {totalUnread > 99 ? '99+' : totalUnread}
-                  </span>
-                )}
-              </Link>
+              <UnreadBadge
+                initialConversations={initialConversations}
+                orgId={orgId}
+              />
             </header>
 
             {/* Page content */}

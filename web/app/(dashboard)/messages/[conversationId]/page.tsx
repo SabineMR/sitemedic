@@ -37,10 +37,11 @@ export default async function ConversationPage({ params }: PageProps) {
     redirect('/messages');
   }
 
-  // Get current user for the thread component
+  // Get current user for the thread component and org_id for Realtime
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const orgId = (user?.app_metadata?.org_id as string) ?? '';
 
   // Find participant name from conversations list (the one matching this conversation)
   const currentConversation = conversations.find(
@@ -71,6 +72,7 @@ export default async function ConversationPage({ params }: PageProps) {
         <ConversationList
           initialConversations={conversations}
           selectedId={conversationId}
+          orgId={orgId}
         />
       </div>
 

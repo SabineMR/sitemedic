@@ -21,6 +21,7 @@ export default async function MessagesPage() {
     data: { user },
   } = await supabase.auth.getUser();
   const role = (user?.app_metadata?.role as 'org_admin' | 'medic') ?? null;
+  const orgId = (user?.app_metadata?.org_id as string) ?? '';
 
   const conversations = await fetchConversationsWithUnread(supabase);
 
@@ -51,7 +52,7 @@ export default async function MessagesPage() {
             existingConversations={existingConversations}
           />
         ) : (
-          <ConversationList initialConversations={conversations} />
+          <ConversationList initialConversations={conversations} orgId={orgId} />
         )}
       </div>
 

@@ -2,9 +2,10 @@
  * Conversation List - Client Component
  *
  * Renders a scrollable list of conversation rows with a search filter.
- * Uses useConversations hook for 30-second polling updates.
+ * Uses Supabase Realtime for live updates (polling removed in Phase 43).
  *
  * Phase 41: Web Messaging Core
+ * Phase 43: Replaced 30s polling with Realtime subscription
  */
 
 'use client';
@@ -12,6 +13,7 @@
 import { useState } from 'react';
 import {
   useConversations,
+  useRealtimeMessages,
   type ConversationListItem,
 } from '@/lib/queries/comms';
 import { ConversationRow } from './ConversationRow';
@@ -21,13 +23,18 @@ import { Search } from 'lucide-react';
 interface ConversationListProps {
   initialConversations: ConversationListItem[];
   selectedId?: string;
+  orgId: string;
 }
 
 export function ConversationList({
   initialConversations,
   selectedId: externalSelectedId,
+  orgId,
 }: ConversationListProps) {
   const { data: conversations } = useConversations(initialConversations);
+
+  // Establish Realtime subscription for live message updates
+  useRealtimeMessages(orgId);
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(
     externalSelectedId ?? null
