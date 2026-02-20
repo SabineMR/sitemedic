@@ -1,5 +1,46 @@
 # Project Milestones: SiteMedic
 
+## v5.0 Internal Comms & Document Management (Shipped: 2026-02-20)
+
+**Delivered:** Built in-platform messaging and compliance document management — org admins communicate with field medics via 1:1 conversations and broadcasts, medics upload compliance documents with expiry tracking, all synced across iOS app and web dashboard with real-time delivery and push notifications. 28/28 requirements satisfied.
+
+**Key accomplishments:**
+
+- Comms foundation: 7 org-scoped tables, 2 storage buckets, 35 RLS policies, TypeScript types — Phase 40 provides the complete data layer for all v5.0 features
+- Web messaging: Two-panel conversation list + message thread, flat Slack-style layout, new conversation flow with MedicPicker (admin) and "Message Admin" (medic), 30s/10s polling — Phases 41
+- iOS messaging & offline: WatermelonDB Conversation + Message models, offline send queue with idempotency_key deduplication, connectivity-triggered sync, cross-platform message delivery — Phase 42
+- Real-time & push: Single Supabase Realtime channel per org, GDPR-safe push via Expo Push API + pg_net trigger, foreground toast + background deep linking — Phase 43
+- Broadcast messaging: Admin sends to all medics, per-medic read tracking ("X of Y read"), drilldown list — Phase 44
+- Document management: Web + iOS upload with 5 categories (Insurance, DBS, Qualification, ID, Other) + custom categories, expiry dates, version archiving, admin medic document view — Phase 45
+- Expiry tracking: Progressive alerts at 30/14/7/1 days via pg_cron + Edge Function, medic + admin digest emails, bulk expiry dashboard with category filtering — Phase 46
+- Message polish: Delivery/read status ticks (sent → delivered → read), PostgreSQL full-text search with tsvector + GIN, file attachments with inline display + signed URL download — Phase 47
+
+**Phases completed:** 40–47 (8 phases, 21 plans total)
+
+**Stats:**
+
+- 8 phases, 21 plans
+- Executed: 2026-02-19 → 2026-02-20
+- 28/28 requirements satisfied (100%)
+- 8/8 phases verified (all passed)
+- 8/8 E2E flows verified
+- 6 migrations (143, 144, 150, 151, 155, 157)
+
+**Git range:** `6e143b7` (feat(40-01): create comms & docs foundation schema migration) → `fd4dd16` (docs: v5.0 milestone audit)
+
+**Tech debt deferred:**
+
+- Header unread badge SSR-only (Realtime covers ConversationList, not layout header)
+- iOS offline round-trip needs physical device test
+- Push notifications need real device + APNS credentials
+- Resend API key for production emails (dev mode logs to console)
+- pg_cron requires production Supabase instance
+- 6 migrations pending production application
+
+**What's next:** Resume v4.0 MedBid Marketplace (Phase 37: Company Accounts onwards) or start v5.1 (bookmarks, notification preferences, document previews)
+
+---
+
 ## v3.0 White-Label Platform & Subscription Engine (Shipped: 2026-02-19)
 
 **Delivered:** Transformed SiteMedic into a white-label SaaS engine — each subscribing medic business gets their own branded portal, subdomain, and subscription plan. Per-org branding (logo, primary colour, company name) applied consistently across the web portal, PDFs, and emails. Three Stripe Billing tiers with a hybrid onboarding flow — pay online, platform admin activates. 30/30 requirements satisfied.

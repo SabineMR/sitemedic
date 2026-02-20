@@ -87,6 +87,20 @@ Documentation happens automatically as the medic does their job, not as separate
 - ✓ Platform admin subscription dashboard — view all org subscriptions, MRR, churn — v3.0
 - ✓ Branding settings UI — org admin logo upload + colour picker, platform admin branding override — v3.0
 
+**Internal Comms & Document Management (v5.0):**
+- ✓ 1:1 messaging — org admin and medics have two-way conversation threads with delivery/read status ticks — v5.0
+- ✓ Community broadcast — org admin sends announcements to all medics with read tracking — v5.0
+- ✓ Message search — full-text search across all conversations with PostgreSQL tsvector — v5.0
+- ✓ File attachments — attach documents/images to messages with inline display and download — v5.0
+- ✓ Offline messaging — messages queued locally when offline, delivered on reconnect with deduplication — v5.0
+- ✓ Real-time delivery — Supabase Realtime for instant message arrival, no polling — v5.0
+- ✓ Push notifications — iOS push via Expo Push API, GDPR-safe (sender name only, no content) — v5.0
+- ✓ Document upload — medics upload compliance documents (PDF, image) with category and expiry date — v5.0
+- ✓ Document versioning — new version archives old, admin views all versions on medic profile — v5.0
+- ✓ Expiry tracking — colour-coded badges (green/amber/red), progressive alerts at 30/14/7/1 days — v5.0
+- ✓ Bulk expiry dashboard — admin view of all documents expiring across all medics — v5.0
+- ✓ Cross-platform sync — messaging and documents work on both iOS app and web dashboard — v5.0
+
 ### Active (v4.0 — MedBid Marketplace)
 
 **Core Marketplace:**
@@ -116,23 +130,6 @@ Documentation happens automatically as the medic does their job, not as separate
 - [ ] Early access — premium credits buy early access to new event listings before general release
 - [ ] Tiered medic priority — SiteMedic roster medics get priority access before open marketplace
 
-### Planned (v5.0 — Internal Comms & Document Management)
-
-**Messaging:**
-- [ ] 1:1 messaging — org admin and medics have two-way conversation threads inside SiteMedic
-- [ ] Community broadcast — org admin sends announcements to all medics at once
-- [ ] Message notifications — medics receive push/email notifications for new messages
-
-**Document Management:**
-- [ ] Document upload — medics upload compliance documents (insurance, DBS, certs) via iOS app or web
-- [ ] Profile document log — uploaded documents saved to medic's individual profile, admin can see what's on file
-- [ ] Expiry tracking — documents have expiry dates, system alerts admin and medic before they lapse
-- [ ] Save for later — medics can bookmark/save documents or messages for quick reference
-
-**Cross-platform:**
-- [ ] iOS app support — messaging and document upload available in the mobile app
-- [ ] Web dashboard support — messaging and document management synced on web portal
-
 ### Out of Scope
 
 - **Document library** — Not MVP-critical, add when clients request it
@@ -145,17 +142,18 @@ Documentation happens automatically as the medic does their job, not as separate
 
 ## Current State
 
-**v3.0 Shipped:** 2026-02-19
+**v5.0 Shipped:** 2026-02-20
 
-- **Codebase:** ~171,000+ lines (TypeScript, TSX, SQL)
-- **Tech Stack:** Expo (iOS), Next.js 15 (web), Supabase (backend), WatermelonDB v4 (offline storage), Stripe (payments + Billing + Connect), Recharts (analytics), react-leaflet (maps)
-- **Phases:** 31 phases complete (180 plans executed — 84 in v1.0, 35 in v1.1, 30 in v2.0, 31 in v3.0)
-- **Status:** v3.0 complete — white-label branding, subdomain routing, Stripe Billing subscription engine, feature gating, org onboarding, and branding settings UI all shipped
-- **Known Issues:** Minor tech debt deferred: `getLocationLabel`/`getEventLabel` orphaned exports; `incident-report-dispatcher.ts` dead code; Motorsport PDF has DRAFT watermark
+- **Codebase:** ~200,000+ lines (TypeScript, TSX, SQL)
+- **Tech Stack:** Expo (iOS), Next.js 15 (web), Supabase (backend + Realtime + Storage), WatermelonDB v5 (offline storage), Stripe (payments + Billing + Connect), Recharts (analytics), react-leaflet (maps), Resend (transactional email), Expo Push API (iOS notifications)
+- **Phases:** 47 phases complete (238 plans executed — 84 in v1.0, 35 in v1.1, 30 in v2.0, 30 in v3.0, 38 in v4.0, 21 in v5.0)
+- **Milestones shipped:** v1.0 MVP, v1.1 Polish, v2.0 Multi-Vertical, v3.0 White-Label, v5.0 Internal Comms (v4.0 in progress)
+- **Status:** v5.0 complete — messaging (1:1 + broadcast + offline + real-time + push), document management (upload + versioning + expiry tracking + alerts), all synced cross-platform
+- **Known Issues:** Minor tech debt deferred: orphaned exports from v2.0, Motorsport PDF DRAFT watermark, v4.0 phases 34/37/38/39 incomplete
 
 **Next Steps:**
-- Begin v4.0 milestone: MedBid Marketplace
-- Deploy v3.0 to production (configure external services per DEPLOYMENT.md)
+- Resume v4.0 MedBid Marketplace (Phase 37 onwards — Company Accounts, Notifications, Admin Dashboard)
+- Deploy all migrations to production (143, 144, 150, 151, 155, 157 for v5.0)
 
 ## Context
 
@@ -224,6 +222,13 @@ Documentation happens automatically as the medic does their job, not as separate
 | `fetchLogoAsDataUri()` for PDF rendering | @react-pdf/renderer in Deno Edge cannot reliably fetch remote images — data URI approach works reliably | ✓ Good (v3.0) |
 | Service-role client for platform admin ops | Platform admin JWT has org_id=NULL so RLS blocks direct writes; service-role bypasses safely | ✓ Good (v3.0) |
 | Hybrid onboarding (pay online, admin activates) | Balances self-service signup with quality control — Sabine can verify each org before activation | ✓ Good (v3.0) |
+| Flat Slack-style message layout (not chat bubbles) | Professional staffing comms, not social media — flat layout with sender name + timestamp | ✓ Good (v5.0) |
+| Single Realtime channel per org | One channel handles all conversations for a user — avoids per-conversation connection exhaustion | ✓ Good (v5.0) |
+| Forward-only message status state machine | sent → delivered → read with no regression — prevents status confusion | ✓ Good (v5.0) |
+| GDPR-safe push notifications | Sender name only, never message content — compliant with UK GDPR for health data | ✓ Good (v5.0) |
+| PostgreSQL tsvector for message search | GENERATED column with GIN index — automatic indexing, no manual sync, websearch type for natural queries | ✓ Good (v5.0) |
+| Document versioning via current_version_id | Archive old, don't delete — compliance audit trail preserved, circular FK with deferred constraint | ✓ Good (v5.0) |
+| Progressive expiry alerts via pg_cron + Edge Function | Daily job at 08:00 UTC checks 4 thresholds (30/14/7/1) — deduplication via audit table, digest format | ✓ Good (v5.0) |
 
 ## Current Milestone: v4.0 MedBid Marketplace
 
@@ -281,4 +286,4 @@ Documentation happens automatically as the medic does their job, not as separate
 6. Save/bookmark functionality
 
 ---
-*Last updated: 2026-02-19 after v5.0 milestone planning started*
+*Last updated: 2026-02-20 after v5.0 milestone shipped*
