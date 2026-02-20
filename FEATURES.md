@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-20 (Phase 34 Quote Management -- edit, withdraw, deadline extension, my-quotes page)
+**Last Updated**: 2026-02-20 (Phase 42 iOS Messaging & Offline -- Plans 01-03 complete)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -77,9 +77,9 @@ Org admins and medics can have 1:1 text conversations through the web dashboard 
 
 **Requirements completed:** MSG-01, MSG-02, MSG-03, MSG-04
 
-### Phase 42: iOS Messaging & Offline — Plans 01-02 (COMPLETE)
+### Phase 42: iOS Messaging & Offline — Plans 01-03 (COMPLETE)
 
-WatermelonDB local data layer and full iOS messaging UI for the React Native app, matching web dashboard messaging features in a mobile-native interface.
+WatermelonDB local data layer, full iOS messaging UI, and offline queue with connectivity-triggered sync for the React Native app.
 
 **Plan 01 — WatermelonDB Models and Message Sync:**
 
@@ -105,11 +105,25 @@ WatermelonDB local data layer and full iOS messaging UI for the React Native app
 | **MedicPicker** | Modal component. Medic flow: "Message Admin" button (looks up own medic record, creates/finds conversation). Admin flow: FlatList of org medics with search filter. SELECT-then-INSERT with 23505 duplicate handling. | `src/components/messaging/MedicPicker.tsx` |
 | **Empty State** | Centered view with message icon, "No conversations yet", contextual action button (medic: Message Admin, admin: Start a conversation). | `src/components/messaging/EmptyState.tsx` |
 
+**Plan 03 — Offline Queue, Delivery, and Connectivity Sync:**
+
+| Feature | Implementation | Files |
+|---------|---------------|-------|
+| **Auto Sync on Reconnect** | MessageSync.startAutoSync registers NetworkMonitor listener. On reconnect: push queued messages first, then pull new messages from server. SyncContext starts/stops auto sync based on auth state. | `src/services/MessageSync.ts`, `src/contexts/SyncContext.tsx` |
+| **Idempotency Deduplication** | Before INSERT, checks Supabase for existing message with same idempotency_key in metadata JSONB field. If found, treats as success (updates local status to 'sent'). Also handles 23505 unique constraint errors. | `src/services/MessageSync.ts` |
+| **24-Hour Failed Messages** | Queued messages older than 24 hours automatically marked as 'failed' during push sync. Prevents stale messages from retrying indefinitely. | `src/services/MessageSync.ts` |
+| **Failed Message UI** | Messages with status='failed' render at 0.5 opacity with red "Failed to send" text and blue "Tap to retry" button. Retry resets status to 'queued' and triggers push sync. | `src/components/messaging/MessageItem.tsx`, `src/components/messaging/MessageThread.tsx` |
+| **Offline Banner (Input)** | Amber banner above message input: "You're offline. Messages will be sent when you reconnect." Appears reactively via useSync state, disappears automatically on reconnect. | `src/components/messaging/MessageInput.tsx` |
+| **Offline Banner (List)** | Amber banner at top of conversation list: "Offline - showing cached messages". Pull-to-refresh completes gracefully when offline without error. | `src/components/messaging/ConversationList.tsx` |
+| **Scroll to New Message** | FlatList ref with auto-scroll to offset 0 (bottom of inverted list) when new messages are added. 100ms delay for smooth animation after WatermelonDB observation update. | `src/components/messaging/MessageThread.tsx` |
+
 **Key decisions:**
 - MessageSync is self-contained (does NOT modify existing clinical data SyncQueue)
 - Local messages use 'queued' status for offline (server schema only has sent/delivered/read)
 - Participant names denormalized on local models (medics see "Admin", admins see medic name)
 - Avatar colors consistent between ConversationRow and MessageItem (same hash function)
+- Idempotency_key stored in Supabase messages.metadata JSONB (no schema change needed)
+- 24-hour timeout for failed messages (not retry-count based) to simplify model
 
 ### Planning Files
 
@@ -335,6 +349,65 @@ Phase 34.1 was inserted into the v4.0 roadmap between Phase 34 (Quote Submission
 | `.planning/REQUIREMENTS-v4.md` | 60 requirements across 10 categories |
 | `.planning/ROADMAP.md` | 8 phases (32--39), 26 plans |
 | `.planning/research/v4/` | Stack, features, architecture, pitfalls research |
+
+---
+
+## Recent Updates -- Marketplace Marketing Website (2026-02-19)
+
+### Overview
+
+Four new marketing pages for the SiteMedic Marketplace — a sub-brand landing experience that explains the CQC-verified RFQ platform, builds trust with enterprise clients, and drives signups for both event organisers and medical companies. Pages are statically generated (`force-static`, `revalidate = 86400`) for fast loading. Uses a `(info)` route group inside `web/app/marketplace/` to avoid collisions with existing app routes.
+
+### New Files Created (7 files)
+
+| File | Purpose |
+|------|---------|
+| `web/components/marketplace-marketing/marketplace-header.tsx` | Sticky header with SiteMedic Marketplace branding, nav links (Marketplace, For Clients, For Companies, FAQ, ASG Direct), "Post an Event" + "Sign In" CTAs, scroll shadow, and mobile Sheet menu. Client component with auth check. |
+| `web/components/marketplace-marketing/marketplace-footer.tsx` | Dark footer with 4 columns (For Clients, For Companies, Platform, Legal), compliance badges row (CQC-Verified, HCPC-Registered, Stripe Payments, etc.), and "Platform by SiteMedic" bottom line. Server component. |
+| `web/app/marketplace/(info)/layout.tsx` | Route group layout wrapping children with MarketplaceHeader + MarketplaceFooter. Same pattern as `(marketing)/layout.tsx`. |
+| `web/app/marketplace/(info)/page.tsx` | **Main landing page** (`/marketplace`) with 9 sections: dark gradient hero with pulse badge, stats bar, 4-step "How It Works" flow, two-sided value proposition cards (blue for clients, green for companies), enterprise trust section (6 dark feature cards), comparison table (Phone Around vs Agency vs SiteMedic Marketplace), industries supported grid (6 core + 4 add-on verticals), "Powered by SiteMedic" compliance dashboard promo, and final CTA with radial dot overlay. |
+| `web/app/marketplace/(info)/for-clients/page.tsx` | **For Clients page** (`/marketplace/for-clients`) with 7 sections: hero ("Stop phoning around for medical cover"), 4 pain point cards (dark section), 6-step posting walkthrough, "What's In Each Quote" breakdown (staffing, equipment, pricing, CQC status, cover letter, profile), compliance assurance section, enterprise features (multi-event, preferred providers, Net 30, dedicated support), and final CTA. |
+| `web/app/marketplace/(info)/for-companies/page.tsx` | **For Companies page** (`/marketplace/for-companies`) with 6 sections: hero with emerald accent ("Find events. Submit quotes. Grow your business."), 4-step quoting flow, 6-card benefits grid, registration checklist (CQC ID, company details, compliance docs, Stripe Connect), direct jobs zero-commission feature highlight, and emerald CTA section. |
+| `web/app/marketplace/(info)/faq/page.tsx` | **FAQ page** (`/marketplace/faq`) with 4 categorized sections (For Clients, For Companies, Platform & Compliance, Pricing) using native `<details>`/`<summary>` accordion pattern. 20 FAQ items total. "Still have questions?" CTA at bottom. |
+
+### Files Modified (3 files)
+
+| File | Change |
+|------|--------|
+| `web/components/marketing/site-header.tsx` | Added "Marketplace" nav link between Pricing and About, linking to `/marketplace`. |
+| `web/components/marketing/site-footer.tsx` | Added "Marketplace" link under Company column, above "Book a Medic". |
+| `web/app/sitemap.ts` | Added 4 new marketplace marketing URLs: `/marketplace` (priority 0.9, weekly), `/marketplace/for-clients` (0.8, monthly), `/marketplace/for-companies` (0.8, monthly), `/marketplace/faq` (0.7, monthly). |
+
+### Visual Design
+
+- **Hero backgrounds**: `bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950` (premium dark gradient)
+- **Primary accent**: `blue-600` (consistent with existing site)
+- **Secondary accent**: `emerald-500` / `emerald-600` for company/provider elements
+- **Dark sections**: `slate-900` with `border-slate-700/80` cards
+- **Radial dot overlay**: On hero + CTA sections (`radial-gradient(circle, #fff 1px, transparent 1px)`)
+- **Cards**: `rounded-2xl border shadow-sm hover:shadow-lg transition`
+- **All pages**: `force-static` + `revalidate = 86400` for fast static generation
+
+### Route Structure
+
+```
+/marketplace                    → Landing page (info route group)
+/marketplace/for-clients        → For event organisers
+/marketplace/for-companies      → For medical companies
+/marketplace/faq                → FAQ with accordion sections
+/marketplace/events             → EXISTING (unchanged)
+/marketplace/register           → EXISTING (unchanged)
+/marketplace/client-register    → EXISTING (unchanged)
+/marketplace/my-events          → EXISTING (unchanged)
+/marketplace/my-quotes          → EXISTING (unchanged)
+```
+
+### Key Technical Decisions
+
+- **Route group `(info)`**: Prevents route collisions with existing `/marketplace/events`, `/marketplace/register`, etc. The parenthesized folder doesn't affect URL paths.
+- **Native `<details>/<summary>`**: Used for FAQ accordion instead of adding Radix Accordion dependency — zero bundle cost, accessible by default.
+- **Static generation**: All 4 pages use `force-static` with 24h revalidation for fast loads without client-side data fetching.
+- **Separate header/footer components**: Marketplace marketing uses its own header/footer (`marketplace-marketing/`) distinct from ASG marketing (`marketing/`) — different branding, different nav links, different CTAs.
 
 ---
 
