@@ -308,12 +308,32 @@ export class MessageSync {
       }
 
       if (serverMessages.length > 0) {
+        // Build a map from Supabase conversation UUID → local WatermelonDB ID
+        // so pulled messages reference the local conversation ID (not the server UUID)
+        const serverConvIds = [...new Set(serverMessages.map((m: any) => m.conversation_id as string))]
+        const localConvs = await database.collections
+          .get<Conversation>('conversations')
+          .query(Q.where('server_id', Q.oneOf(serverConvIds)))
+          .fetch()
+        const serverToLocalConvId = new Map<string, string>()
+        for (const lc of localConvs) {
+          if (lc.serverId) {
+            serverToLocalConvId.set(lc.serverId, lc.id)
+          }
+        }
+
         await database.write(async () => {
           const batchOps: any[] = []
 
           for (const sm of serverMessages) {
             const serverId = (sm as any).id as string
             const senderName = senderNameMap.get((sm as any).sender_id) || 'Admin'
+            const localConvId = serverToLocalConvId.get((sm as any).conversation_id)
+
+            if (!localConvId) {
+              console.warn(`[MessageSync] Skipping message ${serverId}: no local conversation for server_id ${(sm as any).conversation_id}`)
+              continue
+            }
 
             // Check if message exists locally by server_id
             const existing = await database.collections
@@ -337,7 +357,7 @@ export class MessageSync {
                   .get<Message>('messages')
                   .prepareCreate((record: any) => {
                     record.serverId = serverId
-                    record.conversationId = (sm as any).conversation_id
+                    record.conversationId = localConvId
                     record.orgId = (sm as any).org_id
                     record.senderId = (sm as any).sender_id
                     record.senderName = senderName
