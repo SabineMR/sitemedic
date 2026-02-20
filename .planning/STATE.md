@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 43 of 47 (Real-Time Push Notifications — IN PROGRESS)
-Plan: 2 of 3 in current phase (43-02 complete)
+Plan: 2 of 3 in current phase (43-01 + 43-02 complete)
 Status: Executing phase 43
-Last activity: 2026-02-20 — Plan 43-02 complete (PushTokenService, NotificationContext, foreground toast, deep linking)
+Last activity: 2026-02-20 — Completed 43-01-PLAN.md (Realtime subscriptions replacing polling)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [██████░░░░] v4.0 50% | [██████░░░░] v5.0 57%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [██████░░░░] v4.0 50% | [██████░░░░] v5.0 62%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 214 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 23 v4.0 + 12 v5.0)
+- Total plans completed: 215 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 23 v4.0 + 13 v5.0)
 - Average duration: 3.9 min
-- Total execution time: ~13.9 hours
+- Total execution time: ~14.0 hours
 
 **By Milestone:**
 
@@ -32,7 +32,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
 | v4.0 | 8 | 23/32 | ~293 min | ~6.0 min |
-| v5.0 | 8 | 12/21 | ~62 min | ~5.2 min |
+| v5.0 | 8 | 13/21 | ~69 min | ~5.3 min |
 
 *Updated after each plan completion*
 
@@ -131,6 +131,12 @@ Recent decisions affecting current work:
 - [43-02]: Token staleness threshold 7 days -- avoids unnecessary DB writes while ensuring token freshness
 - [43-02]: NotificationProvider wraps tabs layout (not root) so it has access to AuthContext/OrgContext
 - [43-02]: TabsLayout split into outer wrapper (NotificationProvider) + inner component (TabsLayoutInner) for hook access
+- [43-01]: RealtimeProvider placed inside SyncProvider in iOS root layout (needs Auth + Org contexts)
+- [43-01]: Write queue serializes Realtime-triggered WatermelonDB writes to avoid concurrent db.write() conflicts
+- [43-01]: Sender name resolution: session cache > local WatermelonDB > Supabase medics query (3-tier fallback)
+- [43-01]: Web Realtime uses @/lib/supabase singleton (not SSR client) for persistent WebSocket channel
+- [43-01]: UnreadBadge client component replaces server-rendered badge for live updates
+- [43-01]: All polling removed from web messaging (30s conversations, 10s messages) -- Realtime only
 
 ### Pending Todos
 
@@ -161,5 +167,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 43-02-PLAN.md (iOS push notification infrastructure)
+Stopped at: Completed 43-01-PLAN.md (Realtime subscriptions replacing polling)
 Resume file: None
