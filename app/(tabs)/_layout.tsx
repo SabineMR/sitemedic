@@ -11,13 +11,14 @@
  * - Sync status indicator in header (phone) or sidebar footer (iPad)
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
 import { Q } from '@nozbe/watermelondb';
 import { useSync } from '../../src/contexts/SyncContext';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useOrg } from '../../src/contexts/OrgContext';
+import { NotificationProvider, useNotifications } from '../../src/contexts/NotificationContext';
 import { useIsTablet } from '../../hooks/useIsTablet';
 import { useRole } from '../../hooks/useRole';
 import { getDatabase } from '../../src/lib/watermelon';
@@ -54,15 +55,30 @@ function SyncStatusIndicator() {
   );
 }
 
+/**
+ * Outer wrapper: provides NotificationContext to the inner tabs layout.
+ * This split is needed because useNotifications() must be called inside
+ * the provider tree, but the provider itself lives at this level.
+ */
 export default function TabsLayout() {
+  return (
+    <NotificationProvider>
+      <TabsLayoutInner />
+    </NotificationProvider>
+  );
+}
+
+function TabsLayoutInner() {
   const isTablet = useIsTablet();
   const { state } = useAuth();
   const router = useRouter();
   const { primaryVertical } = useOrg();
+  const { promptForPermission } = useNotifications();
   const personPluralLabel = primaryVertical === 'tv_film' ? 'Cast & Crew' : getPatientLabel(primaryVertical) + 's';
   const registryLabel = primaryVertical === 'tv_film' ? 'Cast & Crew Registry' : `${getPatientLabel(primaryVertical)} Registry`;
   const { isAdmin } = useRole();
   const [unreadBadge, setUnreadBadge] = useState<number>(0);
+  const messagesTabPromptedRef = useRef(false);
 
   // Observe unread conversation count from WatermelonDB for tab badge
   useEffect(() => {
@@ -83,7 +99,7 @@ export default function TabsLayout() {
     }
   }, []);
 
-  // During auth load, user is null → isAdmin is false, which would briefly show
+  // During auth load, user is null -> isAdmin is false, which would briefly show
   // the wrong tabs to an admin. Hide role-specific tabs while loading so the
   // correct set only appears once the session resolves.
   const medicOnlyHref = state.isLoading ? null : (isAdmin ? null : undefined);
@@ -92,22 +108,37 @@ export default function TabsLayout() {
   // Standard auth guard: fires whenever isAuthenticated changes (e.g. SIGNED_OUT event)
   useEffect(() => {
     if (!state.isLoading && !state.isAuthenticated) {
-      console.log('[TabsLayout] Not authenticated — redirecting to login');
+      console.log('[TabsLayout] Not authenticated -- redirecting to login');
       router.replace('/(auth)/login');
     }
   }, [state.isLoading, state.isAuthenticated]);
 
-  // Direct session check on mount — catches Fast Refresh stale isAuthenticated=true
+  // Direct session check on mount -- catches Fast Refresh stale isAuthenticated=true
   useEffect(() => {
     (async () => {
       const { supabase } = await import('../../src/lib/supabase');
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        console.log('[TabsLayout] No Supabase session on mount — redirecting to login');
+        console.log('[TabsLayout] No Supabase session on mount -- redirecting to login');
         router.replace('/(auth)/login');
       }
     })();
   }, []);
+
+  /**
+   * Prompt for push notification permission when Messages tab is focused
+   * for the first time. Uses a ref to avoid re-prompting within the session
+   * and AsyncStorage flag (inside promptForPermission) to persist across sessions.
+   */
+  const handleMessagesTabFocus = useCallback(() => {
+    if (messagesTabPromptedRef.current) return;
+    messagesTabPromptedRef.current = true;
+
+    console.log('[TabsLayout] Messages tab focused -- prompting for push permission');
+    promptForPermission().catch((err: Error) => {
+      console.error('[TabsLayout] Push permission prompt failed:', err);
+    });
+  }, [promptForPermission]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -183,6 +214,9 @@ export default function TabsLayout() {
             <Text style={[styles.iconText, { color }]}>💬</Text>
           ),
           tabBarBadge: unreadBadge > 0 ? (unreadBadge > 99 ? '99+' : unreadBadge) : undefined,
+        }}
+        listeners={{
+          focus: handleMessagesTabFocus,
         }}
       />
       <Tabs.Screen
