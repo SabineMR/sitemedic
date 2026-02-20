@@ -57,7 +57,10 @@ export async function fetchConversationsWithUnread(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    console.error('Error getting user for conversations:', userError);
+    console.error(
+      'Error getting user for conversations:',
+      userError ? JSON.stringify(userError) : 'No user session'
+    );
     return [];
   }
 
@@ -72,7 +75,9 @@ export async function fetchConversationsWithUnread(
     .order('last_message_at', { ascending: false, nullsFirst: false });
 
   if (convError) {
-    console.error('Error fetching conversations:', convError);
+    console.error(
+      `Error fetching conversations: message=${convError.message}, code=${convError.code}, details=${convError.details}, hint=${convError.hint}`
+    );
     return [];
   }
 

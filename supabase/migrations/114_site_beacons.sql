@@ -97,7 +97,7 @@ CREATE POLICY "org_admins_insert_beacons"
   WITH CHECK (
     org_id IN (
       SELECT org_id FROM profiles
-      WHERE id = auth.uid() AND role IN ('org_admin', 'manager')
+      WHERE id = auth.uid() AND role = 'org_admin'
     )
   );
 
@@ -106,7 +106,7 @@ CREATE POLICY "org_admins_update_beacons"
   USING (
     org_id IN (
       SELECT org_id FROM profiles
-      WHERE id = auth.uid() AND role IN ('org_admin', 'manager')
+      WHERE id = auth.uid() AND role = 'org_admin'
     )
   );
 
@@ -115,7 +115,7 @@ CREATE POLICY "org_admins_delete_beacons"
   USING (
     org_id IN (
       SELECT org_id FROM profiles
-      WHERE id = auth.uid() AND role IN ('org_admin', 'manager')
+      WHERE id = auth.uid() AND role = 'org_admin'
     )
   );
 

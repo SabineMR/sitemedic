@@ -137,7 +137,7 @@ CREATE POLICY "platform_admin_apex_partners" ON apex_partners
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.user_id = auth.uid()
+      WHERE profiles.id = auth.uid()
         AND profiles.role = 'platform_admin'
     )
   );
@@ -152,7 +152,7 @@ CREATE POLICY "platform_admin_expense_buckets" ON expense_buckets
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.user_id = auth.uid()
+      WHERE profiles.id = auth.uid()
         AND profiles.role = 'platform_admin'
     )
   );
@@ -167,7 +167,7 @@ CREATE POLICY "platform_admin_profit_splits" ON profit_splits
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.user_id = auth.uid()
+      WHERE profiles.id = auth.uid()
         AND profiles.role = 'platform_admin'
     )
   );

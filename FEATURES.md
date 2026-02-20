@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-20 (Phase 42 iOS Messaging & Offline -- Plans 01-03 complete)
+**Last Updated**: 2026-02-20 (Migration fixes + messaging error logging improvements)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -76,6 +76,13 @@ Org admins and medics can have 1:1 text conversations through the web dashboard 
 | **Empty State** | MessageSquare icon, "No conversations yet" text, working "Start a conversation" CTA (opens MedicPicker for admin, triggers Message Admin for medic). | `web/app/(dashboard)/messages/components/EmptyState.tsx` |
 
 **Requirements completed:** MSG-01, MSG-02, MSG-03, MSG-04
+
+**Bug fixes (2026-02-19):**
+| Fix | Details | Files |
+|-----|---------|-------|
+| **"Error fetching conversations: {}" fix** | Root cause: migrations 132-148 were not applied locally, so the `conversations` table didn't exist. `PostgrestError` extends `Error` in supabase-js v2.95.3, which causes Next.js RSC serialisation to output `{}` instead of the actual error. Fixed by: (1) applying all pending migrations, (2) improving error logging to use template literals with explicit property access (`message`, `code`, `details`, `hint`) instead of raw object logging. | `web/lib/queries/comms.ts` |
+| **Migration 114 fix** | `114_site_beacons.sql` RLS policies referenced non-existent `'manager'` enum value in `user_role`. Changed to `'org_admin'`. | `supabase/migrations/114_site_beacons.sql` |
+| **Migration 129 fix** | `129_hourly_pay_and_profit_split.sql` RLS policies referenced `profiles.user_id` which doesn't exist. Changed to `profiles.id`. | `supabase/migrations/129_hourly_pay_and_profit_split.sql` |
 
 ### Phase 42: iOS Messaging & Offline — Plans 01-03 (COMPLETE)
 
