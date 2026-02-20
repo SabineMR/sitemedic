@@ -156,12 +156,21 @@ export async function GET(
         .sort((a, b) => a.event_date.localeCompare(b.event_date)),
       staffing_summary,
       client: job.direct_clients
-        ? {
-            client_name: (job.direct_clients as Record<string, string>).client_name,
-            contact_name: (job.direct_clients as Record<string, string | null>).contact_name,
-            contact_email: (job.direct_clients as Record<string, string | null>).contact_email,
-            contact_phone: (job.direct_clients as Record<string, string | null>).contact_phone,
-          }
+        ? (() => {
+            // Supabase returns object for FK-based joins; cast through unknown for safety
+            const dc = job.direct_clients as unknown as {
+              client_name: string;
+              contact_name: string | null;
+              contact_email: string | null;
+              contact_phone: string | null;
+            };
+            return {
+              client_name: dc.client_name,
+              contact_name: dc.contact_name,
+              contact_email: dc.contact_email,
+              contact_phone: dc.contact_phone,
+            };
+          })()
         : null,
       payment: {
         deposit_amount: depositAmount,
