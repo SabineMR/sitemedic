@@ -88,6 +88,10 @@ export interface MarketplaceCompany {
   can_browse_events: boolean;
   can_submit_quotes: boolean;
 
+  // Ratings (Phase 36: denormalized aggregates)
+  average_rating: number;
+  review_count: number;
+
   // Timestamps
   created_at: string;
   updated_at: string;

@@ -14,11 +14,11 @@ export default function Footer() {
               </div>
               <div>
                 <div className="text-sm font-bold text-white">SiteMedic</div>
-                <div className="text-[10px] text-slate-500">UK Construction Platform</div>
+                <div className="text-[10px] text-slate-500">UK Occupational Health Platform</div>
               </div>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed mb-4">
-              The compliance platform built for UK construction occupational health providers.
+              The compliance platform built for UK occupational health providers.
             </p>
             <p className="text-xs text-slate-600 leading-relaxed">
               SiteMedic Ltd<br />
@@ -43,7 +43,7 @@ export default function Footer() {
             <ul className="space-y-2.5 text-sm">
               <li className="text-slate-400">Medic Agencies</li>
               <li className="text-slate-400">OH Providers</li>
-              <li className="text-slate-400">Construction Companies</li>
+              <li className="text-slate-400">Employers &amp; Companies</li>
               <li className="text-slate-400">Site Managers</li>
             </ul>
           </div>

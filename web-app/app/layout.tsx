@@ -4,9 +4,9 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 
 export const metadata: Metadata = {
-  title: 'SiteMedic — Compliance Platform for UK Construction OH',
+  title: 'SiteMedic — UK Occupational Health Compliance Platform',
   description:
-    'SiteMedic is the digital compliance platform built for UK construction occupational health. RIDDOR auto-flagging, worker health profiles, surveillance tracking, and multi-site management — all in one place.',
+    'SiteMedic is the digital compliance platform built for UK occupational health providers. RIDDOR auto-flagging, worker health profiles, surveillance tracking, and multi-site management — all in one place.',
 };
 
 export default function RootLayout({

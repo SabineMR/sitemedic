@@ -48,17 +48,17 @@ export default function Home() {
         <div className="relative max-w-5xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-full text-sm text-slate-600 font-medium shadow-sm mb-6">
             <span className="w-2 h-2 bg-sky-500 rounded-full animate-pulse" />
-            Built for UK construction · England &amp; Wales
+            Built for UK occupational health · England, Wales &amp; Ireland
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 mb-6 leading-tight tracking-tight">
             The compliance platform for
             <br />
-            <span className="text-sky-600">construction occupational health</span>
+            <span className="text-sky-600">occupational health</span>
           </h1>
 
           <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto mb-4 leading-relaxed">
-            SiteMedic is the digital backbone for medic agencies and OH providers working in UK construction. RIDDOR auto-flagging, worker health profiles, health surveillance tracking, drug test logging, fitness certificates, and multi-site management — all in one platform.
+            SiteMedic is the digital backbone for medic agencies and OH providers across the UK. RIDDOR auto-flagging, worker health profiles, health surveillance tracking, drug test logging, fitness certificates, and multi-site management — all in one platform.
           </p>
           <p className="text-base text-slate-500 max-w-2xl mx-auto mb-10">
             Stop building spreadsheets. Stop losing records. Stop chasing sign-offs. Go live in a day.
@@ -80,7 +80,7 @@ export default function Home() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm text-slate-500">
-            {['UK GDPR Compliant', 'UK-Hosted Data', 'Works Offline', 'RIDDOR 2013', 'CDM 2015'].map((b) => (
+            {['UK GDPR Compliant', 'UK-Hosted Data', 'Works Offline', 'RIDDOR 2013', 'HSWA 1974'].map((b) => (
               <span key={b} className="flex items-center gap-1.5">
                 <Check />
                 {b}
@@ -144,7 +144,7 @@ export default function Home() {
               {
                 Icon: Wifi,
                 title: 'Offline-First',
-                desc: 'Construction sites don\'t always have signal. SiteMedic captures all data locally and syncs automatically the moment connectivity returns. Nothing is ever lost.',
+                desc: 'Remote worksites don\'t always have signal. SiteMedic captures all data locally and syncs automatically the moment connectivity returns. Nothing is ever lost.',
                 color: 'green',
               },
               {
@@ -308,7 +308,7 @@ export default function Home() {
                 features: ['Live site overview', 'RIDDOR auto-flagging', 'Worker health status', 'Weekly safety summaries'],
               },
               {
-                role: 'Construction Companies',
+                role: 'Employers & Companies',
                 desc: 'Single source of truth for all your sites and all your workers. Annual surveillance due dates tracked. HSE-ready records always on hand.',
                 features: ['Multi-site dashboard', 'Surveillance due dates', 'PDF compliance reports', 'Audit trail exports'],
               },
@@ -342,7 +342,7 @@ export default function Home() {
               Apex Safety Group runs their entire operation on SiteMedic
             </h2>
             <p className="text-slate-400 max-w-2xl mx-auto">
-              ASG is an HCPC-registered paramedic agency delivering full occupational health services across construction sites in England &amp; Wales. They use SiteMedic to power every part of their clinical operation.
+              ASG is an HCPC-registered paramedic agency delivering full occupational health services across England, Wales &amp; Ireland. They use SiteMedic to power every part of their clinical operation.
             </p>
           </div>
 
@@ -545,7 +545,7 @@ export default function Home() {
             Get your org set up, add your first medic, and go live on your first site — in under a day.
           </p>
           <p className="text-sky-300 text-sm mb-10">
-            UK construction only · England &amp; Wales
+            England, Wales &amp; Ireland
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

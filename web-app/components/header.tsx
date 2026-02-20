@@ -14,7 +14,6 @@ export default function Header() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const PROVIDER_APP_URL = process.env.NEXT_PUBLIC_PROVIDER_APP_URL || 'http://localhost:30500';
   const MARKETPLACE_URL = process.env.NEXT_PUBLIC_MARKETPLACE_URL || 'http://localhost:30502';
 
   const navLinks = [
@@ -40,7 +39,7 @@ export default function Header() {
             </div>
             <div className="leading-none">
               <div className="text-sm font-bold text-slate-900 group-hover:text-sky-600 transition">SiteMedic</div>
-              <div className="text-[10px] text-slate-400 font-medium">UK Construction Platform</div>
+              <div className="text-[10px] text-slate-400 font-medium">UK Occupational Health Platform</div>
             </div>
           </Link>
 
@@ -66,12 +65,12 @@ export default function Header() {
               )
             )}
             <div className="w-px h-5 bg-slate-200 mx-2" />
-            <a
-              href={PROVIDER_APP_URL + '/login'}
+            <Link
+              href="/login"
               className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 rounded-lg transition font-medium"
             >
               Sign In
-            </a>
+            </Link>
             <Link
               href="#get-started"
               className="bg-sky-600 text-white px-5 py-2 rounded-lg hover:bg-sky-700 text-sm font-semibold transition"
@@ -115,13 +114,13 @@ export default function Header() {
               )
             )}
             <div className="pt-2 px-4 space-y-2">
-              <a
-                href={PROVIDER_APP_URL + '/login'}
+              <Link
+                href="/login"
                 onClick={() => setMobileOpen(false)}
                 className="block w-full border border-slate-200 text-slate-700 px-5 py-3 rounded-lg hover:bg-slate-50 text-center font-medium text-sm transition"
               >
                 Sign In
-              </a>
+              </Link>
               <Link
                 href="#get-started"
                 onClick={() => setMobileOpen(false)}

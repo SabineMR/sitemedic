@@ -9754,6 +9754,21 @@ Each organisation can now declare which industry verticals it serves. This drive
 
 **Valid vertical IDs:** `construction`, `tv_film`, `motorsport`, `festivals`, `sporting_events`, `fairs_shows`, `corporate`, `private_events`, `education`, `outdoor_adventure`
 
+### Recent Changes (2026-02-20) — Platform Landing Page: Industry-Agnostic & Full UK Coverage
+
+Updated the SiteMedic platform landing site (`web-app/`, port 30501) to remove construction-only messaging and reflect that SiteMedic serves **all occupational health categories** across **England, Wales & Ireland**.
+
+**Files Modified:**
+
+| File | Changes |
+|------|---------|
+| `web-app/app/page.tsx` | Hero badge: "Built for UK construction · England & Wales" → "Built for UK occupational health · England, Wales & Ireland". Hero heading: "construction occupational health" → "occupational health". Hero description: removed "working in UK construction" → "across the UK". Offline feature card: "Construction sites" → "Remote worksites". "For Who" section: "Construction Companies" → "Employers & Companies". Apex Safety section: "across construction sites in England & Wales" → "across England, Wales & Ireland". CTA section: removed "UK construction only" qualifier. Compliance badge: "CDM 2015" (construction-specific) → "HSWA 1974" (all industries). |
+| `web-app/app/layout.tsx` | Page title: "Compliance Platform for UK Construction OH" → "UK Occupational Health Compliance Platform". Meta description: removed "UK construction" → "UK occupational health providers". |
+| `web-app/components/header.tsx` | Logo subtitle: "UK Construction Platform" → "UK Occupational Health Platform". |
+| `web-app/components/footer.tsx` | Logo subtitle: "UK Construction Platform" → "UK Occupational Health Platform". Brand description: removed "construction" qualifier. Use case: "Construction Companies" → "Employers & Companies". |
+
+**Why:** SiteMedic supports 10 industry verticals (construction, TV & film, motorsport, festivals, sporting events, fairs/shows, corporate, private events, education, outdoor adventure). The platform landing page was incorrectly scoped to construction only. Geographic coverage now includes Ireland alongside England & Wales.
+
 ### Recent Changes (2026-02-16)
 - **Magic Link Authentication**: Replaced password-based login with passwordless authentication
   - **Feature**: Users receive a secure login link via email instead of entering a password
