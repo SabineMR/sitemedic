@@ -63,7 +63,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 - [x] **Phase 41: Web Messaging Core** - 1:1 conversations between org admin and medics on the web dashboard with conversation list and message threads
 - [x] **Phase 42: iOS Messaging & Offline** - WatermelonDB models for messages, offline send queue, cross-platform sync between iOS app and web
 - [x] **Phase 43: Real-time & Push Notifications** - Supabase Realtime for live message delivery, iOS push notifications with GDPR-safe content
-- [ ] **Phase 44: Broadcast Messaging** - Org admin can send broadcast messages to all medics with per-medic read tracking
+- [x] **Phase 44: Broadcast Messaging** - Org admin can send broadcast messages to all medics with per-medic read tracking
 - [ ] **Phase 45: Document Upload & Profile Storage** - Medics upload categorised compliance documents from iOS or web, stored on their profile with versioning
 - [ ] **Phase 46: Expiry Tracking & Alerts** - Status badges, progressive expiry alerts, and bulk expiry dashboard for org admins
 - [ ] **Phase 47: Message Polish** - Delivery/read status indicators, cross-conversation search, and file attachments in messages
@@ -304,8 +304,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 44-01: Broadcast send and delivery (admin compose UI; create message + message_recipients rows for each medic; broadcast conversation type; medic conversation list display with "Broadcast" label)
-- [ ] 44-02: Broadcast read tracking (mark-as-read on open per recipient; admin read summary UI with "X of Y read" count; drilldown list of read/unread medics)
+- [x] 44-01-PLAN.md — Broadcast send and delivery (migration 151, POST /api/messages/broadcast, BroadcastComposeDialog, ConversationRow broadcast display, MessageThread read-only notice)
+- [x] 44-02-PLAN.md — Broadcast read tracking (PATCH /api/messages/broadcast/read, GET /api/messages/broadcast/{messageId}/recipients, BroadcastReadSummary, BroadcastReadDrilldown, useBroadcastReadSummaries hook)
 
 ### Phase 45: Document Upload & Profile Storage
 **Goal**: Medics can upload categorised compliance documents (PDF, image) with expiry dates from either the iOS app or web dashboard, documents are stored on the medic's profile visible to their org admin, and uploading a new version of a document type archives the previous version
@@ -392,7 +392,7 @@ Plans:
 | 41. Web Messaging Core | v5.0 | 3/3 | Complete | 2026-02-19 |
 | 42. iOS Messaging & Offline | v5.0 | 3/3 | Complete | 2026-02-20 |
 | 43. Real-time & Push Notifications | v5.0 | 3/3 | Complete | 2026-02-20 |
-| 44. Broadcast Messaging | v5.0 | 0/2 | Not started | - |
+| 44. Broadcast Messaging | v5.0 | 2/2 | Complete | 2026-02-20 |
 | 45. Document Upload & Profile Storage | v5.0 | 0/3 | Not started | - |
 | 46. Expiry Tracking & Alerts | v5.0 | 0/2 | Not started | - |
 | 47. Message Polish | v5.0 | 0/3 | Not started | - |

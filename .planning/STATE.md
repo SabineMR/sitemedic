@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v5.0 Internal Comms — Phase 43 complete, Phase 44 next
+**Current focus:** v5.0 Internal Comms — Phase 44 complete, Phase 45 next
 
 ## Current Position
 
-Phase: 43 of 47 (Real-Time Push Notifications — COMPLETE)
-Plan: 3 of 3 in current phase (all complete)
-Status: Phase 43 verified (16/16 must-haves), ready for Phase 44
-Last activity: 2026-02-20 — Completed Phase 43 (Real-Time Push Notifications)
+Phase: 44 of 47 (Broadcast Messaging — COMPLETE)
+Plan: 2 of 2 in current phase (all complete)
+Status: Phase 44 verified (4/4 must-haves), ready for Phase 45
+Last activity: 2026-02-20 — Completed Phase 44 (Broadcast Messaging)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [██████░░░░] v4.0 63% | [████████░░] v5.0 75%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [██████░░░░] v4.0 63% | [█████████░] v5.0 88%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 222 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 27 v4.0 + 16 v5.0)
+- Total plans completed: 224 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 27 v4.0 + 18 v5.0)
 - Average duration: 3.9 min
 - Total execution time: ~14.0 hours
 
@@ -32,7 +32,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
 | v4.0 | 8 | 27/32 | ~317 min | ~5.6 min |
-| v5.0 | 8 | 16/21 | ~81 min | ~5.1 min |
+| v5.0 | 8 | 18/21 | ~92 min | ~5.1 min |
 
 *Updated after each plan completion*
 
@@ -149,13 +149,20 @@ Recent decisions affecting current work:
 - [43-03]: Vault secrets pattern for Edge Function URL/key (matching migration 033 RIDDOR trigger)
 - [43-03]: Sender name resolution: medics.first_name+last_name > profiles.full_name > "Someone" fallback
 - [43-03]: Direct message recipient resolved via medics.user_id comparison with sender_id
+- [44-01]: Single broadcast conversation per org via partial unique index (conversations.org_id WHERE type='broadcast')
+- [44-01]: Broadcast recipient tracking via message_recipients join table (one row per medic per message)
+- [44-01]: MessageInput hidden for ALL users on broadcast (admin uses Broadcast button, medic sees read-only notice)
+- [44-01]: No filtering by available_for_work when fetching medics for broadcast recipients — all org medics receive
+- [44-02]: Batched read summary query (single message_recipients query for all visible message IDs) avoids N+1
+- [44-02]: 30-second stale time on read summaries for admin (balance freshness vs query volume)
+- [44-02]: Broadcast mark-as-read updates both message_recipients.read_at AND conversation_read_status (dual update)
 
 ### Pending Todos
 
 - Configure external services for production deployment (Stripe, Google Maps, Resend, webhooks, pg_cron, Vault) -- carried from v1.1
 - Obtain DPA template + solicitor review before first org onboarding (non-code blocker for v3.0 launch)
 - **Configure Vercel wildcard `*.sitemedic.co.uk` and DNS CNAME** -- checkpoint from 26-01; 72h propagation
-- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142, 143, 144, 146, 147, 148, 149, 149b, 150) to production** -- migrations 132-144 verified, 146 for marketplace quotes, 147 for direct jobs, 148 for job ratings, 149/149b for marketplace award/payment, 150 for message notification trigger
+- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142, 143, 144, 146, 147, 148, 149, 149b, 150, 151) to production** -- migrations 132-144 verified, 146 for marketplace quotes, 147 for direct jobs, 148 for job ratings, 149/149b for marketplace award/payment, 150 for message notification trigger, 151 for broadcast indexes
 - **Add `NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.co.uk` to Vercel env vars** -- needed for production subdomain routing
 - **Create Stripe Products/Prices and register billing webhook** -- checkpoint from 25-01
 - **CQC legal opinion required** -- must determine if marketplace model requires CQC registration before launch
@@ -179,5 +186,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed Phase 43 (Real-Time Push Notifications) — all 3 plans executed and verified (16/16 must-haves)
+Stopped at: Completed Phase 44 (Broadcast Messaging) — all 2 plans executed and verified (4/4 must-haves)
 Resume file: None

@@ -11,12 +11,12 @@
 - [x] **MSG-02**: Medic can start a 1:1 conversation with their org admin
 - [x] **MSG-03**: Both parties can send and receive text messages in a conversation thread
 - [x] **MSG-04**: Users see a conversation list with last message preview, timestamp, and unread count
-- [ ] **MSG-05**: Org admin can compose and send a broadcast message to all medics in the org
-- [ ] **MSG-06**: Broadcast messages appear in each medic's conversation list (medics cannot reply to each other)
+- [x] **MSG-05**: Org admin can compose and send a broadcast message to all medics in the org
+- [x] **MSG-06**: Broadcast messages appear in each medic's conversation list (medics cannot reply to each other)
 - [x] **MSG-07**: Messages sent offline are queued locally and delivered when connectivity returns
 - [x] **MSG-08**: Previously loaded messages are viewable offline
 - [ ] **MSG-09**: Messages show delivery status: Sent → Delivered → Read
-- [ ] **MSG-10**: Org admin sees broadcast read tracking ("12 of 15 medics read")
+- [x] **MSG-10**: Org admin sees broadcast read tracking ("12 of 15 medics read")
 - [ ] **MSG-11**: Users can search across all their conversations
 - [ ] **MSG-12**: Users can attach a document/file to a message
 
@@ -78,12 +78,12 @@
 | MSG-02 | Phase 41 | Complete |
 | MSG-03 | Phase 41 | Complete |
 | MSG-04 | Phase 41 | Complete |
-| MSG-05 | Phase 44 | Pending |
-| MSG-06 | Phase 44 | Pending |
+| MSG-05 | Phase 44 | Complete |
+| MSG-06 | Phase 44 | Complete |
 | MSG-07 | Phase 42 | Complete |
 | MSG-08 | Phase 42 | Complete |
 | MSG-09 | Phase 47 | Pending |
-| MSG-10 | Phase 44 | Pending |
+| MSG-10 | Phase 44 | Complete |
 | MSG-11 | Phase 47 | Pending |
 | MSG-12 | Phase 47 | Pending |
 | NOTIF-01 | Phase 43 | Complete |
@@ -110,4 +110,4 @@
 
 ---
 *Requirements defined: 2026-02-19*
-*Last updated: 2026-02-19 after roadmap creation -- all 28 requirements mapped to Phases 40-47*
+*Last updated: 2026-02-20 after Phase 44 completion -- MSG-05, MSG-06, MSG-10 marked Complete*
