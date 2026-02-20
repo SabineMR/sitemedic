@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v4.0 Marketplace — Phase 34.1 (Self-Procured Jobs)
+**Current focus:** v5.0 Internal Comms — Phase 42 (iOS Messaging & Offline)
 
 ## Current Position
 
-Phase: 34.1 of 47 (Self-Procured Jobs — INSERTED)
-Plan: 2 of 5 in current phase
+Phase: 42 of 47 (iOS Messaging & Offline)
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-20 — Completed 34.1-02-PLAN.md (job creation wizard UI)
+Last activity: 2026-02-20 — Completed 42-02-PLAN.md (iOS Conversation List and Thread UI)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████░░░░░░] v4.0 31% | [████░░░░░░] v5.0 33%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████░░░░░░] v4.0 31% | [████░░░░░░] v5.0 38%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 196 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 11 v4.0 + 6 v5.0)
+- Total plans completed: 197 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 11 v4.0 + 7 v5.0)
 - Average duration: 3.9 min
-- Total execution time: ~13.4 hours
+- Total execution time: ~13.5 hours
 
 **By Milestone:**
 
@@ -32,7 +32,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
 | v4.0 | 8 | 11/26 | ~119 min | ~6.5 min |
-| v5.0 | 8 | 6/21 | ~27 min | ~4.5 min |
+| v5.0 | 8 | 7/21 | ~33 min | ~4.7 min |
 
 *Updated after each plan completion*
 
@@ -86,6 +86,11 @@ Recent decisions affecting current work:
 - [34.1-02]: Wizard at /dashboard/jobs (platform section, NOT marketplace) — 6 steps vs marketplace 4
 - [34.1-02]: Existing client selector pre-fills all fields but disables editing
 - [34.1-02]: Pricing step shows 0% platform commission prominently in payment breakdown
+- [42-02]: Messages tab visible to ALL roles (no href restriction) — placed between Safety and Events
+- [42-02]: Unread badge uses WatermelonDB observeCount (reactive) wrapped in try-catch for cold start safety
+- [42-02]: Return key sends message (no multi-line), matching CONTEXT.md requirement
+- [42-02]: MedicPicker talks to Supabase directly (not Next.js API routes) for iOS app
+- [42-02]: Mark-as-read fires on thread mount (local WatermelonDB + Supabase upsert)
 
 ### Pending Todos
 
@@ -116,5 +121,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 34.1-02-PLAN.md (job creation wizard UI)
+Stopped at: Completed 42-02-PLAN.md (iOS Conversation List and Thread UI)
 Resume file: None

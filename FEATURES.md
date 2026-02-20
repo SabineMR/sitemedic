@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-19 (Phase 41 Web Messaging Core complete)
+**Last Updated**: 2026-02-20 (Phase 42 iOS Messaging UI complete)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -76,6 +76,40 @@ Org admins and medics can have 1:1 text conversations through the web dashboard 
 | **Empty State** | MessageSquare icon, "No conversations yet" text, working "Start a conversation" CTA (opens MedicPicker for admin, triggers Message Admin for medic). | `web/app/(dashboard)/messages/components/EmptyState.tsx` |
 
 **Requirements completed:** MSG-01, MSG-02, MSG-03, MSG-04
+
+### Phase 42: iOS Messaging & Offline — Plans 01-02 (COMPLETE)
+
+WatermelonDB local data layer and full iOS messaging UI for the React Native app, matching web dashboard messaging features in a mobile-native interface.
+
+**Plan 01 — WatermelonDB Models and Message Sync:**
+
+| Feature | Implementation | Files |
+|---------|---------------|-------|
+| **Conversation Model** | WatermelonDB model with server_id, org_id, type, medic_id, last_message_at, participant_name, unread_count, last_read_at. Schema version bumped v4 to v5. | `src/database/models/Conversation.ts`, `src/database/schema.ts`, `src/database/migrations.ts` |
+| **Message Model** | WatermelonDB model with server_id, conversation_id, sender_id, sender_name, content, status (queued/sent/delivered/read), idempotency_key. | `src/database/models/Message.ts` |
+| **MessageSync Pull** | Incremental sync from Supabase using AsyncStorage lastSyncedAt. First sync fetches all conversations + last 100 messages per conversation. Resolves participant/sender names, computes unread counts. | `src/services/MessageSync.ts` |
+| **MessageSync Push** | Sends locally-queued messages (status='queued') to Supabase. Updates conversation metadata and read status. 23505 duplicate handling. | `src/services/MessageSync.ts` |
+| **SyncContext Integration** | messageSyncStatus and triggerMessageSync exposed for UI pull-to-refresh. Push queued messages then pull new data in combined sync flow. | `src/contexts/SyncContext.tsx` |
+
+**Plan 02 — iOS Conversation List and Thread UI:**
+
+| Feature | Implementation | Files |
+|---------|---------------|-------|
+| **Messages Tab** | New tab in bottom bar (between Safety and Events) visible to all roles. Speech bubble emoji icon. Unread badge from WatermelonDB observe query (99+ cap). | `app/(tabs)/_layout.tsx`, `app/(tabs)/messages.tsx` |
+| **Conversation List** | FlatList with reactive WatermelonDB observe query sorted by last_message_at descending. Pull-to-refresh triggers messageSync. Local search filter by participant name. | `src/components/messaging/ConversationList.tsx` |
+| **Conversation Row** | Avatar circle with initial (color derived from name hash), participant name (bold if unread), truncated preview, relative timestamp, unread badge pill (red, 99+ cap). 72px minimum height for gloves-on. | `src/components/messaging/ConversationRow.tsx` |
+| **Message Thread** | Inverted FlatList of messages from WatermelonDB filtered by conversation_id. KeyboardAvoidingView wrapper. Pull-to-refresh. Auto-scroll via inverted list. | `src/components/messaging/MessageThread.tsx`, `app/messages/[conversationId].tsx` |
+| **Message Item** | Flat Slack-style layout (not chat bubbles). Avatar, sender name with "(you)" suffix, content, relative timestamp. Queued messages at 0.5 opacity with "Sending..." indicator. | `src/components/messaging/MessageItem.tsx` |
+| **Message Input** | TextInput with Return-to-send, visible Send button (appears when text entered). Creates local WatermelonDB record (status=queued), updates conversation metadata, triggers push sync. UUID idempotency key. | `src/components/messaging/MessageInput.tsx` |
+| **Mark as Read** | On thread open: local WatermelonDB update (last_read_at, unread_count=0) + Supabase upsert to conversation_read_status using conversation server_id. | `app/messages/[conversationId].tsx` |
+| **MedicPicker** | Modal component. Medic flow: "Message Admin" button (looks up own medic record, creates/finds conversation). Admin flow: FlatList of org medics with search filter. SELECT-then-INSERT with 23505 duplicate handling. | `src/components/messaging/MedicPicker.tsx` |
+| **Empty State** | Centered view with message icon, "No conversations yet", contextual action button (medic: Message Admin, admin: Start a conversation). | `src/components/messaging/EmptyState.tsx` |
+
+**Key decisions:**
+- MessageSync is self-contained (does NOT modify existing clinical data SyncQueue)
+- Local messages use 'queued' status for offline (server schema only has sent/delivered/read)
+- Participant names denormalized on local models (medics see "Admin", admins see medic name)
+- Avatar colors consistent between ConversationRow and MessageItem (same hash function)
 
 ### Planning Files
 
