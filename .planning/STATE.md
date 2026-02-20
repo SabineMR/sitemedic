@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 38-notifications-alerts (Phase 1 of 2 remaining in v4.0)
-Plan: 01 of 04 complete
-Status: In progress — Plan 01 (Database Foundation) shipped
-Last activity: 2026-02-20 — Completed 38-01-PLAN.md (DB migrations + SMS/notification utilities)
+Plan: 02 of 04 complete
+Status: In progress — Plan 02 (Notification Feed UI) shipped
+Last activity: 2026-02-20 — Completed 38-02-PLAN.md (Bell dropdown, notifications page, Realtime hooks)
 
 Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [#########-] v4.0 84% | [##########] v5.0 100%
 
@@ -126,6 +126,10 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 - [38-01]: REPLICA IDENTITY FULL on user_notifications — required for Realtime UPDATE payloads (mark-as-read live updates)
 - [38-01]: All sms_* preference columns default FALSE (PECR compliance); sms_opted_in_at provides consent audit trail
 - [38-01]: SMS dev-mode returns { success: true, sid: 'dev-mode-mock-sid' } — unblocks dev without Twilio credentials
+- [38-02]: useUnreadCount uses limit=1 (NOT limit=0) — limit=0 causes .range(0,-1) invalid range on server
+- [38-02]: Realtime channel filtered with user_id=eq.userId for per-user isolation (not org-wide)
+- [38-02]: NotificationBell placed immediately before UnreadBadge in layout header for visual grouping
+- [38-02]: Load-more pagination in notifications page: useState(limit) grows by 20 per click (simpler than cursor-based)
 
 ### Pending Todos
 
@@ -151,6 +155,6 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 
 ## Session Continuity
 
-Last session: 2026-02-20T23:15:45Z
-Stopped at: Completed 38-01-PLAN.md (notifications database foundation + utilities)
+Last session: 2026-02-20T23:21:36Z
+Stopped at: Completed 38-02-PLAN.md (notification feed UI + Realtime hooks)
 Resume file: None
