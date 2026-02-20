@@ -65,12 +65,12 @@ export default function Header() {
               )
             )}
             <div className="w-px h-5 bg-slate-200 mx-2" />
-            <Link
-              href="/login"
+            <a
+              href={`${process.env.NEXT_PUBLIC_PROVIDER_APP_URL || 'http://localhost:30500'}/login`}
               className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 rounded-lg transition font-medium"
             >
               Sign In
-            </Link>
+            </a>
             <Link
               href="#get-started"
               className="bg-sky-600 text-white px-5 py-2 rounded-lg hover:bg-sky-700 text-sm font-semibold transition"
@@ -114,13 +114,13 @@ export default function Header() {
               )
             )}
             <div className="pt-2 px-4 space-y-2">
-              <Link
-                href="/login"
+              <a
+                href={`${process.env.NEXT_PUBLIC_PROVIDER_APP_URL || 'http://localhost:30500'}/login`}
                 onClick={() => setMobileOpen(false)}
                 className="block w-full border border-slate-200 text-slate-700 px-5 py-3 rounded-lg hover:bg-slate-50 text-center font-medium text-sm transition"
               >
                 Sign In
-              </Link>
+              </a>
               <Link
                 href="#get-started"
                 onClick={() => setMobileOpen(false)}

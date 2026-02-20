@@ -2,20 +2,20 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-20 (Phase 36 Plan 03 Disputes/Cancellation/Resolution API routes)
+**Last Updated**: 2026-02-20 (Marketing site merged into web/ — SiteMedic rebrand)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
 
-## Architecture: 3-App Structure (2026-02-19)
+## Architecture: 2-App Structure (2026-02-20)
 
-SiteMedic is now split into 3 Next.js apps sharing the same Supabase project (same auth, same data):
+SiteMedic runs on 2 Next.js apps sharing the same Supabase project (same auth, same data). The marketing site (`web-app/`, 30501) has been **deprecated** — its landing page content was merged into `web/` (30500) so that sign-in, marketing, and the dashboard all live on one port.
 
 | Port | Directory | Purpose | Branding |
 |------|-----------|---------|----------|
-| 30501 | `web-app/` | SiteMedic marketing/landing site | SiteMedic (neutral) |
-| **30502** | **`web-marketplace/`** | **SiteMedic Marketplace** — event posting, quote submission, provider registration, award flow | **SiteMedic (neutral)** |
-| 30500 | `web/` | Provider app (Apex) — dashboard, treatments, near-misses, workers, RIDDOR, contracts, messaging, analytics | Apex Safety Group (org-branded) |
+| **30500** | **`web/`** | **SiteMedic main app** — marketing landing page, sign-in, dashboard, treatments, near-misses, workers, RIDDOR, contracts, messaging, analytics | **SiteMedic (sky-blue)** |
+| 30502 | `web-marketplace/` | SiteMedic Marketplace — event posting, quote submission, provider registration, award flow | SiteMedic (neutral) |
+| ~~30501~~ | ~~`web-app/`~~ | ~~Marketing site~~ **(DEPRECATED — merged into `web/`)** | — |
 
 ### Marketplace Extraction Details
 
@@ -33,10 +33,9 @@ SiteMedic is now split into 3 Next.js apps sharing the same Supabase project (sa
 **Route changes:** `/marketplace/events` is now `/events` (marketplace IS the app root)
 
 **Cross-app navigation:**
-- `web-app/` (30501): Header has "Marketplace" + "Sign In" links (Sign In stays on 30501 with its own login page + auth callback, then redirects to provider app dashboard after successful authentication)
-- `web/` (30500): Dashboard sidebar has "Marketplace (Full)" external link
-- `web/` (30500): Old `/marketplace/*` routes redirect to marketplace app via `next.config.ts` redirects
+- `web/` (30500): Marketing header has "Marketplace" external link to 30502, "Sign In" goes to `/login` (same port). Dashboard sidebar has "Marketplace (Full)" external link. Old `/marketplace/*` routes redirect to marketplace app via `next.config.ts` redirects.
 - `web-marketplace/` (30502): Header has "Provider App" link, footer links to provider app for legal pages
+- `web-app/` (30501): **Deprecated** — Sign In link now redirects to `web/` (30500). No longer has its own auth.
 
 **Shared code (still in `web/`):**
 - `web/components/marketplace/` — still used by `web/app/(dashboard)/dashboard/marketplace/` (provider's in-dashboard marketplace view)
@@ -44,21 +43,12 @@ SiteMedic is now split into 3 Next.js apps sharing the same Supabase project (sa
 - `web/lib/queries/marketplace/` — React Query hooks used by dashboard
 - `web/stores/` — Zustand stores used by dashboard
 
-**Environment variables added:**
+**Environment variables:**
 - `web/.env.local`: `NEXT_PUBLIC_MARKETPLACE_URL=http://localhost:30502`
-- `web-app/.env.local`: `NEXT_PUBLIC_PROVIDER_APP_URL`, `NEXT_PUBLIC_MARKETPLACE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `web-app/.env.local`: `NEXT_PUBLIC_PROVIDER_APP_URL`, `NEXT_PUBLIC_MARKETPLACE_URL` (Supabase vars removed — auth moved to `web/`)
 - `web-marketplace/.env.local`: `NEXT_PUBLIC_PROVIDER_APP_URL`, `NEXT_PUBLIC_MARKETING_URL`
 
-**Auth on localhost:** Each port gets its own cookies, so users log in separately per app. In production with shared cookie domain (`.sitemedic.co.uk`), SSO would work across subdomains.
-
-### Marketing Site Auth (web-app, 30501)
-
-The marketing site has its own Supabase-powered login page at `/login` with magic link (passwordless) authentication. This means users clicking "Sign In" on the marketing site stay on the same port (30501) throughout the login flow:
-
-- **Login page** (`web-app/app/login/page.tsx`): Magic link form using `@supabase/ssr` browser client. Email is persisted in localStorage. Styled with plain Tailwind to match the marketing site design language.
-- **Auth callback** (`web-app/app/auth/callback/route.ts`): Exchanges the magic link code for a session, then redirects to the provider app (`NEXT_PUBLIC_PROVIDER_APP_URL`) based on user role (`platform_admin` -> `/platform`, `org_admin` -> `/admin`, `medic` -> `/medic`, default -> `/dashboard`).
-- **Supabase client utilities**: `web-app/lib/supabase/client.ts` (browser) and `web-app/lib/supabase/server.ts` (server) — same pattern as `web/`.
-- **Dependencies added**: `@supabase/ssr`, `@supabase/supabase-js`
+**Auth:** All authentication happens on `web/` (30500). The marketing homepage, sign-in, and dashboard are all on the same port — no cross-port auth issues.
 
 ---
 
@@ -9995,6 +9985,46 @@ Updated the SiteMedic platform landing site (`web-app/`, port 30501) to remove c
   - Assets created: `icon.png` (1024x1024), `adaptive-icon.png` (Android), `splash-icon.png`, `favicon.png`
   - Files: `/assets/*.png` (45KB each, upgraded from 70-byte placeholders)
   - Configuration: Already set in `app.json` - icons will appear after rebuild
+
+---
+
+### Recent Changes (2026-02-20) — Marketing Site Merged into web/ & SiteMedic Rebrand
+
+The separate marketing site (`web-app/`, port 30501) has been **merged into the main app** (`web/`, port 30500). The Apex Safety Group landing page has been replaced with the SiteMedic platform landing page. All branding on the marketing pages is now SiteMedic (sky-blue theme).
+
+**Why:** Having marketing and the dashboard on different ports created a broken sign-in UX — clicking "Sign In" on 30501 bounced users to 30500, auth callbacks failed across ports, and users couldn't understand the jump between apps. Now everything lives on one port.
+
+**Files deleted (Apex marketing pages):**
+| File | Reason |
+|------|--------|
+| `web/app/(marketing)/services/page.tsx` | Apex-specific services page — replaced by SiteMedic features on homepage |
+| `web/app/(marketing)/about/page.tsx` | Apex-specific about page — no longer needed |
+| `web/app/(marketing)/contact/page.tsx` | Apex-specific contact page — no longer needed |
+| `web/app/(marketing)/contact/contact-form.tsx` | Contact form component for deleted page |
+| `web/app/(marketing)/pricing/page.tsx` | Apex pricing page — pricing section now on homepage |
+| `web/components/marketing/quote-button.tsx` | Apex "Get a Quote" CTA — replaced by "Get Started" |
+| `web/components/marketing/hero.tsx` | Unused marketing component |
+| `web/components/marketing/trust-signals.tsx` | Unused marketing component |
+| `web/components/marketing/pricing-table.tsx` | Only used by deleted pricing page |
+
+**Files deleted (web-app auth — no longer needed):**
+| File | Reason |
+|------|--------|
+| `web-app/app/login/page.tsx` | Auth moved to `web/` (30500) |
+| `web-app/app/auth/callback/route.ts` | Auth callback moved to `web/` |
+| `web-app/lib/supabase/client.ts` | Supabase client no longer needed on web-app |
+| `web-app/lib/supabase/server.ts` | Supabase server no longer needed on web-app |
+
+**Files modified:**
+| File | Changes |
+|------|---------|
+| `web/app/(marketing)/page.tsx` | **Replaced entirely** — Apex Safety Group 695-line landing page replaced with SiteMedic platform landing page (from `web-app/app/page.tsx`). Sections: Hero, Stats Bar, Features (9 cards), Clinical Modules (4 cards), For Who (4 roles), Powered By (Apex as customer), How It Works (4 steps), Pricing (3 tiers), Get Started CTA. Sky-blue theme throughout. Metadata updated to SiteMedic. Static generation enabled. |
+| `web/components/marketing/site-header.tsx` | Logo: `ASG` (blue-600) -> `SM` (sky-600). Brand: "Apex Safety Group" -> "SiteMedic". Subtitle: "Powered by SiteMedic" -> "UK Occupational Health Platform". Nav links: Removed `/services`, `/about`, `/contact` (deleted pages). Added `#features` anchor. Kept Home, Pricing (now `#pricing` anchor), Marketplace (external link to 30502). CTA: "Book Now" -> "Get Started" (`#get-started`). Mobile nav: hover colors `blue-*` -> `sky-*`. External link support added for Marketplace. |
+| `web/components/marketing/site-footer.tsx` | **Replaced entirely** — Apex branding -> SiteMedic branding. Logo: `ASG` (blue-600) -> `SM` (sky-600). Industries column -> Platform column (Features, For Who, Pricing, Get Started, Marketplace, Sign In). Company column -> Use Cases column (Medic Agencies, OH Providers, Employers & Companies, Site Managers). Legal column: kept all legal links + added Complaints. Compliance badges: removed Apex-specific (Purple Guide, Motorsport UK, CDM 2015, FA Governance), kept OH-relevant (UK GDPR, RIDDOR 2013, HSWA 1974, HSE Audit-Ready, HCPC-Ready, ISO 27001). Copyright: "Apex Safety Group Ltd" -> "SiteMedic Ltd". |
+| `web-app/.env.local` | Removed `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` — auth no longer on web-app |
+| `web-app/components/header.tsx` | Sign In link changed from `<Link href="/login">` (local login page) to `<a href={PROVIDER_APP_URL + '/login'}>` (external link to web/ app). Both desktop and mobile nav updated. |
+
+**Architecture change:** 3-app -> 2-app structure. `web-app/` (30501) is now deprecated. Marketing and auth all live on `web/` (30500).
 
 ---
 

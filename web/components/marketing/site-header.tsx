@@ -29,13 +29,13 @@ export default function SiteHeader() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  const MARKETPLACE_URL = process.env.NEXT_PUBLIC_MARKETPLACE_URL || 'http://localhost:30502';
+
   const navLinks = [
     { href: '/', label: 'Home' },
-    { href: '/services', label: 'Services' },
-    { href: '/pricing', label: 'Pricing' },
-    { href: '/marketplace', label: 'Marketplace' },
-    { href: '/about', label: 'About' },
-    { href: '/contact', label: 'Contact' },
+    { href: '#features', label: 'Features' },
+    { href: '#pricing', label: 'Pricing' },
+    { href: MARKETPLACE_URL, label: 'Marketplace', external: true },
   ];
 
   return (
@@ -49,38 +49,48 @@ export default function SiteHeader() {
 
           {/* Logo / Brand */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-700 transition">
-              <span className="text-white text-xs font-bold tracking-tight">ASG</span>
+            <div className="w-8 h-8 bg-sky-600 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-sky-700 transition">
+              <span className="text-white text-[11px] font-bold tracking-tight">SM</span>
             </div>
             <div className="hidden sm:block leading-none">
-              <div className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition">
-                Apex Safety Group
+              <div className="text-sm font-bold text-slate-900 group-hover:text-sky-600 transition">
+                SiteMedic
               </div>
               <div className="text-[10px] text-slate-400 font-medium tracking-wide">
-                Powered by SiteMedic
+                UK Occupational Health Platform
               </div>
             </div>
-            <div className="sm:hidden text-base font-bold text-slate-900">ASG</div>
+            <div className="sm:hidden text-base font-bold text-slate-900">SM</div>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition font-medium"
-              >
-                {label}
-              </Link>
-            ))}
+            {navLinks.map(({ href, label, external }) =>
+              external ? (
+                <a
+                  key={href}
+                  href={href}
+                  className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition font-medium"
+                >
+                  {label}
+                </a>
+              ) : (
+                <Link
+                  key={href}
+                  href={href}
+                  className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition font-medium"
+                >
+                  {label}
+                </Link>
+              )
+            )}
 
             <div className="w-px h-5 bg-slate-200 mx-2" />
 
             {isAuthenticated ? (
               <Link
                 href="/dashboard"
-                className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-semibold transition"
+                className="bg-sky-600 text-white px-5 py-2 rounded-lg hover:bg-sky-700 text-sm font-semibold transition"
               >
                 Dashboard
               </Link>
@@ -93,10 +103,10 @@ export default function SiteHeader() {
                   Sign in
                 </Link>
                 <Link
-                  href="/book"
-                  className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-semibold transition"
+                  href="#get-started"
+                  className="bg-sky-600 text-white px-5 py-2 rounded-lg hover:bg-sky-700 text-sm font-semibold transition"
                 >
-                  Book Now
+                  Get Started
                 </Link>
               </>
             )}
@@ -117,26 +127,36 @@ export default function SiteHeader() {
                 <div className="flex flex-col h-full">
                   {/* Mobile header */}
                   <div className="flex items-center gap-2.5 px-5 py-4 border-b border-slate-100">
-                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">ASG</span>
+                    <div className="w-8 h-8 bg-sky-600 rounded-lg flex items-center justify-center">
+                      <span className="text-white text-[11px] font-bold">SM</span>
                     </div>
                     <div>
-                      <div className="text-sm font-bold text-slate-900">Apex Safety Group</div>
-                      <div className="text-[10px] text-slate-400">Powered by SiteMedic</div>
+                      <div className="text-sm font-bold text-slate-900">SiteMedic</div>
+                      <div className="text-[10px] text-slate-400">UK Occupational Health Platform</div>
                     </div>
                   </div>
 
                   {/* Mobile links */}
                   <div className="flex flex-col px-3 py-4 gap-1 flex-1">
-                    {navLinks.map(({ href, label }) => (
-                      <Link
-                        key={href}
-                        href={href}
-                        className="px-4 py-3 text-slate-700 font-medium hover:text-blue-600 hover:bg-blue-50 rounded-lg transition text-sm"
-                      >
-                        {label}
-                      </Link>
-                    ))}
+                    {navLinks.map(({ href, label, external }) =>
+                      external ? (
+                        <a
+                          key={href}
+                          href={href}
+                          className="px-4 py-3 text-slate-700 font-medium hover:text-sky-600 hover:bg-sky-50 rounded-lg transition text-sm"
+                        >
+                          {label}
+                        </a>
+                      ) : (
+                        <Link
+                          key={href}
+                          href={href}
+                          className="px-4 py-3 text-slate-700 font-medium hover:text-sky-600 hover:bg-sky-50 rounded-lg transition text-sm"
+                        >
+                          {label}
+                        </Link>
+                      )
+                    )}
                   </div>
 
                   {/* Mobile CTA */}
@@ -144,7 +164,7 @@ export default function SiteHeader() {
                     {isAuthenticated ? (
                       <Link
                         href="/dashboard"
-                        className="block w-full bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700 text-center font-semibold text-sm transition"
+                        className="block w-full bg-sky-600 text-white px-5 py-3 rounded-lg hover:bg-sky-700 text-center font-semibold text-sm transition"
                       >
                         Dashboard
                       </Link>
@@ -157,10 +177,10 @@ export default function SiteHeader() {
                           Sign in
                         </Link>
                         <Link
-                          href="/book"
-                          className="block w-full bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700 text-center font-semibold text-sm transition"
+                          href="#get-started"
+                          className="block w-full bg-sky-600 text-white px-5 py-3 rounded-lg hover:bg-sky-700 text-center font-semibold text-sm transition"
                         >
-                          Book Now
+                          Get Started
                         </Link>
                       </>
                     )}
