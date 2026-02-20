@@ -200,12 +200,13 @@ Plans:
   3. Urgent or high-value events (<7 days away or >2,000 GBP budget) trigger SMS alerts to qualified nearby medics
   4. All marketplace actions (quote received, award, rejection, payment, rating, message) generate appropriate notifications through the medic's preferred channels
   5. Medics can configure notification preferences: which channels (dashboard/email/SMS), which event types, and location radius
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 38-01: Event matching and dashboard feed (qualification + location filtering, real-time updates)
-- [ ] 38-02: Email and SMS alerts (event notifications, urgent/high-value SMS triggers, marketplace action notifications)
-- [ ] 38-03: Notification preferences (channel selection, event type filters, location radius configuration)
+- [ ] 38-01-PLAN.md — Database foundation and notification service (user_notifications + preferences migrations, Twilio SMS module, notification types, create-notification utility)
+- [ ] 38-02-PLAN.md — Dashboard notification bell and feed UI (NotificationBell dropdown, /dashboard/notifications page, Realtime hooks, mark-as-read API)
+- [ ] 38-03-PLAN.md — Event fan-out and marketplace action triggers (new event fan-out to companies, notification triggers in 10+ existing API routes)
+- [ ] 38-04-PLAN.md — Notification preferences UI and API (channel x category matrix settings page, GET/PUT preferences API, SMS opt-in with PECR compliance)
 
 ### Phase 39: Admin Dashboard
 **Goal**: Platform admin can monitor marketplace health, manage all marketplace entities, configure settings, and moderate users — completing the operational toolkit
@@ -255,5 +256,5 @@ Plans:
 | 35. Award Flow & Payment | v4.0 | 0/4 | Not started | - |
 | 36. Ratings, Messaging & Disputes | v4.0 | 3/3 | Complete | 2026-02-20 |
 | 37. Company Accounts | v4.0 | 3/3 | Complete | 2026-02-20 |
-| 38. Notifications & Alerts | v4.0 | 0/3 | Not started | - |
+| 38. Notifications & Alerts | v4.0 | 0/4 | Not started | - |
 | 39. Admin Dashboard | v4.0 | 0/3 | Not started | - |
