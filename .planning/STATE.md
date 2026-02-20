@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v5.0 Internal Comms — Phase 42 (iOS Messaging & Offline)
+**Current focus:** v4.0 Marketplace — Phase 34.1 (Self-Procured Jobs)
 
 ## Current Position
 
-Phase: 42 of 47 (iOS Messaging & Offline)
-Plan: 0 of 3 in current phase
-Status: Ready to plan
-Last activity: 2026-02-19 — Phase 41 complete (3 plans, 4/4 must-haves verified)
+Phase: 34.1 of 47 (Self-Procured Jobs — INSERTED)
+Plan: 1 of 5 in current phase
+Status: In progress
+Last activity: 2026-02-20 — Completed 34.1-01-PLAN.md (data layer + API routes)
 
-Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████░░░░░░] v4.0 25% | [███░░░░░░░] v5.0 29%
+Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [████░░░░░░] v4.0 28% | [███░░░░░░░] v5.0 29%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 192 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 8 v4.0 + 5 v5.0)
+- Total plans completed: 193 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 9 v4.0 + 5 v5.0)
 - Average duration: 3.9 min
-- Total execution time: ~12.6 hours
+- Total execution time: ~12.7 hours
 
 **By Milestone:**
 
@@ -31,7 +31,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 8/26 | ~86 min | ~6.4 min |
+| v4.0 | 8 | 9/26 | ~94 min | ~6.2 min |
 | v5.0 | 8 | 5/21 | ~18 min | ~3.6 min |
 
 *Updated after each plan completion*
@@ -71,13 +71,18 @@ Recent decisions affecting current work:
 - [41-03]: SELECT-then-INSERT with 23505 catch for conversation creation duplicate prevention (partial unique index)
 - [41-03]: MedicPicker fetches medics client-side on dialog open (not server-side) for fresh data on long-lived pages
 - [41-03]: EmptyState converted to client component to support MedicPicker rendering
+- [34.1-01]: Direct jobs use source='direct' on marketplace_events (not a separate table)
+- [34.1-01]: agreed_price nullable on marketplace_events (null for marketplace, required for direct via Zod)
+- [34.1-01]: Direct job default status is 'confirmed' (not 'open' — no quoting process)
+- [34.1-01]: quote_deadline sentinel 2099-12-31 for direct jobs (NOT NULL constraint workaround)
+- [34.1-01]: DELETE restricted to draft-only jobs — non-drafts must be cancelled
 
 ### Pending Todos
 
 - Configure external services for production deployment (Stripe, Google Maps, Resend, webhooks, pg_cron, Vault) -- carried from v1.1
 - Obtain DPA template + solicitor review before first org onboarding (non-code blocker for v3.0 launch)
 - **Configure Vercel wildcard `*.sitemedic.co.uk` and DNS CNAME** -- checkpoint from 26-01; 72h propagation
-- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142, 143, 144, 146) to production** -- migrations 132-144 verified, 146 new for marketplace quotes
+- **Apply Supabase migrations (132, 133, 134, 135, 140, 141, 142, 143, 144, 146, 147) to production** -- migrations 132-144 verified, 146 for marketplace quotes, 147 for direct jobs
 - **Add `NEXT_PUBLIC_ROOT_DOMAIN=sitemedic.co.uk` to Vercel env vars** -- needed for production subdomain routing
 - **Create Stripe Products/Prices and register billing webhook** -- checkpoint from 25-01
 - **CQC legal opinion required** -- must determine if marketplace model requires CQC registration before launch
@@ -100,6 +105,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-02-19
-Stopped at: Phase 41 complete -- ready to plan Phase 42 (iOS Messaging & Offline)
+Last session: 2026-02-20
+Stopped at: Completed 34.1-01-PLAN.md (data layer + API routes for direct jobs)
 Resume file: None
