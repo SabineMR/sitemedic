@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-19 (Marketplace extraction into standalone app on port 30502)
+**Last Updated**: 2026-02-20 (Phase 44 Broadcast Messaging complete)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -218,6 +218,42 @@ Supabase Realtime subscriptions replace polling, Expo push notification registra
 - pg_net async trigger (non-blocking, does not delay message INSERT)
 - Vault secrets for Edge Function authentication (same pattern as RIDDOR trigger)
 - Migration numbered 150 (149 was taken by marketplace_award_payment)
+
+### Phase 44: Broadcast Messaging — Plans 01-02 (COMPLETE)
+
+Org admins can send broadcast messages to all medics in their organisation. Broadcasts appear as a distinct conversation type with read-only access for medics. Admins see per-message read tracking with drilldown to individual medic read status.
+
+**Plan 01 — Broadcast Send and Delivery:**
+
+| Feature | Implementation | Files |
+|---------|---------------|-------|
+| **Broadcast Conversation** | Single broadcast conversation per org enforced via partial unique index (`idx_conversations_org_broadcast ON conversations(org_id) WHERE type = 'broadcast'`). Auto-created on first broadcast send via SELECT-then-INSERT with 23505 catch. | `supabase/migrations/151_broadcast_indexes.sql` |
+| **Broadcast API** | POST `/api/messages/broadcast` — org_admin only (403 for others). Gets-or-creates broadcast conversation, inserts message, bulk-inserts `message_recipients` rows for all org medics, updates conversation metadata (last_message_at, last_message_preview), upserts sender read status. | `web/app/api/messages/broadcast/route.ts` |
+| **Compose Dialog** | Client component with Dialog (textarea form) + AlertDialog (send confirmation "Send to X medics?"). Radio icon trigger button shown to org_admin only. On confirm: POST to broadcast API, navigate to broadcast conversation. | `web/app/(dashboard)/messages/components/BroadcastComposeDialog.tsx` |
+| **Broadcast Conversation Row** | Blue Radio icon avatar (instead of user initial), "Broadcast" Badge, hidden role indicator. Distinct visual identity in conversation list. | `web/app/(dashboard)/messages/components/ConversationRow.tsx` |
+| **Read-Only Thread** | MessageInput replaced with read-only notice for broadcast conversations. Admins see "Use the Broadcast button to send a new broadcast", medics see "Broadcast messages are read-only". | `web/app/(dashboard)/messages/components/MessageThread.tsx` |
+| **Conversation Resolution** | Broadcast conversations resolved with `participantName = 'Broadcasts'` and `participantRole = 'broadcast'` in conversation list query. | `web/lib/queries/comms.ts` |
+
+**Plan 02 — Broadcast Read Tracking:**
+
+| Feature | Implementation | Files |
+|---------|---------------|-------|
+| **Mark-as-Read API** | PATCH `/api/messages/broadcast/read` — medic marks all unread broadcast messages as read. Updates both `message_recipients.read_at` AND `conversation_read_status` (dual update for unread badge accuracy). | `web/app/api/messages/broadcast/read/route.ts` |
+| **Recipients API** | GET `/api/messages/broadcast/[messageId]/recipients` — admin-only endpoint returning `{ messageId, totalRecipients, readCount, recipients[] }` with per-medic detail (name, read_at). Read users sorted first by most recent, then unread alphabetically. | `web/app/api/messages/broadcast/[messageId]/recipients/route.ts` |
+| **Read Summary Hook** | `useBroadcastReadSummaries` — batched TanStack Query hook fetching all `message_recipients` rows for visible message IDs in single query. 30-second stale time. Avoids N+1. | `web/lib/queries/comms.hooks.ts` |
+| **Read Summary UI** | Inline clickable "Read by X of Y" with Eye icon rendered below each broadcast message (admin view only). | `web/app/(dashboard)/messages/components/BroadcastReadSummary.tsx` |
+| **Read Drilldown Sheet** | Sheet component showing per-medic rows with Read (green) / Unread (secondary) badges and relative timestamps. Fetches via TanStack Query on open. Header shows "Read by X of Y". | `web/app/(dashboard)/messages/components/BroadcastReadDrilldown.tsx` |
+| **Message Integration** | MessageItem receives optional `readSummary` and `onReadDrilldown` props. MessageThread manages drilldown state and passes data through. | `web/app/(dashboard)/messages/components/MessageItem.tsx`, `web/app/(dashboard)/messages/components/MessageThread.tsx` |
+
+**Key decisions:**
+- Single broadcast conversation per org via partial unique index (not one conversation per broadcast)
+- `message_recipients` join table for per-medic read tracking (one row per medic per message)
+- No filtering by `available_for_work` — ALL org medics receive broadcasts
+- Existing `on_message_insert_notify` trigger (migration 150) fires automatically for push notifications — no new notification code needed
+- Realtime `useRealtimeMessages` hook triggers same cache invalidation for broadcast as direct messages
+- Batched read summary query (single query for all visible message IDs) avoids N+1
+- 30-second stale time on read summaries (balance freshness vs query volume)
+- Broadcast mark-as-read updates both `message_recipients.read_at` AND `conversation_read_status` (dual update)
 
 ### Planning Files
 
