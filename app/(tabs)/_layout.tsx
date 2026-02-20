@@ -11,14 +11,16 @@
  * - Sync status indicator in header (phone) or sidebar footer (iPad)
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
+import { Q } from '@nozbe/watermelondb';
 import { useSync } from '../../src/contexts/SyncContext';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useOrg } from '../../src/contexts/OrgContext';
 import { useIsTablet } from '../../hooks/useIsTablet';
 import { useRole } from '../../hooks/useRole';
+import { getDatabase } from '../../src/lib/watermelon';
 import TabletSidebar from '../../components/ui/TabletSidebar';
 import { getPatientLabel } from '../../services/taxonomy/vertical-outcome-labels';
 
@@ -60,6 +62,27 @@ export default function TabsLayout() {
   const personPluralLabel = primaryVertical === 'tv_film' ? 'Cast & Crew' : getPatientLabel(primaryVertical) + 's';
   const registryLabel = primaryVertical === 'tv_film' ? 'Cast & Crew Registry' : `${getPatientLabel(primaryVertical)} Registry`;
   const { isAdmin } = useRole();
+  const [unreadBadge, setUnreadBadge] = useState<number>(0);
+
+  // Observe unread conversation count from WatermelonDB for tab badge
+  useEffect(() => {
+    try {
+      const database = getDatabase();
+      const subscription = database.collections
+        .get('conversations')
+        .query(Q.where('unread_count', Q.gt(0)))
+        .observeCount()
+        .subscribe((count) => {
+          setUnreadBadge(count);
+        });
+
+      return () => subscription.unsubscribe();
+    } catch {
+      // Database may not be initialized yet during cold start
+      return undefined;
+    }
+  }, []);
+
   // During auth load, user is null → isAdmin is false, which would briefly show
   // the wrong tabs to an admin. Hide role-specific tabs while loading so the
   // correct set only appears once the session resolves.
@@ -148,6 +171,18 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }) => (
             <Text style={[styles.iconText, { color }]}>🛡️</Text>
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="messages"
+        options={{
+          title: 'Messages',
+          headerTitle: 'Messages',
+          tabBarLabel: 'Messages',
+          tabBarIcon: ({ color }) => (
+            <Text style={[styles.iconText, { color }]}>💬</Text>
+          ),
+          tabBarBadge: unreadBadge > 0 ? (unreadBadge > 99 ? '99+' : unreadBadge) : undefined,
         }}
       />
       <Tabs.Screen
