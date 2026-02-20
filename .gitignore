@@ -9,6 +9,7 @@ supabase/functions/.env
 # Build outputs
 dist/
 build/
+.next/
 
 # Expo
 .expo/
