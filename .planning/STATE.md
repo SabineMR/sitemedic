@@ -12,14 +12,14 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 Phase: 34.1 of 47 (Self-Procured Jobs — INSERTED)
 Plan: 5 of 5 in current phase (PHASE COMPLETE)
 Status: Phase complete
-Last activity: 2026-02-20 — Completed 34.1-05-PLAN.md (Client Portal & Bidirectional Ratings)
+Last activity: 2026-02-20 — Completed 34-02-PLAN.md (Quote Comparison & Company Profile)
 
 Progress: [██████████] v1.0 | [██████████] v1.1 | [██████████] v2.0 | [██████████] v3.0 | [█████░░░░░] v4.0 38% | [████░░░░░░] v5.0 38%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 199 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 13 v4.0 + 7 v5.0)
+- Total plans completed: 200 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 14 v4.0 + 7 v5.0)
 - Average duration: 3.9 min
 - Total execution time: ~13.8 hours
 
@@ -31,7 +31,7 @@ Progress: [██████████] v1.0 | [█████████�
 | v1.1 | 10 | 35 | ~2.4 hrs | ~4.1 min |
 | v2.0 | 7 | 30 | ~22 min | ~1.8 min |
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
-| v4.0 | 8 | 13/26 | ~141 min | ~6.5 min |
+| v4.0 | 8 | 14/26 | ~228 min | ~6.8 min |
 | v5.0 | 8 | 7/21 | ~33 min | ~4.7 min |
 
 *Updated after each plan completion*
@@ -102,6 +102,11 @@ Recent decisions affecting current work:
 - [34.1-05]: Rating section only visible when job status is 'completed'
 - [34.1-05]: deposit_percent defaults to 25% in client-access API (no DB column)
 - [34.1-05]: RLS uses split INSERT/UPDATE/DELETE policies for rater's own ratings
+- [34-02]: Best-value scoring: 60% price + 40% rating, normalised to 0-100 scale with tiebreaker on submitted_at DESC
+- [34-02]: Contact details hidden until BOTH event awarded AND deposit paid (stricter than just 'awarded')
+- [34-02]: Company name always visible before award; medic names masked as "First L."
+- [34-02]: Company profile access-controlled via quote relationship check (must have quote on viewer's event)
+- [34-02]: Zod v4 now installed in web package (v4.3.6) -- .errors renamed to .issues, .partial() disallowed on refined schemas
 
 ### Pending Todos
 
@@ -132,5 +137,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 34.1-05-PLAN.md (Client Portal & Bidirectional Ratings) -- Phase 34.1 COMPLETE
+Stopped at: Completed 34-02-PLAN.md (Quote Comparison & Company Profile)
 Resume file: None
