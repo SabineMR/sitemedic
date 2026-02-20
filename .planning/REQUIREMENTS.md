@@ -13,8 +13,8 @@
 - [x] **MSG-04**: Users see a conversation list with last message preview, timestamp, and unread count
 - [ ] **MSG-05**: Org admin can compose and send a broadcast message to all medics in the org
 - [ ] **MSG-06**: Broadcast messages appear in each medic's conversation list (medics cannot reply to each other)
-- [ ] **MSG-07**: Messages sent offline are queued locally and delivered when connectivity returns
-- [ ] **MSG-08**: Previously loaded messages are viewable offline
+- [x] **MSG-07**: Messages sent offline are queued locally and delivered when connectivity returns
+- [x] **MSG-08**: Previously loaded messages are viewable offline
 - [ ] **MSG-09**: Messages show delivery status: Sent → Delivered → Read
 - [ ] **MSG-10**: Org admin sees broadcast read tracking ("12 of 15 medics read")
 - [ ] **MSG-11**: Users can search across all their conversations
@@ -41,7 +41,7 @@
 
 ### Cross-Platform
 
-- [ ] **PLAT-01**: Messaging works on both iOS app and web dashboard, synced
+- [x] **PLAT-01**: Messaging works on both iOS app and web dashboard, synced
 - [ ] **PLAT-02**: Document upload works on both iOS app and web dashboard
 - [x] **PLAT-03**: All data is scoped to the organization (org_id RLS isolation)
 
@@ -80,8 +80,8 @@
 | MSG-04 | Phase 41 | Complete |
 | MSG-05 | Phase 44 | Pending |
 | MSG-06 | Phase 44 | Pending |
-| MSG-07 | Phase 42 | Pending |
-| MSG-08 | Phase 42 | Pending |
+| MSG-07 | Phase 42 | Complete |
+| MSG-08 | Phase 42 | Complete |
 | MSG-09 | Phase 47 | Pending |
 | MSG-10 | Phase 44 | Pending |
 | MSG-11 | Phase 47 | Pending |
@@ -99,7 +99,7 @@
 | DOC-08 | Phase 45 | Pending |
 | DOC-09 | Phase 45 | Pending |
 | DOC-10 | Phase 46 | Pending |
-| PLAT-01 | Phase 42 | Pending |
+| PLAT-01 | Phase 42 | Complete |
 | PLAT-02 | Phase 45 | Pending |
 | PLAT-03 | Phase 40 | Complete |
 

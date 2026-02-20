@@ -61,7 +61,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 
 - [x] **Phase 40: Comms & Docs Foundation** - Database schema for conversations, messages, and documents; Supabase Storage buckets; org-scoped RLS policies
 - [x] **Phase 41: Web Messaging Core** - 1:1 conversations between org admin and medics on the web dashboard with conversation list and message threads
-- [ ] **Phase 42: iOS Messaging & Offline** - WatermelonDB models for messages, offline send queue, cross-platform sync between iOS app and web
+- [x] **Phase 42: iOS Messaging & Offline** - WatermelonDB models for messages, offline send queue, cross-platform sync between iOS app and web
 - [ ] **Phase 43: Real-time & Push Notifications** - Supabase Realtime for live message delivery, iOS push notifications with GDPR-safe content
 - [ ] **Phase 44: Broadcast Messaging** - Org admin can send broadcast messages to all medics with per-medic read tracking
 - [ ] **Phase 45: Document Upload & Profile Storage** - Medics upload categorised compliance documents from iOS or web, stored on their profile with versioning
@@ -390,7 +390,7 @@ Plans:
 | 39. Admin Dashboard | v4.0 | 0/3 | Not started | - |
 | 40. Comms & Docs Foundation | v5.0 | 2/2 | Complete | 2026-02-19 |
 | 41. Web Messaging Core | v5.0 | 3/3 | Complete | 2026-02-19 |
-| 42. iOS Messaging & Offline | v5.0 | 0/3 | Planned | - |
+| 42. iOS Messaging & Offline | v5.0 | 3/3 | Complete | 2026-02-20 |
 | 43. Real-time & Push Notifications | v5.0 | 0/3 | Not started | - |
 | 44. Broadcast Messaging | v5.0 | 0/2 | Not started | - |
 | 45. Document Upload & Profile Storage | v5.0 | 0/3 | Not started | - |
