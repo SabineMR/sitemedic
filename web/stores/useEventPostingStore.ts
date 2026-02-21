@@ -7,6 +7,7 @@
  */
 
 import { create } from 'zustand';
+import { MARKETPLACE_DEFAULTS } from '@/lib/marketplace/admin-settings-defaults';
 import type {
   EventType,
   IndoorOutdoor,
@@ -75,6 +76,7 @@ interface EventPostingState {
   setError: (e: string | null) => void;
   setDraftId: (id: string | null) => void;
   applyDefaultQuoteDeadline: (defaultHours: number) => void;
+  hydrateDefaults: () => Promise<void>;
   loadDraft: (event: MarketplaceEventWithDetails) => void;
   reset: () => void;
 }
@@ -100,7 +102,7 @@ const DEFAULT_STATE = {
   location_lat: null as number | null,
   location_lng: null as number | null,
   location_display: '',
-  quote_deadline: getDefaultQuoteDeadlineValue(72),
+  quote_deadline: '',
   staffing_requirements: [{ event_day_id: null, role: '', quantity: 1, additional_notes: '' }] as StaffingInput[],
   equipment_required: [] as EquipmentItem[],
   budget_min: null as number | null,
@@ -182,6 +184,36 @@ export const useEventPostingStore = create<EventPostingState>((set) => ({
         quote_deadline: getDefaultQuoteDeadlineValue(defaultHours),
       };
     }),
+  hydrateDefaults: async () => {
+    try {
+      const response = await fetch('/api/marketplace/settings/defaults', { cache: 'no-store' });
+      if (!response.ok) {
+        set((state) => ({
+          quote_deadline:
+            state.quote_deadline || getDefaultQuoteDeadlineValue(MARKETPLACE_DEFAULTS.defaultQuoteDeadlineHours),
+        }));
+        return;
+      }
+
+      const payload = await response.json();
+      const defaultHours = Number(payload?.defaults?.defaultQuoteDeadlineHours);
+
+      set((state) => ({
+        quote_deadline:
+          state.quote_deadline ||
+          getDefaultQuoteDeadlineValue(
+            Number.isFinite(defaultHours) && defaultHours > 0
+              ? defaultHours
+              : MARKETPLACE_DEFAULTS.defaultQuoteDeadlineHours
+          ),
+      }));
+    } catch {
+      set((state) => ({
+        quote_deadline:
+          state.quote_deadline || getDefaultQuoteDeadlineValue(MARKETPLACE_DEFAULTS.defaultQuoteDeadlineHours),
+      }));
+    }
+  },
 
   loadDraft: (event: MarketplaceEventWithDetails) =>
     set({
@@ -214,5 +246,5 @@ export const useEventPostingStore = create<EventPostingState>((set) => ({
       currentStep: 0,
     }),
 
-  reset: () => set({ ...DEFAULT_STATE, quote_deadline: getDefaultQuoteDeadlineValue(72) }),
+  reset: () => set({ ...DEFAULT_STATE }),
 }));

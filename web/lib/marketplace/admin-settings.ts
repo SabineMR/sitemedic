@@ -1,4 +1,5 @@
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { MARKETPLACE_DEFAULTS } from './admin-settings-defaults';
 
 export interface MarketplaceAdminSettings {
   id: string | null;
@@ -11,9 +12,9 @@ export interface MarketplaceAdminSettings {
 
 export const MARKETPLACE_ADMIN_SETTINGS_DEFAULTS: MarketplaceAdminSettings = {
   id: null,
-  defaultCommissionPercent: 60,
-  defaultDepositPercent: 25,
-  defaultQuoteDeadlineHours: 72,
+  defaultCommissionPercent: MARKETPLACE_DEFAULTS.defaultCommissionPercent,
+  defaultDepositPercent: MARKETPLACE_DEFAULTS.defaultDepositPercent,
+  defaultQuoteDeadlineHours: MARKETPLACE_DEFAULTS.defaultQuoteDeadlineHours,
   updatedAt: null,
   updatedBy: null,
 };

@@ -16,19 +16,24 @@
 - [x] **Task 2:** Build settings API/UI and wire defaults into runtime marketplace flows
   - Added `GET`/`PUT /api/platform/marketplace/settings` with platform-admin auth guard and input validation.
   - Added `web/lib/marketplace/admin-settings.ts` typed settings utility + commission split helper.
-  - Added `/platform/marketplace/settings` UI with change reason requirement and recent audit list.
-  - Wired runtime commission fallback in `booking-bridge` to settings-backed defaults via `award-calculations` helper.
-  - Added quick links from `/platform/marketplace` dashboard to entity ops + settings routes.
+- Added `/platform/marketplace/settings` UI with change reason requirement and recent audit list.
+- Wired runtime commission fallback in `booking-bridge` to settings-backed defaults via `award-calculations` helper.
+- Added authenticated runtime defaults endpoint (`/api/marketplace/settings/defaults`) and wired first-open deposit/deadline hydration in award + event wizard flows.
+- Added quick links from `/platform/marketplace` dashboard to entity ops + settings routes.
 
 ## Files Added/Updated
 
 - `supabase/migrations/163_marketplace_admin_settings.sql`
 - `web/app/api/platform/marketplace/settings/route.ts`
+- `web/app/api/marketplace/settings/defaults/route.ts`
 - `web/lib/marketplace/admin-settings.ts`
+- `web/lib/marketplace/admin-settings-defaults.ts`
 - `web/app/platform/marketplace/settings/page.tsx`
 - `web/lib/marketplace/award-calculations.ts`
 - `web/lib/marketplace/booking-bridge.ts`
 - `web/stores/useEventPostingStore.ts`
+- `web/components/marketplace/award/AwardConfirmationModal.tsx`
+- `web/components/marketplace/event-wizard/ScheduleLocationStep.tsx`
 - `web/app/platform/marketplace/page.tsx`
 - `FEATURES.md`
 
@@ -45,6 +50,8 @@
   - `pnpm --dir web exec tsc --noEmit` ✅
 - Lint:
   - `pnpm --dir web lint` ✅ warning-only (known non-blocking legacy warnings)
+- Final goal-backward verification:
+  - `.planning/phases/39-admin-dashboard/39-VERIFICATION.md` ✅ status `passed`, score `4/4 must-haves verified`
 
 ## Notes
 
