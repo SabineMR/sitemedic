@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-20 (Phase 38: Notifications & Alerts complete)
+**Last Updated**: 2026-02-21 (Phase 39-01 marketplace admin metrics delivered)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -49,6 +49,38 @@ SiteMedic runs on 2 Next.js apps sharing the same Supabase project (same auth, s
 - `web-marketplace/.env.local`: `NEXT_PUBLIC_PROVIDER_APP_URL`, `NEXT_PUBLIC_MARKETING_URL`
 
 **Auth:** All authentication happens on `web/` (30500). The marketing homepage, sign-in, and dashboard are all on the same port — no cross-port auth issues.
+
+---
+
+## Planning Update - Phase 39 Admin Dashboard (2026-02-21)
+
+Phase 39 planning artifacts are now in place at `.planning/phases/39-admin-dashboard/` to cover platform-level marketplace operations.
+
+| Plan | Focus | Planned Outputs |
+|------|-------|-----------------|
+| **39-01** | Marketplace metrics dashboard | `161_marketplace_admin_metrics.sql`, `/api/platform/marketplace/metrics`, `/platform/marketplace` metrics UI, platform nav link |
+| **39-02** | Entity management + moderation | `162_marketplace_admin_moderation.sql`, unified entities API, moderation API, `/platform/marketplace/entities` workspace, moderation audit trail |
+| **39-03** | Marketplace configuration | `163_marketplace_admin_settings.sql`, settings GET/PUT API, `/platform/marketplace/settings` UI, runtime defaults integration for commission/deposit/deadline |
+
+**Requirements covered by planning:** ADMIN-01, ADMIN-02, ADMIN-03, ADMIN-04.
+
+### Phase 39-01 Delivered - Marketplace Metrics Dashboard Foundation (2026-02-21)
+
+Phase 39-01 is now implemented for ADMIN-01. Platform admins can open `/platform/marketplace` and view marketplace health metrics with server-side aggregation and date-window filtering.
+
+| Area | What Was Added | Why It Matters |
+|------|----------------|----------------|
+| **DB Metrics RPC** | `supabase/migrations/161_marketplace_admin_metrics.sql` adds `get_marketplace_admin_metrics(window_days INT DEFAULT 30)` returning one-row aggregates: total events, total qualifying quotes, awarded events, conversion rate, marketplace revenue (`platform_fee` sum), and open disputes. | Gives a single trusted backend metric source for dashboard cards; avoids expensive client-side counting and keeps platform-admin access independent of org context. |
+| **Security posture** | Function is `SECURITY DEFINER`, sets `search_path`, revokes `PUBLIC` execute, and grants execute to `authenticated`. | Matches existing platform metrics pattern while keeping direct execution restricted and suitable for platform-admin API usage. |
+| **Platform API route** | `GET /api/platform/marketplace/metrics` at `web/app/api/platform/marketplace/metrics/route.ts`. Enforces authenticated user and `user.app_metadata.role === 'platform_admin'`, supports `window=7|30|90|all`, uses service-role RPC call to bypass org-scoped RLS assumptions. | Ensures only platform admins can query cross-tenant marketplace metrics and keeps date filtering server-side. |
+| **React Query hook** | `web/lib/queries/platform/marketplace-metrics.ts` introduces `useMarketplaceAdminMetrics(window)` with typed response, 30s stale time, and 60s refresh interval. | Standardizes data fetching/caching behavior for platform dashboard UI and minimizes repetitive route logic in components. |
+| **Marketplace dashboard page** | `web/app/platform/marketplace/page.tsx` adds new Platform Admin page with window selector (7d/30d/90d/all), six metric cards, loading/error states, and health snapshot rows (quotes/event ratio, unresolved dispute ratio, refresh status). | Delivers ADMIN-01 operator view so platform team can quickly monitor launch health and revenue trends from one page. |
+| **Platform sidebar navigation** | `web/app/platform/layout.tsx` adds `Marketplace` nav entry linking to `/platform/marketplace`. | Makes the new dashboard discoverable in normal platform-admin workflow without manual URL entry. |
+
+**Performance design notes:**
+- Metrics are aggregated in SQL via one RPC call (no client-side full-table scans).
+- Window filtering is handled in the function/API path, reducing payload size and repeated client computations.
+- UI uses cached query responses with periodic refresh instead of aggressive polling.
 
 ---
 

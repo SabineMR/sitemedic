@@ -23,6 +23,7 @@ import {
   Users,
   Shield,
   ShieldCheck,
+  Store,
   LogOut,
 } from 'lucide-react';
 import { QueryProvider } from '@/components/providers/query-provider';
@@ -114,6 +115,11 @@ export default function PlatformLayout({ children }: PlatformLayoutProps) {
       name: 'Verification',
       href: '/platform/verification',
       icon: <ShieldCheck className="w-5 h-5" />,
+    },
+    {
+      name: 'Marketplace',
+      href: '/platform/marketplace',
+      icon: <Store className="w-5 h-5" />,
     },
     {
       name: 'Subscriptions',
