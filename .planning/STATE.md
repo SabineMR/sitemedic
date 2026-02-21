@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 39-admin-dashboard
-Plan: 02
+Plan: 03
 Status: In progress
-Last activity: 2026-02-21 — Completed 39-01 (marketplace metrics dashboard foundation)
+Last activity: 2026-02-21 — Completed 39-02 (marketplace entity management + moderation workspace)
 
-Note: v4.0 Phase 39 execution started — next step is 39-02
+Note: v4.0 Phase 39 execution ongoing — next step is 39-03
 
 Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [##########] v4.0 90% | [##########] v5.0 100%
 
@@ -38,6 +38,7 @@ Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [#########
 
 *Updated after each plan completion*
 | Phase 39-admin-dashboard P01 | 3m | 2 tasks | 7 files |
+| Phase 39 P02 | 8m | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -140,6 +141,8 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 - [38-04]: SMS opt-in limited to 4 categories (events, quotes, awards, payments) — time-sensitive only per spec
 - [Phase 39]: 39-01: Marketplace metrics conversion uses awarded events over events with qualifying quotes within selected window
 - [Phase 39]: 39-01: Marketplace admin revenue metric uses bookings.platform_fee where source='marketplace'
+- [Phase 39]: Entity search/filter/pagination are enforced in API routes to avoid client-side full-dataset table loading.
+- [Phase 39]: Moderation side effects update both profiles.is_active and marketplace company quote permissions before audit insert response.
 
 ### Pending Todos
 
@@ -165,6 +168,6 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 
 ## Session Continuity
 
-Last session: 2026-02-21T21:21:34Z
-Stopped at: Completed 39-admin-dashboard-01-PLAN.md
+Last session: 2026-02-21T21:57:01Z
+Stopped at: Completed 39-02-PLAN.md
 Resume file: None
