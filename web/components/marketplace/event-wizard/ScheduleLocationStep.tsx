@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useEventPostingStore } from '@/stores/useEventPostingStore';
 
 interface Props {
@@ -9,11 +8,6 @@ interface Props {
 
 export default function ScheduleLocationStep({ errors }: Props) {
   const store = useEventPostingStore();
-  const hydrateDefaults = useEventPostingStore((state) => state.hydrateDefaults);
-
-  useEffect(() => {
-    hydrateDefaults();
-  }, [hydrateDefaults]);
 
   return (
     <div className="space-y-8">

@@ -16,6 +16,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import {
   calculateMarketplaceCommission,
   calculateRemainderDueDate,
+  getConfiguredCommissionSplit,
 } from './award-calculations';
 
 // =============================================================================
@@ -61,15 +62,6 @@ export interface CreateMarketplaceBookingResult {
 // Booking Bridge Function
 // =============================================================================
 
-const DEFAULT_PLATFORM_FEE_PERCENT = parseInt(
-  process.env.DEFAULT_PLATFORM_FEE_PERCENT || '60',
-  10
-);
-const DEFAULT_MEDIC_PAYOUT_PERCENT = parseInt(
-  process.env.DEFAULT_MEDIC_PAYOUT_PERCENT || '40',
-  10
-);
-
 export async function createMarketplaceBooking(
   supabase: SupabaseClient,
   params: CreateMarketplaceBookingParams
@@ -86,8 +78,8 @@ export async function createMarketplaceBooking(
     stripeCustomerId,
     stripePaymentMethodId,
     depositPaymentIntentId,
-    platformFeePercent = DEFAULT_PLATFORM_FEE_PERCENT,
-    medicPayoutPercent = DEFAULT_MEDIC_PAYOUT_PERCENT,
+    platformFeePercent,
+    medicPayoutPercent,
   } = params;
 
   try {
@@ -104,11 +96,15 @@ export async function createMarketplaceBooking(
 
     const orgId = company?.org_id || null;
 
+    const configuredSplit = await getConfiguredCommissionSplit();
+    const effectivePlatformFeePercent = platformFeePercent ?? configuredSplit.platformFeePercent;
+    const effectiveMedicPayoutPercent = medicPayoutPercent ?? configuredSplit.medicPayoutPercent;
+
     // Calculate commission
     const commission = calculateMarketplaceCommission(
       quote.total_price,
-      platformFeePercent,
-      medicPayoutPercent
+      effectivePlatformFeePercent,
+      effectiveMedicPayoutPercent
     );
 
     // Find latest event day for remainder due date
@@ -125,10 +121,10 @@ export async function createMarketplaceBooking(
     const perDaySubtotal = parseFloat((perDayTotal / 1.20).toFixed(2));
     const perDayVat = parseFloat((perDayTotal - perDaySubtotal).toFixed(2));
     const perDayPlatformFee = parseFloat(
-      (perDaySubtotal * (platformFeePercent / 100)).toFixed(2)
+      (perDaySubtotal * (effectivePlatformFeePercent / 100)).toFixed(2)
     );
     const perDayMedicPayout = parseFloat(
-      (perDaySubtotal * (medicPayoutPercent / 100)).toFixed(2)
+      (perDaySubtotal * (effectiveMedicPayoutPercent / 100)).toFixed(2)
     );
     const perDayDeposit = parseFloat((depositAmount / dayCount).toFixed(2));
     const perDayRemainder = parseFloat((remainderAmount / dayCount).toFixed(2));

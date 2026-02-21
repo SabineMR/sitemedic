@@ -17,6 +17,7 @@ export default function EditEventPage() {
   const params = useParams();
   const router = useRouter();
   const store = useEventPostingStore();
+  const hydrateDefaults = useEventPostingStore((state) => state.hydrateDefaults);
   const [event, setEvent] = useState<MarketplaceEventWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -26,6 +27,10 @@ export default function EditEventPage() {
   // Post-quote restricted fields
   const [description, setDescription] = useState('');
   const [specialRequirements, setSpecialRequirements] = useState('');
+
+  useEffect(() => {
+    hydrateDefaults();
+  }, [hydrateDefaults]);
 
   useEffect(() => {
     const fetchEvent = async () => {

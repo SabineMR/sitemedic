@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@/lib/stripe/client';
 import { useAwardCheckoutStore } from '@/stores/useAwardCheckoutStore';
@@ -50,19 +50,71 @@ export default function AwardConfirmationModal({
 }: AwardConfirmationModalProps) {
   const store = useAwardCheckoutStore();
   const [isInitialized, setIsInitialized] = useState(false);
+  const [defaultDepositPercent, setDefaultDepositPercent] = useState<number | null>(null);
+  const [depositDefaultsReady, setDepositDefaultsReady] = useState(false);
 
-  // Initialize store when modal opens
-  if (open && !isInitialized) {
-    const depositPercent = getDepositPercentForEventType(eventType);
+  useEffect(() => {
+    if (!open) {
+      setDepositDefaultsReady(false);
+      return;
+    }
+
+    let cancelled = false;
+    setDepositDefaultsReady(false);
+
+    async function loadDefaults() {
+      try {
+        const response = await fetch('/api/marketplace/settings/defaults', { cache: 'no-store' });
+        if (!response.ok) return;
+        const payload = await response.json();
+        const value = Number(payload?.defaults?.defaultDepositPercent);
+        if (!cancelled && Number.isFinite(value) && value > 0) {
+          setDefaultDepositPercent(value);
+        }
+      } catch {
+        // Keep fallback defaults when settings request fails
+      } finally {
+        if (!cancelled) {
+          setDepositDefaultsReady(true);
+        }
+      }
+    }
+
+    loadDefaults();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || isInitialized || !depositDefaultsReady) return;
+    const depositPercent = getDepositPercentForEventType(
+      eventType,
+      defaultDepositPercent === null ? undefined : defaultDepositPercent
+    );
     store.initializeAward(quoteId, eventId, '', companyName, totalPrice, depositPercent);
     setIsInitialized(true);
-  }
+  }, [
+    open,
+    isInitialized,
+    depositDefaultsReady,
+    eventType,
+    defaultDepositPercent,
+    quoteId,
+    eventId,
+    companyName,
+    totalPrice,
+    store,
+  ]);
 
   // Reset when modal closes
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
       store.reset();
       setIsInitialized(false);
+      setDefaultDepositPercent(null);
+      setDepositDefaultsReady(false);
     }
     onOpenChange(newOpen);
   };

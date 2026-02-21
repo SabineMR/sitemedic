@@ -15,7 +15,12 @@ export default function CreateEventPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const store = useEventPostingStore();
+  const hydrateDefaults = useEventPostingStore((state) => state.hydrateDefaults);
   const [errors, setErrors] = useState<Record<string, string[] | undefined>>({});
+
+  useEffect(() => {
+    hydrateDefaults();
+  }, [hydrateDefaults]);
 
   // Load draft if draft ID in URL
   useEffect(() => {

@@ -147,6 +147,7 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 - [Phase 39]: 39-03: Marketplace defaults now live in singleton `marketplace_admin_settings` with bounded constraints and platform-admin RLS.
 - [Phase 39]: 39-03: Settings changes require a reason and write immutable before/after rows to `marketplace_admin_settings_audit`.
 - [Phase 39]: 39-03: Booking commission fallback now resolves via settings-backed helper instead of fixed split constants.
+- [Phase 39]: 39-03 hardening: active runtime defaults consumers are wired in `web-marketplace` (award modal + event create/edit wizard hydration) while `web` remains platform-admin control surface.
 
 ### Pending Todos
 

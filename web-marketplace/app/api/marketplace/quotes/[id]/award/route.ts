@@ -31,6 +31,7 @@ import {
   calculateAwardAmounts,
   getDepositPercentForEventType,
 } from '@/lib/marketplace/award-calculations';
+import { getMarketplaceAdminSettings } from '@/lib/marketplace/admin-settings';
 import type { AwardApiResponse } from '@/lib/marketplace/award-types';
 
 export const dynamic = 'force-dynamic';
@@ -176,7 +177,10 @@ export async function POST(
     }
 
     // 4. Calculate deposit percentage and amounts
-    const depositPercent = requestedDepositPercent ?? getDepositPercentForEventType(event.event_type);
+    const settings = await getMarketplaceAdminSettings();
+    const depositPercent =
+      requestedDepositPercent ??
+      getDepositPercentForEventType(event.event_type, settings.defaultDepositPercent);
     const breakdown = calculateAwardAmounts(quote.total_price, depositPercent);
 
     // 5. Create or retrieve Stripe Customer

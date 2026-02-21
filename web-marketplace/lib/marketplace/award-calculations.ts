@@ -10,6 +10,7 @@
  */
 
 import type { PaymentBreakdown, MarketplaceCommission } from './award-types';
+import { MARKETPLACE_DEFAULTS } from './admin-settings-defaults';
 
 // =============================================================================
 // Deposit Percentage by Event Type
@@ -27,8 +28,27 @@ const DEPOSIT_PERCENT_BY_EVENT_TYPE: Record<string, number> = {
  * Construction and motorsport require 50% deposit; all others default to 25%.
  * Admin UI for configuring this will be added in Phase 39.
  */
-export function getDepositPercentForEventType(eventType: string): number {
-  return DEPOSIT_PERCENT_BY_EVENT_TYPE[eventType] ?? 25;
+export function getDepositPercentForEventType(
+  eventType: string,
+  defaultDepositPercent: number = MARKETPLACE_DEFAULTS.defaultDepositPercent
+): number {
+  return DEPOSIT_PERCENT_BY_EVENT_TYPE[eventType] ?? defaultDepositPercent;
+}
+
+export async function getConfiguredCommissionSplit(): Promise<{
+  platformFeePercent: number;
+  medicPayoutPercent: number;
+}> {
+  if (typeof window !== 'undefined') {
+    return {
+      platformFeePercent: MARKETPLACE_DEFAULTS.defaultCommissionPercent,
+      medicPayoutPercent: 100 - MARKETPLACE_DEFAULTS.defaultCommissionPercent,
+    };
+  }
+
+  const { getMarketplaceAdminSettings, getCommissionSplitFromSettings } = await import('./admin-settings');
+  const settings = await getMarketplaceAdminSettings();
+  return getCommissionSplitFromSettings(settings.defaultCommissionPercent);
 }
 
 // =============================================================================

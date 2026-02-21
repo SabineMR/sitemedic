@@ -7,6 +7,7 @@
  */
 
 import { create } from 'zustand';
+import { MARKETPLACE_DEFAULTS } from '@/lib/marketplace/admin-settings-defaults';
 import type {
   EventType,
   IndoorOutdoor,
@@ -74,8 +75,15 @@ interface EventPostingState {
   setSubmitting: (v: boolean) => void;
   setError: (e: string | null) => void;
   setDraftId: (id: string | null) => void;
+  hydrateDefaults: () => Promise<void>;
   loadDraft: (event: MarketplaceEventWithDetails) => void;
   reset: () => void;
+}
+
+function getDefaultQuoteDeadlineValue(defaultHours: number): string {
+  const now = new Date();
+  now.setHours(now.getHours() + defaultHours, 0, 0, 0);
+  return now.toISOString().slice(0, 16);
 }
 
 const DEFAULT_STATE = {
@@ -166,6 +174,36 @@ export const useEventPostingStore = create<EventPostingState>((set) => ({
   setSubmitting: (v: boolean) => set({ isSubmitting: v }),
   setError: (e: string | null) => set({ error: e }),
   setDraftId: (id: string | null) => set({ draftId: id }),
+  hydrateDefaults: async () => {
+    try {
+      const response = await fetch('/api/marketplace/settings/defaults', { cache: 'no-store' });
+      if (!response.ok) {
+        set((state) => ({
+          quote_deadline:
+            state.quote_deadline || getDefaultQuoteDeadlineValue(MARKETPLACE_DEFAULTS.defaultQuoteDeadlineHours),
+        }));
+        return;
+      }
+
+      const payload = await response.json();
+      const defaultHours = Number(payload?.defaults?.defaultQuoteDeadlineHours);
+
+      set((state) => ({
+        quote_deadline:
+          state.quote_deadline ||
+          getDefaultQuoteDeadlineValue(
+            Number.isFinite(defaultHours) && defaultHours > 0
+              ? defaultHours
+              : MARKETPLACE_DEFAULTS.defaultQuoteDeadlineHours
+          ),
+      }));
+    } catch {
+      set((state) => ({
+        quote_deadline:
+          state.quote_deadline || getDefaultQuoteDeadlineValue(MARKETPLACE_DEFAULTS.defaultQuoteDeadlineHours),
+      }));
+    }
+  },
 
   loadDraft: (event: MarketplaceEventWithDetails) =>
     set({
