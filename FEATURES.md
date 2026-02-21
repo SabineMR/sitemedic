@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-21 (Phase 39-01 marketplace admin metrics delivered)
+**Last Updated**: 2026-02-21 (Phase 39-02 marketplace entity ops + moderation delivered)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -81,6 +81,24 @@ Phase 39-01 is now implemented for ADMIN-01. Platform admins can open `/platform
 - Metrics are aggregated in SQL via one RPC call (no client-side full-table scans).
 - Window filtering is handled in the function/API path, reducing payload size and repeated client computations.
 - UI uses cached query responses with periodic refresh instead of aggressive polling.
+
+### Phase 39-02 Delivered - Unified Entity Operations and Moderation (2026-02-21)
+
+Phase 39-02 is now implemented for ADMIN-02 and ADMIN-04. Platform admins can open `/platform/marketplace/entities` to manage core marketplace entities with server-side filtering/pagination, and can suspend, ban, or reinstate users with mandatory reason capture and immutable moderation audit logging.
+
+| Area | What Was Added | Why It Matters |
+|------|----------------|----------------|
+| **Moderation audit migration** | `supabase/migrations/162_marketplace_admin_moderation.sql` adds `marketplace_user_moderation_audit` with required actor/target/action/reason fields, metadata JSON, timestamp, RLS (platform admin read/insert), and immutable trigger blocking update/delete mutations. | Creates durable, attributable moderation history so every enforcement action is reviewable and cannot be silently edited later. |
+| **Unified entities API** | `GET /api/platform/marketplace/entities` at `web/app/api/platform/marketplace/entities/route.ts` supports `entity`, `status`, `search`, `page`, and `limit` params. Uses platform-admin auth guard + service-role reads with exact-count pagination and entity-specific normalization for events, quotes, awards, disputes, and users. | Delivers one operational endpoint for all ADMIN-02 list surfaces while keeping filtering and pagination server-side (no full-dataset client pulls). |
+| **Moderation API** | `POST /api/platform/marketplace/moderation` at `web/app/api/platform/marketplace/moderation/route.ts` validates `{ targetUserId, action, reason, context }`, enforces reason minimum length, toggles `profiles.is_active`, updates `marketplace_companies.can_submit_quotes` when the user is a marketplace company admin, and inserts a `marketplace_user_moderation_audit` row per action. | Enables fast policy enforcement across user and marketplace-quoting behavior with complete auditability required by ADMIN-04. |
+| **React Query entities hook** | `web/lib/queries/platform/marketplace-entities.ts` introduces `useMarketplaceEntities(params)` with typed records and paginated response shape. | Standardizes data access for entity workspace and future platform moderation/reporting views. |
+| **Entities workspace UI** | `web/app/platform/marketplace/entities/page.tsx` adds tabbed views (events/quotes/awards/disputes/users), debounced search, status filter, paginated table, and row details designed for platform operators. | Gives platform admins one workspace for triage across all key marketplace entities instead of fragmented screens. |
+| **Moderation panel UI** | `web/components/platform/marketplace/EntityModerationPanel.tsx` adds user detail actions for suspend/ban/reinstate with preset reasons, mandatory reason notes, action feedback, and API integration. | Reduces moderation friction while preserving required audit context for compliance and incident review. |
+
+**Performance design notes:**
+- Entity listings are server-side paginated (`page` + `limit`) with count metadata, so the UI never requests full tables.
+- Search filters are applied in API queries (including event/company lookup for quote/audit-related tables) rather than client-side post-processing.
+- User moderation refreshes only the active query set, keeping admin interaction responsive during repeated actions.
 
 ---
 
