@@ -5,14 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v5.0 shipped — ready for next milestone (v4.0 MedBid Marketplace remaining: Phase 39)
+**Current focus:** v6.0 Marketplace Integrity — defining requirements
 
 ## Current Position
 
-Phase: 39-admin-dashboard (Phase 1 of 1 remaining in v4.0) — pending planning
-Plan: 0 of ? pending
-Status: Ready for planning
-Last activity: 2026-02-20 — Phase 38 (Notifications & Alerts) verified and complete
+Phase: Not started — defining v6.0 requirements
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-20 — v6.0 Marketplace Integrity milestone started
+
+Note: v4.0 Phase 39 (Admin Dashboard) still pending — resume with /gsd:plan-phase 39 when ready
 
 Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [##########] v4.0 89% | [##########] v5.0 100%
 

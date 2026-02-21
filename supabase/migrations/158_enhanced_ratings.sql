@@ -144,8 +144,9 @@ ALTER TABLE marketplace_companies ADD CONSTRAINT chk_trust_score
 COMMENT ON COLUMN marketplace_companies.trust_score IS 'Composite trust score (0-100) combining rating, volume, insurance, verification, cancellation rate, tenure, response rate';
 
 -- =============================================================================
--- UPDATED TRIGGER: Bayesian Average + Recency Weighting + Trust Score
--- Features 1, 2, 3, 9 combined in a single trigger for efficiency.
+-- UPDATED TRIGGER: Bayesian Average + Recency Weighting (Features 1, 2, 3)
+-- Trust score (Feature 9) is computed by the daily cron job only, to avoid
+-- expensive full-table scans inside a per-row trigger.
 -- =============================================================================
 
 CREATE OR REPLACE FUNCTION update_company_rating_aggregate()
@@ -160,21 +161,6 @@ DECLARE
   v_confidence_threshold INTEGER := 5;  -- Bayesian C parameter
   v_weighted_sum NUMERIC;
   v_weighted_count NUMERIC;
-  v_trust_score INTEGER;
-  v_rating_component NUMERIC;
-  v_volume_component NUMERIC;
-  v_insurance_component NUMERIC;
-  v_verification_component NUMERIC;
-  v_cancellation_component NUMERIC;
-  v_tenure_component NUMERIC;
-  v_response_component NUMERIC;
-  v_insurance_status TEXT;
-  v_verification_status TEXT;
-  v_company_created_at TIMESTAMPTZ;
-  v_total_completed INTEGER;
-  v_total_cancelled INTEGER;
-  v_total_events_in_area INTEGER;
-  v_total_quotes INTEGER;
 BEGIN
   -- Determine which job_id to process
   IF TG_OP = 'DELETE' THEN
@@ -214,7 +200,7 @@ BEGIN
 
   -- =========================================================================
   -- FEATURE 2: Bayesian average — blend toward platform-wide mean
-  -- Formula: bayesian = (C * m + sum_of_ratings) / (C + review_count)
+  -- Formula: bayesian = (C * m + weighted_sum) / (C + weighted_count)
   -- =========================================================================
 
   -- Compute platform-wide average across ALL published client ratings
@@ -252,104 +238,19 @@ BEGIN
     AND jr.moderation_status = 'published';
 
   -- Bayesian formula with recency-weighted values
-  IF v_weighted_count > 0 OR v_confidence_threshold > 0 THEN
-    v_bayesian_avg := ROUND(
-      ((v_confidence_threshold * v_global_avg) + v_weighted_sum)
-      / (v_confidence_threshold + v_weighted_count),
-      2
-    );
-  ELSE
-    v_bayesian_avg := 0;
-  END IF;
-
-  -- =========================================================================
-  -- FEATURE 9: Composite Trust Score (0-100)
-  -- Calculated opportunistically when ratings change
-  -- =========================================================================
-
-  -- Fetch company metadata for trust score signals
-  SELECT insurance_status, verification_status, created_at
-  INTO v_insurance_status, v_verification_status, v_company_created_at
-  FROM marketplace_companies
-  WHERE id = v_company_id;
-
-  -- Rating component: Bayesian average normalized to 0-100 (30% weight)
-  v_rating_component := CASE
-    WHEN v_bayesian_avg > 0 THEN ((v_bayesian_avg - 1) / 4.0) * 100
-    ELSE 0
-  END;
-
-  -- Volume component: review count capped at 50 = 100% (15% weight)
-  v_volume_component := LEAST(v_count::numeric / 50.0 * 100, 100);
-
-  -- Insurance component: verified = 100, else 0 (10% weight)
-  v_insurance_component := CASE WHEN v_insurance_status = 'verified' THEN 100 ELSE 0 END;
-
-  -- Verification component: verified/cqc_verified = 100, else 0 (10% weight)
-  v_verification_component := CASE
-    WHEN v_verification_status IN ('verified', 'cqc_verified') THEN 100
-    ELSE 0
-  END;
-
-  -- Cancellation rate component: inverse of cancel rate (15% weight)
-  SELECT
-    COALESCE(COUNT(*) FILTER (WHERE me.status = 'completed'), 0),
-    COALESCE(COUNT(*) FILTER (WHERE me.status = 'cancelled'), 0)
-  INTO v_total_completed, v_total_cancelled
-  FROM marketplace_events me
-  JOIN marketplace_quotes mq ON mq.event_id = me.id AND mq.status = 'awarded'
-  WHERE mq.company_id = v_company_id;
-
-  v_cancellation_component := CASE
-    WHEN (v_total_completed + v_total_cancelled) > 0
-    THEN (1.0 - (v_total_cancelled::numeric / (v_total_completed + v_total_cancelled)::numeric)) * 100
-    ELSE 50  -- Neutral score for new companies
-  END;
-
-  -- Tenure component: capped at 2 years = 100% (10% weight)
-  v_tenure_component := LEAST(
-    EXTRACT(EPOCH FROM (now() - v_company_created_at)) / (2 * 365.25 * 86400) * 100,
-    100
+  v_bayesian_avg := ROUND(
+    ((v_confidence_threshold * v_global_avg) + v_weighted_sum)
+    / (v_confidence_threshold + v_weighted_count),
+    2
   );
 
-  -- Response rate component: quotes submitted vs total events in area (10% weight)
-  SELECT COUNT(*) INTO v_total_quotes
-  FROM marketplace_quotes
-  WHERE company_id = v_company_id;
-
-  -- Simplified: use total events as denominator (exact area matching too expensive in trigger)
-  SELECT COUNT(*) INTO v_total_events_in_area
-  FROM marketplace_events
-  WHERE status IN ('open', 'quoting', 'awarded', 'completed', 'cancelled');
-
-  v_response_component := CASE
-    WHEN v_total_events_in_area > 0
-    THEN LEAST(v_total_quotes::numeric / GREATEST(v_total_events_in_area * 0.1, 1) * 100, 100)
-    ELSE 50  -- Neutral score when no events exist
-  END;
-
-  -- Weighted composite
-  v_trust_score := ROUND(
-    (v_rating_component * 0.30) +
-    (v_volume_component * 0.15) +
-    (v_insurance_component * 0.10) +
-    (v_verification_component * 0.10) +
-    (v_cancellation_component * 0.15) +
-    (v_tenure_component * 0.10) +
-    (v_response_component * 0.10)
-  )::integer;
-
-  -- Clamp to 0-100
-  v_trust_score := GREATEST(0, LEAST(100, v_trust_score));
-
   -- =========================================================================
-  -- Update denormalized columns
+  -- Update denormalized rating columns (trust_score updated by cron only)
   -- =========================================================================
   UPDATE marketplace_companies
   SET average_rating = v_bayesian_avg,
       raw_average_rating = v_raw_avg,
-      review_count = v_count,
-      trust_score = v_trust_score
+      review_count = v_count
   WHERE id = v_company_id;
 
   IF TG_OP = 'DELETE' THEN

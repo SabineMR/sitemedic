@@ -124,8 +124,25 @@ export async function GET(
       }
     }
 
-    // Feature 8: Compute booking_count per reviewer (repeat client indicator)
+    // Fetch reviewer names from medics table (Bug 3 fix)
     const reviewerIds = [...new Set(filteredReviews.map((r: any) => r.rater_user_id))];
+    let nameMap: Record<string, string> = {};
+
+    if (reviewerIds.length > 0) {
+      const { data: medics } = await supabase
+        .from('medics')
+        .select('user_id, first_name, last_name')
+        .in('user_id', reviewerIds);
+
+      if (medics) {
+        for (const m of medics) {
+          const name = `${m.first_name || ''} ${(m.last_name || '').charAt(0)}`.trim();
+          if (name) nameMap[m.user_id] = name.endsWith('.') ? name : `${name}.`;
+        }
+      }
+    }
+
+    // Feature 8: Compute booking_count per reviewer (repeat client indicator)
     let bookingCountMap: Record<string, number> = {};
 
     if (reviewerIds.length > 0) {
@@ -140,9 +157,10 @@ export async function GET(
       }
     }
 
-    // Assemble enriched reviews with replies and booking count
+    // Assemble enriched reviews with replies, booking count, and rater name
     const enrichedReviews = filteredReviews.map((r: any) => ({
       ...r,
+      rater_name: nameMap[r.rater_user_id] || null,
       reply: repliesMap[r.id] || null,
       booking_count: bookingCountMap[r.rater_user_id] || 0,
     }));

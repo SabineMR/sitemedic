@@ -230,60 +230,49 @@ Documentation happens automatically as the medic does their job, not as separate
 | Document versioning via current_version_id | Archive old, don't delete — compliance audit trail preserved, circular FK with deferred constraint | ✓ Good (v5.0) |
 | Progressive expiry alerts via pg_cron + Edge Function | Daily job at 08:00 UTC checks 4 thresholds (30/14/7/1) — deduplication via audit table, digest format | ✓ Good (v5.0) |
 
-## Current Milestone: v4.0 MedBid Marketplace
+## Current Milestone: v6.0 Marketplace Integrity
 
-**Goal:** Add a Request-for-Quotes marketplace to SiteMedic where UK clients post events needing medical cover, medics (individuals and companies) submit detailed quotes, clients award the job, and SiteMedic takes a commission from the medic's side. Awarded quotes auto-create bookings that flow into the existing dashboard, timesheets, and payout systems. Free to sign up for both sides. Credits/points monetisation system added in later phases.
+**Goal:** Protect the marketplace from fee evasion, disintermediation, and job-source fraud — while establishing the definitive fee model (10% platform fee always first, medic-paid referral fee, medic-to-medic job passing, and co-shared job support) that makes the marketplace financially sustainable and fraud-resistant.
 
 **Target features:**
-- Event posting with full details (type, dates, location, staffing needs, budget range)
-- Quote submission with itemised breakdown, cover letter, availability confirmation
-- Medic profiles visible only after quoting (certs, rating, experience) — contact details hidden until award + deposit
-- Deposit + remainder payment model — deposit on award, remainder after event
-- Commission from medic's quote (existing platform_fee/medic_payout pattern)
-- Open registration for individual medics AND medic companies
-- Company roster management with double-up prevention (company quotes lock out individual quotes from same medic)
-- Bidirectional ratings (client rates medic, medic rates client)
-- Multi-channel notifications: dashboard feed, email alerts, SMS for urgent/high-value
-- Credits/points system (later phases) — medics purchase credits to quote, early access, tiered priority
+- Fee model enforcement: 10% platform fee taken first on all marketplace jobs, subscription-only for self-sourced jobs (no per-job fee)
+- Referral system: 10% referral finder's fee paid from medic's side (medic keeps 80% on referred jobs, platform always keeps full 10%)
+- Job source declaration: explicit source selection on job creation (marketplace vs self-sourced) with platform-side verification
+- Client identity lock: once a client's email/phone appears in the marketplace, any future booking between that medic and that client is automatically tagged platform-sourced and 10% applies
+- Fuzzy job matching: when a self-sourced job is created, compare against recent marketplace jobs — flag close matches (same area, date, job type, medic) for review
+- Message scanning: detect and flag phone numbers, emails, addresses, and external contact details shared in platform messaging
+- Scenario B — medic-to-medic job passing: platform takes 10% first, passing medic and receiving medic split the remaining 90% with configurable split percentage
+- Scenario C — co-shared job (two companies, different expertise): platform takes 10% first, remaining 90% split between both companies per agreed percentage
+- Fraud audit trail: admin view of flagged self-sourced jobs, flagged messages, and client-identity lock triggers
+
+**Fee model (confirmed):**
+- Marketplace job, solo: Platform 10%, Medic 90%
+- Marketplace job, with referral: Platform 10%, Referrer 10% (from medic's side), Medic 80%
+- Marketplace job, medic passes to another: Platform 10%, Medic A (passer) negotiated %, Medic B (worker) negotiated %
+- Co-shared job (two companies): Platform 10%, Company A negotiated %, Company B negotiated %
+- Self-sourced job: Subscription covers it — 0% per-job fee
 
 **Build priority:**
-1. Database schema + core marketplace (event posting, quoting, awarding)
-2. Payment integration (deposit + remainder, commission split)
-3. Booking integration (award → auto-create booking in SiteMedic)
-4. Registration + verification (individual medics + companies)
-5. Ratings + notifications
-6. Credits/points monetisation system
+1. Fee model schema and enforcement (commission tables, referral tracking)
+2. Job source declaration flow + client identity lock
+3. Fuzzy job matching + fraud detection
+4. Message scanning for contact info
+5. Scenario B (medic-to-medic passing) + Scenario C (co-shared)
+6. Admin fraud audit dashboard
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Same repo as SiteMedic | Shared auth, database, Stripe, medic roster — separate repo would duplicate infrastructure | — Pending |
-| Request for Quotes model (not auction) | Medics submit detailed quotes with breakdown + pitch. More professional than price-only bidding. Clients choose on quality + price. | — Pending |
-| Commission from medic side | Client pays exactly what medic quoted. SiteMedic takes % from medic (like Upwork). Clean, transparent. | — Pending |
-| Deposit + remainder payment | Deposit on award secures medic's time. Remainder after event. Balances risk for both sides. | — Pending |
-| Profiles visible after quote only | Prevents disintermediation (clients contacting medics directly). Contact details hidden until award + deposit. | — Pending |
-| Open registration (individuals + companies) | Bigger medic pool = more competition = better for clients. Companies manage rosters with double-up prevention. | — Pending |
-| Free to quote at launch, credits in v2 | New marketplace needs frictionless adoption. Credits/points added once volume justifies it. | — Pending |
-| Part of SiteMedic brand | Lives at sitemedic.co.uk/marketplace. Leverages existing brand. No separate domain needed. | — Pending |
+| Platform 10% always first | Platform fee is primary income — must never be diluted regardless of referral or split arrangements | ✓ Confirmed |
+| Referral fee from medic's side | Medic got work they wouldn't have had — they pay the finder's fee, not the platform | ✓ Confirmed |
+| Client identity lock at email/phone level | Strongest tamper-resistant signal — medic would need client to create fake identity to bypass | ✓ Confirmed |
+| Subscription = zero per-job fee | Two-tier model removes incentive to lie about job source — self-sourced is cheaper so medics want to declare it | ✓ Confirmed |
+| Medics split remainder after platform 10% | Platform income protected, medic arrangements are their own — platform facilitates payment split | ✓ Confirmed |
 
-## Planned Milestone: v5.0 Internal Comms & Document Management
+## Completed Milestone: v4.0 MedBid Marketplace (Phase 39 pending)
 
-**Goal:** Give org admins a built-in way to communicate with their field medics and collect compliance documents — replacing scattered WhatsApp/email with an in-platform messaging system and document storage tied to individual medic profiles.
+**Goal:** Add a Request-for-Quotes marketplace to SiteMedic where UK clients post events needing medical cover, medics (individuals and companies) submit detailed quotes, clients award the job, and SiteMedic takes a commission from the medic's side. Awarded quotes auto-create bookings that flow into the existing dashboard, timesheets, and payout systems.
 
-**Target features:**
-- Two-way 1:1 messaging between org admin and medics
-- Community broadcast — org admin sends announcements to all medics
-- Medics upload compliance documents (insurance, DBS, qualifications) via iOS app or web
-- Documents stored on medic profiles with expiry date tracking and alerts
-- Save/bookmark messages and documents for quick reference
-- Synced across iOS app and web dashboard
-
-**Build priority:**
-1. Database schema for messages and documents
-2. Messaging UI (web + iOS) with conversation threads
-3. Document upload and profile storage
-4. Expiry tracking and notifications
-5. Broadcast messaging
-6. Save/bookmark functionality
+**Status:** Phase 39 (Admin Dashboard) still pending.
 
 ---
-*Last updated: 2026-02-20 after v5.0 milestone shipped*
+*Last updated: 2026-02-20 after v6.0 Marketplace Integrity milestone defined*
