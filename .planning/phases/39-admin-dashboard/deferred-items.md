@@ -2,8 +2,12 @@
 
 ## Out-of-scope issues discovered during verification
 
-- `pnpm --dir web lint` fails due to pre-existing lint errors across unrelated files (for example legal policy pages, admin pages, and messaging components).
-- These errors are not caused by the Phase 39-01 changes and were not modified in this execution.
+- Historical lint blockers that previously failed `pnpm --dir web lint` have been cleaned up in a dedicated follow-up pass.
+- Current lint output is warning-only (React hook dependency warnings and image optimization/a11y warnings in legacy files); there are no remaining lint **errors** blocking verification.
+- `pnpm --dir web exec tsc --noEmit` passes.
 
-- Re-ran `pnpm --dir web lint` during Phase 39-02 validation; failures remain in unrelated legacy files (for example legal content pages, `components/ui/what3words-input.tsx`, and parse error in `web/lib/invoices/pdf-generator.ts`).
-- New Phase 39-02 files pass `pnpm --dir web exec tsc --noEmit`; lint debt remains deferred because it predates this plan and exceeds current task scope.
+## Remaining quality debt (non-blocking)
+
+- Hook dependency warnings across older admin and shared components.
+- Image optimization/accessibility warnings in selected document and messaging components.
+- Next.js deprecation notice for `next lint`; migrate to ESLint CLI via `next-lint-to-eslint-cli` codemod in a future maintenance plan.

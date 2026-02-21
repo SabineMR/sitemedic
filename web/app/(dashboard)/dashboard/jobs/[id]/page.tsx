@@ -620,7 +620,7 @@ export default function DirectJobDetailPage() {
                         {STAFFING_ROLE_LABELS[req.role] || req.role}
                       </span>
                       {req.additional_notes && (
-                        <span className="text-gray-500">-- {req.additional_notes}</span>
+                        <span className="text-gray-500">{'-- '}{req.additional_notes}</span>
                       )}
                     </div>
                     <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">
@@ -736,7 +736,7 @@ export default function DirectJobDetailPage() {
               <p className="font-medium">{job.location_postcode}</p>
               {job.location_what3words && (
                 <p className="text-gray-500">
-                  ///{job.location_what3words}
+                  {`///${job.location_what3words}`}
                 </p>
               )}
             </div>

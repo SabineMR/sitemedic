@@ -133,12 +133,12 @@ export default async function CreateContractPage() {
             All pending and confirmed bookings already have contracts, or there are no
             bookings yet.
           </p>
-          <a
+          <Link
             href="/bookings"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
             View Bookings
-          </a>
+          </Link>
         </div>
       ) : templates.length === 0 ? (
         <div className="border rounded-lg p-8 text-center">
@@ -146,12 +146,12 @@ export default async function CreateContractPage() {
           <p className="text-sm text-muted-foreground mb-4">
             You need at least one active contract template before creating contracts.
           </p>
-          <a
+          <Link
             href="/contracts/templates"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
             Manage Templates
-          </a>
+          </Link>
         </div>
       ) : (
         <CreateContractForm bookings={availableBookings} templates={templates} />

@@ -224,7 +224,7 @@ export function What3WordsInput({
                 className="cursor-pointer px-4 py-2 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
               >
                 <div className="font-mono font-semibold text-blue-600">
-                  ///{suggestion.words}
+                  {`///${suggestion.words}`}
                 </div>
                 <div className="text-xs text-gray-600">
                   {suggestion.nearestPlace}
