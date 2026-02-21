@@ -9,14 +9,14 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: Not started — defining v6.0 requirements
-Plan: —
-Status: Defining requirements
-Last activity: 2026-02-20 — v6.0 Marketplace Integrity milestone started
+Phase: 39-admin-dashboard
+Plan: 02
+Status: In progress
+Last activity: 2026-02-21 — Completed 39-01 (marketplace metrics dashboard foundation)
 
-Note: v4.0 Phase 39 (Admin Dashboard) still pending — resume with /gsd:plan-phase 39 when ready
+Note: v4.0 Phase 39 execution started — next step is 39-02
 
-Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [##########] v4.0 89% | [##########] v5.0 100%
+Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [##########] v4.0 90% | [##########] v5.0 100%
 
 ## Performance Metrics
 
@@ -37,6 +37,7 @@ Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [#########
 | v5.0 | 8 | 21 | ~116 min | ~5.0 min |
 
 *Updated after each plan completion*
+| Phase 39-admin-dashboard P01 | 3m | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -137,6 +138,8 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 - [38-04]: Dashboard column always ON (greyed/disabled) — no schema column exists, pure UI enforcement
 - [38-04]: CSS Switch component (no @radix-ui/react-switch) — avoids new Radix dep for single component
 - [38-04]: SMS opt-in limited to 4 categories (events, quotes, awards, payments) — time-sensitive only per spec
+- [Phase 39]: 39-01: Marketplace metrics conversion uses awarded events over events with qualifying quotes within selected window
+- [Phase 39]: 39-01: Marketplace admin revenue metric uses bookings.platform_fee where source='marketplace'
 
 ### Pending Todos
 
@@ -162,6 +165,6 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 
 ## Session Continuity
 
-Last session: 2026-02-21T00:00:00Z
-Stopped at: Phase 38 verified and complete — ready for Phase 39 (Admin Dashboard)
+Last session: 2026-02-21T21:21:34Z
+Stopped at: Completed 39-admin-dashboard-01-PLAN.md
 Resume file: None

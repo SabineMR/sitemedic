@@ -217,12 +217,12 @@ Plans:
   2. Platform admin can view and manage all events, quotes, awards, and disputes from a single interface
   3. Platform admin can configure marketplace settings: default commission rate, deposit percentage, and quote deadline defaults
   4. Platform admin can suspend or ban marketplace users (medics or clients) who violate terms
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 39-01: Marketplace metrics dashboard (events, quotes, conversion rate, revenue)
-- [ ] 39-02: Entity management and moderation (events/quotes/awards/disputes admin views, user suspension/ban)
-- [ ] 39-03: Marketplace configuration (commission rate, deposit %, deadline defaults)
+- [x] 39-01-PLAN.md — Marketplace metrics dashboard foundation (SQL metrics function, platform API route, `/platform/marketplace` dashboard, window filters)
+- [x] 39-02-PLAN.md — Entity management and moderation workspace (unified entities API, moderation actions, immutable moderation audit trail)
+- [x] 39-03-PLAN.md — Marketplace configuration management (settings + audit migrations, GET/PUT settings API, runtime defaults integration)
 
 ---
 
@@ -257,4 +257,4 @@ Plans:
 | 36. Ratings, Messaging & Disputes | v4.0 | 3/3 | Complete | 2026-02-20 |
 | 37. Company Accounts | v4.0 | 3/3 | Complete | 2026-02-20 |
 | 38. Notifications & Alerts | v4.0 | 4/4 | Complete | 2026-02-20 |
-| 39. Admin Dashboard | v4.0 | 0/3 | Not started | - |
+| 39. Admin Dashboard | v4.0 | 1/3 | In Progress | - |
