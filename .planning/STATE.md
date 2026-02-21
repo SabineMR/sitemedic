@@ -11,12 +11,12 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 Phase: 39-admin-dashboard
 Plan: 03
-Status: In progress
-Last activity: 2026-02-21 — Completed 39-02 (marketplace entity management + moderation workspace)
+Status: Completed
+Last activity: 2026-02-21 — Completed 39-03 (marketplace settings configuration + runtime defaults integration)
 
-Note: v4.0 Phase 39 execution ongoing — next step is 39-03
+Note: v4.0 Phase 39 execution complete
 
-Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [##########] v4.0 90% | [##########] v5.0 100%
+Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [##########] v4.0 100% | [##########] v5.0 100%
 
 ## Performance Metrics
 
@@ -39,6 +39,7 @@ Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [#########
 *Updated after each plan completion*
 | Phase 39-admin-dashboard P01 | 3m | 2 tasks | 7 files |
 | Phase 39 P02 | 8m | 2 tasks | 8 files |
+| Phase 39 P03 | 10m | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -143,6 +144,9 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 - [Phase 39]: 39-01: Marketplace admin revenue metric uses bookings.platform_fee where source='marketplace'
 - [Phase 39]: Entity search/filter/pagination are enforced in API routes to avoid client-side full-dataset table loading.
 - [Phase 39]: Moderation side effects update both profiles.is_active and marketplace company quote permissions before audit insert response.
+- [Phase 39]: 39-03: Marketplace defaults now live in singleton `marketplace_admin_settings` with bounded constraints and platform-admin RLS.
+- [Phase 39]: 39-03: Settings changes require a reason and write immutable before/after rows to `marketplace_admin_settings_audit`.
+- [Phase 39]: 39-03: Booking commission fallback now resolves via settings-backed helper instead of fixed split constants.
 
 ### Pending Todos
 
@@ -168,6 +172,6 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 
 ## Session Continuity
 
-Last session: 2026-02-21T21:57:01Z
-Stopped at: Completed 39-02-PLAN.md
+Last session: 2026-02-21T22:42:00Z
+Stopped at: Completed 39-03-PLAN.md
 Resume file: None

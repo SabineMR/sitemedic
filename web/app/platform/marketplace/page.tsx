@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { AlertTriangle, BriefcaseBusiness, FileCheck2, Gavel, PoundSterling, TrendingUp } from 'lucide-react';
 import {
   useMarketplaceAdminMetrics,
@@ -42,6 +43,20 @@ export default function PlatformMarketplaceDashboardPage() {
           <p className="mt-2 text-sm text-purple-200">
             Track marketplace health, award conversion, and platform revenue in one place.
           </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href="/platform/marketplace/entities"
+              className="rounded-lg border border-purple-600/50 bg-purple-800/40 px-3 py-1.5 text-xs font-medium text-purple-100 hover:bg-purple-700/50"
+            >
+              Entity Ops
+            </Link>
+            <Link
+              href="/platform/marketplace/settings"
+              className="rounded-lg border border-purple-600/50 bg-purple-800/40 px-3 py-1.5 text-xs font-medium text-purple-100 hover:bg-purple-700/50"
+            >
+              Marketplace Settings
+            </Link>
+          </div>
         </div>
 
         <div className="flex gap-2 rounded-xl border border-purple-700/50 bg-purple-800/40 p-1">

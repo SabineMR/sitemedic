@@ -53,7 +53,7 @@ See: `.planning/milestones/v3.0-ROADMAP.md`
 - [x] **Phase 36: Ratings, Messaging & Disputes** - Bidirectional ratings, per-quote messaging, cancellation policy, dispute resolution
 - [x] **Phase 37: Company Accounts** - Company roster management, medic assignment to events, company profile display
 - [x] **Phase 38: Notifications & Alerts** - Multi-channel notification system (dashboard feed, email, SMS) with medic preferences
-- [ ] **Phase 39: Admin Dashboard** - Platform admin marketplace metrics, event/quote/dispute management, configuration
+- [x] **Phase 39: Admin Dashboard** - Platform admin marketplace metrics, event/quote/dispute management, configuration
 
 <details>
 <summary>✅ v5.0 Internal Comms & Document Management (Phases 40–47) — SHIPPED 2026-02-20</summary>
@@ -257,4 +257,4 @@ Plans:
 | 36. Ratings, Messaging & Disputes | v4.0 | 3/3 | Complete | 2026-02-20 |
 | 37. Company Accounts | v4.0 | 3/3 | Complete | 2026-02-20 |
 | 38. Notifications & Alerts | v4.0 | 4/4 | Complete | 2026-02-20 |
-| 39. Admin Dashboard | 2/3 | In Progress|  | - |
+| 39. Admin Dashboard | 3/3 | Complete | 2026-02-21 |

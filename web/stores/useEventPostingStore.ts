@@ -74,8 +74,15 @@ interface EventPostingState {
   setSubmitting: (v: boolean) => void;
   setError: (e: string | null) => void;
   setDraftId: (id: string | null) => void;
+  applyDefaultQuoteDeadline: (defaultHours: number) => void;
   loadDraft: (event: MarketplaceEventWithDetails) => void;
   reset: () => void;
+}
+
+function getDefaultQuoteDeadlineValue(defaultHours: number): string {
+  const now = new Date();
+  now.setHours(now.getHours() + defaultHours, 0, 0, 0);
+  return now.toISOString().slice(0, 16);
 }
 
 const DEFAULT_STATE = {
@@ -93,7 +100,7 @@ const DEFAULT_STATE = {
   location_lat: null as number | null,
   location_lng: null as number | null,
   location_display: '',
-  quote_deadline: '',
+  quote_deadline: getDefaultQuoteDeadlineValue(72),
   staffing_requirements: [{ event_day_id: null, role: '', quantity: 1, additional_notes: '' }] as StaffingInput[],
   equipment_required: [] as EquipmentItem[],
   budget_min: null as number | null,
@@ -166,6 +173,15 @@ export const useEventPostingStore = create<EventPostingState>((set) => ({
   setSubmitting: (v: boolean) => set({ isSubmitting: v }),
   setError: (e: string | null) => set({ error: e }),
   setDraftId: (id: string | null) => set({ draftId: id }),
+  applyDefaultQuoteDeadline: (defaultHours: number) =>
+    set((state) => {
+      if (state.quote_deadline) {
+        return state;
+      }
+      return {
+        quote_deadline: getDefaultQuoteDeadlineValue(defaultHours),
+      };
+    }),
 
   loadDraft: (event: MarketplaceEventWithDetails) =>
     set({
@@ -198,5 +214,5 @@ export const useEventPostingStore = create<EventPostingState>((set) => ({
       currentStep: 0,
     }),
 
-  reset: () => set({ ...DEFAULT_STATE }),
+  reset: () => set({ ...DEFAULT_STATE, quote_deadline: getDefaultQuoteDeadlineValue(72) }),
 }));

@@ -11,6 +11,9 @@
 
 import type { PaymentBreakdown, MarketplaceCommission } from './award-types';
 
+export const DEFAULT_MARKETPLACE_COMMISSION_PERCENT = 60;
+export const DEFAULT_MARKETPLACE_DEPOSIT_PERCENT = 25;
+
 // =============================================================================
 // Deposit Percentage by Event Type
 // =============================================================================
@@ -28,7 +31,33 @@ const DEPOSIT_PERCENT_BY_EVENT_TYPE: Record<string, number> = {
  * Admin UI for configuring this will be added in Phase 39.
  */
 export function getDepositPercentForEventType(eventType: string): number {
-  return DEPOSIT_PERCENT_BY_EVENT_TYPE[eventType] ?? 25;
+  return DEPOSIT_PERCENT_BY_EVENT_TYPE[eventType] ?? DEFAULT_MARKETPLACE_DEPOSIT_PERCENT;
+}
+
+export async function getConfiguredDepositPercentForEventType(eventType: string): Promise<number> {
+  if (typeof window !== 'undefined') {
+    return getDepositPercentForEventType(eventType);
+  }
+
+  const { getMarketplaceAdminSettings } = await import('./admin-settings');
+  const settings = await getMarketplaceAdminSettings();
+  return DEPOSIT_PERCENT_BY_EVENT_TYPE[eventType] ?? settings.defaultDepositPercent;
+}
+
+export async function getConfiguredCommissionSplit(): Promise<{
+  platformFeePercent: number;
+  medicPayoutPercent: number;
+}> {
+  if (typeof window !== 'undefined') {
+    return {
+      platformFeePercent: DEFAULT_MARKETPLACE_COMMISSION_PERCENT,
+      medicPayoutPercent: 100 - DEFAULT_MARKETPLACE_COMMISSION_PERCENT,
+    };
+  }
+
+  const { getMarketplaceAdminSettings, getCommissionSplitFromSettings } = await import('./admin-settings');
+  const settings = await getMarketplaceAdminSettings();
+  return getCommissionSplitFromSettings(settings.defaultCommissionPercent);
 }
 
 // =============================================================================

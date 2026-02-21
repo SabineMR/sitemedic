@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-21 (Phase 39-02 delivered + verification/lint cleanup pass)
+**Last Updated**: 2026-02-21 (Phase 39-03 marketplace settings/configuration delivered)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -114,6 +114,24 @@ After Phase 39-02 delivery, a focused cleanup pass removed repository lint **err
 **Verification status after cleanup:**
 - `pnpm --dir web lint` now completes with warnings only (no errors).
 - `pnpm --dir web exec tsc --noEmit` passes.
+
+### Phase 39-03 Delivered - Marketplace Configuration Management (2026-02-21)
+
+Phase 39-03 is now implemented for ADMIN-03. Platform admins can open `/platform/marketplace/settings`, update marketplace default commission/deposit/deadline values with a required reason, and review recent settings history. Runtime commission logic now consumes centralized settings-backed defaults instead of hardcoded split values.
+
+| Area | What Was Added | Why It Matters |
+|------|----------------|----------------|
+| **Settings + audit migration** | `supabase/migrations/163_marketplace_admin_settings.sql` adds singleton `marketplace_admin_settings` and `marketplace_admin_settings_audit`, constraint bounds (`commission 0-100`, `deposit 1-100`, `deadline 1-720`), default seed row, and platform-admin RLS policies for settings and audit reads/writes. | Makes marketplace economics/defaults centrally managed, validated at DB level, and auditable to prevent silent policy drift. |
+| **Typed settings utility** | `web/lib/marketplace/admin-settings.ts` introduces typed `getMarketplaceAdminSettings()` with safe fallback defaults and split helper (`getCommissionSplitFromSettings`). | Provides one reusable source for runtime defaults and removes duplicated hardcoded constants in server-side marketplace logic. |
+| **Platform settings API** | `web/app/api/platform/marketplace/settings/route.ts` adds `GET`/`PUT` with platform-admin auth guard, payload validation, required change reason, update + audit insert, and response normalization with commission split preview. | Delivers a secure control plane for changing marketplace defaults while preserving attributable history of why changes were made. |
+| **Settings UI** | `web/app/platform/marketplace/settings/page.tsx` adds editable fields for commission/deposit/deadline, required reason input, save feedback, and recent changes panel with actor + timestamp. | Gives operators practical control over marketplace defaults without code edits or redeploys. |
+| **Runtime default integration** | `web/lib/marketplace/award-calculations.ts` adds configured default helpers; `web/lib/marketplace/booking-bridge.ts` now resolves commission split from settings-backed defaults when explicit values are not provided. | Ensures booking commission behavior follows current platform configuration rather than fixed constants. |
+| **Marketplace nav continuity** | `web/app/platform/marketplace/page.tsx` now links directly to `/platform/marketplace/settings` and `/platform/marketplace/entities`. | Reduces operator friction by keeping metrics, entity moderation, and configuration flows connected in one admin surface. |
+
+**Performance design notes:**
+- Settings reads are single-row lookups with bounded audit history fetches (latest 20), avoiding heavy payloads.
+- Runtime commission resolution uses fast fallback defaults if settings retrieval fails, preserving operational continuity.
+- Settings page uses query caching and targeted invalidation after save to keep admin interactions responsive.
 
 ---
 
