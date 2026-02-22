@@ -9,6 +9,7 @@ import {
   type MarketplaceEntityType,
 } from '@/lib/queries/platform/marketplace-entities';
 import { EntityModerationPanel } from '@/components/platform/marketplace/EntityModerationPanel';
+import { IntegrityCasePanel } from '@/components/platform/marketplace/IntegrityCasePanel';
 
 const ENTITY_TABS: Array<{ value: MarketplaceEntityType; label: string }> = [
   { value: 'events', label: 'Events' },
@@ -16,6 +17,7 @@ const ENTITY_TABS: Array<{ value: MarketplaceEntityType; label: string }> = [
   { value: 'awards', label: 'Awards' },
   { value: 'disputes', label: 'Disputes' },
   { value: 'users', label: 'Users' },
+  { value: 'integrity', label: 'Integrity' },
 ];
 
 function formatDate(value: string | null): string {
@@ -38,11 +40,21 @@ function formatMoney(value: number | null): string {
 }
 
 function statusTone(status: string): string {
-  if (status === 'open' || status === 'active' || status === 'awarded' || status === 'resolved') {
+  if (
+    status === 'open' ||
+    status === 'active' ||
+    status === 'awarded' ||
+    status === 'resolved' ||
+    status === 'resolved_dismissed' ||
+    status === 'resolved_confirmed'
+  ) {
     return 'bg-emerald-200/20 text-emerald-200 border-emerald-300/20';
   }
   if (status === 'under_review' || status === 'revised' || status === 'submitted') {
     return 'bg-blue-200/20 text-blue-200 border-blue-300/20';
+  }
+  if (status === 'investigating' || status === 'open') {
+    return 'bg-orange-200/20 text-orange-200 border-orange-300/20';
   }
   if (status === 'suspended' || status === 'inactive' || status === 'cancelled' || status === 'withdrawn') {
     return 'bg-amber-200/20 text-amber-200 border-amber-300/20';
@@ -60,6 +72,7 @@ export default function MarketplaceEntityWorkspacePage() {
   const [status, setStatus] = useState('all');
   const [page, setPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<MarketplaceEntityRecord | null>(null);
+  const [selectedIntegrityCase, setSelectedIntegrityCase] = useState<MarketplaceEntityRecord | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -91,15 +104,26 @@ export default function MarketplaceEntityWorkspacePage() {
   useEffect(() => {
     if (entity !== 'users') {
       setSelectedUser(null);
-      return;
+    } else {
+      setSelectedUser((previous) => {
+        if (!previous) return null;
+        const next = records.find((row) => row.id === previous.id);
+        return next || null;
+      });
     }
 
-    setSelectedUser((previous) => {
-      if (!previous) return null;
-      const next = records.find((row) => row.id === previous.id);
-      return next || null;
-    });
+    if (entity !== 'integrity') {
+      setSelectedIntegrityCase(null);
+    } else {
+      setSelectedIntegrityCase((previous) => {
+        if (!previous) return null;
+        const next = records.find((row) => row.id === previous.id);
+        return next || null;
+      });
+    }
   }, [entity, records]);
+
+  const splitPanelEnabled = entity === 'users' || entity === 'integrity';
 
   const totalPages = query.data?.totalPages || 1;
 
@@ -108,10 +132,12 @@ export default function MarketplaceEntityWorkspacePage() {
       const role = typeof row.metadata.role === 'string' ? row.metadata.role : null;
       const quoteCount =
         typeof row.metadata.quoteCount === 'number' ? String(row.metadata.quoteCount) : undefined;
+      const riskBand = typeof row.metadata.riskBand === 'string' ? row.metadata.riskBand : null;
+      const holdApplied = row.metadata.payoutHoldApplied === true ? 'hold applied' : null;
 
       return {
         ...row,
-        tertiary: role || quoteCount || null,
+        tertiary: role || quoteCount || riskBand || holdApplied || null,
       };
     });
   }, [records]);
@@ -186,7 +212,7 @@ export default function MarketplaceEntityWorkspacePage() {
         </div>
       </section>
 
-      <div className={`grid gap-6 ${entity === 'users' ? 'xl:grid-cols-[2fr_1fr]' : 'grid-cols-1'}`}>
+      <div className={`grid gap-6 ${splitPanelEnabled ? 'xl:grid-cols-[2fr_1fr]' : 'grid-cols-1'}`}>
         <section className="rounded-2xl border border-purple-700/40 bg-purple-900/20 overflow-hidden">
           {query.isLoading ? (
             <div className="space-y-2 p-6">
@@ -219,13 +245,15 @@ export default function MarketplaceEntityWorkspacePage() {
                       onClick={() => {
                         if (entity === 'users') {
                           setSelectedUser(row);
+                        } else if (entity === 'integrity') {
+                          setSelectedIntegrityCase(row);
                         }
                       }}
                       className={`transition-colors ${
-                        entity === 'users'
+                        splitPanelEnabled
                           ? 'cursor-pointer hover:bg-purple-800/30'
                           : 'hover:bg-purple-800/20'
-                      } ${selectedUser?.id === row.id ? 'bg-purple-700/30' : ''}`}
+                      } ${selectedUser?.id === row.id || selectedIntegrityCase?.id === row.id ? 'bg-purple-700/30' : ''}`}
                     >
                       <td className="px-4 py-3 align-top">
                         <p className="font-medium text-white">{row.primaryText}</p>
@@ -279,6 +307,10 @@ export default function MarketplaceEntityWorkspacePage() {
 
         {entity === 'users' && selectedUser && (
           <EntityModerationPanel user={selectedUser} onActionComplete={() => query.refetch()} />
+        )}
+
+        {entity === 'integrity' && selectedIntegrityCase && (
+          <IntegrityCasePanel caseRecord={selectedIntegrityCase} onActionComplete={() => query.refetch()} />
         )}
       </div>
     </div>

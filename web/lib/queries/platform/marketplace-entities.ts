@@ -2,7 +2,13 @@
 
 import { useQuery } from '@tanstack/react-query';
 
-export type MarketplaceEntityType = 'events' | 'quotes' | 'awards' | 'disputes' | 'users';
+export type MarketplaceEntityType =
+  | 'events'
+  | 'quotes'
+  | 'awards'
+  | 'disputes'
+  | 'users'
+  | 'integrity';
 
 export interface MarketplaceEntityRecord {
   id: string;

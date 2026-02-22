@@ -4,7 +4,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
-const ENTITY_VALUES = ['events', 'quotes', 'awards', 'disputes', 'users'] as const;
+const ENTITY_VALUES = ['events', 'quotes', 'awards', 'disputes', 'users', 'integrity'] as const;
 type EntityKey = (typeof ENTITY_VALUES)[number];
 
 const ENTITY_STATUSES: Record<EntityKey, string[]> = {
@@ -13,6 +13,7 @@ const ENTITY_STATUSES: Record<EntityKey, string[]> = {
   awards: ['all', 'awarded'],
   disputes: ['all', 'open', 'under_review', 'resolved'],
   users: ['all', 'active', 'inactive'],
+  integrity: ['all', 'open', 'investigating', 'resolved_dismissed', 'resolved_confirmed'],
 };
 
 function getServiceClient() {
@@ -365,6 +366,73 @@ async function listUsers(
   };
 }
 
+async function listIntegrityCases(
+  serviceClient: ReturnType<typeof getServiceClient>,
+  status: string | null,
+  search: string,
+  page: number,
+  limit: number
+) {
+  const { from, to } = buildRange(page, limit);
+
+  let query = serviceClient
+    .from('marketplace_integrity_cases')
+    .select(
+      'id, event_id, company_id, score, risk_band, status, payout_hold_applied, hold_reason, opened_at, updated_at, closed_at, resolution_notes, event:marketplace_events!marketplace_integrity_cases_event_id_fkey(id,event_name), company:marketplace_companies!marketplace_integrity_cases_company_id_fkey(id,company_name)',
+      { count: 'exact' }
+    )
+    .order('opened_at', { ascending: false });
+
+  if (status) query = query.eq('status', status);
+
+  if (search) {
+    const [eventIds, companyIds] = await Promise.all([
+      lookupEventIdsByName(serviceClient, search),
+      lookupCompanyIdsByName(serviceClient, search),
+    ]);
+
+    const clauses: string[] = [];
+    if (eventIds.length > 0) clauses.push(`event_id.in.(${eventIds.join(',')})`);
+    if (companyIds.length > 0) clauses.push(`company_id.in.(${companyIds.join(',')})`);
+
+    if (clauses.length === 0) {
+      return { total: 0, items: [] };
+    }
+
+    query = query.or(clauses.join(','));
+  }
+
+  const { data, error, count } = await query.range(from, to);
+  if (error) throw error;
+
+  return {
+    total: count || 0,
+    items: (data || []).map((row) => {
+      const event = Array.isArray(row.event) ? row.event[0] : row.event;
+      const company = Array.isArray(row.company) ? row.company[0] : row.company;
+      return {
+        id: row.id,
+        entity: 'integrity',
+        status: row.status,
+        createdAt: row.opened_at,
+        primaryText: event?.event_name || row.event_id,
+        secondaryText: company?.company_name || row.company_id || 'No company',
+        amount: Number(row.score || 0),
+        metadata: {
+          eventId: row.event_id,
+          companyId: row.company_id,
+          riskBand: row.risk_band,
+          payoutHoldApplied: Boolean(row.payout_hold_applied),
+          holdReason: row.hold_reason,
+          updatedAt: row.updated_at,
+          closedAt: row.closed_at,
+          resolutionNotes: row.resolution_notes,
+        },
+      };
+    }),
+  };
+}
+
 export async function GET(request: Request) {
   try {
     const supabase = await createClient();
@@ -400,8 +468,10 @@ export async function GET(request: Request) {
       result = await listAwards(serviceClient, search, page, limit);
     } else if (entity === 'disputes') {
       result = await listDisputes(serviceClient, status, search, page, limit);
-    } else {
+    } else if (entity === 'users') {
       result = await listUsers(serviceClient, status, search, page, limit);
+    } else {
+      result = await listIntegrityCases(serviceClient, status, search, page, limit);
     }
 
     const totalPages = Math.max(1, Math.ceil(result.total / limit));
