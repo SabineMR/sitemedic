@@ -39,6 +39,8 @@
 - `pnpm --dir web lint` ✅ warning-only
 - `pnpm --dir web test -- web/lib/marketplace/attribution/__tests__/pass-on-invariants.test.ts web/lib/marketplace/integrity/__tests__/signals-risk-band.test.ts` ✅
 - `pnpm --dir web-marketplace exec tsc --noEmit` ✅
+- `pnpm --dir web-marketplace lint` ✅ warning-only
+- `pnpm --dir web-marketplace exec tsc --noEmit` ✅
 - `pnpm --dir web-marketplace lint` ⚠️ blocked by interactive first-run ESLint init prompt
 
 ## Notes

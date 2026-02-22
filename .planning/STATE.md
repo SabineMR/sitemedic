@@ -166,6 +166,7 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 - [Phase 52]: Integrity thresholds/config and repeat-offender boosts are now configurable; queue SLA metrics are visible in platform integrity overview.
 - [Phase 52]: Optional hardening adds scheduled SLA alerts, explicit co-share policy breach detection, and referral-network cluster signals.
 - [Phase 52]: web-marketplace compile debt from missing marketplace modules is closed (`pnpm --dir web-marketplace exec tsc --noEmit` passes).
+- [Phase 52]: web-marketplace lint now runs with project ESLint config and is warning-only (no blocking lint errors).
 
 ### Pending Todos
 

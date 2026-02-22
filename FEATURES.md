@@ -108,7 +108,7 @@ Net effect: optional anti-gaming coverage is now included on top of core v6 cont
 - Added missing marketplace module stubs/types in `web-marketplace` for ratings, messaging, and disputes components so routes compile.
 - Extended `web-marketplace/lib/marketplace/event-types.ts` status union/labels to cover legacy runtime states (`confirmed`, `in_progress`, `completed`) and optional `awarded_company_id` usage.
 - `pnpm --dir web-marketplace exec tsc --noEmit` now passes.
-- `pnpm --dir web-marketplace lint` remains blocked by interactive first-run ESLint init prompt (project-level setup issue, not code compile issue).
+- Added `web-marketplace/.eslintrc.json`; `pnpm --dir web-marketplace lint` now runs and returns warning-only (no blocking errors).
 
 ---
 
