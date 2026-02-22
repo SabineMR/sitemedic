@@ -79,6 +79,20 @@ See: `.planning/milestones/v5.0-ROADMAP.md`
 Plans:
 - [x] 48-01-PLAN.md — Provenance data model, fee-policy invariants, and write-path propagation baseline
 
+### Phase 49: Marketplace Integrity Operations
+**Goal**: Operationalize attribution with SOLO and PASS-ON lifecycle flows, explicit handoff states, and auditable chain-of-custody timelines.
+**Depends on**: Phase 48
+**Requirements**: INT-05, INT-06, INT-07, INT-08
+**Success Criteria** (what must be TRUE):
+  1. SOLO jobs have stable attribution lifecycle state and no hidden handoff transitions
+  2. PASS-ON handoffs are explicit and actor-attributed, with accept/decline paths
+  3. Original provenance remains preserved through pass-on acceptance unless explicit admin override exists
+  4. Custody timeline is queryable and visible to operators for audit/review
+**Plans**: 1 plan (initial)
+
+Plans:
+- [ ] 49-01-PLAN.md — SOLO/PASS-ON operational lifecycle, custody ledger, attribution timeline
+
 ### Phase 32: Foundation Schema & Registration
 **Goal**: CQC-registered medical companies and clients can register on the marketplace, companies can upload compliance documents for verification, and platform admin can approve/reject registrations — all on a database foundation with marketplace-scoped RLS and race-condition prevention
 **Depends on**: Phase 31 (v3.0 complete)
@@ -274,3 +288,4 @@ Plans:
 | 38. Notifications & Alerts | v4.0 | 4/4 | Complete | 2026-02-20 |
 | 39. Admin Dashboard | 3/3 | Complete | 2026-02-21 |
 | 48. Marketplace Integrity Foundation | v6.0 | 1/1 | Complete | 2026-02-21 |
+| 49. Marketplace Integrity Operations | v6.0 | 0/1 | Ready | - |

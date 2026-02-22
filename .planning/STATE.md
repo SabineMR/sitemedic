@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v6.0 Marketplace Integrity — executing Phase 48 foundation
+**Current focus:** v6.0 Marketplace Integrity — Phase 49 operational attribution kickoff
 
 ## Current Position
 
-Phase: 48-marketplace-integrity
+Phase: 49-marketplace-integrity-operations
 Plan: 01
-Status: Completed
-Last activity: 2026-02-21 — Completed 48-01 provenance and fee-integrity foundation
+Status: Ready
+Last activity: 2026-02-21 — Started 49-01 planning (SOLO + PASS-ON operational lifecycle)
 
-Note: v6.0 Phase 48 foundation complete
+Note: v6.0 progressing from invariants to operational lifecycle controls
 
 Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [##########] v4.0 100% | [##########] v5.0 100%
 
@@ -154,6 +154,7 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 - [Phase 48]: Scenario C co-shared fee policy uses dual-sided split (5% + 5%).
 - [Phase 48]: Client source-confirmation prompts are not primary controls; integrity uses system signals and enforced provenance.
 - [Phase 48]: Database-level trigger now blocks non-admin source_provenance/fee_policy reclassification on events and bookings.
+- [Phase 49]: Scope starts with SOLO + PASS-ON operational lifecycle; Scenario C co-share execution is deferred to a later plan.
 
 ### Pending Todos
 
@@ -179,6 +180,6 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 
 ## Session Continuity
 
-Last session: 2026-02-21T23:59:00Z
-Stopped at: Completed 48-01-SUMMARY.md
+Last session: 2026-02-22T00:11:00Z
+Stopped at: Created 49-01-PLAN.md
 Resume file: None

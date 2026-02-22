@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-21 (Phase 48-01 marketplace integrity foundation delivered)
+**Last Updated**: 2026-02-22 (Phase 48-01 delivered; Phase 49-01 planning started)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -14,6 +14,12 @@
 - Added immutable-by-default source reclassification guard (non-platform-admin updates to provenance/fee policy now fail at DB layer).
 - Wired direct and marketplace write paths to persist provenance and fee policy snapshots in both apps (`web/` and `web-marketplace/`).
 - Locked decision: pass-on jobs keep origin provenance; Scenario C co-share policy remains dual-sided (5% + 5%); client self-attestation is not treated as a primary fraud control.
+
+### v6.0 Update: Phase 49-01 Planning Kickoff (2026-02-22)
+
+- Added `.planning/phases/49-marketplace-integrity-operations/49-CONTEXT.md` and `.planning/phases/49-marketplace-integrity-operations/49-01-PLAN.md`.
+- 49-01 scope is locked to SOLO + PASS-ON operational lifecycle first (handoff states, custody ledger, attribution timeline).
+- Co-share operational behavior is explicitly deferred to a later plan in Phase 49 to keep lifecycle rollout controlled and verifiable.
 
 ---
 
