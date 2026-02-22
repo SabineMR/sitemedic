@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v6.0 Marketplace Integrity — Phase 51 escalation workflow delivered
+**Current focus:** v6.0 Marketplace Integrity — Phase 52 automation tuning delivered
 
 ## Current Position
 
-Phase: 51-marketplace-integrity-enforcement
+Phase: 52-marketplace-integrity-automation
 Plan: 01
 Status: Completed
-Last activity: 2026-02-22 — Completed 51-01 escalation queue and resolution workflow
+Last activity: 2026-02-22 — Completed 52-01 threshold calibration and automation monitoring
 
-Note: v6.0 ready for final integrity automation phase
+Note: v6.0 marketplace integrity milestone complete
 
 Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [##########] v4.0 100% | [##########] v5.0 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 246 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 37 v4.0 + 21 v5.0 + 5 gap closures + 4 v6.0)
+- Total plans completed: 247 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 37 v4.0 + 21 v5.0 + 5 gap closures + 5 v6.0)
 - Average duration: 3.9 min
 - Total execution time: ~14.5 hours
 
@@ -35,7 +35,7 @@ Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [#########
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
 | v4.0 | 9 | 37 | ~389 min | ~5.3 min |
 | v5.0 | 8 | 21 | ~116 min | ~5.0 min |
-| v6.0 | 4 | 4 | ~66 min | ~16.5 min |
+| v6.0 | 5 | 5 | ~90 min | ~18.0 min |
 
 *Updated after each plan completion*
 | Phase 39-admin-dashboard P01 | 3m | 2 tasks | 7 files |
@@ -45,6 +45,7 @@ Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [#########
 | Phase 49 P01 | 15m | 3 tasks | 13 files |
 | Phase 50 P01 | 18m | 3 tasks | 10 files |
 | Phase 51 P01 | 21m | 3 tasks | 6 files |
+| Phase 52 P01 | 24m | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -161,6 +162,7 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 - [Phase 49]: PASS-ON initiate/accept/decline is now API-driven with role-gated transitions and append-only custody timeline.
 - [Phase 50]: Marketplace-to-direct leakage signals (`THREAD_NO_CONVERT`, `PROXIMITY_CLONE`, `MARKETPLACE_TO_DIRECT_SWITCH`) now persist and roll up into event risk bands.
 - [Phase 51]: High-risk integrity scores now auto-escalate into platform review cases with booking remainder-hold automation.
+- [Phase 52]: Integrity thresholds/config and repeat-offender boosts are now configurable; queue SLA metrics are visible in platform integrity overview.
 
 ### Pending Todos
 
@@ -186,6 +188,6 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 
 ## Session Continuity
 
-Last session: 2026-02-22T01:42:00Z
-Stopped at: Completed 51-01-SUMMARY.md
+Last session: 2026-02-22T02:10:00Z
+Stopped at: Completed 52-01-SUMMARY.md
 Resume file: None

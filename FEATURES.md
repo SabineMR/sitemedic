@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-22 (Phase 51-01 integrity escalation queue delivered)
+**Last Updated**: 2026-02-22 (Phase 52-01 integrity automation tuning delivered)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -67,6 +67,24 @@
   - Added integrity records in `web/app/api/platform/marketplace/entities/route.ts`
   - Added triage component `web/components/platform/marketplace/IntegrityCasePanel.tsx`
 - Enforcement remains review-first: escalations can hold remainder payout, but final case outcomes are platform-admin controlled and auditable.
+
+### v6.0 Update: Phase 52-01 Delivered (2026-02-22)
+
+- Added calibration migration `supabase/migrations/168_marketplace_integrity_calibration.sql`:
+  - singleton `marketplace_integrity_config` for thresholds and review SLA
+  - expanded signal taxonomy (`EVENT_COLLISION_DUPLICATE`, `REFERRAL_LOOP_ABUSE`)
+  - escalation trigger now factors repeat-offender context and config thresholds
+- Enhanced `web/lib/marketplace/integrity/signals.ts`:
+  - dynamic threshold usage from config
+  - repeat-offender score boost on recompute
+  - event collision duplicate ingestion for near-duplicate marketplace/direct patterns
+- Enhanced `web/lib/marketplace/attribution/service.ts` to emit referral-loop abuse signals when reciprocal pass-on acceptance patterns are detected.
+- Added platform-admin monitoring endpoint and UI:
+  - `GET /api/platform/marketplace/integrity/overview`
+  - `web/components/platform/marketplace/IntegrityOverviewPanel.tsx`
+  - integrated into `/platform/marketplace/entities` integrity tab.
+
+This completes the v6.0 integrity stack from provenance invariants through operational lifecycle, signal scoring, enforcement queue, and calibrated automation monitoring.
 
 ---
 

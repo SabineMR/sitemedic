@@ -412,6 +412,34 @@ export async function resolvePassOn(params: {
   }
 
   try {
+    if (action === 'accept') {
+      const { count: reciprocalCount } = await supabase
+        .from('marketplace_attribution_handoffs')
+        .select('id', { count: 'exact', head: true })
+        .eq('current_from_company_id', handoff.target_company_id)
+        .eq('target_company_id', handoff.current_from_company_id)
+        .eq('status', 'pass_on_accepted')
+        .gte('created_at', new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString());
+
+      if (Number(reciprocalCount || 0) >= 1) {
+        await logIntegritySignal(supabase, {
+          event_id: handoff.event_id,
+          related_event_id: handoff.event_id,
+          company_id: actorCompanyId,
+          actor_user_id: actorUserId,
+          signal_type: 'REFERRAL_LOOP_ABUSE',
+          confidence: 0.74,
+          weight: 32,
+          details: {
+            fromCompanyId: handoff.current_from_company_id,
+            toCompanyId: handoff.target_company_id,
+            reciprocalAcceptedCount: Number(reciprocalCount || 0),
+            windowDays: 120,
+          },
+        });
+      }
+    }
+
     await logIntegritySignal(supabase, {
       event_id: handoff.event_id,
       related_event_id: handoff.event_id,

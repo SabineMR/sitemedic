@@ -10,6 +10,7 @@ import {
 } from '@/lib/queries/platform/marketplace-entities';
 import { EntityModerationPanel } from '@/components/platform/marketplace/EntityModerationPanel';
 import { IntegrityCasePanel } from '@/components/platform/marketplace/IntegrityCasePanel';
+import { IntegrityOverviewPanel } from '@/components/platform/marketplace/IntegrityOverviewPanel';
 
 const ENTITY_TABS: Array<{ value: MarketplaceEntityType; label: string }> = [
   { value: 'events', label: 'Events' },
@@ -211,6 +212,8 @@ export default function MarketplaceEntityWorkspacePage() {
           </select>
         </div>
       </section>
+
+      {entity === 'integrity' && <IntegrityOverviewPanel />}
 
       <div className={`grid gap-6 ${splitPanelEnabled ? 'xl:grid-cols-[2fr_1fr]' : 'grid-cols-1'}`}>
         <section className="rounded-2xl border border-purple-700/40 bg-purple-900/20 overflow-hidden">
