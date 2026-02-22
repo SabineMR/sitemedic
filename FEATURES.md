@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-22 (Phase 48-01 delivered; Phase 49-01 planning started)
+**Last Updated**: 2026-02-22 (Phase 49-01 SOLO/PASS-ON operational attribution delivered)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -20,6 +20,22 @@
 - Added `.planning/phases/49-marketplace-integrity-operations/49-CONTEXT.md` and `.planning/phases/49-marketplace-integrity-operations/49-01-PLAN.md`.
 - 49-01 scope is locked to SOLO + PASS-ON operational lifecycle first (handoff states, custody ledger, attribution timeline).
 - Co-share operational behavior is explicitly deferred to a later plan in Phase 49 to keep lifecycle rollout controlled and verifiable.
+
+### v6.0 Update: Phase 49-01 Delivered (2026-02-22)
+
+- Added migration `supabase/migrations/165_marketplace_integrity_operations_solo_pass_on.sql` introducing:
+  - `marketplace_attribution_handoffs` (pending/accepted/declined handoff state)
+  - `marketplace_attribution_custody` (append-only lifecycle ledger)
+  - DB-level integrity checks and append-only mutation guards
+- Added attribution service and PASS-ON APIs in `web/`:
+  - `POST /api/marketplace/attribution/pass-on`
+  - `POST /api/marketplace/attribution/pass-on/[handoffId]/accept`
+  - `POST /api/marketplace/attribution/pass-on/[handoffId]/decline`
+- Added attribution read endpoint and operator timeline UI:
+  - `GET /api/marketplace/attribution/events/[eventId]`
+  - `web/components/marketplace/attribution/AttributionChainTimeline.tsx`
+  - integrated into `web/app/(dashboard)/dashboard/jobs/[id]/page.tsx`
+- Added invariant regression tests in `web/lib/marketplace/attribution/__tests__/pass-on-invariants.test.ts`.
 
 ---
 

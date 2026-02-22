@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v6.0 Marketplace Integrity — Phase 49 operational attribution kickoff
+**Current focus:** v6.0 Marketplace Integrity — Phase 49 SOLO/PASS-ON complete, preparing next detection phase
 
 ## Current Position
 
 Phase: 49-marketplace-integrity-operations
 Plan: 01
-Status: Ready
-Last activity: 2026-02-21 — Started 49-01 planning (SOLO + PASS-ON operational lifecycle)
+Status: Completed
+Last activity: 2026-02-22 — Completed 49-01 SOLO/PASS-ON operational attribution lifecycle
 
-Note: v6.0 progressing from invariants to operational lifecycle controls
+Note: v6.0 progressing from operational lifecycle to signal detection phase
 
 Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [##########] v4.0 100% | [##########] v5.0 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 243 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 37 v4.0 + 21 v5.0 + 5 gap closures + 1 v6.0)
+- Total plans completed: 244 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 37 v4.0 + 21 v5.0 + 5 gap closures + 2 v6.0)
 - Average duration: 3.9 min
 - Total execution time: ~14.5 hours
 
@@ -35,13 +35,14 @@ Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [#########
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
 | v4.0 | 9 | 37 | ~389 min | ~5.3 min |
 | v5.0 | 8 | 21 | ~116 min | ~5.0 min |
-| v6.0 | 1 | 1 | ~12 min | ~12.0 min |
+| v6.0 | 2 | 2 | ~27 min | ~13.5 min |
 
 *Updated after each plan completion*
 | Phase 39-admin-dashboard P01 | 3m | 2 tasks | 7 files |
 | Phase 39 P02 | 8m | 2 tasks | 8 files |
 | Phase 39 P03 | 10m | 2 tasks | 9 files |
 | Phase 48 P01 | 12m | 3 tasks | 10 files |
+| Phase 49 P01 | 15m | 3 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -155,6 +156,7 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 - [Phase 48]: Client source-confirmation prompts are not primary controls; integrity uses system signals and enforced provenance.
 - [Phase 48]: Database-level trigger now blocks non-admin source_provenance/fee_policy reclassification on events and bookings.
 - [Phase 49]: Scope starts with SOLO + PASS-ON operational lifecycle; Scenario C co-share execution is deferred to a later plan.
+- [Phase 49]: PASS-ON initiate/accept/decline is now API-driven with role-gated transitions and append-only custody timeline.
 
 ### Pending Todos
 
@@ -180,6 +182,6 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 
 ## Session Continuity
 
-Last session: 2026-02-22T00:11:00Z
-Stopped at: Created 49-01-PLAN.md
+Last session: 2026-02-22T00:34:00Z
+Stopped at: Completed 49-01-SUMMARY.md
 Resume file: None

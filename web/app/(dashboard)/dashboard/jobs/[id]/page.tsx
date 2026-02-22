@@ -48,6 +48,9 @@ import { EVENT_TYPE_LABELS } from '@/lib/marketplace/event-types';
 import { STAFFING_ROLE_LABELS, EQUIPMENT_TYPE_LABELS } from '@/lib/marketplace/event-types';
 import type { EventType, StaffingRole, EquipmentItem } from '@/lib/marketplace/event-types';
 import { RatingForm, StarDisplay } from '@/components/direct-jobs/RatingForm';
+import type { AttributionChainResponse } from '@/lib/marketplace/attribution/types';
+import { fetchAttributionChain } from '@/lib/queries/marketplace/attribution';
+import { AttributionChainTimeline } from '@/components/marketplace/attribution/AttributionChainTimeline';
 
 // =============================================================================
 // Types
@@ -148,6 +151,7 @@ export default function DirectJobDetailPage() {
   const [allRatings, setAllRatings] = useState<
     Array<{ id: string; rater_type: string; rating: number; review: string | null; created_at: string }>
   >([]);
+  const [attributionChain, setAttributionChain] = useState<AttributionChainResponse | null>(null);
 
   // ── Fetch job ──────────────────────────────────────────────────────────────
 
@@ -198,6 +202,29 @@ export default function DirectJobDetailPage() {
   useEffect(() => {
     fetchRatings();
   }, [fetchRatings]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAttribution() {
+      try {
+        const chain = await fetchAttributionChain(id);
+        if (!cancelled) {
+          setAttributionChain(chain);
+        }
+      } catch {
+        if (!cancelled) {
+          setAttributionChain(null);
+        }
+      }
+    }
+
+    loadAttribution();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   // ── Status Actions ─────────────────────────────────────────────────────────
 
@@ -649,6 +676,8 @@ export default function DirectJobDetailPage() {
               </div>
             )}
           </section>
+
+          {attributionChain && <AttributionChainTimeline chain={attributionChain} />}
 
           {/* Medic Assignment */}
           <section className="border rounded-lg p-5">

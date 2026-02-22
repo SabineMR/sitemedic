@@ -25,12 +25,12 @@ Phase 49 operationalizes those invariants through real SOLO and PASS-ON workflow
 
 ## Story Board (Current Sprint)
 
-- [ ] **Story INT-OPS-01:** SOLO + PASS-ON operational schema and custody ledger
-  - **Status:** Ready
+- [x] **Story INT-OPS-01:** SOLO + PASS-ON operational schema and custody ledger
+  - **Status:** Complete
   - **Branch:** `feature/49-int-ops-schema-ledger`
-- [ ] **Story INT-OPS-02:** PASS-ON initiate/accept/decline service + APIs
-  - **Status:** Planned
+- [x] **Story INT-OPS-02:** PASS-ON initiate/accept/decline service + APIs
+  - **Status:** Complete
   - **Branch:** `feature/49-int-passon-apis`
-- [ ] **Story INT-OPS-03:** Attribution timeline read model + UI + invariant tests
-  - **Status:** Planned
+- [x] **Story INT-OPS-03:** Attribution timeline read model + UI + invariant tests
+  - **Status:** Complete
   - **Branch:** `feature/49-int-attribution-timeline`

@@ -91,7 +91,7 @@ Plans:
 **Plans**: 1 plan (initial)
 
 Plans:
-- [ ] 49-01-PLAN.md — SOLO/PASS-ON operational lifecycle, custody ledger, attribution timeline
+- [x] 49-01-PLAN.md — SOLO/PASS-ON operational lifecycle, custody ledger, attribution timeline
 
 ### Phase 32: Foundation Schema & Registration
 **Goal**: CQC-registered medical companies and clients can register on the marketplace, companies can upload compliance documents for verification, and platform admin can approve/reject registrations — all on a database foundation with marketplace-scoped RLS and race-condition prevention
@@ -288,4 +288,4 @@ Plans:
 | 38. Notifications & Alerts | v4.0 | 4/4 | Complete | 2026-02-20 |
 | 39. Admin Dashboard | 3/3 | Complete | 2026-02-21 |
 | 48. Marketplace Integrity Foundation | v6.0 | 1/1 | Complete | 2026-02-21 |
-| 49. Marketplace Integrity Operations | v6.0 | 0/1 | Ready | - |
+| 49. Marketplace Integrity Operations | v6.0 | 1/1 | Complete | 2026-02-22 |
