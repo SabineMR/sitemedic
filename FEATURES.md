@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-22 (Phase 52-01 integrity automation tuning delivered)
+**Last Updated**: 2026-02-22 (Phase 52-02 optional integrity hardening delivered)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -85,6 +85,23 @@
   - integrated into `/platform/marketplace/entities` integrity tab.
 
 This completes the v6.0 integrity stack from provenance invariants through operational lifecycle, signal scoring, enforcement queue, and calibrated automation monitoring.
+
+### v6.0 Update: Phase 52-02 Optional Hardening Delivered (2026-02-22)
+
+- Added migration `supabase/migrations/169_marketplace_integrity_optional_automation.sql`:
+  - extends signal taxonomy with `REFERRAL_NETWORK_CLUSTER` and `CO_SHARE_POLICY_BREACH`
+  - adds `integrity_alert` notification type support in `user_notifications`
+- Added cron reporting endpoint:
+  - `POST /api/cron/integrity-sla-report`
+  - sends `integrity_alert` feed notifications to platform admins when SLA breaches exist
+- Enhanced scoring/inference logic:
+  - `web/lib/marketplace/integrity/signals.ts` now includes recent-window dedupe helper and explicit co-share policy breach signaling
+  - `web/lib/marketplace/attribution/service.ts` now logs referral-network cluster abuse when reciprocal accepted pass-on chains repeat
+- Enhanced overview monitoring:
+  - `web/app/api/platform/marketplace/integrity/overview/route.ts` now reports repeat-offender watchlist metrics
+  - `web/components/platform/marketplace/IntegrityOverviewPanel.tsx` surfaces watchlist counts in the platform integrity dashboard
+
+Net effect: optional anti-gaming coverage is now included on top of core v6 controls, with scheduled visibility alerts and deeper pattern detection.
 
 ---
 

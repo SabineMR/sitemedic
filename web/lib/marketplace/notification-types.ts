@@ -23,6 +23,7 @@ export const NOTIFICATION_TYPES = {
   DISPUTE_RESOLVED: 'dispute_resolved', // Either: a dispute was resolved
   EVENT_CANCELLED:  'event_cancelled',  // Either: event was cancelled
   RATING_NUDGE:     'rating_nudge',     // Either: reminder to leave rating
+  INTEGRITY_ALERT:  'integrity_alert',  // Platform/admin: integrity escalation or SLA alert
 } as const;
 
 export type NotificationType = typeof NOTIFICATION_TYPES[keyof typeof NOTIFICATION_TYPES];
@@ -39,6 +40,7 @@ export const NOTIFICATION_CATEGORIES = {
   ratings:  ['rating_received', 'rating_nudge'] as const,
   messages: ['message_received'] as const,
   disputes: ['dispute_filed', 'dispute_resolved'] as const,
+  integrity: ['integrity_alert'] as const,
 } as const;
 
 export type NotificationCategory = keyof typeof NOTIFICATION_CATEGORIES;

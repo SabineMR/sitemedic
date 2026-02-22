@@ -38,6 +38,7 @@ export async function GET() {
       { count: holdCount },
       { data: openCases },
       { data: cfg },
+      { data: confirmedCases },
     ] = await Promise.all([
       serviceClient
         .from('marketplace_integrity_cases')
@@ -64,12 +65,20 @@ export async function GET() {
         .limit(200),
       serviceClient
         .from('marketplace_integrity_config')
-        .select('review_sla_hours')
+        .select('review_sla_hours, repeat_offender_case_window_days, repeat_offender_confirmed_case_threshold')
         .eq('singleton_key', 'marketplace_integrity')
         .maybeSingle(),
+      serviceClient
+        .from('marketplace_integrity_cases')
+        .select('company_id, closed_at')
+        .eq('status', 'resolved_confirmed')
+        .not('company_id', 'is', null)
+        .limit(2000),
     ]);
 
     const slaHours = Number(cfg?.review_sla_hours || 48);
+    const repeatWindowDays = Number(cfg?.repeat_offender_case_window_days || 180);
+    const repeatThreshold = Number(cfg?.repeat_offender_confirmed_case_threshold || 2);
     const now = Date.now();
 
     const openAgesHours = (openCases || []).map((row) =>
@@ -83,6 +92,16 @@ export async function GET() {
 
     const slaBreaches = openAgesHours.filter((age) => age > slaHours).length;
 
+    const repeatCutoff = new Date(now - repeatWindowDays * 24 * 60 * 60 * 1000).toISOString();
+    const repeatCounts = new Map<string, number>();
+    for (const row of confirmedCases || []) {
+      if (!row.company_id || !row.closed_at || row.closed_at < repeatCutoff) continue;
+      repeatCounts.set(row.company_id, (repeatCounts.get(row.company_id) || 0) + 1);
+    }
+    const repeatOffenderWatchlist = Array.from(repeatCounts.values()).filter(
+      (count) => count >= repeatThreshold
+    ).length;
+
     return NextResponse.json(
       {
         queue: {
@@ -93,6 +112,9 @@ export async function GET() {
           avgOpenAgeHours,
           slaBreaches,
           slaHours,
+          repeatOffenderWatchlist,
+          repeatWindowDays,
+          repeatThreshold,
         },
       },
       { status: 200, headers: { 'Cache-Control': 'no-store' } }

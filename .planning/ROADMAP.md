@@ -130,10 +130,11 @@ Plans:
   2. Repeat offenders receive deterministic score boosts in calibration logic
   3. Collision/referral-loop signal coverage expands automated detection confidence
   4. Platform admins can monitor queue health and SLA breaches from one overview panel
-**Plans**: 1 plan (initial)
+**Plans**: 2 plans
 
 Plans:
 - [x] 52-01-PLAN.md — Calibration config, repeat-offender automation, and SLA overview
+- [x] 52-02-PLAN.md — Optional hardening: cron alerts, referral-network analytics, co-share enforcement
 
 ### Phase 32: Foundation Schema & Registration
 **Goal**: CQC-registered medical companies and clients can register on the marketplace, companies can upload compliance documents for verification, and platform admin can approve/reject registrations — all on a database foundation with marketplace-scoped RLS and race-condition prevention
@@ -333,4 +334,4 @@ Plans:
 | 49. Marketplace Integrity Operations | v6.0 | 1/1 | Complete | 2026-02-22 |
 | 50. Marketplace Integrity Signals | v6.0 | 1/1 | Complete | 2026-02-22 |
 | 51. Marketplace Integrity Enforcement | v6.0 | 1/1 | Complete | 2026-02-22 |
-| 52. Marketplace Integrity Automation | v6.0 | 1/1 | Complete | 2026-02-22 |
+| 52. Marketplace Integrity Automation | v6.0 | 2/2 | Complete | 2026-02-22 |

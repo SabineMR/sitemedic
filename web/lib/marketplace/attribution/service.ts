@@ -5,6 +5,7 @@ import {
 } from './invariants';
 import {
   logIntegritySignal,
+  logIntegritySignalIfRecentAbsent,
   recomputeIntegrityScoreForEvent,
 } from '@/lib/marketplace/integrity/signals';
 import type {
@@ -437,6 +438,37 @@ export async function resolvePassOn(params: {
             windowDays: 120,
           },
         });
+
+        const { count: networkClusterCount } = await supabase
+          .from('marketplace_attribution_handoffs')
+          .select('id', { count: 'exact', head: true })
+          .or(
+            `and(current_from_company_id.eq.${handoff.current_from_company_id},target_company_id.eq.${handoff.target_company_id}),and(current_from_company_id.eq.${handoff.target_company_id},target_company_id.eq.${handoff.current_from_company_id})`
+          )
+          .eq('status', 'pass_on_accepted')
+          .gte('created_at', new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString());
+
+        if (Number(networkClusterCount || 0) >= 3) {
+          await logIntegritySignalIfRecentAbsent(
+            supabase,
+            {
+              event_id: handoff.event_id,
+              related_event_id: handoff.event_id,
+              company_id: actorCompanyId,
+              actor_user_id: actorUserId,
+              signal_type: 'REFERRAL_NETWORK_CLUSTER',
+              confidence: 0.78,
+              weight: 34,
+              details: {
+                companyA: handoff.current_from_company_id,
+                companyB: handoff.target_company_id,
+                reciprocalAcceptedCount: Number(networkClusterCount || 0),
+                windowDays: 180,
+              },
+            },
+            45
+          );
+        }
       }
     }
 

@@ -16,4 +16,10 @@ describe('integrity risk band thresholds', () => {
     expect(riskBandForScore(70)).toBe('high');
     expect(riskBandForScore(200)).toBe('high');
   });
+
+  it('supports calibrated custom thresholds', () => {
+    expect(riskBandForScore(49, { medium: 50, high: 90 })).toBe('low');
+    expect(riskBandForScore(50, { medium: 50, high: 90 })).toBe('medium');
+    expect(riskBandForScore(90, { medium: 50, high: 90 })).toBe('high');
+  });
 });

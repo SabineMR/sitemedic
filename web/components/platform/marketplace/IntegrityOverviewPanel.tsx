@@ -11,6 +11,9 @@ interface IntegrityOverviewResponse {
     avgOpenAgeHours: number;
     slaBreaches: number;
     slaHours: number;
+    repeatOffenderWatchlist: number;
+    repeatWindowDays: number;
+    repeatThreshold: number;
   };
 }
 
@@ -50,7 +53,7 @@ export function IntegrityOverviewPanel() {
   const queue = query.data.queue;
 
   return (
-    <section className="grid gap-3 rounded-2xl border border-purple-700/40 bg-purple-900/20 p-4 md:grid-cols-3 xl:grid-cols-6">
+    <section className="grid gap-3 rounded-2xl border border-purple-700/40 bg-purple-900/20 p-4 md:grid-cols-3 xl:grid-cols-7">
       <Metric label="Open" value={queue.open} />
       <Metric label="Investigating" value={queue.investigating} />
       <Metric label="High Risk" value={queue.highRiskActive} />
@@ -60,6 +63,11 @@ export function IntegrityOverviewPanel() {
         label={`SLA Breaches (>${queue.slaHours}h)`}
         value={queue.slaBreaches}
         tone={queue.slaBreaches > 0 ? 'warn' : 'ok'}
+      />
+      <Metric
+        label={`Repeat Watchlist (${queue.repeatWindowDays}d/${queue.repeatThreshold}+)`}
+        value={queue.repeatOffenderWatchlist}
+        tone={queue.repeatOffenderWatchlist > 0 ? 'warn' : 'ok'}
       />
     </section>
   );

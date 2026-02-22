@@ -6,7 +6,9 @@ export type IntegritySignalType =
   | 'MARKETPLACE_TO_DIRECT_SWITCH'
   | 'PASS_ON_ACTIVITY'
   | 'EVENT_COLLISION_DUPLICATE'
-  | 'REFERRAL_LOOP_ABUSE';
+  | 'REFERRAL_LOOP_ABUSE'
+  | 'REFERRAL_NETWORK_CLUSTER'
+  | 'CO_SHARE_POLICY_BREACH';
 
 interface IntegritySignalInsert {
   event_id: string;
@@ -91,6 +93,32 @@ export async function logIntegritySignal(
   }
 }
 
+export async function logIntegritySignalIfRecentAbsent(
+  supabase: SupabaseClient,
+  signal: IntegritySignalInsert,
+  lookbackDays: number = 14
+): Promise<void> {
+  const cutoff = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000).toISOString();
+  const { data: existing, error } = await supabase
+    .from('marketplace_integrity_signals')
+    .select('id')
+    .eq('event_id', signal.event_id)
+    .eq('signal_type', signal.signal_type)
+    .gte('created_at', cutoff)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to dedupe integrity signal: ${error.message}`);
+  }
+
+  if (existing?.id) {
+    return;
+  }
+
+  await logIntegritySignal(supabase, signal);
+}
+
 export async function recomputeIntegrityScoreForEvent(params: {
   supabase: SupabaseClient;
   eventId: string;
@@ -98,6 +126,35 @@ export async function recomputeIntegrityScoreForEvent(params: {
   actorUserId: string;
 }) {
   const { supabase, eventId, companyId, actorUserId } = params;
+
+  const { data: eventRow } = await supabase
+    .from('marketplace_events')
+    .select('id, fee_policy, source_provenance')
+    .eq('id', eventId)
+    .maybeSingle();
+
+  if (eventRow?.fee_policy === 'co_share_blended') {
+    const { count: acceptedHandoffs } = await supabase
+      .from('marketplace_attribution_handoffs')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_id', eventId)
+      .eq('status', 'pass_on_accepted');
+
+    const hasRequiredCoShareLink = Number(acceptedHandoffs || 0) >= 1;
+    if (!hasRequiredCoShareLink) {
+      await logIntegritySignalIfRecentAbsent(supabase, {
+        event_id: eventId,
+        company_id: companyId,
+        actor_user_id: actorUserId,
+        signal_type: 'CO_SHARE_POLICY_BREACH',
+        confidence: 0.9,
+        weight: 45,
+        details: {
+          reason: 'co_share_blended fee policy without accepted cross-company handoff chain',
+        },
+      }, 30);
+    }
+  }
 
   const config = await getIntegrityConfig(supabase);
 
@@ -241,7 +298,7 @@ export async function ingestMarketplaceToDirectSignals(params: {
       const typeSame = priorEvent.event_type === eventType;
 
       if (sharesDate && postcodeNear && typeSame) {
-        await logIntegritySignal(supabase, {
+        await logIntegritySignalIfRecentAbsent(supabase, {
           event_id: directEventId,
           related_event_id: priorEvent.id,
           company_id: companyId,
@@ -253,7 +310,7 @@ export async function ingestMarketplaceToDirectSignals(params: {
             overlapReason: 'matching event date + type + postcode area with prior marketplace event',
             priorEventStatus: priorEvent.status,
           },
-        });
+        }, 30);
       }
     }
   }
