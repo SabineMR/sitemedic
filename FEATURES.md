@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-22 (Phase 50-01 integrity signal scoring delivered)
+**Last Updated**: 2026-02-22 (Phase 51-01 integrity escalation queue delivered)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -52,6 +52,21 @@
   - `GET /api/marketplace/integrity/events/[eventId]`
   - `GET /api/platform/marketplace/integrity/events/[eventId]`
 - Added operator-facing risk UI via `web/components/marketplace/attribution/IntegrityRiskCard.tsx`, integrated into `web/app/(dashboard)/dashboard/jobs/[id]/page.tsx`.
+
+### v6.0 Update: Phase 51-01 Delivered (2026-02-22)
+
+- Added escalation migration `supabase/migrations/167_marketplace_integrity_escalation.sql`:
+  - `marketplace_integrity_cases` (review queue)
+  - `marketplace_integrity_case_events` (case event log)
+  - score trigger that auto-opens high-risk cases and applies `bookings.remainder_hold`
+- Added platform-admin resolution API:
+  - `POST /api/platform/marketplace/integrity/cases/[caseId]/resolve`
+  - Supports dismissed/confirmed outcomes with mandatory notes and optional hold release.
+- Expanded platform entities workspace with integrity queue support:
+  - Added `integrity` tab in `web/app/platform/marketplace/entities/page.tsx`
+  - Added integrity records in `web/app/api/platform/marketplace/entities/route.ts`
+  - Added triage component `web/components/platform/marketplace/IntegrityCasePanel.tsx`
+- Enforcement remains review-first: escalations can hold remainder payout, but final case outcomes are platform-admin controlled and auditable.
 
 ---
 
