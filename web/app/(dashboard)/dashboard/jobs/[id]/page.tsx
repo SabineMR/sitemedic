@@ -51,6 +51,11 @@ import { RatingForm, StarDisplay } from '@/components/direct-jobs/RatingForm';
 import type { AttributionChainResponse } from '@/lib/marketplace/attribution/types';
 import { fetchAttributionChain } from '@/lib/queries/marketplace/attribution';
 import { AttributionChainTimeline } from '@/components/marketplace/attribution/AttributionChainTimeline';
+import {
+  fetchIntegrityEvent,
+  type IntegrityEventResponse,
+} from '@/lib/queries/marketplace/integrity';
+import { IntegrityRiskCard } from '@/components/marketplace/attribution/IntegrityRiskCard';
 
 // =============================================================================
 // Types
@@ -152,6 +157,7 @@ export default function DirectJobDetailPage() {
     Array<{ id: string; rater_type: string; rating: number; review: string | null; created_at: string }>
   >([]);
   const [attributionChain, setAttributionChain] = useState<AttributionChainResponse | null>(null);
+  const [integrity, setIntegrity] = useState<IntegrityEventResponse | null>(null);
 
   // ── Fetch job ──────────────────────────────────────────────────────────────
 
@@ -171,6 +177,29 @@ export default function DirectJobDetailPage() {
     } finally {
       setLoading(false);
     }
+  }, [id]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadIntegrity() {
+      try {
+        const payload = await fetchIntegrityEvent(id);
+        if (!cancelled) {
+          setIntegrity(payload);
+        }
+      } catch {
+        if (!cancelled) {
+          setIntegrity(null);
+        }
+      }
+    }
+
+    loadIntegrity();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   useEffect(() => {
@@ -678,6 +707,7 @@ export default function DirectJobDetailPage() {
           </section>
 
           {attributionChain && <AttributionChainTimeline chain={attributionChain} />}
+          {integrity && <IntegrityRiskCard integrity={integrity} />}
 
           {/* Medic Assignment */}
           <section className="border rounded-lg p-5">

@@ -22,7 +22,7 @@ function clampConfidence(value: number): number {
   return Math.max(0, Math.min(1, Number(value || 0)));
 }
 
-function riskBandForScore(score: number): 'low' | 'medium' | 'high' {
+export function riskBandForScore(score: number): 'low' | 'medium' | 'high' {
   if (score >= 70) return 'high';
   if (score >= 35) return 'medium';
   return 'low';

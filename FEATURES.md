@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-22 (Phase 49-01 SOLO/PASS-ON operational attribution delivered)
+**Last Updated**: 2026-02-22 (Phase 50-01 integrity signal scoring delivered)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -36,6 +36,22 @@
   - `web/components/marketplace/attribution/AttributionChainTimeline.tsx`
   - integrated into `web/app/(dashboard)/dashboard/jobs/[id]/page.tsx`
 - Added invariant regression tests in `web/lib/marketplace/attribution/__tests__/pass-on-invariants.test.ts`.
+
+### v6.0 Update: Phase 50-01 Delivered (2026-02-22)
+
+- Added `supabase/migrations/166_marketplace_integrity_signals.sql` with:
+  - `marketplace_integrity_signals` (typed, weighted, confidence-based signal rows)
+  - `marketplace_integrity_scores` (event-level score snapshots + risk bands)
+- Added signal/scoring service in `web/lib/marketplace/integrity/signals.ts`.
+- Direct job creation now emits leakage-detection signals when marketplace-to-direct migration patterns are detected:
+  - `THREAD_NO_CONVERT`
+  - `MARKETPLACE_TO_DIRECT_SWITCH`
+  - `PROXIMITY_CLONE`
+- PASS-ON lifecycle now emits `PASS_ON_ACTIVITY` signals from `web/lib/marketplace/attribution/service.ts`.
+- Added integrity visibility APIs:
+  - `GET /api/marketplace/integrity/events/[eventId]`
+  - `GET /api/platform/marketplace/integrity/events/[eventId]`
+- Added operator-facing risk UI via `web/components/marketplace/attribution/IntegrityRiskCard.tsx`, integrated into `web/app/(dashboard)/dashboard/jobs/[id]/page.tsx`.
 
 ---
 

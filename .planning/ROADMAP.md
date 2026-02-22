@@ -93,6 +93,20 @@ Plans:
 Plans:
 - [x] 49-01-PLAN.md — SOLO/PASS-ON operational lifecycle, custody ledger, attribution timeline
 
+### Phase 50: Marketplace Integrity Signals
+**Goal**: Convert operational lifecycle evidence into explainable anti-gaming risk signals and event-level risk scores for operator review.
+**Depends on**: Phase 49
+**Requirements**: INT-09, INT-10, INT-11
+**Success Criteria** (what must be TRUE):
+  1. Integrity signals are persisted with confidence, weight, and related evidence context
+  2. Marketplace-to-direct leakage patterns produce risk score updates automatically
+  3. Operators can inspect risk band + contributing signals per event from API/UI
+  4. Detection remains review-first and explainable (no opaque auto-punishment)
+**Plans**: 1 plan (initial)
+
+Plans:
+- [x] 50-01-PLAN.md — Signal ingestion, scoring, and operator visibility baseline
+
 ### Phase 32: Foundation Schema & Registration
 **Goal**: CQC-registered medical companies and clients can register on the marketplace, companies can upload compliance documents for verification, and platform admin can approve/reject registrations — all on a database foundation with marketplace-scoped RLS and race-condition prevention
 **Depends on**: Phase 31 (v3.0 complete)
@@ -257,7 +271,7 @@ Plans:
 
 ## Progress
 
-**Execution Order:** 01 → 01.5 → 02 → 03 → 04 → 04.5 → 04.6 → 05 → 05.5 → 06 → 06.5 → 07 → 07.5 → 08 → 09 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 18.5 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 27 → 28 → 29 → 30 → 31 → 32 → 33 → 34 → 34.1 → 35 → 36 → 37 → 38 → 39 → 40 → 41 → 42 → 43 → 44 → 45 → 46 → 47 → 48
+**Execution Order:** 01 → 01.5 → 02 → 03 → 04 → 04.5 → 04.6 → 05 → 05.5 → 06 → 06.5 → 07 → 07.5 → 08 → 09 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 18.5 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 27 → 28 → 29 → 30 → 31 → 32 → 33 → 34 → 34.1 → 35 → 36 → 37 → 38 → 39 → 40 → 41 → 42 → 43 → 44 → 45 → 46 → 47 → 48 → 49 → 50
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -289,3 +303,4 @@ Plans:
 | 39. Admin Dashboard | 3/3 | Complete | 2026-02-21 |
 | 48. Marketplace Integrity Foundation | v6.0 | 1/1 | Complete | 2026-02-21 |
 | 49. Marketplace Integrity Operations | v6.0 | 1/1 | Complete | 2026-02-22 |
+| 50. Marketplace Integrity Signals | v6.0 | 1/1 | Complete | 2026-02-22 |
