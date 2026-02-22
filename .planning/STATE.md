@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v6.0 Marketplace Integrity — optional hardening complete (alerts + co-share + referral-network)
+**Current focus:** v7.0 Integrity Launch Operations — Phase 53 promotion safety baseline delivered
 
 ## Current Position
 
-Phase: 52-marketplace-integrity-automation
+Phase: 53-production-promotion-safety
 Plan: 01
 Status: Completed
-Last activity: 2026-02-22 — Completed 52-02 optional hardening (cron alerts, co-share enforcement, referral-network analytics)
+Last activity: 2026-02-22 — Completed 53-01 migration preflight, promotion guardrails, and integrity smoke runbook
 
-Note: v6.0 marketplace integrity milestone complete (core + optional)
+Note: v7.0 phase 53 complete; ready to start phase 54 external service delivery hardening
 
 Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [##########] v4.0 100% | [##########] v5.0 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 248 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 37 v4.0 + 21 v5.0 + 5 gap closures + 6 v6.0)
+- Total plans completed: 249 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 37 v4.0 + 21 v5.0 + 5 gap closures + 6 v6.0 + 1 v7.0)
 - Average duration: 3.9 min
 - Total execution time: ~14.5 hours
 
@@ -36,6 +36,7 @@ Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [#########
 | v4.0 | 9 | 37 | ~389 min | ~5.3 min |
 | v5.0 | 8 | 21 | ~116 min | ~5.0 min |
 | v6.0 | 5 | 6 | ~104 min | ~17.3 min |
+| v7.0 | 1 | 1 | ~16 min | ~16.0 min |
 
 *Updated after each plan completion*
 | Phase 39-admin-dashboard P01 | 3m | 2 tasks | 7 files |
@@ -47,6 +48,7 @@ Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [#########
 | Phase 51 P01 | 21m | 3 tasks | 6 files |
 | Phase 52 P01 | 24m | 3 tasks | 6 files |
 | Phase 52 P02 | 14m | 3 tasks | 8 files |
+| Phase 53 P01 | 16m | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -167,6 +169,7 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 - [Phase 52]: Optional hardening adds scheduled SLA alerts, explicit co-share policy breach detection, and referral-network cluster signals.
 - [Phase 52]: web-marketplace compile debt from missing marketplace modules is closed (`pnpm --dir web-marketplace exec tsc --noEmit` passes).
 - [Phase 52]: web-marketplace lint now runs with project ESLint config and is warning-only (no blocking lint errors).
+- [Phase 53]: Integrity release safety now has one-command guardrails (`ops:promote-integrity`) with migration preflight + smoke verification.
 
 ### Pending Todos
 
@@ -192,6 +195,6 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 
 ## Session Continuity
 
-Last session: 2026-02-22T02:34:00Z
-Stopped at: Completed 52-02-SUMMARY.md
+Last session: 2026-02-22T03:24:00Z
+Stopped at: Completed 53-01-SUMMARY.md
 Resume file: None

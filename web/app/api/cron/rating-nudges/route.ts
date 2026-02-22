@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendRatingNudgeNotification } from '@/lib/marketplace/notifications';
 import { createNotification } from '@/lib/marketplace/create-notification';
+import { completeJobRun, failJobRun, startJobRun } from '@/lib/ops/job-runs';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -23,6 +24,7 @@ export const runtime = 'nodejs';
 const CRON_SECRET = process.env.CRON_SECRET;
 
 export async function POST(request: NextRequest) {
+  let jobRun: { id: string; startedAt: string } | null = null;
   try {
     // Verify cron secret if configured
     if (CRON_SECRET) {
@@ -33,6 +35,11 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient();
+    jobRun = await startJobRun({
+      supabase,
+      jobName: 'rating-nudges',
+      triggerType: 'cron',
+    });
 
     // Find completed events that haven't had nudges sent
     const { data: events, error: eventsError } = await supabase
@@ -48,6 +55,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (!events || events.length === 0) {
+      await completeJobRun({
+        supabase,
+        runId: jobRun.id,
+        startedAt: jobRun.startedAt,
+        metadata: { processed: 0, errors: 0, total: 0 },
+      });
       return NextResponse.json({ processed: 0, message: 'No events need nudges' });
     }
 
@@ -177,13 +190,35 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
+    const responsePayload = {
       processed,
       errors,
       total: events.length,
       message: `Processed ${processed} events, ${errors} errors`,
+    };
+
+    await completeJobRun({
+      supabase,
+      runId: jobRun.id,
+      startedAt: jobRun.startedAt,
+      metadata: responsePayload,
     });
+
+    return NextResponse.json(responsePayload);
   } catch (error) {
+    if (jobRun) {
+      try {
+        const supabase = await createClient();
+        await failJobRun({
+          supabase,
+          runId: jobRun.id,
+          startedAt: jobRun.startedAt,
+          errorMessage: error instanceof Error ? error.message : String(error),
+        });
+      } catch (jobError) {
+        console.error('[Rating Nudge Cron] Failed to record failed job run:', jobError);
+      }
+    }
     console.error('[Rating Nudge Cron] Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

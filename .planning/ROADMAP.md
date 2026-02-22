@@ -8,7 +8,8 @@
 - ✅ **v3.0 White-Label Platform & Subscription Engine** — Phases 24–31 (8 phases, 30 plans — shipped 2026-02-19)
 - ✅ **v4.0 MedBid Marketplace** — Phases 32–39 (8 phases, shipped 2026-02-21)
 - ✅ **v5.0 Internal Comms & Document Management** — Phases 40–47 (8 phases, 21 plans — shipped 2026-02-20)
-- **v6.0 Marketplace Integrity** — Phases 48–52 (5 phases, in progress)
+- ✅ **v6.0 Marketplace Integrity** — Phases 48–52 (5 phases, shipped 2026-02-22)
+- **v7.0 Integrity Launch Operations** — Phases 53–56 (4 phases, in progress)
 
 ---
 
@@ -135,6 +136,34 @@ Plans:
 Plans:
 - [x] 52-01-PLAN.md — Calibration config, repeat-offender automation, and SLA overview
 - [x] 52-02-PLAN.md — Optional hardening: cron alerts, referral-network analytics, co-share enforcement
+
+### Phase 53: Production Promotion & Migration Safety
+**Goal**: Make integrity releases production-safe with preflight validation, promotion guardrails, and smoke verification runbooks.
+**Depends on**: Phase 52
+**Requirements**: OPS-01, OPS-02, OPS-03
+**Success Criteria** (what must be TRUE):
+  1. Production migration apply has deterministic preflight and actionable fail-fast output
+  2. Promotion flow blocks deploy when schema/app compatibility checks fail
+  3. Post-promotion smoke confirms integrity queue/scoring/hold workflows are healthy
+  4. Operators can execute one documented runbook without ad-hoc SQL
+**Plans**: 1 plan (initial)
+
+Plans:
+- [x] 53-01-PLAN.md — Migration preflight, promotion guardrails, and integrity smoke runbook baseline
+
+### Phase 54: External Services & Alert Delivery
+**Goal**: Ensure alert delivery and scheduled job operations are observable, retriable, and recoverable for launch operations.
+**Depends on**: Phase 53
+**Requirements**: OPS-04, OPS-05, OPS-06
+**Success Criteria** (what must be TRUE):
+  1. Alert delivery attempts capture sent/failed/dead-letter status with retry metadata
+  2. Cron jobs write started/completed/failed run records with error context
+  3. Platform integrity overview exposes alert reliability and cron health signals
+  4. Promotion workflow remains green with new operational reliability checks
+**Plans**: 1 plan (initial)
+
+Plans:
+- [x] 54-01-PLAN.md — Alert delivery reliability schema, runtime hooks, and ops observability
 
 ### Phase 32: Foundation Schema & Registration
 **Goal**: CQC-registered medical companies and clients can register on the marketplace, companies can upload compliance documents for verification, and platform admin can approve/reject registrations — all on a database foundation with marketplace-scoped RLS and race-condition prevention
@@ -300,7 +329,7 @@ Plans:
 
 ## Progress
 
-**Execution Order:** 01 → 01.5 → 02 → 03 → 04 → 04.5 → 04.6 → 05 → 05.5 → 06 → 06.5 → 07 → 07.5 → 08 → 09 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 18.5 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 27 → 28 → 29 → 30 → 31 → 32 → 33 → 34 → 34.1 → 35 → 36 → 37 → 38 → 39 → 40 → 41 → 42 → 43 → 44 → 45 → 46 → 47 → 48 → 49 → 50 → 51 → 52
+**Execution Order:** 01 → 01.5 → 02 → 03 → 04 → 04.5 → 04.6 → 05 → 05.5 → 06 → 06.5 → 07 → 07.5 → 08 → 09 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 18.5 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 27 → 28 → 29 → 30 → 31 → 32 → 33 → 34 → 34.1 → 35 → 36 → 37 → 38 → 39 → 40 → 41 → 42 → 43 → 44 → 45 → 46 → 47 → 48 → 49 → 50 → 51 → 52 → 53 → 54
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -335,3 +364,5 @@ Plans:
 | 50. Marketplace Integrity Signals | v6.0 | 1/1 | Complete | 2026-02-22 |
 | 51. Marketplace Integrity Enforcement | v6.0 | 1/1 | Complete | 2026-02-22 |
 | 52. Marketplace Integrity Automation | v6.0 | 2/2 | Complete | 2026-02-22 |
+| 53. Production Promotion & Migration Safety | v7.0 | 1/1 | Complete | 2026-02-22 |
+| 54. External Services & Alert Delivery | v7.0 | 1/1 | Complete | 2026-02-22 |

@@ -30,6 +30,40 @@ export interface CreateNotificationParams {
   metadata?: Record<string, unknown>;
 }
 
+async function logDeliveryAttempt(
+  supabase: any,
+  input: {
+    recipientUserId?: string;
+    notificationType?: NotificationType;
+    payload: Record<string, unknown>;
+    status: 'pending' | 'sent' | 'failed' | 'dead_letter';
+    attemptCount: number;
+    lastError?: string;
+    nextRetryAt?: string | null;
+  }
+) {
+  try {
+    await supabase.from('marketplace_alert_delivery_attempts').insert({
+      channel: 'dashboard_feed',
+      recipient_user_id: input.recipientUserId ?? null,
+      notification_type: input.notificationType ?? null,
+      status: input.status,
+      attempt_count: input.attemptCount,
+      last_error: input.lastError ?? null,
+      payload: input.payload,
+      next_retry_at: input.nextRetryAt ?? null,
+      last_attempt_at: new Date().toISOString(),
+      delivered_at: input.status === 'sent' ? new Date().toISOString() : null,
+    });
+  } catch (error) {
+    console.error('[Notifications] Failed to log delivery attempt:', error);
+  }
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // =============================================================================
 // Internal: build service-role client
 // =============================================================================
@@ -61,22 +95,54 @@ export async function createNotification(
   const supabase = getServiceRoleClient();
   if (!supabase) return;
 
-  try {
-    const { error } = await supabase.from('user_notifications').insert({
-      user_id:  params.userId,
-      type:     params.type,
-      title:    params.title,
-      body:     params.body,
-      link:     params.link ?? null,
-      metadata: params.metadata ?? {},
+  const payload = {
+    user_id: params.userId,
+    type: params.type,
+    title: params.title,
+    body: params.body,
+    link: params.link ?? null,
+    metadata: params.metadata ?? {},
+  };
+
+  const maxAttempts = 3;
+  let lastErrorMessage = '';
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const { error } = await supabase.from('user_notifications').insert(payload);
+      if (!error) {
+        await logDeliveryAttempt(supabase, {
+          recipientUserId: params.userId,
+          notificationType: params.type,
+          payload,
+          status: 'sent',
+          attemptCount: attempt,
+        });
+        return;
+      }
+      lastErrorMessage = error.message;
+    } catch (error) {
+      lastErrorMessage = error instanceof Error ? error.message : String(error);
+    }
+
+    const nextRetryAt =
+      attempt < maxAttempts ? new Date(Date.now() + attempt * 30_000).toISOString() : null;
+    await logDeliveryAttempt(supabase, {
+      recipientUserId: params.userId,
+      notificationType: params.type,
+      payload,
+      status: attempt < maxAttempts ? 'failed' : 'dead_letter',
+      attemptCount: attempt,
+      lastError: lastErrorMessage,
+      nextRetryAt,
     });
 
-    if (error) {
-      console.error('[Notifications] Failed to insert notification:', error);
+    if (attempt < maxAttempts) {
+      await sleep(150 * attempt);
     }
-  } catch (error) {
-    console.error('[Notifications] Unexpected error creating notification:', error);
   }
+
+  console.error('[Notifications] Notification moved to dead-letter after retries:', lastErrorMessage);
 }
 
 // =============================================================================
@@ -88,25 +154,7 @@ export async function createBulkNotifications(
 ): Promise<void> {
   if (!notifications.length) return;
 
-  const supabase = getServiceRoleClient();
-  if (!supabase) return;
-
-  try {
-    const rows = notifications.map((n) => ({
-      user_id:  n.userId,
-      type:     n.type,
-      title:    n.title,
-      body:     n.body,
-      link:     n.link ?? null,
-      metadata: n.metadata ?? {},
-    }));
-
-    const { error } = await supabase.from('user_notifications').insert(rows);
-
-    if (error) {
-      console.error('[Notifications] Failed to bulk insert notifications:', error);
-    }
-  } catch (error) {
-    console.error('[Notifications] Unexpected error in bulk notification insert:', error);
+  for (const notification of notifications) {
+    await createNotification(notification);
   }
 }

@@ -14,7 +14,16 @@ interface IntegrityOverviewResponse {
     repeatOffenderWatchlist: number;
     repeatWindowDays: number;
     repeatThreshold: number;
+    alertDeadLetters: number;
+    alertFailuresPendingRetry: number;
   };
+  cronHealth: Array<{
+    jobName: string;
+    status: string;
+    startedAt: string | null;
+    finishedAt: string | null;
+    errorMessage: string | null;
+  }>;
 }
 
 async function fetchIntegrityOverview(): Promise<IntegrityOverviewResponse> {
@@ -53,7 +62,8 @@ export function IntegrityOverviewPanel() {
   const queue = query.data.queue;
 
   return (
-    <section className="grid gap-3 rounded-2xl border border-purple-700/40 bg-purple-900/20 p-4 md:grid-cols-3 xl:grid-cols-7">
+    <section className="space-y-3 rounded-2xl border border-purple-700/40 bg-purple-900/20 p-4">
+      <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-9">
       <Metric label="Open" value={queue.open} />
       <Metric label="Investigating" value={queue.investigating} />
       <Metric label="High Risk" value={queue.highRiskActive} />
@@ -69,6 +79,41 @@ export function IntegrityOverviewPanel() {
         value={queue.repeatOffenderWatchlist}
         tone={queue.repeatOffenderWatchlist > 0 ? 'warn' : 'ok'}
       />
+      <Metric
+        label="Alert Dead Letters"
+        value={queue.alertDeadLetters}
+        tone={queue.alertDeadLetters > 0 ? 'warn' : 'ok'}
+      />
+      <Metric
+        label="Alert Retries Pending"
+        value={queue.alertFailuresPendingRetry}
+        tone={queue.alertFailuresPendingRetry > 0 ? 'warn' : 'ok'}
+      />
+      </div>
+
+      <div className="rounded-xl border border-purple-700/35 bg-purple-800/15 p-3">
+        <p className="mb-2 text-[11px] uppercase tracking-wide text-purple-300">Cron Health</p>
+        <div className="grid gap-2 md:grid-cols-3">
+          {query.data.cronHealth.map((job) => (
+            <div key={job.jobName} className="rounded-lg border border-purple-700/30 bg-purple-900/20 px-3 py-2">
+              <p className="text-xs text-purple-200">{job.jobName}</p>
+              <p
+                className={`text-sm font-medium ${
+                  job.status === 'completed'
+                    ? 'text-emerald-200'
+                    : job.status === 'failed'
+                      ? 'text-red-300'
+                      : job.status === 'started'
+                        ? 'text-amber-200'
+                        : 'text-purple-200'
+                }`}
+              >
+                {job.status}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }

@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-22 (Phase 52-02 delivered + web-marketplace type debt follow-through)
+**Last Updated**: 2026-02-22 (v7.0 Phase 53 promotion safety baseline delivered)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -109,6 +109,29 @@ Net effect: optional anti-gaming coverage is now included on top of core v6 cont
 - Extended `web-marketplace/lib/marketplace/event-types.ts` status union/labels to cover legacy runtime states (`confirmed`, `in_progress`, `completed`) and optional `awarded_company_id` usage.
 - `pnpm --dir web-marketplace exec tsc --noEmit` now passes.
 - Added `web-marketplace/.eslintrc.json`; `pnpm --dir web-marketplace lint` now runs and returns warning-only (no blocking errors).
+
+### v7.0 Kickoff: Phase 53 Planning Started (2026-02-22)
+
+- Added `.planning/phases/53-production-promotion-safety/53-CONTEXT.md`.
+- Added `.planning/phases/53-production-promotion-safety/53-01-PLAN.md`.
+- Phase 53 focuses on production promotion safety for integrity releases:
+  - migration preflight checks,
+  - promotion guardrails,
+  - integrity smoke verification runbook.
+
+### v7.0 Update: Phase 53-01 Delivered (2026-02-22)
+
+- Added production safety scripts:
+  - `scripts/ops/migration-preflight.cjs`
+  - `scripts/ops/integrity-smoke.cjs`
+  - `scripts/ops/promote-integrity-release.cjs`
+- Added root package scripts:
+  - `pnpm run ops:migration-preflight`
+  - `pnpm run ops:integrity-smoke`
+  - `pnpm run ops:promote-integrity`
+- Added runbook documentation:
+  - `.planning/phases/53-production-promotion-safety/53-01-RUNBOOK.md`
+- Promotion guardrail now performs migration validation + dual-app verification + integrity smoke checks in one workflow.
 
 ---
 

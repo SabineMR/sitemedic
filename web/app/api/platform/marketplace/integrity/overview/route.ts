@@ -39,6 +39,9 @@ export async function GET() {
       { data: openCases },
       { data: cfg },
       { data: confirmedCases },
+      { count: deadLetterCount },
+      { count: failedDeliveryCount },
+      { data: recentJobRuns },
     ] = await Promise.all([
       serviceClient
         .from('marketplace_integrity_cases')
@@ -74,6 +77,19 @@ export async function GET() {
         .eq('status', 'resolved_confirmed')
         .not('company_id', 'is', null)
         .limit(2000),
+      serviceClient
+        .from('marketplace_alert_delivery_attempts')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'dead_letter'),
+      serviceClient
+        .from('marketplace_alert_delivery_attempts')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'failed'),
+      serviceClient
+        .from('marketplace_job_runs')
+        .select('job_name, status, started_at, finished_at, error_message')
+        .order('started_at', { ascending: false })
+        .limit(30),
     ]);
 
     const slaHours = Number(cfg?.review_sla_hours || 48);
@@ -102,6 +118,35 @@ export async function GET() {
       (count) => count >= repeatThreshold
     ).length;
 
+    const latestJobState = new Map<string, {
+      status: string;
+      startedAt: string;
+      finishedAt: string | null;
+      errorMessage: string | null;
+    }>();
+
+    for (const run of recentJobRuns || []) {
+      if (latestJobState.has(run.job_name)) continue;
+      latestJobState.set(run.job_name, {
+        status: run.status,
+        startedAt: run.started_at,
+        finishedAt: run.finished_at,
+        errorMessage: run.error_message,
+      });
+    }
+
+    const trackedJobs = ['integrity-sla-report', 'rating-nudges', 'trust-score-refresh'];
+    const cronHealth = trackedJobs.map((jobName) => {
+      const latest = latestJobState.get(jobName);
+      return {
+        jobName,
+        status: latest?.status || 'unknown',
+        startedAt: latest?.startedAt || null,
+        finishedAt: latest?.finishedAt || null,
+        errorMessage: latest?.errorMessage || null,
+      };
+    });
+
     return NextResponse.json(
       {
         queue: {
@@ -115,7 +160,10 @@ export async function GET() {
           repeatOffenderWatchlist,
           repeatWindowDays,
           repeatThreshold,
+          alertDeadLetters: Number(deadLetterCount || 0),
+          alertFailuresPendingRetry: Number(failedDeliveryCount || 0),
         },
+        cronHealth,
       },
       { status: 200, headers: { 'Cache-Control': 'no-store' } }
     );

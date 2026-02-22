@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createBulkNotifications } from '@/lib/marketplace/create-notification';
+import { completeJobRun, failJobRun, startJobRun } from '@/lib/ops/job-runs';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -16,6 +17,7 @@ export const runtime = 'nodejs';
 const CRON_SECRET = process.env.CRON_SECRET;
 
 export async function POST(request: NextRequest) {
+  let jobRun: { id: string; startedAt: string } | null = null;
   try {
     if (CRON_SECRET) {
       const authHeader = request.headers.get('authorization');
@@ -25,6 +27,11 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient();
+    jobRun = await startJobRun({
+      supabase,
+      jobName: 'integrity-sla-report',
+      triggerType: 'cron',
+    });
 
     const [{ data: cfg }, { data: openCases }, { data: platformAdmins }] = await Promise.all([
       supabase
@@ -54,6 +61,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (breachedCases.length === 0 || !platformAdmins || platformAdmins.length === 0) {
+      await completeJobRun({
+        supabase,
+        runId: jobRun.id,
+        startedAt: jobRun.startedAt,
+        metadata: { breachedCases: 0, sent: 0 },
+      });
       return NextResponse.json({
         success: true,
         sent: 0,
@@ -83,6 +96,17 @@ export async function POST(request: NextRequest) {
       }))
     );
 
+    await completeJobRun({
+      supabase,
+      runId: jobRun.id,
+      startedAt: jobRun.startedAt,
+      metadata: {
+        breachedCases: breachedCases.length,
+        sent: platformAdmins.length,
+        slaHours,
+      },
+    });
+
     return NextResponse.json({
       success: true,
       sent: platformAdmins.length,
@@ -90,6 +114,19 @@ export async function POST(request: NextRequest) {
       slaHours,
     });
   } catch (error) {
+    if (jobRun) {
+      try {
+        const supabase = await createClient();
+        await failJobRun({
+          supabase,
+          runId: jobRun.id,
+          startedAt: jobRun.startedAt,
+          errorMessage: error instanceof Error ? error.message : String(error),
+        });
+      } catch (jobError) {
+        console.error('[Integrity SLA Report Cron] Failed to record failed job run:', jobError);
+      }
+    }
     console.error('[Integrity SLA Report Cron] Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
