@@ -2,7 +2,7 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-22 (Phase 52-02 optional integrity hardening delivered)
+**Last Updated**: 2026-02-22 (Phase 52-02 delivered + web-marketplace type debt follow-through)
 **Audience**: Web developers, technical reviewers, product team
 
 ---
@@ -102,6 +102,13 @@ This completes the v6.0 integrity stack from provenance invariants through opera
   - `web/components/platform/marketplace/IntegrityOverviewPanel.tsx` surfaces watchlist counts in the platform integrity dashboard
 
 Net effect: optional anti-gaming coverage is now included on top of core v6 controls, with scheduled visibility alerts and deeper pattern detection.
+
+### Follow-through: web-marketplace Type Debt Cleanup (2026-02-22)
+
+- Added missing marketplace module stubs/types in `web-marketplace` for ratings, messaging, and disputes components so routes compile.
+- Extended `web-marketplace/lib/marketplace/event-types.ts` status union/labels to cover legacy runtime states (`confirmed`, `in_progress`, `completed`) and optional `awarded_company_id` usage.
+- `pnpm --dir web-marketplace exec tsc --noEmit` now passes.
+- `pnpm --dir web-marketplace lint` remains blocked by interactive first-run ESLint init prompt (project-level setup issue, not code compile issue).
 
 ---
 

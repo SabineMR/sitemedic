@@ -12,8 +12,16 @@
 // Enums / Union Types
 // =============================================================================
 
-/** Event status workflow: draft → open → closed | cancelled | awarded */
-export type EventStatus = 'draft' | 'open' | 'closed' | 'cancelled' | 'awarded';
+/** Event status workflow (legacy + current app states) */
+export type EventStatus =
+  | 'draft'
+  | 'open'
+  | 'closed'
+  | 'cancelled'
+  | 'awarded'
+  | 'confirmed'
+  | 'in_progress'
+  | 'completed';
 
 /** Event types (align with existing booking verticals) */
 export type EventType =
@@ -74,6 +82,7 @@ export interface MarketplaceEvent {
   status: EventStatus;
   has_quotes: boolean;
   quote_count: number;
+  awarded_company_id?: string | null;
   deadline_extended: boolean;
   equipment_required: EquipmentItem[];
   created_at: string;
@@ -145,6 +154,9 @@ export const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
   closed: 'Closed',
   cancelled: 'Cancelled',
   awarded: 'Awarded',
+  confirmed: 'Confirmed',
+  in_progress: 'In Progress',
+  completed: 'Completed',
 };
 
 export const INDOOR_OUTDOOR_LABELS: Record<IndoorOutdoor, string> = {

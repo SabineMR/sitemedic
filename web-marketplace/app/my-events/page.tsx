@@ -11,6 +11,9 @@ const STATUS_COLOURS: Record<EventStatus, string> = {
   closed: 'bg-yellow-100 text-yellow-700',
   cancelled: 'bg-red-100 text-red-700',
   awarded: 'bg-blue-100 text-blue-700',
+  confirmed: 'bg-blue-100 text-blue-700',
+  in_progress: 'bg-indigo-100 text-indigo-700',
+  completed: 'bg-emerald-100 text-emerald-700',
 };
 
 export default function MyEventsPage() {
