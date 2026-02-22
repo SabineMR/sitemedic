@@ -6,6 +6,8 @@
  * These types mirror the schema changes in migration 149_marketplace_award_payment.sql.
  */
 
+import type { FeePolicy, SourceProvenance } from './event-types';
+
 // =============================================================================
 // Award Checkout Flow
 // =============================================================================
@@ -85,6 +87,9 @@ export interface MarketplaceCommission {
 
 /** Marketplace payment columns on the bookings table */
 export interface MarketplaceBookingPayment {
+  source_provenance: SourceProvenance;
+  fee_policy: FeePolicy;
+  source_origin_event_id: string | null;
   marketplace_event_id: string | null;
   marketplace_quote_id: string | null;
   deposit_amount: number | null;

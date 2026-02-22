@@ -32,6 +32,12 @@ export type StaffingRole = 'paramedic' | 'emt' | 'first_aider' | 'doctor' | 'nur
 /** Indoor/outdoor setting */
 export type IndoorOutdoor = 'indoor' | 'outdoor' | 'mixed';
 
+/** Canonical source-of-work attribution (integrity model) */
+export type SourceProvenance = 'self_sourced' | 'marketplace_sourced';
+
+/** Fee policy snapshot applied to an event/booking */
+export type FeePolicy = 'subscription' | 'marketplace_commission' | 'co_share_blended';
+
 // =============================================================================
 // Database Row Interfaces
 // =============================================================================
@@ -46,6 +52,11 @@ export interface EquipmentItem {
 export interface MarketplaceEvent {
   id: string;
   posted_by: string;
+  source: 'marketplace' | 'direct';
+  source_provenance: SourceProvenance;
+  fee_policy: FeePolicy;
+  source_locked_at: string;
+  source_lock_reason: string;
   event_name: string;
   event_type: EventType;
   event_description: string | null;

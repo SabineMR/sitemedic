@@ -28,6 +28,12 @@ export type DirectJobStatus = 'draft' | 'confirmed' | 'in_progress' | 'completed
 /** Source discriminator for marketplace_events */
 export type EventSource = 'marketplace' | 'direct';
 
+/** Canonical source-of-work attribution (integrity model) */
+export type SourceProvenance = 'self_sourced' | 'marketplace_sourced';
+
+/** Fee policy snapshot applied to an event/booking */
+export type FeePolicy = 'subscription' | 'marketplace_commission' | 'co_share_blended';
+
 // =============================================================================
 // Database Row Interfaces
 // =============================================================================
@@ -58,6 +64,8 @@ export interface DirectJob {
   id: string;
   posted_by: string;
   source: 'direct';
+  source_provenance: 'self_sourced';
+  fee_policy: 'subscription';
   client_id: string | null;
   event_name: string;
   event_type: EventType;
@@ -71,6 +79,8 @@ export interface DirectJob {
   location_what3words: string | null;
   location_display: string | null;
   status: DirectJobStatus;
+  source_locked_at: string;
+  source_lock_reason: string;
   equipment_required: EquipmentItem[];
   created_at: string;
   updated_at: string;

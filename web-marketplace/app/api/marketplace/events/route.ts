@@ -47,6 +47,10 @@ export async function POST(request: NextRequest) {
     // Build event row
     const eventRow: Record<string, unknown> = {
       posted_by: user.id,
+      source: 'marketplace',
+      source_provenance: 'marketplace_sourced',
+      fee_policy: 'marketplace_commission',
+      source_lock_reason: 'marketplace_event_created',
       event_name: data.event_name,
       event_type: data.event_type,
       event_description: data.event_description || null,

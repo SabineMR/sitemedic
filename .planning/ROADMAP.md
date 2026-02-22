@@ -6,8 +6,9 @@
 - ✅ **v1.1 Post-MVP Polish & Data Completeness** — Phases 08–17 (10 phases, 35 plans — shipped 2026-02-17)
 - ✅ **v2.0 Multi-Vertical Platform Expansion** — Phases 18–23 (7 phases, 30 plans — shipped 2026-02-18)
 - ✅ **v3.0 White-Label Platform & Subscription Engine** — Phases 24–31 (8 phases, 30 plans — shipped 2026-02-19)
-- **v4.0 MedBid Marketplace** — Phases 32–39 (8 phases, TBD plans — in progress)
+- ✅ **v4.0 MedBid Marketplace** — Phases 32–39 (8 phases, shipped 2026-02-21)
 - ✅ **v5.0 Internal Comms & Document Management** — Phases 40–47 (8 phases, 21 plans — shipped 2026-02-20)
+- **v6.0 Marketplace Integrity** — Phases 48–52 (5 phases, in progress)
 
 ---
 
@@ -63,6 +64,20 @@ See: `.planning/milestones/v5.0-ROADMAP.md`
 </details>
 
 ## Phase Details
+
+### Phase 48: Marketplace Integrity Foundation
+**Goal**: Make source-of-work attribution and fee policy first-class invariants so self-sourced subscription jobs and marketplace-commission jobs cannot be silently reclassified.
+**Depends on**: Phase 39
+**Requirements**: INT-01, INT-02, INT-03, INT-04
+**Success Criteria** (what must be TRUE):
+  1. Source provenance is persisted and immutable-by-default across event and booking write paths
+  2. Self-sourced flows remain subscription-covered with no per-job commission
+  3. Marketplace-sourced flows retain marketplace fee policy and auditability
+  4. Pass-on handoffs preserve original provenance without implicit reclassification
+**Plans**: 1 plan (initial)
+
+Plans:
+- [x] 48-01-PLAN.md — Provenance data model, fee-policy invariants, and write-path propagation baseline
 
 ### Phase 32: Foundation Schema & Registration
 **Goal**: CQC-registered medical companies and clients can register on the marketplace, companies can upload compliance documents for verification, and platform admin can approve/reject registrations — all on a database foundation with marketplace-scoped RLS and race-condition prevention
@@ -228,7 +243,7 @@ Plans:
 
 ## Progress
 
-**Execution Order:** 01 → 01.5 → 02 → 03 → 04 → 04.5 → 04.6 → 05 → 05.5 → 06 → 06.5 → 07 → 07.5 → 08 → 09 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 18.5 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 27 → 28 → 29 → 30 → 31 → 32 → 33 → 34 → 34.1 → 35 → 36 → 37 → 38 → 39 → 40 → 41 → 42 → 43 → 44 → 45 → 46 → 47
+**Execution Order:** 01 → 01.5 → 02 → 03 → 04 → 04.5 → 04.6 → 05 → 05.5 → 06 → 06.5 → 07 → 07.5 → 08 → 09 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 18.5 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 27 → 28 → 29 → 30 → 31 → 32 → 33 → 34 → 34.1 → 35 → 36 → 37 → 38 → 39 → 40 → 41 → 42 → 43 → 44 → 45 → 46 → 47 → 48
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -258,3 +273,4 @@ Plans:
 | 37. Company Accounts | v4.0 | 3/3 | Complete | 2026-02-20 |
 | 38. Notifications & Alerts | v4.0 | 4/4 | Complete | 2026-02-20 |
 | 39. Admin Dashboard | 3/3 | Complete | 2026-02-21 |
+| 48. Marketplace Integrity Foundation | v6.0 | 1/1 | Complete | 2026-02-21 |

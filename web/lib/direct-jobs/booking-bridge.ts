@@ -104,13 +104,17 @@ export async function createDirectJobBooking(
     // Insert the booking record
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
-      .insert({
+        .insert({
         org_id: orgId,
         client_id: null, // Direct jobs use direct_clients, not the bookings.client_id (which refs clients table)
         medic_id: medicId || null,
         status: 'confirmed',
-        source: 'direct',
-        // Site details mapped from job
+          source: 'direct',
+          source_provenance: 'self_sourced',
+          fee_policy: 'subscription',
+          source_origin_event_id: job.id,
+          source_lock_reason: 'direct_job_booking_created',
+          // Site details mapped from job
         site_name: job.event_name,
         site_address: job.location_address || job.location_postcode,
         site_postcode: job.location_postcode,

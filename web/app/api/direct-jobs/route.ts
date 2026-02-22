@@ -147,6 +147,9 @@ export async function POST(request: NextRequest) {
     const eventRow: Record<string, unknown> = {
       posted_by: user.id,
       source: 'direct',
+      source_provenance: 'self_sourced',
+      fee_policy: 'subscription',
+      source_lock_reason: 'direct_job_created',
       client_id: clientId,
       event_name: data.event_name,
       event_type: data.event_type,

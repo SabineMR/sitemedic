@@ -151,6 +151,10 @@ export async function createMarketplaceBooking(
           medic_id: null, // Assigned later by company
           status: 'confirmed',
           source: 'marketplace',
+          source_provenance: 'marketplace_sourced',
+          fee_policy: 'marketplace_commission',
+          source_origin_event_id: eventId,
+          source_lock_reason: 'marketplace_award_booking_created',
           // Event reference
           marketplace_event_id: eventId,
           marketplace_quote_id: quoteId,

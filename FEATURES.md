@@ -2,8 +2,18 @@
 
 **Project**: SiteMedic - UK Multi-Vertical Medic Staffing Platform with Bundled Software + Service
 **Business**: Apex Safety Group (ASG) - HCPC-registered paramedic company serving 10+ industries, powered by SiteMedic platform
-**Last Updated**: 2026-02-21 (Phase 39-03 marketplace settings/configuration delivered)
+**Last Updated**: 2026-02-21 (Phase 48-01 marketplace integrity foundation delivered)
 **Audience**: Web developers, technical reviewers, product team
+
+---
+
+## v6.0 Update: Phase 48-01 Marketplace Integrity Foundation (2026-02-21)
+
+- Added migration `supabase/migrations/164_marketplace_integrity_provenance.sql` introducing `source_provenance`, `fee_policy`, and source-lock metadata on `marketplace_events` and `bookings`.
+- Added DB consistency checks so `self_sourced` maps to `subscription`, while `marketplace_sourced` maps to `marketplace_commission` or `co_share_blended`.
+- Added immutable-by-default source reclassification guard (non-platform-admin updates to provenance/fee policy now fail at DB layer).
+- Wired direct and marketplace write paths to persist provenance and fee policy snapshots in both apps (`web/` and `web-marketplace/`).
+- Locked decision: pass-on jobs keep origin provenance; Scenario C co-share policy remains dual-sided (5% + 5%); client self-attestation is not treated as a primary fraud control.
 
 ---
 

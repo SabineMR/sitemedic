@@ -17,6 +17,9 @@
 
 import { z } from 'zod';
 
+export const sourceProvenanceSchema = z.enum(['self_sourced', 'marketplace_sourced']);
+export const feePolicySchema = z.enum(['subscription', 'marketplace_commission', 'co_share_blended']);
+
 // UK postcode validation regex (same as event-schemas.ts)
 const ukPostcodeRegex = /^[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}$/i;
 

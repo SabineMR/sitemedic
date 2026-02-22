@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core value:** Documentation happens automatically as the medic does their job, not as separate admin work.
-**Current focus:** v6.0 Marketplace Integrity — defining requirements
+**Current focus:** v6.0 Marketplace Integrity — executing Phase 48 foundation
 
 ## Current Position
 
-Phase: 39-admin-dashboard
-Plan: 03
+Phase: 48-marketplace-integrity
+Plan: 01
 Status: Completed
-Last activity: 2026-02-21 — Completed 39-03 (marketplace settings configuration + runtime defaults integration)
+Last activity: 2026-02-21 — Completed 48-01 provenance and fee-integrity foundation
 
-Note: v4.0 Phase 39 execution complete
+Note: v6.0 Phase 48 foundation complete
 
 Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [##########] v3.0 | [##########] v4.0 100% | [##########] v5.0 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 242 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 37 v4.0 + 21 v5.0 + 5 gap closures)
+- Total plans completed: 243 (84 v1.0 + 35 v1.1 + 30 v2.0 + 30 v3.0 + 37 v4.0 + 21 v5.0 + 5 gap closures + 1 v6.0)
 - Average duration: 3.9 min
 - Total execution time: ~14.5 hours
 
@@ -35,11 +35,13 @@ Progress: [##########] v1.0 | [##########] v1.1 | [##########] v2.0 | [#########
 | v3.0 | 8 | 30 | ~1.7 hrs | ~3.4 min |
 | v4.0 | 9 | 37 | ~389 min | ~5.3 min |
 | v5.0 | 8 | 21 | ~116 min | ~5.0 min |
+| v6.0 | 1 | 1 | ~12 min | ~12.0 min |
 
 *Updated after each plan completion*
 | Phase 39-admin-dashboard P01 | 3m | 2 tasks | 7 files |
 | Phase 39 P02 | 8m | 2 tasks | 8 files |
 | Phase 39 P03 | 10m | 2 tasks | 9 files |
+| Phase 48 P01 | 12m | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -148,6 +150,10 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 - [Phase 39]: 39-03: Settings changes require a reason and write immutable before/after rows to `marketplace_admin_settings_audit`.
 - [Phase 39]: 39-03: Booking commission fallback now resolves via settings-backed helper instead of fixed split constants.
 - [Phase 39]: 39-03 hardening: active runtime defaults consumers are wired in `web-marketplace` (award modal + event create/edit wizard hydration) while `web` remains platform-admin control surface.
+- [Phase 48]: Pass-on jobs preserve original source provenance at handoff (no implicit source reclassification).
+- [Phase 48]: Scenario C co-shared fee policy uses dual-sided split (5% + 5%).
+- [Phase 48]: Client source-confirmation prompts are not primary controls; integrity uses system signals and enforced provenance.
+- [Phase 48]: Database-level trigger now blocks non-admin source_provenance/fee_policy reclassification on events and bookings.
 
 ### Pending Todos
 
@@ -173,6 +179,6 @@ Recent decisions affecting current work (v4.0 only — v5.0 archived to mileston
 
 ## Session Continuity
 
-Last session: 2026-02-21T22:42:00Z
-Stopped at: Completed 39-03-PLAN.md
+Last session: 2026-02-21T23:59:00Z
+Stopped at: Completed 48-01-SUMMARY.md
 Resume file: None
