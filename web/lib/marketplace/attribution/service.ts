@@ -3,6 +3,10 @@ import {
   assertPassOnPreservesIntegrity,
   isFeePolicyAllowedForProvenance,
 } from './invariants';
+import {
+  logIntegritySignal,
+  recomputeIntegrityScoreForEvent,
+} from '@/lib/marketplace/integrity/signals';
 import type {
   AttributionChainResponse,
   AttributionCustodyEvent,
@@ -293,6 +297,31 @@ export async function initiatePassOn(params: {
     throw new Error(custodyError.message);
   }
 
+  try {
+    await logIntegritySignal(supabase, {
+      event_id: eventId,
+      related_event_id: eventId,
+      company_id: initiatingCompanyId,
+      actor_user_id: initiatedByUserId,
+      signal_type: 'PASS_ON_ACTIVITY',
+      confidence: 0.42,
+      weight: 12,
+      details: {
+        handoffId: handoff.id,
+        action: 'initiated',
+      },
+    });
+
+    await recomputeIntegrityScoreForEvent({
+      supabase,
+      eventId,
+      companyId: initiatingCompanyId,
+      actorUserId: initiatedByUserId,
+    });
+  } catch (signalError) {
+    console.warn('PASS_ON_ACTIVITY signal ingestion failed (non-fatal):', signalError);
+  }
+
   return handoff;
 }
 
@@ -380,6 +409,31 @@ export async function resolvePassOn(params: {
 
   if (custodyError) {
     throw new Error(custodyError.message);
+  }
+
+  try {
+    await logIntegritySignal(supabase, {
+      event_id: handoff.event_id,
+      related_event_id: handoff.event_id,
+      company_id: actorCompanyId,
+      actor_user_id: actorUserId,
+      signal_type: 'PASS_ON_ACTIVITY',
+      confidence: action === 'accept' ? 0.5 : 0.35,
+      weight: action === 'accept' ? 14 : 8,
+      details: {
+        handoffId: handoff.id,
+        action,
+      },
+    });
+
+    await recomputeIntegrityScoreForEvent({
+      supabase,
+      eventId: handoff.event_id,
+      companyId: actorCompanyId,
+      actorUserId: actorUserId,
+    });
+  } catch (signalError) {
+    console.warn('PASS_ON_ACTIVITY signal ingestion failed (non-fatal):', signalError);
   }
 
   return updatedHandoff;

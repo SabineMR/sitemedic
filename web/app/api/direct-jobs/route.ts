@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { directJobFormSchema } from '@/lib/direct-jobs/schemas';
+import { ingestMarketplaceToDirectSignals } from '@/lib/marketplace/integrity/signals';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -230,6 +231,25 @@ export async function POST(request: NextRequest) {
       if (staffingError) {
         console.error('[Direct Jobs POST] Failed to insert staffing requirements:', staffingError);
       }
+    }
+
+    // Integrity detection: flag potential marketplace-to-direct leakage patterns
+    try {
+      const firstEventDate = data.event_days
+        .map((day) => day.event_date)
+        .sort((a, b) => a.localeCompare(b))[0] || null;
+
+      await ingestMarketplaceToDirectSignals({
+        supabase,
+        directEventId: event.id,
+        actorUserId: user.id,
+        companyId: company.id,
+        eventType: data.event_type,
+        locationPostcode: data.location_postcode || null,
+        firstEventDate,
+      });
+    } catch (integrityError) {
+      console.warn('[Direct Jobs POST] Integrity signal ingestion failed (non-fatal):', integrityError);
     }
 
     return NextResponse.json({ success: true, jobId: event.id }, { status: 201 });
